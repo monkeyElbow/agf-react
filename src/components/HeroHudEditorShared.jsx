@@ -740,7 +740,7 @@ export function HeroHudEditorPanel({
       <>
         <TextHighlightColorControls
           label={hasLineSelection
-            ? `Selection Color "${selectedTextPreview}"`
+            ? `Selected Color "${selectedTextPreview}"`
             : `Core Color (${line.label || lineKey})`}
           ariaLabel={lineKey === safeLines[0]?.key
             ? 'Hero color controls'

@@ -29,6 +29,7 @@ export default function SiteSearchPanel({
   label = 'Search all pages',
   showPageLabel = true,
   placeholder = 'Try: retirement, insurance, calculators, rates',
+  onQueryStateChange,
 }) {
   const generatedInputId = useId();
   const inputId = `site-search-input-${generatedInputId}`;
@@ -50,10 +51,19 @@ export default function SiteSearchPanel({
     }
   }, [autoFocus]);
 
+  useEffect(() => {
+    onQueryStateChange?.(hasTypedTerm);
+  }, [hasTypedTerm, onQueryStateChange]);
+
   const matches = useMemo(
     () => searchSiteIndex(searchableItems, deferredTerm),
     [searchableItems, deferredTerm],
   );
+
+  const clearQuery = () => {
+    setQuery('');
+    inputRef.current?.focus();
+  };
   const groupedMatches = useMemo(
     () => groupSiteSearchMatches(matches),
     [matches],
@@ -110,18 +120,39 @@ export default function SiteSearchPanel({
     );
   }
 
+  const isHeaderVariant = variant === 'header';
+
   return (
-    <div className="site-search-panel site-search-panel--page">
+    <div className={`site-search-panel ${isHeaderVariant ? 'site-search-panel--header' : 'site-search-panel--page'}`}>
       <label htmlFor={inputId} className={showPageLabel ? 'search-page-label' : 'sr-only'}>{label}</label>
-      <input
-        id={inputId}
-        type="search"
-        className="site-search-input search-page-input"
-        ref={inputRef}
-        value={query}
-        onChange={(event) => setQuery(event.target.value)}
-        placeholder={placeholder}
-      />
+      {isHeaderVariant ? (
+        <div className="site-search-input-wrap">
+          <input
+            id={inputId}
+            type="search"
+            className="site-search-input search-page-input site-header-search-input"
+            ref={inputRef}
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder={placeholder}
+          />
+          {hasTypedTerm ? (
+            <button type="button" className="site-header-search-clear" onClick={clearQuery} aria-label="Clear search">
+              <span aria-hidden="true">×</span>
+            </button>
+          ) : null}
+        </div>
+      ) : (
+        <input
+          id={inputId}
+          type="search"
+          className="site-search-input search-page-input"
+          ref={inputRef}
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder={placeholder}
+        />
+      )}
 
       {typedTerm ? (
         <div className="search-page-results">

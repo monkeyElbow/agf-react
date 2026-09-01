@@ -587,7 +587,7 @@ describe('NativeContentPage functional routes', () => {
         ...block,
         settings: {
           ...(block?.settings || {}),
-          ...(block?.id === 'resources' ? { cardTitleSizeRem: 1.25 } : {}),
+          ...(block?.id === 'resources' ? { cardTitleSizeRem: 1.25, cardTitleLineHeight: 1.1 } : {}),
         },
         editableFields: Array.isArray(block?.editableFields) ? [...block.editableFields] : [],
       })),
@@ -609,6 +609,8 @@ describe('NativeContentPage functional routes', () => {
     expect(document.querySelector('.insurance-pc-native-partner.native-dynamic-page-content')).toBeTruthy();
     expect(document.querySelector('.insurance-pc-native-resources.native-dynamic-grid')).toBeTruthy();
     expect(document.querySelector('.insurance-pc-native-resources')?.getAttribute('style')).toContain('--dynamic-grid-card-title-size: 1.25rem');
+    expect(document.querySelector('.insurance-pc-native-resources')?.getAttribute('style')).toContain('--dynamic-grid-card-title-line-height: 1.1');
+    expect(document.querySelector('.insurance-pc-native-resources')?.className).toContain('is-card-title-line-height-controlled');
     expect(document.querySelector('.insurance-pc-native-safe.native-dynamic-page-content')).toBeTruthy();
     expect(document.querySelector('.insurance-pc-native-fineprint.native-dynamic-page-content')).toBeTruthy();
     expect(document.querySelector('[data-block-id="page_content"]')).toBeNull();
@@ -1170,6 +1172,9 @@ describe('NativeContentPage functional routes', () => {
   });
 
   it('renders the careers route through NativeContentPage with delegated jobs behavior intact', () => {
+    mockBlocksByPath = {
+      '/about-us/careers': contentBlockBlueprintsByPath['/about-us/careers'],
+    };
     mockVisibleJobs = [
       {
         id: 'job-1',
@@ -1218,7 +1223,35 @@ describe('NativeContentPage functional routes', () => {
     expect(screen.getByRole('link', { name: 'Apply Online' })).toBeTruthy();
   });
 
-  it('keeps the native careers page when content admin has an empty route entry', () => {
+  it('exposes every Careers section in the front HUD in authored order', () => {
+    mockFrontHudEnabled = true;
+    mockBlocksByPath = {
+      '/about-us/careers': contentBlockBlueprintsByPath['/about-us/careers'],
+    };
+
+    render(
+      <MemoryRouter>
+        <NativeContentPage
+          page={{
+            path: '/about-us/careers',
+            title: 'Careers',
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+    expect(Array.from(document.querySelectorAll('.admin-front-hud-dock-tab .admin-front-hud-dock-tab-label')).map((node) => node.textContent)).toEqual([
+      'Hero',
+      'Intro',
+      'Card Grid · Flexible cards',
+      'Billboard',
+      'Career Open Positions',
+      'Billboard',
+      'Page Content',
+    ]);
+  });
+
+  it('does not restore native careers content when a block-only route is explicitly empty', () => {
     mockBlocksByPath = {
       '/about-us/careers': [],
     };
@@ -1234,8 +1267,8 @@ describe('NativeContentPage functional routes', () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByRole('heading', { name: 'Faith + Career.' })).toBeTruthy();
-    expect(document.querySelector('.native-info-page--careers .careers-native-benefits')).toBeTruthy();
+    expect(screen.queryByRole('heading', { name: 'Faith + Career.' })).toBeNull();
+    expect(document.querySelector('.native-info-page--careers .careers-native-benefits')).toBeNull();
   });
 
   it('does not apply the careers intro variant to unrelated native pages like insurance', () => {

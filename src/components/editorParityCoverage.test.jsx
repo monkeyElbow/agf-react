@@ -630,6 +630,29 @@ describe('editor parity coverage', () => {
     expect(onSettingChange).toHaveBeenCalledWith('addressLines', '');
   });
 
+  it('loads legacy page-content fineprint copy into HTML editor and promotes it on edit', () => {
+    const onSettingChange = vi.fn();
+    render(createElement(PageContentBlockEditor, {
+      block: {
+        kind: 'content',
+        settings: {
+          html: '<p></p>',
+          fineprint: 'AGFinancial is an equal opportunity employer.',
+        },
+      },
+      onSettingChange,
+    }));
+
+    const editor = screen.getByRole('textbox', { name: 'HTML content' });
+    expect(editor.textContent).toContain('AGFinancial is an equal opportunity employer.');
+
+    editor.innerHTML = '<p>Updated careers copy.</p>';
+    fireEvent.input(editor);
+
+    expect(onSettingChange).toHaveBeenCalledWith('html', '<p>Updated careers copy.</p>');
+    expect(onSettingChange).toHaveBeenCalledWith('fineprint', '');
+  });
+
   it('keeps every HUD editor type mapped to a parity contract', () => {
     const editorTypes = new Set(
       allBlueprintBlocks

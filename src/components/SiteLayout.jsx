@@ -1,12 +1,15 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { navSections } from '../data/siteMap';
 import { useContentAdmin } from '../context/ContentAdminContextCore';
+import { DocumentsContext } from '../context/DocumentsContext';
+import { ResourcesContext } from '../context/ResourcesContext';
 import { FrontHudContext } from '../context/FrontHudContext';
 import { isApplePlatformNavigator, isSafariBrowserNavigator } from '../lib/browserFlags';
 import SiteFooter from './SiteFooter';
 import AnimatedBrandLogo from './AnimatedBrandLogo';
 import SiteChatbotWindow from './SiteChatbotWindow';
+import SiteSearchPanel from './SiteSearchPanel';
 
 const DESKTOP_NAV_QUERY = '(min-width: 1100px)';
 const CONTENT_WIDTH_OVERLAY_STORAGE_KEY = 'agf-admin-content-width-overlay-v1';
@@ -71,6 +74,55 @@ function isTypingTarget(target) {
   return target.isContentEditable;
 }
 
+function SiteHeaderSearch({ isOpen, isDesktop }) {
+  const documentsContext = useContext(DocumentsContext);
+  const resourcesContext = useContext(ResourcesContext);
+  const documents = documentsContext?.documents || [];
+  const [catalogArticles, setCatalogArticles] = useState([]);
+  const [hasQuery, setHasQuery] = useState(false);
+  const articles = resourcesContext?.publishedArticles || catalogArticles;
+
+  useEffect(() => {
+    if (!isOpen || resourcesContext) {
+      return undefined;
+    }
+
+    let active = true;
+    import('../data/resourceArticles').then(({ resourceArticles: loadedArticles }) => {
+      if (active) {
+        setCatalogArticles(Array.isArray(loadedArticles) ? loadedArticles : []);
+      }
+    }).catch(() => {
+      // The header search still works with pages, blocks, and documents if the catalog is unavailable.
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [isOpen, resourcesContext]);
+
+  return (
+    <div
+      id="site-header-search-layer"
+      className={`site-header-search-layer${isOpen ? ' is-open' : ''}${hasQuery ? ' has-query' : ''}${isDesktop ? ' is-desktop' : ' is-mobile'}`}
+      aria-hidden={!isOpen}
+    >
+      <div className="site-header-search-surface">
+        <SiteSearchPanel
+          variant="header"
+          documents={documents}
+          articles={articles}
+          autoFocus={isOpen}
+          label="Search this site"
+          showPageLabel={false}
+          placeholder="Search AGFinancial"
+          onQueryStateChange={setHasQuery}
+        />
+      </div>
+    </div>
+  );
+}
+
 export default function SiteLayout({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
@@ -82,6 +134,7 @@ export default function SiteLayout({ children }) {
   const isAdminRoute = location.pathname.startsWith('/admin/');
   const [menuOpen, setMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState(null);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [desktopQueryMatch, setDesktopQueryMatch] = useState(
     typeof window !== 'undefined' ? window.matchMedia(DESKTOP_NAV_QUERY).matches : false,
   );
@@ -158,6 +211,8 @@ export default function SiteLayout({ children }) {
   const navInnerRef = useRef(null);
   const brandRef = useRef(null);
   const navLinksRef = useRef(null);
+  const searchTriggerRef = useRef(null);
+  const [headerSearchLeft, setHeaderSearchLeft] = useState(0);
 
   useEffect(() => {
     if (typeof document === 'undefined') {
@@ -176,6 +231,7 @@ export default function SiteLayout({ children }) {
     }
     setMenuOpen(false);
     setOpenDropdown(null);
+    setSearchOpen(false);
   };
 
   const cancelScheduledDropdownClose = () => {
@@ -203,8 +259,25 @@ export default function SiteLayout({ children }) {
     return resolved || fallback;
   };
   const homePath = resolveManagedNavPath('/', '/');
-  const searchPath = resolveManagedNavPath('/search', '/search');
   const isDesktop = desktopQueryMatch && !forceCompactNav;
+
+  useLayoutEffect(() => {
+    if (!isDesktop || typeof window === 'undefined') {
+      return undefined;
+    }
+
+    const syncSearchPosition = () => {
+      const left = searchTriggerRef.current?.getBoundingClientRect().left;
+      if (Number.isFinite(left)) {
+        const availableWidth = Math.max(0, window.innerWidth - left);
+        setHeaderSearchLeft(Math.max(0, Math.round(left - (availableWidth * 0.5))));
+      }
+    };
+
+    syncSearchPosition();
+    window.addEventListener('resize', syncSearchPosition);
+    return () => window.removeEventListener('resize', syncSearchPosition);
+  }, [isDesktop, searchOpen]);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -582,6 +655,17 @@ export default function SiteLayout({ children }) {
     setOpenDropdown((current) => (current === title ? null : title));
   }
 
+  const handleSearchToggle = () => {
+    setSearchOpen((current) => {
+      const next = !current;
+      if (next && !isDesktop) {
+        setMenuOpen(false);
+      }
+      return next;
+    });
+    setOpenDropdown(null);
+  };
+
   const handleNavItemSelect = () => {
     closeNavMenus();
   };
@@ -599,6 +683,16 @@ export default function SiteLayout({ children }) {
       return;
     }
     cancelScheduledDropdownClose();
+    setSearchOpen(false);
+    setOpenDropdown(title);
+  };
+
+  const handleGroupMouseEnter = (title) => {
+    if (!isDesktop) {
+      return;
+    }
+    cancelScheduledDropdownClose();
+    setSearchOpen(false);
     setOpenDropdown(title);
   };
 
@@ -651,12 +745,13 @@ export default function SiteLayout({ children }) {
         <nav
           ref={navRef}
           className={`site-nav${forceCompactNav ? ' is-force-mobile' : ''}${isFrontHudRevealing ? ' is-front-hud-revealing' : ''}`}
+          style={{ '--site-header-search-left': `${headerSearchLeft}px` }}
           aria-label="Main navigation"
           onKeyDown={(event) => {
             if (event.key !== 'Escape') {
               return;
             }
-            if (!menuOpen && !openDropdown) {
+            if (!menuOpen && !openDropdown && !searchOpen) {
               return;
             }
             closeNavMenus();
@@ -673,7 +768,10 @@ export default function SiteLayout({ children }) {
               aria-controls="site-nav-menu"
               aria-expanded={menuOpen}
               aria-label={menuOpen ? 'Close menu' : 'Open menu'}
-              onClick={() => setMenuOpen((open) => !open)}
+              onClick={() => {
+                setSearchOpen(false);
+                setMenuOpen((open) => !open);
+              }}
             >
               <span className="sr-only">{menuOpen ? 'Close menu' : 'Open menu'}</span>
               <span className={`site-nav-toggle-icon${menuOpen ? ' is-open' : ''}`} aria-hidden="true">
@@ -694,12 +792,7 @@ export default function SiteLayout({ children }) {
                     <div
                       key={section.title}
                       className={`site-nav-group${openDropdown === section.title ? ' is-open' : ''}`}
-                      onMouseEnter={() => {
-                        if (isDesktop) {
-                          cancelScheduledDropdownClose();
-                          setOpenDropdown(section.title);
-                        }
-                      }}
+                      onMouseEnter={() => handleGroupMouseEnter(section.title)}
                       onMouseLeave={handleGroupMouseLeave}
                       onFocusCapture={() => handleGroupFocus(section.title)}
                       onBlurCapture={handleGroupBlur}
@@ -757,6 +850,25 @@ export default function SiteLayout({ children }) {
                 </div>
 
                 <div className="site-nav-links-utility">
+                  <button
+                    ref={searchTriggerRef}
+                    type="button"
+                    className="site-nav-link nav-search-link"
+                    aria-label="Search"
+                    aria-expanded={searchOpen}
+                    aria-controls="site-header-search-layer"
+                    onClick={handleSearchToggle}
+                  >
+                    <span className="nav-icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" width="16" height="16" focusable="false" aria-hidden="true">
+                        <path
+                          fill="currentColor"
+                          d="M10 2a8 8 0 1 0 5.29 14l4.35 4.35 1.41-1.41-4.35-4.35A8 8 0 0 0 10 2Zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12Z"
+                        />
+                      </svg>
+                    </span>
+                    <span className="nav-search-text">Search</span>
+                  </button>
                   <a
                     href="https://secure.agfinancial.org/"
                     target="_blank"
@@ -774,25 +886,9 @@ export default function SiteLayout({ children }) {
                     </span>
                     <span>Log In</span>
                   </a>
-                  <NavLink to={searchPath} className="site-nav-link nav-search-link" aria-label="Search">
-                    <span className="nav-icon" aria-hidden="true">
-                      <svg viewBox="0 0 24 24" width="16" height="16" focusable="false" aria-hidden="true">
-                        <path
-                          fill="currentColor"
-                          d="M10 2a8 8 0 1 0 5.29 14l4.35 4.35 1.41-1.41-4.35-4.35A8 8 0 0 0 10 2Zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12Z"
-                        />
-                      </svg>
-                    </span>
-                    <span className="nav-search-text">Search</span>
-                  </NavLink>
                   <div
                     className={`site-nav-group is-admin${openDropdown === 'Admin' ? ' is-open' : ''}`}
-                    onMouseEnter={() => {
-                      if (isDesktop) {
-                        cancelScheduledDropdownClose();
-                        setOpenDropdown('Admin');
-                      }
-                    }}
+                    onMouseEnter={() => handleGroupMouseEnter('Admin')}
                     onMouseLeave={handleGroupMouseLeave}
                     onFocusCapture={() => handleGroupFocus('Admin')}
                     onBlurCapture={handleGroupBlur}
@@ -960,6 +1056,10 @@ export default function SiteLayout({ children }) {
               </div>
             </div>
           </div>
+          <SiteHeaderSearch
+            isOpen={searchOpen}
+            isDesktop={isDesktop}
+          />
         </nav>
 
         {contentWidthOverlayEnabled && !isAdminRoute ? (

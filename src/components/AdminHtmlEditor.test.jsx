@@ -91,19 +91,14 @@ describe('AdminHtmlEditor', () => {
       .toBe('<p><span class="is-text-fine-print">Fine print</span> <span class="is-text-large">Large</span> <span class="is-text-display">Display</span></p>');
   });
 
-  it('exposes shared text-size controls from fine print through display', () => {
-    const execCommand = vi.fn();
-    document.execCommand = execCommand;
-
+  it('does not expose the obsolete text-size dropdown', () => {
     render(createElement(AdminHtmlEditor, {
       value: '<p>Newsletter copy</p>',
       onChange: () => {},
       compact: true,
     }));
 
-    fireEvent.change(screen.getByRole('combobox', { name: 'Text size' }), { target: { value: 'display' } });
-
-    expect(execCommand).toHaveBeenCalledWith('fontSize', false, '6');
+    expect(screen.queryByRole('combobox', { name: 'Text size' })).toBeNull();
   });
 
   it('keeps only the supported left, center, and right alignment controls', () => {

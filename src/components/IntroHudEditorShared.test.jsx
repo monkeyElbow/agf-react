@@ -37,7 +37,7 @@ describe('IntroHudEditorPanel', () => {
       }),
     );
 
-    const selectionPalette = screen.getByRole('radiogroup', { name: 'Selection Color "se it d"' });
+    const selectionPalette = screen.getByRole('radiogroup', { name: 'Selected Color "se it d"' });
     expect(within(selectionPalette).getByRole('radio', { name: 'White' })).toBeTruthy();
     expect(within(selectionPalette).getByRole('radio', { name: 'Sandstone' })).toBeTruthy();
     expect(within(selectionPalette).getByRole('radio', { name: 'Blue' }).getAttribute('aria-checked')).toBe('true');
@@ -113,6 +113,36 @@ describe('IntroHudEditorPanel', () => {
     expect(previewHeading.className).not.toContain('is-white');
   });
 
+  it('exposes accent line typography controls and forwards slider changes', () => {
+    const onSizeChange = vi.fn();
+    const onSpaceBeforeChange = vi.fn();
+    const onLineHeightChange = vi.fn();
+    renderPanel({
+      extraLine: 'What you do here truly matters.',
+      extraLineSizeRem: 4.15,
+      extraLineSpaceBeforeRem: 2.4,
+      extraLineLineHeight: 0.94,
+      onExtraLineSizeChange: onSizeChange,
+      onExtraLineSpaceBeforeChange: onSpaceBeforeChange,
+      onExtraLineLineHeightChange: onLineHeightChange,
+    });
+
+    fireEvent.change(screen.getByRole('slider', { name: 'Accent line size (rem)' }), {
+      target: { value: '3.6' },
+    });
+    fireEvent.change(screen.getByRole('slider', { name: 'Accent line space above (rem)' }), {
+      target: { value: '1.8' },
+    });
+    fireEvent.change(screen.getByRole('slider', { name: 'Accent line line height' }), {
+      target: { value: '1.1' },
+    });
+
+    expect(onSizeChange).toHaveBeenCalledWith(3.6);
+    expect(onSpaceBeforeChange).toHaveBeenCalledWith(1.8);
+    expect(onLineHeightChange).toHaveBeenCalledWith(1.1);
+    expect(screen.getByLabelText('Accent line size (rem) value')).toBeTruthy();
+  });
+
   it('keeps the pilot compact by removing redundant section headers and notes', () => {
     const { container } = renderPanel();
 
@@ -123,17 +153,15 @@ describe('IntroHudEditorPanel', () => {
     expect(within(sectionRail).queryByRole('button', { name: 'Actions' })).toBeNull();
     expect(screen.queryByText('Click body copy on page to jump here.')).toBeNull();
     expect(screen.queryByText('Optional line beneath the heading.')).toBeNull();
-    expect(container.querySelector('.admin-intro-hud-heading-group')?.parentElement?.className).toContain('admin-hud-editor-main');
-    expect(container.querySelector('.admin-intro-hud-accent-group')?.parentElement?.className).toContain('admin-hud-editor-main');
+    expect(container.querySelector('.admin-intro-hud-heading-group')?.parentElement?.className).toContain('admin-intro-hud-heading-preview-column');
+    expect(container.querySelector('.admin-intro-hud-accent-group')?.parentElement?.className).toContain('admin-intro-hud-heading-controls');
   });
 
-  it('keeps highlight guidance inline with the highlight swatches', () => {
+  it('keeps the Intro color control free of redundant highlight guidance', () => {
     const { container } = renderPanel();
-    const inlineControl = container.querySelector('.admin-front-hud-text-highlight-inline');
 
-    expect(inlineControl).toBeTruthy();
-    expect(inlineControl?.querySelector('.admin-front-hud-note')?.textContent).toContain('Highlight text first');
-    expect(container.querySelectorAll('.admin-front-hud-note')).toHaveLength(1);
+    expect(container.querySelector('.admin-front-hud-text-highlight-inline')).toBeNull();
+    expect(container.querySelector('.admin-front-hud-note')).toBeNull();
   });
 
   it('places layout controls above heading text and keeps actions in the settings rail', () => {
@@ -143,10 +171,18 @@ describe('IntroHudEditorPanel', () => {
     const heading = container.querySelector('.admin-intro-hud-heading-group');
 
     expect(actions.parentElement?.className).toContain('admin-hud-editor-settings-rail');
-    expect(layout?.parentElement?.parentElement?.className).toContain('admin-hud-editor-main');
-    expect(layout?.compareDocumentPosition(heading)).toBe(
+    expect(layout?.parentElement?.parentElement?.className).toContain('admin-intro-hud-heading-controls');
+    expect(heading?.compareDocumentPosition(layout)).toBe(
       Node.DOCUMENT_POSITION_FOLLOWING,
     );
+  });
+
+  it('places the heading preview on the left and heading controls on the right', () => {
+    const { container } = renderPanel();
+
+    expect(container.querySelector('.admin-intro-hud-heading-page')).toBeTruthy();
+    expect(container.querySelector('.admin-intro-hud-heading-preview-column')).toBeTruthy();
+    expect(container.querySelector('.admin-intro-hud-heading-controls')).toBeTruthy();
   });
 
   it('keeps the actions page as one HUD group instead of nesting a second card', () => {

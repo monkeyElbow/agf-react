@@ -262,12 +262,12 @@ export default function AdminHtmlEditor({
   className = '',
   style,
   onBaseColorChange,
+  showAlignmentControls = true,
 }) {
   const editorRef = useRef(null);
   const savedSelectionRangeRef = useRef(null);
   const [sourceMode, setSourceMode] = useState(false);
   const [selectedColorId, setSelectedColorId] = useState(HTML_EDITOR_COLOR_SWATCHES[0]?.id || '');
-  const [selectedTextSizeId, setSelectedTextSizeId] = useState('');
   const htmlValue = useMemo(
     () => ensureHtml(normalizeHtmlEditorFormatting(value)),
     [value],
@@ -406,30 +406,13 @@ export default function AdminHtmlEditor({
           getOptionLabel={(option) => option.label}
           getOptionShortLabel={(option) => option.shortLabel || option.label}
         />
-        <select
-          className="admin-html-editor-text-size"
-          aria-label="Text size"
-          value={selectedTextSizeId}
-          onMouseDown={captureSelection}
-          onChange={(event) => {
-            const nextOption = HTML_EDITOR_TEXT_SIZE_OPTIONS.find((option) => option.id === event.target.value);
-            if (!nextOption) {
-              return;
-            }
-            setSelectedTextSizeId('');
-            applyCommand('fontSize', nextOption.commandValue);
-          }}
-        >
-          <option value="">Text size</option>
-          {HTML_EDITOR_TEXT_SIZE_OPTIONS.map((option) => (
-            <option key={option.id} value={option.id}>{option.label}</option>
-          ))}
-        </select>
-        <div className="admin-html-editor-toolbar-group" role="group" aria-label="Text alignment">
-          <button type="button" onMouseDown={preserveSelection} onClick={() => applyCommand('justifyLeft')} title="Align left">Left</button>
-          <button type="button" onMouseDown={preserveSelection} onClick={() => applyCommand('justifyCenter')} title="Align center">Center</button>
-          <button type="button" onMouseDown={preserveSelection} onClick={() => applyCommand('justifyRight')} title="Align right">Right</button>
-        </div>
+        {showAlignmentControls ? (
+          <div className="admin-html-editor-toolbar-group" role="group" aria-label="Text alignment">
+            <button type="button" onMouseDown={preserveSelection} onClick={() => applyCommand('justifyLeft')} title="Align left">Left</button>
+            <button type="button" onMouseDown={preserveSelection} onClick={() => applyCommand('justifyCenter')} title="Align center">Center</button>
+            <button type="button" onMouseDown={preserveSelection} onClick={() => applyCommand('justifyRight')} title="Align right">Right</button>
+          </div>
+        ) : null}
         <button type="button" onMouseDown={preserveSelection} onClick={() => applyCommand('formatBlock', 'h2')} title="Heading 2">H2</button>
         <button type="button" onMouseDown={preserveSelection} onClick={() => applyCommand('formatBlock', 'h3')} title="Heading 3">H3</button>
         <button type="button" onMouseDown={preserveSelection} onClick={() => applyCommand('formatBlock', 'p')} title="Paragraph">P</button>

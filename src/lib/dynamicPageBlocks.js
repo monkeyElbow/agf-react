@@ -9,7 +9,8 @@ import {
 } from '../blocks/foundation/forms';
 import {
   getGridSafeCardStyleForBg,
-  getGridSafeToneForBg,
+  normalizeDynamicGridHeaderWidthPercent,
+  DEFAULT_DYNAMIC_GRID_HEADER_CARDS_SPACE_REM,
   DEFAULT_DYNAMIC_GRID_HEADER_SUBHEAD_SPACE_REM,
   normalizeDynamicGridCardBodyLineHeight,
   normalizeDynamicGridCardBulletLineHeight,
@@ -17,6 +18,7 @@ import {
   normalizeDynamicGridCardBulletSizeRem,
   normalizeDynamicGridCardBodySizeRem,
   normalizeDynamicGridCardPaddingRem,
+  normalizeDynamicGridCardTitleLineHeight,
   normalizeDynamicGridCardTitleSizeRem,
   normalizeDynamicGridHeaderSizeRem,
   normalizeDynamicGridSubheadSizeRem,
@@ -46,6 +48,9 @@ import {
   buildBillboardLeadCopyStyle,
   buildBillboardSubtitleStyle,
   buildBillboardTitleStyle,
+  normalizeIntroExtraLineHeight,
+  normalizeIntroExtraLineSizeRem,
+  normalizeIntroExtraLineSpaceBeforeRem,
   normalizeBillboardSubtitleDisplay,
   normalizeBillboardLeadCopySizeRem,
   normalizeBillboardSubtitleSizeRem,
@@ -941,6 +946,14 @@ function normalizePageContentMaxWidthPx(value, fallback = 980) {
   return Math.max(560, Math.min(1440, Math.round(numeric)));
 }
 
+export function normalizeBillboardBodyMaxWidthPx(value, fallback = 760) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return fallback;
+  }
+  return Math.max(320, Math.min(1200, Math.round(numeric / 10) * 10));
+}
+
 function normalizeColumnsStyle(value) {
   const token = String(value || '').trim().toLowerCase();
   return DYNAMIC_COLUMNS_STYLE_SET.has(token) ? token : 'retirement';
@@ -989,9 +1002,27 @@ function toIntroEmphasisClassName(value) {
   return normalizeSemanticTextColorClass(value);
 }
 
-function toIntroEmphasisStyle(value) {
-  const color = resolveIntroAccentColor(value);
-  return color ? { color } : undefined;
+function toIntroEmphasisStyle(settings = {}) {
+  const style = {};
+  const color = resolveIntroAccentColor(settings.extraLineTone);
+  if (color) {
+    style.color = color;
+  }
+  if (settings.extraLineSizeRem !== null && settings.extraLineSizeRem !== ''
+    && Number.isFinite(Number(settings.extraLineSizeRem))) {
+    style['--service-native-intro-emphasis-size'] = `${normalizeIntroExtraLineSizeRem(settings.extraLineSizeRem)}rem`;
+  }
+  if (settings.extraLineSpaceBeforeRem !== null && settings.extraLineSpaceBeforeRem !== ''
+    && Number.isFinite(Number(settings.extraLineSpaceBeforeRem))) {
+    style['--service-native-intro-emphasis-space-before'] = `${normalizeIntroExtraLineSpaceBeforeRem(settings.extraLineSpaceBeforeRem)}rem`;
+  }
+  if (settings.extraLineLineHeight !== null && settings.extraLineLineHeight !== ''
+    && Number.isFinite(Number(settings.extraLineLineHeight))) {
+    style['--service-native-intro-emphasis-line-height'] = String(
+      normalizeIntroExtraLineHeight(settings.extraLineLineHeight),
+    );
+  }
+  return Object.keys(style).length ? style : undefined;
 }
 
 export function buildDynamicIntroFromBlock(block) {
@@ -1006,8 +1037,11 @@ export function buildDynamicIntroFromBlock(block) {
   const body = String(settings.body || '').trim();
   const bodyColorClassName = normalizeHighlightClassName(settings.bodyColorClassName || '');
   const extraLine = String(settings.extraLine || '').trim();
-  const extraLineClassName = toIntroEmphasisClassName(settings.extraLineTone);
-  const extraLineStyle = toIntroEmphasisStyle(settings.extraLineTone);
+  const extraLineClassName = [
+    toIntroEmphasisClassName(settings.extraLineTone),
+    sanitizeClassName(settings.extraLineClassName || ''),
+  ].filter(Boolean).join(' ');
+  const extraLineStyle = toIntroEmphasisStyle(settings);
   const bgTone = normalizeSurfaceBgTone(settings.bgTone, 'sand');
   const textTone = normalizeSharedPanelTextTone(settings.textTone, 'dark');
   const justify = String(settings.justify || 'center').trim().toLowerCase();
@@ -1058,6 +1092,7 @@ export function buildDynamicIntroFromBlock(block) {
     justify: justify || 'center',
     lineSpacing,
     sectionClassName,
+    copyClassName: sanitizeClassName(settings.copyClassName || ''),
     actions,
   };
 }
@@ -1083,6 +1118,8 @@ export function buildDynamicBillboardFromBlock(block) {
   const bgTone = String(settings.bgTone || 'blue').trim().toLowerCase() || 'blue';
   const textTone = String(settings.textTone || 'white').trim().toLowerCase() || 'white';
   const justify = String(settings.justify || 'center').trim().toLowerCase() || 'center';
+  const bodyJustifyToken = String(settings.bodyJustify || settings.justify || 'center').trim().toLowerCase();
+  const bodyJustify = ['left', 'center', 'right'].includes(bodyJustifyToken) ? bodyJustifyToken : 'center';
   const lineSpacing = Number.isFinite(Number(settings.lineSpacing)) ? Number(settings.lineSpacing) : 1;
   const scrollReveal = normalizeBillboardScrollReveal(settings.scrollReveal);
   const titleFontFamily = normalizeBillboardTitleFontFamily(settings.titleFontFamily);
@@ -1108,6 +1145,16 @@ export function buildDynamicBillboardFromBlock(block) {
     && Number.isFinite(Number(settings.contentMaxWidthPx));
   const contentMaxWidthPx = hasContentWidthOverride
     ? normalizePageContentMaxWidthPx(settings.contentMaxWidthPx, 920)
+    : null;
+  const hasBodyMaxWidthOverride = String(settings.bodyMaxWidthPx ?? '').trim() !== ''
+    && Number.isFinite(Number(settings.bodyMaxWidthPx));
+  const bodyMaxWidthPx = hasBodyMaxWidthOverride
+    ? normalizeBillboardBodyMaxWidthPx(settings.bodyMaxWidthPx)
+    : null;
+  const hasHeaderGapOverride = String(settings.headerGapRem ?? '').trim() !== ''
+    && Number.isFinite(Number(settings.headerGapRem));
+  const headerGapRem = hasHeaderGapOverride
+    ? normalizePageContentSpaceRem(settings.headerGapRem, 1.15, 0, 4)
     : null;
   const hasPaddingTopOverride = String(settings.paddingTopRem ?? '').trim() !== ''
     && Number.isFinite(Number(settings.paddingTopRem));
@@ -1197,18 +1244,26 @@ export function buildDynamicBillboardFromBlock(block) {
     bgTone,
     textTone,
     justify,
+    bodyJustify,
     lineSpacing,
     scrollReveal,
     // Older snapshots may still carry headlineMaxWidthPx, but the title must
     // follow the billboard content rail instead of being trapped in a legacy
     // narrow column.
-    copyStyle: contentMaxWidthPx
-      ? { '--dynamic-billboard-copy-max-width': `${contentMaxWidthPx}px` }
+    copyStyle: contentMaxWidthPx || bodyMaxWidthPx
+      || headerGapRem !== null
+      ? {
+          ...(contentMaxWidthPx ? { '--dynamic-billboard-copy-max-width': `${contentMaxWidthPx}px` } : {}),
+          ...(bodyMaxWidthPx ? { '--dynamic-billboard-body-max-width': `${bodyMaxWidthPx}px` } : {}),
+          ...(headerGapRem !== null ? { '--dynamic-billboard-header-gap': `${headerGapRem}rem` } : {}),
+        }
       : undefined,
     copyClassName: sanitizeClassName(settings.copyClassName || '')
       || (scrollReveal === 'scale-up' ? 'fade-up fade-up-force-observe fade-up-repeat-observe billboard-scroll-reveal-scale-up' : ''),
     copyFadeRootMargin: scrollReveal === 'scale-up' ? '0px 0px -20% 0px' : '',
     contentMaxWidthPx,
+    bodyMaxWidthPx,
+    headerGapRem,
     paddingTopRem,
     paddingBottomRem,
     action: actions[0] || null,
@@ -2453,6 +2508,17 @@ export function buildDynamicGridFromBlock(block) {
   const presetId = resolveCardGridPresetId(block);
   const presetDefinition = resolveCardGridPresetDefinition(block);
   const sectionClassName = sanitizeClassName(settings.sectionClassName || '');
+  const isInsuranceCoverageGrid = sectionClassName.split(/\s+/).includes('insurance-native-coverage');
+  // Insurance coverage uses the minimal card skin, whose legacy hover rule
+  // disables transforms. Keep the old coverage motion for legacy snapshots
+  // until the new editor setting is explicitly saved.
+  const cardHoverScale = isInsuranceCoverageGrid
+    ? (
+      Object.prototype.hasOwnProperty.call(settings, 'cardHoverScale')
+        ? toBoolean(settings.cardHoverScale)
+        : true
+    )
+    : null;
   const presetToken = String(block?.presetId || settings.cardsPreset || '').trim().toLowerCase();
   const cardsPreset = presetToken === 'value-cards' || sectionClassName.split(/\s+/).includes('about-native-values')
     ? 'value-cards'
@@ -2506,7 +2572,9 @@ export function buildDynamicGridFromBlock(block) {
   const titleTone = normalizeGridToneToken(
     settings.titleTone ?? presetDefinition?.defaults?.titleTone,
   );
-  const bodyTone = getGridSafeToneForBg(settings.bodyTone, bgTone, 'super-grey');
+  const bodyTone = normalizeGridToneToken(
+    settings.bodyTone ?? presetDefinition?.defaults?.bodyTone,
+  );
   // Merged intro HTML has its own text-selection colors. Keep its unmarked
   // first block independent from the card-body swatch.
   const subheadTone = normalizeGridToneToken(
@@ -2514,6 +2582,12 @@ export function buildDynamicGridFromBlock(block) {
   );
   const cardPaddingRem = normalizeDynamicGridCardPaddingRem(settings.cardPaddingRem);
   const cardTitleSizeRem = normalizeDynamicGridCardTitleSizeRem(settings.cardTitleSizeRem);
+  const hasCardTitleLineHeight = settings.cardTitleLineHeight !== null
+    && settings.cardTitleLineHeight !== ''
+    && Number.isFinite(Number(settings.cardTitleLineHeight));
+  const cardTitleLineHeight = hasCardTitleLineHeight
+    ? normalizeDynamicGridCardTitleLineHeight(settings.cardTitleLineHeight)
+    : undefined;
   const cardBodySizeRem = normalizeDynamicGridCardBodySizeRem(settings.cardBodySizeRem);
   const cardBulletSize = normalizeDynamicGridCardBulletSize(settings.cardBulletSize);
   const cardBulletSizeRem = normalizeDynamicGridCardBulletSizeRem(
@@ -2527,6 +2601,10 @@ export function buildDynamicGridFromBlock(block) {
     && Number.isFinite(Number(settings.paddingBottomRem));
   const hasHeaderSubheadSpace = settings.headerSubheadSpaceRem !== null && settings.headerSubheadSpaceRem !== ''
     && Number.isFinite(Number(settings.headerSubheadSpaceRem));
+  const hasHeaderCardsSpace = settings.headerCardsSpaceRem !== null && settings.headerCardsSpaceRem !== ''
+    && Number.isFinite(Number(settings.headerCardsSpaceRem));
+  const hasHeaderWidth = settings.headerWidthPercent !== null && settings.headerWidthPercent !== ''
+    && Number.isFinite(Number(settings.headerWidthPercent));
   const paddingTopRem = hasPaddingTop
     ? normalizePageContentSpaceRem(settings.paddingTopRem, 3.8, 0, 8)
     : undefined;
@@ -2536,6 +2614,12 @@ export function buildDynamicGridFromBlock(block) {
   const headerSubheadSpaceRem = hasHeaderSubheadSpace
     ? normalizePageContentSpaceRem(settings.headerSubheadSpaceRem, DEFAULT_DYNAMIC_GRID_HEADER_SUBHEAD_SPACE_REM, 0, 4)
     : DEFAULT_DYNAMIC_GRID_HEADER_SUBHEAD_SPACE_REM;
+  const headerCardsSpaceRem = hasHeaderCardsSpace
+    ? normalizePageContentSpaceRem(settings.headerCardsSpaceRem, DEFAULT_DYNAMIC_GRID_HEADER_CARDS_SPACE_REM, 0, 4)
+    : DEFAULT_DYNAMIC_GRID_HEADER_CARDS_SPACE_REM;
+  const headerWidthPercent = hasHeaderWidth
+    ? normalizeDynamicGridHeaderWidthPercent(settings.headerWidthPercent)
+    : undefined;
   const hasSubheadSize = settings.subheadSizeRem !== null && settings.subheadSizeRem !== ''
     && Number.isFinite(Number(settings.subheadSizeRem));
   const subheadSizeRem = hasSubheadSize
@@ -2694,6 +2778,7 @@ export function buildDynamicGridFromBlock(block) {
     subheadTone,
     cardPaddingRem,
     cardTitleSizeRem,
+    cardTitleLineHeight,
     cardBodySizeRem,
     cardBulletSize,
     cardBulletSizeRem,
@@ -2702,8 +2787,12 @@ export function buildDynamicGridFromBlock(block) {
     paddingTopRem,
     paddingBottomRem,
     headerSubheadSpaceRem,
+    headerSubheadSpaceConfigured: hasHeaderSubheadSpace,
+    headerCardsSpaceRem,
+    headerWidthPercent,
     subheadSizeRem,
     headerSizeRem,
+    cardHoverScale,
     actions: sectionAction ? [sectionAction] : [],
     cards,
   };
@@ -2917,6 +3006,7 @@ export function buildDynamicCardChartFromBlock(block) {
 
   const settings = block.settings || {};
   const defaultColumnColors = ['atlantean', 'mango', 'melon', 'sandstone', 'super-grey', 'atlantean'];
+  const bgTone = normalizeSurfaceBgTone(settings.bgTone, 'white');
   const title = String(settings.title || '').trim();
   const titleClassName = normalizeHighlightClassName(settings.titleClassName || '');
   const titleHighlights = parseTextHighlights(settings.titleHighlightsJson);
@@ -2939,6 +3029,7 @@ export function buildDynamicCardChartFromBlock(block) {
 
   return {
     title,
+    bgTone,
     justify: String(settings.justify || '').trim() || 'center',
     titleClassName,
     titleHighlights,

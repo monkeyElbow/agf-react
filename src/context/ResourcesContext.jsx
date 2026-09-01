@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { resourceArticleFeatureCatalog } from '../data/resourceArticleFeatureCatalog';
 
 const STORAGE_KEY = 'agf-resources-admin-v1';
-const ResourcesContext = createContext(null);
+export const ResourcesContext = createContext(null);
 
 function normalizeArticle(article) {
   const normalized = normalizeArticleFields(article);

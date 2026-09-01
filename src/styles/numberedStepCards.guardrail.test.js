@@ -22,6 +22,8 @@ describe('numbered step-card vertical alignment guardrail', () => {
     expect(source).toContain(
       '.is-numbered-step-cards .service-native-card:not(:has(.service-native-action-row, .service-native-card-link-list, .service-native-card-bullet-list, .service-native-card-accordions)) .service-native-card-rich-body {',
     );
+    expect(source).toContain('@media (min-width: 721px) {');
+    expect(source).toContain('transform: translateY(0.42em);');
   });
 
   it('lets explicit card title colors beat alternating step accents', () => {

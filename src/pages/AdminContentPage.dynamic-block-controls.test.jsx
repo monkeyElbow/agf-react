@@ -742,9 +742,11 @@ describe('dynamic block control wiring', () => {
 
     const titleInput = screen.getByLabelText('Chart heading');
     const headingEditor = container.querySelector('.admin-color-text-editor.is-card-chart-heading');
+    expect(within(headingEditor).getByText('Core Color')).toBeTruthy();
     titleInput.focus();
     titleInput.setSelectionRange(0, 7);
     fireEvent.select(titleInput);
+    expect(within(headingEditor).getByText('Selected Color "Compare"')).toBeTruthy();
     fireEvent.click(within(headingEditor).getByRole('radio', { name: 'Mango' }));
 
     expect(container.querySelector('.admin-color-text-editor.is-card-chart-heading .admin-color-text-preview mark.is-mango')?.textContent)
@@ -767,6 +769,34 @@ describe('dynamic block control wiring', () => {
     expect(screen.getAllByRole('button', { name: 'Add comparison point' }).length).toBeGreaterThanOrEqual(2);
     expect(screen.getAllByLabelText('Comparison point 1').length).toBeGreaterThanOrEqual(2);
     expect(screen.getByLabelText('Chart width (px)')).toBeTruthy();
+  });
+
+  it('writes each Card Chart card swatch to that card setting', () => {
+    const block = getDynamicBlock('card_chart');
+    const onSettingChange = vi.fn();
+
+    render(<CardChartBlockEditor block={block} onSettingChange={onSettingChange} />);
+
+    fireEvent.click(
+      within(screen.getByRole('radiogroup', { name: 'Card 1 color' }))
+        .getByRole('radio', { name: 'Melon' }),
+    );
+
+    expect(onSettingChange).toHaveBeenCalledWith('card1Color', 'melon');
+  });
+
+  it('writes the Card Chart Page 1 background swatch to the block setting', () => {
+    const block = getDynamicBlock('card_chart');
+    const onSettingChange = vi.fn();
+
+    render(<CardChartBlockEditor block={block} onSettingChange={onSettingChange} />);
+
+    fireEvent.click(
+      within(screen.getByRole('radiogroup', { name: 'Chart background' }))
+        .getByRole('radio', { name: 'Blue' }),
+    );
+
+    expect(onSettingChange).toHaveBeenCalledWith('bgTone', 'blue');
   });
 
   it('keeps line 1 swatch application on the selected range even if the browser collapses focus before click', () => {
@@ -1682,6 +1712,11 @@ describe('dynamic block control wiring', () => {
 
     render(<GridBlockEditor block={block} onSettingChange={onSettingChange} />);
     onSettingChange.mockClear();
+
+    fireEvent.change(screen.getByRole('slider', { name: 'Card title line height' }), {
+      target: { value: '1.1' },
+    });
+    expect(onSettingChange).toHaveBeenCalledWith('cardTitleLineHeight', 1.1);
 
     fireEvent.click(screen.getByText('Card 1').closest('button'));
     fireEvent.click(screen.getByRole('button', { name: /^Title and body/ }));

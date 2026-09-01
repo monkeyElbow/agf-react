@@ -102,8 +102,8 @@ export default function CtaHudEditorPanel({
   const [hasLocalBgToneDraft, setHasLocalBgToneDraft] = useState(false);
   const resolvedBgTone = hasLocalBgToneDraft ? draftBgTone : externalBgTone;
   const headingColorLabel = hasTitleSelection
-    ? `Heading Color (selection: "${selectedTitlePreview}")`
-    : 'Heading Color';
+    ? `Selected Color "${selectedTitlePreview}"`
+    : 'Core Color';
   const autoTitleColorValue = resolveCtaHeadingAutoColor(resolvedBgTone);
   const previewTitleColorValue = String(titleColor || autoTitleColorValue);
   const activeTitleColorValue = hasTitleSelection

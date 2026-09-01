@@ -7,6 +7,9 @@ import { getVisibleDynamicBlocks } from './pageBlockRuntime';
 import { formatBlockDisplayName } from './blockDisplayName';
 
 const HUD_ID_OVERRIDES = {
+  jobs: {
+    label: 'Career Open Positions',
+  },
   value_cards: {
     label: 'Value Cards',
     icon: columnsHudIcon,

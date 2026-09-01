@@ -25,6 +25,7 @@ const BLOCK_ONLY_MANAGED_PAGE_PATHS = new Set([
   '/services/loans/loan-consultants',
   '/services/investments',
   '/about-us',
+  '/about-us/careers',
   '/services/planned-giving',
   '/services/planned-giving/charitable-gift-annuities',
   '/services/planned-giving/charitable-trusts',
@@ -52,7 +53,6 @@ const BLOCK_ONLY_MANAGED_PAGE_PATHS = new Set([
 
 const BLOCKLESS_MANAGED_PAGE_PATHS = new Set([
   // Functional and specialized native routes whose visible UI is owned outside admin blocks.
-  '/about-us/careers',
   '/forms',
   '/prospectus',
   '/search',

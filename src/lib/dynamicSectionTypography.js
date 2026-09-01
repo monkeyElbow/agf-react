@@ -1,4 +1,10 @@
 export const DEFAULT_INTRO_LINE_SPACING = 1.04;
+export const DEFAULT_INTRO_EXTRA_LINE_SIZE_REM = 1.7;
+export const DEFAULT_INTRO_EXTRA_LINE_SPACE_BEFORE_REM = 1;
+export const DEFAULT_INTRO_EXTRA_LINE_HEIGHT = 1.35;
+export const DEFAULT_CAREERS_EXTRA_LINE_SIZE_REM = 4.15;
+export const DEFAULT_CAREERS_EXTRA_LINE_SPACE_BEFORE_REM = 2.4;
+export const DEFAULT_CAREERS_EXTRA_LINE_HEIGHT = 0.94;
 export const DEFAULT_BILLBOARD_LINE_SPACING = 1;
 export const DEFAULT_BILLBOARD_TITLE_SIZE_REM = 3.4;
 export const DEFAULT_BILLBOARD_TITLE_FONT_WEIGHT = 800;
@@ -12,6 +18,45 @@ export function normalizeIntroLineSpacing(value, fallback = DEFAULT_INTRO_LINE_S
     return fallback;
   }
   return Math.max(0.85, Math.min(1.4, Number(numeric.toFixed(2))));
+}
+
+export function normalizeIntroExtraLineSizeRem(value, fallback = DEFAULT_INTRO_EXTRA_LINE_SIZE_REM) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return fallback;
+  }
+  return Math.max(1, Math.min(5, Number(numeric.toFixed(2))));
+}
+
+export function normalizeIntroExtraLineSpaceBeforeRem(value, fallback = DEFAULT_INTRO_EXTRA_LINE_SPACE_BEFORE_REM) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return fallback;
+  }
+  return Math.max(0, Math.min(4, Number(numeric.toFixed(2))));
+}
+
+export function normalizeIntroExtraLineHeight(value, fallback = DEFAULT_INTRO_EXTRA_LINE_HEIGHT) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return fallback;
+  }
+  return Math.max(0.8, Math.min(1.5, Number(numeric.toFixed(2))));
+}
+
+export function getIntroExtraLineDefaults(sectionClassName = '') {
+  const isCareersIntro = String(sectionClassName || '').split(/\s+/).includes('careers-native-top-intro');
+  return isCareersIntro
+    ? {
+        extraLineSizeRem: DEFAULT_CAREERS_EXTRA_LINE_SIZE_REM,
+        extraLineSpaceBeforeRem: DEFAULT_CAREERS_EXTRA_LINE_SPACE_BEFORE_REM,
+        extraLineLineHeight: DEFAULT_CAREERS_EXTRA_LINE_HEIGHT,
+      }
+    : {
+        extraLineSizeRem: DEFAULT_INTRO_EXTRA_LINE_SIZE_REM,
+        extraLineSpaceBeforeRem: DEFAULT_INTRO_EXTRA_LINE_SPACE_BEFORE_REM,
+        extraLineLineHeight: DEFAULT_INTRO_EXTRA_LINE_HEIGHT,
+      };
 }
 
 export function normalizeBillboardLineSpacing(value, fallback = DEFAULT_BILLBOARD_LINE_SPACING) {

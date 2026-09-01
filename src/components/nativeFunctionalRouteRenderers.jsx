@@ -320,7 +320,11 @@ function formatCareersPostedDate(value) {
 }
 
 export function isNativeCareersJobsSection(section) {
-  return String(section?.className || '').trim() === 'careers-native-jobs-list';
+  return String(section?.className || '')
+    .split(/\s+/)
+    .map((token) => token.trim())
+    .filter(Boolean)
+    .includes('careers-native-jobs-list');
 }
 
 export function buildCareersRouteSections({ pathname, sections, getVisibleJobs }) {

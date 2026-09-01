@@ -45,8 +45,18 @@ describe('native intro and billboard renderer guardrail', () => {
     expect(source).not.toContain('function normalizeBillboardLineSpacing(');
     expect(runtimeSource).toContain("} from './dynamicSectionTypography';");
     expect(runtimeSource).toContain('normalizeBillboardSubtitleSizeRem(settings.subtitleSizeRem)');
+    expect(runtimeSource).toContain('normalizeIntroExtraLineSizeRem(settings.extraLineSizeRem)');
+    expect(runtimeSource).toContain("'--service-native-intro-emphasis-size'");
+    expect(runtimeSource).toContain("'--service-native-intro-emphasis-space-before'");
+    expect(runtimeSource).toContain("'--service-native-intro-emphasis-line-height'");
     expect(runtimeSource).toContain('subtitleStyle: buildBillboardSubtitleStyle({');
     expect(runtimeSource).toContain('titleStyle: buildBillboardTitleStyle({');
+    expect(runtimeSource).toContain("const bodyJustifyToken = String(settings.bodyJustify || settings.justify || 'center').trim().toLowerCase();");
+    expect(runtimeSource).toContain("'--dynamic-billboard-body-max-width'");
+    expect(runtimeSource).toContain("'--dynamic-billboard-header-gap'");
+    expect(source).toContain('bodyJustify: normalizeHeroJustify(runtime.bodyJustify || \'center\')');
+    expect(source).toContain('is-dynamic-billboard-header-gap');
+    expect(source).toContain('is-body-justify-${sectionBodyJustifyToken}');
     expect(source).not.toContain('copyClassName: `is-justify-${normalizeHeroJustify(runtime.justify)}`');
     expect(source).not.toContain('function buildTestDynamicIntro(');
     expect(source).not.toContain('function buildTestDynamicBillboard(');
@@ -76,6 +86,8 @@ describe('native intro and billboard renderer guardrail', () => {
     expect(cssSource).toContain('.service-native-intro.dynamic-intro.is-text-blue .native-info-rich-html a:not(.service-native-btn),');
     expect(cssSource).toContain('.native-info-rich-html .is-atlantean {');
     expect(cssSource).toContain('.native-info-rich-html .is-white {');
+    expect(cssSource).toContain('margin-top: var(--service-native-intro-emphasis-space-before, 1rem);');
+    expect(cssSource).toContain('line-height: var(--service-native-intro-emphasis-line-height, 0.94);');
     expect(cssSource).toContain('.service-native-section.test-dynamic-billboard .native-info-section-copy > h2.is-sandstone,');
     expect(cssSource).toContain('.service-native-section.test-dynamic-billboard .native-info-section-copy > h2 mark.is-sandstone {');
   });

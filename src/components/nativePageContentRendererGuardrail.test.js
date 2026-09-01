@@ -157,7 +157,7 @@ describe('native page content renderer guardrail', () => {
     expect(cssSource).toContain('.retirement-403b-native-benefits-cards .service-native-card > div:first-child {');
     expect(cssSource).toContain('align-items: flex-start;');
     expect(cssSource).toContain('.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).retirement-403b-native-benefits-cards .service-native-card h3 {');
-    expect(cssSource).toContain('--dynamic-grid-card-title-size: clamp(1.68rem, 2.45vw, 2.14rem);');
+    expect(cssSource).toContain('font-size: var(--dynamic-grid-card-title-size, clamp(1.68rem, 2.45vw, 2.14rem));');
     expect(cssSource).toContain('min-height: 0 !important;');
     expect(cssSource).toContain('align-items: flex-start !important;');
     expect(cssSource).toContain('line-height: 0.9 !important;');
@@ -166,8 +166,7 @@ describe('native page content renderer guardrail', () => {
     expect(cssSource).toContain('padding-bottom: clamp(6.9rem, 10.6vw, 9rem);');
     expect(cssSource).toContain('.service-native-section.native-dynamic-grid.retirement-403b-native-enroll .service-native-card h3,');
     expect(cssSource).toContain('.service-native-section.test-dynamic-grid.retirement-403b-native-enroll .service-native-card h3 {');
-    expect(cssSource).toContain('--dynamic-grid-card-title-size: clamp(1.68rem, 2.45vw, 2.14rem);');
-    expect(cssSource).toContain('font-size: clamp(1.68rem, 2.45vw, 2.14rem) !important;');
+    expect(cssSource).toContain('font-size: var(--dynamic-grid-card-title-size, clamp(1.68rem, 2.45vw, 2.14rem)) !important;');
     expect(cssSource).toContain('line-height: 0.9 !important;');
     expect(cssSource).toContain('letter-spacing: -0.035em;');
   });

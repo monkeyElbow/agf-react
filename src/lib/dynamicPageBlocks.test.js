@@ -28,6 +28,7 @@ import {
   heroAnimationClassForLine,
   isPdfLinkHref,
   normalizeUniversalOutlineButtonClassName,
+  normalizeBillboardBodyMaxWidthPx,
   shouldUseUniversalOutlineButtonLink,
 } from './dynamicPageBlocks';
 import { serializeLinkValue } from './linkValue';
@@ -660,6 +661,9 @@ describe('buildDynamicIntroFromBlock', () => {
         bodyColorClassName: 'white',
         extraLine: 'A little more confidence.',
         extraLineTone: 'white',
+        extraLineSizeRem: 2.25,
+        extraLineSpaceBeforeRem: 1.75,
+        extraLineLineHeight: 1.1,
         bgTone: 'sand',
         textTone: 'dark',
         justify: 'left',
@@ -681,6 +685,12 @@ describe('buildDynamicIntroFromBlock', () => {
       bodyColorClassName: 'is-white',
       extraLine: 'A little more confidence.',
       extraLineClassName: 'is-white',
+      extraLineStyle: {
+        color: 'var(--ag-color-white)',
+        '--service-native-intro-emphasis-size': '2.25rem',
+        '--service-native-intro-emphasis-space-before': '1.75rem',
+        '--service-native-intro-emphasis-line-height': '1.1',
+      },
       bgTone: 'sand',
       textTone: 'dark',
       justify: 'left',
@@ -754,6 +764,7 @@ describe('buildDynamicBillboardFromBlock', () => {
       bgTone: 'blue',
       textTone: 'white',
       justify: 'right',
+      bodyJustify: 'right',
       copyClassName: '',
       copyFadeRootMargin: '',
       copyStyle: { '--dynamic-billboard-copy-max-width': '1100px' },
@@ -813,6 +824,36 @@ describe('buildDynamicBillboardFromBlock', () => {
     expect(runtime?.contentMaxWidthPx).toBe(1216);
     expect(runtime?.copyStyle).toEqual({
       '--dynamic-billboard-copy-max-width': '1216px',
+    });
+  });
+
+  it('keeps body alignment and body width independent from the title alignment', () => {
+    expect(normalizeBillboardBodyMaxWidthPx(315)).toBe(320);
+    expect(normalizeBillboardBodyMaxWidthPx(645)).toBe(650);
+    expect(normalizeBillboardBodyMaxWidthPx(1210)).toBe(1200);
+
+    const runtime = buildDynamicBillboardFromBlock({
+      kind: 'billboard',
+      mode: 'dynamic',
+      settings: {
+        title: 'Centered title',
+        bodyHtml: '<p>Left aligned body.</p>',
+        justify: 'center',
+        bodyJustify: 'left',
+        bodyMaxWidthPx: 645,
+        headerGapRem: 1.17,
+      },
+    });
+
+    expect(runtime).toMatchObject({
+      justify: 'center',
+      bodyJustify: 'left',
+      bodyMaxWidthPx: 650,
+      copyStyle: {
+        '--dynamic-billboard-body-max-width': '650px',
+        '--dynamic-billboard-header-gap': '1.17rem',
+      },
+      headerGapRem: 1.17,
     });
   });
 
@@ -1936,6 +1977,33 @@ describe('buildDynamicRatesFromBlock', () => {
 });
 
 describe('buildDynamicGridFromBlock', () => {
+  it('restores Insurance coverage hover motion while allowing the editor to turn it off', () => {
+    const legacyRuntime = buildDynamicGridFromBlock({
+      id: 'insurance-coverage',
+      kind: 'card_grid',
+      mode: 'dynamic',
+      settings: {
+        sectionClassName: 'insurance-native-coverage',
+        cardStyle: 'none',
+        card1Title: 'Property & Casualty',
+      },
+    });
+    const disabledRuntime = buildDynamicGridFromBlock({
+      id: 'insurance-coverage',
+      kind: 'card_grid',
+      mode: 'dynamic',
+      settings: {
+        sectionClassName: 'insurance-native-coverage',
+        cardStyle: 'none',
+        cardHoverScale: false,
+        card1Title: 'Property & Casualty',
+      },
+    });
+
+    expect(legacyRuntime.cardHoverScale).toBe(true);
+    expect(disabledRuntime.cardHoverScale).toBe(false);
+  });
+
   it('keeps card data intact when the configured visible count is reduced', () => {
     const runtime = buildDynamicGridFromBlock({
       id: 'grid',
@@ -2035,6 +2103,9 @@ describe('buildDynamicGridFromBlock', () => {
         bodyTone: 'mango',
         headerSizeRem: 3.1,
         subheadSizeRem: 1.6,
+        headerSubheadSpaceRem: 4,
+        headerCardsSpaceRem: 2.25,
+        headerWidthPercent: 72,
         card1Title: 'First step',
         card1TitleClassName: 'is-atlantean',
         card1Body: 'Follow the first instruction.',
@@ -2047,7 +2118,9 @@ describe('buildDynamicGridFromBlock', () => {
       bodyTone: 'mango',
       headerSizeRem: 3.1,
       subheadSizeRem: 1.6,
-      headerSubheadSpaceRem: 0.7,
+      headerSubheadSpaceRem: 4,
+      headerCardsSpaceRem: 2.25,
+      headerWidthPercent: 72,
       bodyHtml: '<h3><span class="is-text-large">Start here.</span></h3>',
       subheadTone: 'super-grey',
     }));
@@ -2297,6 +2370,7 @@ describe('buildDynamicGridFromBlock', () => {
         bodyTone: 'white',
         cardPaddingRem: 2.2,
         cardTitleSizeRem: 1.5,
+        cardTitleLineHeight: 1.1,
         cardBodySizeRem: 1.2,
         cardBulletSize: 'large',
         cardBulletSizeRem: 1.72,
@@ -2329,6 +2403,7 @@ describe('buildDynamicGridFromBlock', () => {
       bodyTone: 'white',
       cardPaddingRem: 2.2,
       cardTitleSizeRem: 1.5,
+      cardTitleLineHeight: 1.1,
       cardBodySizeRem: 1.2,
       cardBulletSize: 'large',
       cardBulletSizeRem: 1.72,
@@ -2458,7 +2533,7 @@ describe('buildDynamicGridFromBlock', () => {
     });
 
     expect(runtime?.titleTone).toBe('white');
-    expect(runtime?.bodyTone).toBe('super-grey');
+    expect(runtime?.bodyTone).toBe('white');
     expect(runtime?.cardStyle).toBe('card2');
     expect(runtime?.cards).toEqual([
       expect.objectContaining({
@@ -2571,7 +2646,7 @@ describe('buildDynamicGridFromBlock', () => {
     ]);
   });
 
-  it('preserves authored card title color when the grid background is dark', () => {
+  it('preserves authored card title and body colors when the grid background is dark', () => {
     const runtime = buildDynamicGridFromBlock({
       id: 'grid',
       kind: 'card_grid',
@@ -2585,7 +2660,7 @@ describe('buildDynamicGridFromBlock', () => {
     });
 
     expect(runtime?.titleTone).toBe('super-grey');
-    expect(runtime?.bodyTone).toBe('white');
+    expect(runtime?.bodyTone).toBe('super-grey');
     expect(runtime?.cardStyle).toBe('card1');
   });
 });
@@ -2808,6 +2883,27 @@ describe('buildDynamicTestimonialsFromBlock', () => {
 });
 
 describe('buildDynamicCardChartFromBlock', () => {
+  it('passes each card color setting through to the shared chart columns', () => {
+    const runtime = buildDynamicCardChartFromBlock({
+      id: 'comparison_table',
+      kind: 'card_chart',
+      mode: 'dynamic',
+      settings: {
+        cardCount: '2',
+        bgTone: 'blue',
+        card1Title: 'First option',
+        card1Color: 'melon',
+        card1Bullets: 'First point',
+        card2Title: 'Second option',
+        card2Color: 'sandstone',
+        card2Bullets: 'Second point',
+      },
+    });
+
+    expect(runtime.bgTone).toBe('blue');
+    expect(runtime.table.columnTones).toEqual(['melon', 'sandstone']);
+  });
+
   it('normalizes reusable card titles and newline bullets into the shared chart runtime', () => {
     const runtime = buildDynamicCardChartFromBlock({
       id: 'comparison_table',

@@ -34,6 +34,11 @@ export function getPageContentEditorHtml(settings = {}) {
     return bodyHtml;
   }
 
+  const fineprintHtml = pageContentLinesToHtml(settings.fineprint);
+  if (fineprintHtml) {
+    return fineprintHtml;
+  }
+
   const addressTitle = String(settings.addressTitle || '').trim();
   const addressLines = pageContentLinesToHtml(settings.addressLines);
   return [
@@ -55,5 +60,10 @@ export function getPageContentEditorField(settings = {}) {
 export function hasLegacyPageContentSource(settings = {}) {
   return !hasMeaningfulPageContentHtml(settings.html)
     && !hasMeaningfulPageContentHtml(settings.bodyHtml)
-    && (String(settings.body || '').trim() || String(settings.addressTitle || '').trim() || String(settings.addressLines || '').trim());
+    && (
+      String(settings.body || '').trim()
+      || String(settings.fineprint || '').trim()
+      || String(settings.addressTitle || '').trim()
+      || String(settings.addressLines || '').trim()
+    );
 }

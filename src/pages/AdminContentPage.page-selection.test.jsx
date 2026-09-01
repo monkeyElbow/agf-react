@@ -256,7 +256,7 @@ describe('AdminContentPage page selection', () => {
     expect(container.querySelector('.admin-page-save-bar-context span')?.textContent).toBe('/services/investments');
   });
 
-  it('keeps blockless functional routes out of the editable page picker', async () => {
+  it('keeps genuinely blockless functional routes out of the editable page picker', async () => {
     render(
       <MemoryRouter initialEntries={['/admin/content?page=/services/loans']}>
         <AdminContentPage />
@@ -268,7 +268,7 @@ describe('AdminContentPage page selection', () => {
 
     expect(optionValues).toContain('/services/loans');
     expect(optionValues).toContain('/services/investments');
-    expect(optionValues).not.toContain('/about-us/careers');
+    expect(optionValues).toContain('/about-us/careers');
     expect(optionValues).not.toContain('/forms');
     expect(optionValues).not.toContain('/prospectus');
     expect(optionValues).not.toContain('/sitemap');

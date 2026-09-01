@@ -1643,9 +1643,9 @@ export default function LoansPage({ sectionsOnly = false }) {
                 </p>
               ) : null}
               {visionFuelBodyHtml ? (
-                <SafeRichText as="div" className="native-info-rich-html" html={visionFuelBodyHtml} />
+                <SafeRichText as="div" className={`native-info-rich-html is-body-justify-${resolvedVisionFuel?.bodyJustify || resolvedVisionFuel?.justify || 'center'}${resolvedVisionFuel?.headerGapRem !== null && resolvedVisionFuel?.headerGapRem !== undefined ? ' is-dynamic-billboard-header-gap' : ''}`} html={visionFuelBodyHtml} />
               ) : visionFuelBody ? (
-                <div className="native-info-rich-html">
+                <div className={`native-info-rich-html is-body-justify-${resolvedVisionFuel?.bodyJustify || resolvedVisionFuel?.justify || 'center'}${resolvedVisionFuel?.headerGapRem !== null && resolvedVisionFuel?.headerGapRem !== undefined ? ' is-dynamic-billboard-header-gap' : ''}`}>
                   <p>{visionFuelBody}</p>
                 </div>
               ) : null}

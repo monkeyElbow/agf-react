@@ -971,6 +971,7 @@ function buildNativeIntroConfig(block, { includeTestClassName = false } = {}) {
     bodyHtml: normalizeHtmlContent(runtime.bodyHtml),
     bodyColorClassName: runtime.bodyColorClassName || '',
     body: runtime.body ? [runtime.body] : [],
+    copyClassName: runtime.copyClassName || '',
     emphasis: runtime.extraLine || null,
     emphasisClassName: runtime.extraLine ? (runtime.extraLineClassName || '') : '',
     emphasisStyle: runtime.extraLineStyle || undefined,
@@ -1064,9 +1065,16 @@ function buildNativeBillboardSection(block, { includeTestClassName = false } = {
     subtitleClassName: runtime.subtitleClassName || undefined,
     subtitleStyle: runtime.subtitleStyle || undefined,
     html: normalizeHtmlContent(runtime.bodyHtml),
-    htmlClassName: [runtime.bodyColorClassName, runtime.bodyHtmlStyle ? 'is-dynamic-billboard-lead-copy-sized' : ''].filter(Boolean).join(' '),
+    htmlClassName: [
+      runtime.bodyColorClassName,
+      runtime.bodyHtmlStyle ? 'is-dynamic-billboard-lead-copy-sized' : '',
+      runtime.bodyJustify ? `is-body-justify-${runtime.bodyJustify}` : '',
+      runtime.headerGapRem !== null ? 'is-dynamic-billboard-header-gap' : '',
+    ].filter(Boolean).join(' '),
     htmlStyle: runtime.bodyHtmlStyle || undefined,
     body: runtime.body ? [runtime.body] : [],
+    bodyJustify: normalizeHeroJustify(runtime.bodyJustify || 'center'),
+    headerGapRem: runtime.headerGapRem,
     fineprint: runtime.fineprint || undefined,
     fineprintDisclosureId: runtime.fineprintDisclosureId || undefined,
     justify: normalizeHeroJustify(runtime.justify),
@@ -1242,7 +1250,7 @@ function buildDynamicCardChartSection(block, pathname) {
     blockId,
     hideTitle: !runtime.title,
     anchorId: runtime.anchorId || undefined,
-    className: `${pathname === '/test' ? 'test-dynamic-card-chart' : 'native-dynamic-card-chart'}${runtime.sectionClassName ? ` ${runtime.sectionClassName}` : ''}`,
+    className: `${pathname === '/test' ? 'test-dynamic-card-chart' : 'native-dynamic-card-chart'}${runtime.sectionClassName ? ` ${runtime.sectionClassName}` : ''} is-bg-${runtime.bgTone}`,
     fullBleed: Boolean(runtime.fullBleed),
     title: runtime.title,
     justify,
@@ -1306,6 +1314,7 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
     subheadTone,
     cardPaddingRem,
     cardTitleSizeRem,
+    cardTitleLineHeight,
     cardBodySizeRem,
     cardBulletSize,
     cardBulletSizeRem,
@@ -1314,8 +1323,11 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
     paddingTopRem,
     paddingBottomRem,
     headerSubheadSpaceRem,
+    headerCardsSpaceRem,
+    headerWidthPercent,
     subheadSizeRem,
     headerSizeRem,
+    cardHoverScale,
     hasMergedIntro,
     actions,
     cards: runtimeCards,
@@ -1440,10 +1452,19 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
       ...(Number.isFinite(Number(paddingBottomRem)) ? { paddingBottom: `${paddingBottomRem}rem` } : {}),
       '--dynamic-grid-card-padding': `${cardPaddingRem}rem`,
       '--dynamic-grid-card-title-size': `${cardTitleSizeRem}rem`,
+      ...(Number.isFinite(Number(cardTitleLineHeight))
+        ? { '--dynamic-grid-card-title-line-height': String(cardTitleLineHeight) }
+        : {}),
       '--dynamic-grid-card-body-size': `${cardBodySizeRem}rem`,
       '--dynamic-grid-card-body-line-height': String(cardBodyLineHeight),
       ...(Number.isFinite(Number(headerSizeRem))
         ? { '--dynamic-grid-header-size': `${headerSizeRem}rem` }
+        : {}),
+      ...(Number.isFinite(Number(headerWidthPercent))
+        ? { '--dynamic-grid-header-width': `${headerWidthPercent}%` }
+        : {}),
+      ...(Number.isFinite(Number(headerCardsSpaceRem))
+        ? { '--dynamic-grid-header-cards-space': `${headerCardsSpaceRem}rem` }
         : {}),
       ...(hasControlledBulletTypography
         ? {
@@ -1456,7 +1477,7 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
           }
         : {}),
     },
-    className: `${sectionClassBase}${sectionClassName ? ` ${sectionClassName}` : ''}${numberedStepCardsClassName ? ` ${numberedStepCardsClassName}` : ''}${isPlannedGivingBulletGrid ? ' is-planned-giving-bullet-grid' : ''}${hasControlledBulletTypography ? ' is-card-grid-bullet-controlled' : ''}${Number.isFinite(Number(subheadSizeRem)) ? ' is-subhead-sized' : ''} is-bg-${bgTone} is-width-${contentWidth} is-title-${titleTone} is-body-${bodyTone} is-subhead-${subheadTone} ${presetRuntimeClassName} is-card-grid-style-${cardStyle}${cardStyle === 'none' ? ' is-card-none' : ''}`,
+    className: `${sectionClassBase}${sectionClassName ? ` ${sectionClassName}` : ''}${numberedStepCardsClassName ? ` ${numberedStepCardsClassName}` : ''}${isPlannedGivingBulletGrid ? ' is-planned-giving-bullet-grid' : ''}${hasControlledBulletTypography ? ' is-card-grid-bullet-controlled' : ''}${Number.isFinite(Number(cardTitleLineHeight)) ? ' is-card-title-line-height-controlled' : ''}${Number.isFinite(Number(subheadSizeRem)) ? ' is-subhead-sized' : ''}${cardHoverScale === true ? ' is-card-hover-scale' : ''}${cardHoverScale === false ? ' is-card-hover-scale-disabled' : ''} is-bg-${bgTone} is-width-${contentWidth} is-title-${titleTone} is-body-${bodyTone} is-subhead-${subheadTone} ${presetRuntimeClassName} is-card-grid-style-${cardStyle}${cardStyle === 'none' ? ' is-card-none' : ''}`,
   };
 }
 
@@ -6387,6 +6408,9 @@ export default function NativeContentPage({ page }) {
           )
           && !showFrontHud;
         const isDynamicBillboardSection = sectionClassName.includes('dynamic-billboard');
+        const sectionBodyJustifyToken = isDynamicBillboardSection
+          ? normalizeHeroJustify(section.bodyJustify || 'center')
+          : '';
         const isDynamicCtaSection = sectionClassName.includes('dynamic-cta');
         const isDynamicPageContentSection = sectionClassName.includes('dynamic-page-content');
         const isDynamicRequestSection = sectionClassName.includes('native-dynamic-request');
@@ -6944,11 +6968,24 @@ export default function NativeContentPage({ page }) {
                         : renderTextWithStrong(section.leadLine)}
                     </p>
                   ) : null}
-                  {(section.body || []).map((paragraph) => <p key={paragraph}>{renderTextWithStrong(paragraph)}</p>)}
+                  {(section.body || []).map((paragraph) => (
+                    <p
+                      key={paragraph}
+                      className={isDynamicBillboardSection
+                        ? [
+                            'billboard-body-copy',
+                            sectionBodyJustifyToken ? `is-body-justify-${sectionBodyJustifyToken}` : '',
+                            section.headerGapRem !== null && section.headerGapRem !== undefined ? 'is-dynamic-billboard-header-gap' : '',
+                          ].filter(Boolean).join(' ')
+                        : undefined}
+                    >
+                      {renderTextWithStrong(paragraph)}
+                    </p>
+                  ))}
                   {sectionHtml ? (
                     <SafeRichText
                       as="div"
-                      className={`native-info-rich-html${section.htmlClassName ? ` ${section.htmlClassName}` : ''}${(showBillboardSectionHud || showPageContentSectionHud) && allowOnPageClickEdit ? ' admin-front-hud-click-edit-target' : ''}`}
+                      className={`native-info-rich-html${section.htmlClassName ? ` ${section.htmlClassName}` : ''}${sectionBodyJustifyToken ? ` is-body-justify-${sectionBodyJustifyToken}` : ''}${(showBillboardSectionHud || showPageContentSectionHud) && allowOnPageClickEdit ? ' admin-front-hud-click-edit-target' : ''}`}
                       html={sectionHtml}
                       style={section.htmlStyle || undefined}
                       onClick={(showBillboardSectionHud || showPageContentSectionHud) && allowOnPageClickEdit

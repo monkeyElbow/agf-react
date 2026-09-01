@@ -13,6 +13,12 @@ import { normalizeBillboardLeadCopySizeRem } from '../lib/dynamicSectionTypograp
 export const BILLBOARD_WIDTH_MIN_PX = 560;
 export const BILLBOARD_WIDTH_MAX_PX = 1440;
 export const BILLBOARD_WIDTH_STEP_PX = 10;
+export const BILLBOARD_BODY_WIDTH_MIN_PX = 320;
+export const BILLBOARD_BODY_WIDTH_MAX_PX = 1200;
+export const BILLBOARD_BODY_WIDTH_STEP_PX = 10;
+export const BILLBOARD_HEADER_GAP_MIN_REM = 0;
+export const BILLBOARD_HEADER_GAP_MAX_REM = 4;
+export const BILLBOARD_HEADER_GAP_STEP_REM = 0.05;
 export const BILLBOARD_PADDING_MIN_REM = 0;
 export const BILLBOARD_PADDING_MAX_REM = 8;
 export const BILLBOARD_PADDING_STEP_REM = 0.25;
@@ -56,7 +62,7 @@ function formatSelectionLabel(text) {
   if (!value) {
     return 'Core Color';
   }
-  return `Selection Color "${value.length > 28 ? `${value.slice(0, 25)}...` : value}"`;
+  return `Selected Color "${value.length > 28 ? `${value.slice(0, 25)}...` : value}"`;
 }
 
 function isOutlineButtonStyle(style) {
@@ -81,6 +87,30 @@ export function normalizeBillboardWidth(value) {
   }
   const clamped = Math.min(BILLBOARD_WIDTH_MAX_PX, Math.max(BILLBOARD_WIDTH_MIN_PX, numericValue));
   return Math.round(clamped / BILLBOARD_WIDTH_STEP_PX) * BILLBOARD_WIDTH_STEP_PX;
+}
+
+export function normalizeBillboardBodyWidth(value) {
+  if (value == null || String(value).trim() === '') {
+    return null;
+  }
+  const numericValue = Number(value);
+  if (!Number.isFinite(numericValue)) {
+    return null;
+  }
+  const clamped = Math.min(BILLBOARD_BODY_WIDTH_MAX_PX, Math.max(BILLBOARD_BODY_WIDTH_MIN_PX, numericValue));
+  return Math.round(clamped / BILLBOARD_BODY_WIDTH_STEP_PX) * BILLBOARD_BODY_WIDTH_STEP_PX;
+}
+
+export function normalizeBillboardHeaderGap(value) {
+  if (value == null || String(value).trim() === '') {
+    return null;
+  }
+  const numericValue = Number(value);
+  if (!Number.isFinite(numericValue)) {
+    return null;
+  }
+  const clamped = Math.min(BILLBOARD_HEADER_GAP_MAX_REM, Math.max(BILLBOARD_HEADER_GAP_MIN_REM, numericValue));
+  return Number((Math.round(clamped / BILLBOARD_HEADER_GAP_STEP_REM) * BILLBOARD_HEADER_GAP_STEP_REM).toFixed(2));
 }
 
 export function normalizeBillboardPadding(value) {
@@ -138,10 +168,10 @@ function BillboardSegment({ label, options = [], value, onChange, className = ''
   );
 }
 
-export function BillboardSlider({ label, value, min, max, step, displayValue, onChange, ariaLabel = label }) {
+export function BillboardSlider({ label, value, min, max, step, displayValue, onChange, ariaLabel = label, className = '' }) {
   const safeValue = normalizeSliderValue(value, min, min, max, step);
   return (
-    <label className="admin-front-hud-range admin-billboard-editor-slider">
+    <label className={`admin-front-hud-range admin-billboard-editor-slider${className ? ` ${className}` : ''}`}>
       <span>{label}</span>
       <input
         type="range"
@@ -192,16 +222,25 @@ function BillboardPanel({ id, title, description, children, className = '', head
   );
 }
 
-function BillboardWidthControl({ label, value, onChange, autoLabel }) {
-  const normalizedValue = normalizeBillboardWidth(value);
+function BillboardWidthControl({
+  label,
+  value,
+  onChange,
+  autoLabel,
+  normalizeValue = normalizeBillboardWidth,
+  min = BILLBOARD_WIDTH_MIN_PX,
+  max = BILLBOARD_WIDTH_MAX_PX,
+  step = BILLBOARD_WIDTH_STEP_PX,
+}) {
+  const normalizedValue = normalizeValue(value);
   const isAuto = normalizedValue == null;
   const handleSliderChange = useCallback((nextValue) => {
-    const nextWidth = normalizeBillboardWidth(nextValue);
+    const nextWidth = normalizeValue(nextValue);
     if (nextWidth == null || nextWidth === normalizedValue) {
       return;
     }
     onChange?.(nextWidth);
-  }, [normalizedValue, onChange]);
+  }, [normalizedValue, normalizeValue, onChange]);
 
   return (
     <div className="admin-billboard-editor-width-control">
@@ -209,7 +248,7 @@ function BillboardWidthControl({ label, value, onChange, autoLabel }) {
         <span>{label}</span>
         <strong>{isAuto ? autoLabel : `${normalizedValue}px`}</strong>
       </div>
-      <div className="admin-billboard-editor-width-row">
+      <div className="admin-billboard-editor-width-row admin-front-hud-range">
         <button
           type="button"
           className={`admin-front-hud-segment-btn admin-billboard-editor-auto${isAuto ? ' is-active' : ''}`}
@@ -224,10 +263,10 @@ function BillboardWidthControl({ label, value, onChange, autoLabel }) {
         </button>
         <input
           type="range"
-          min={BILLBOARD_WIDTH_MIN_PX}
-          max={BILLBOARD_WIDTH_MAX_PX}
-          step={BILLBOARD_WIDTH_STEP_PX}
-          value={normalizedValue ?? BILLBOARD_WIDTH_MIN_PX}
+          min={min}
+          max={max}
+          step={step}
+          value={normalizedValue ?? min}
           aria-label={label}
           onChange={(event) => handleSliderChange(event.target.value)}
         />
@@ -261,6 +300,13 @@ export default function BillboardHudEditorPanel({
   bodyHtml,
   onBodyHtmlChange,
   onBodyHtmlBlur,
+  bodyJustify,
+  onBodyJustifyChange,
+  bodyJustifyOptions = [],
+  bodyMaxWidthPx,
+  onBodyMaxWidthPxChange,
+  headerGapRem,
+  onHeaderGapRemChange,
   leadCopySizeRem,
   onLeadCopySizeRemChange,
   bodyColorClassName,
@@ -427,7 +473,7 @@ export default function BillboardHudEditorPanel({
             <div className="admin-billboard-hud-heading-settings">
               <div className="admin-billboard-hud-heading-settings-box">
                 <BillboardSegment label="Title font" options={titleFontOptions} value={titleFontFamily} onChange={onTitleFontFamilyChange} />
-                <BillboardSegment label="Alignment" options={justifyOptions} value={justify} onChange={onJustifyChange} />
+                <BillboardSegment label="Title alignment" options={justifyOptions} value={justify} onChange={onJustifyChange} />
                 <BillboardSegment
                   label="Title weight"
                   options={titleWeightOptions.map((weight) => ({ value: Number(weight), label: String(weight) }))}
@@ -437,6 +483,16 @@ export default function BillboardHudEditorPanel({
               </div>
               <div className="admin-billboard-hud-heading-settings-box">
                 <BillboardSlider label="Leading" ariaLabel="Title line height" value={lineSpacing} min={0.85} max={1.25} step={0.01} displayValue={Number(lineSpacing || 1).toFixed(2)} onChange={onLineSpacingChange} />
+                <BillboardSlider
+                  label="Header gap"
+                  ariaLabel="Header gap"
+                  value={normalizeBillboardHeaderGap(headerGapRem) ?? 1.15}
+                  min={BILLBOARD_HEADER_GAP_MIN_REM}
+                  max={BILLBOARD_HEADER_GAP_MAX_REM}
+                  step={BILLBOARD_HEADER_GAP_STEP_REM}
+                  displayValue={`${(normalizeBillboardHeaderGap(headerGapRem) ?? 1.15).toFixed(2)}rem`}
+                  onChange={onHeaderGapRemChange}
+                />
                 <BillboardSlider label="Tracking" ariaLabel="Title tracking" value={titleLetterSpacingEm} min={-0.12} max={0.04} step={0.005} displayValue={`${Number(titleLetterSpacingEm || 0).toFixed(3)}em`} onChange={onTitleLetterSpacingEmChange} />
               </div>
             </div>
@@ -446,37 +502,54 @@ export default function BillboardHudEditorPanel({
         {activeSection === 'copy' ? (
           <BillboardPanel id="02" title="Copy" showHeader={false}>
             <div className="admin-billboard-editor-copy-grid">
-              <BillboardField label="Lead copy">
-                <textarea aria-label="Lead copy" value={String(body || '')} onChange={(event) => onBodyChange?.(event.target.value)} onBlur={() => onBodyBlur?.()} rows={5} />
-                <small>Plain text shown before the rich body.</small>
-              </BillboardField>
-              <BillboardSlider
-                label="Lead copy size"
-                ariaLabel="Lead copy size"
-                value={normalizeBillboardLeadCopySizeRem(leadCopySizeRem)}
-                min={1}
-                max={4}
-                step={0.05}
-                displayValue={`${normalizeBillboardLeadCopySizeRem(leadCopySizeRem).toFixed(2)}rem`}
-                onChange={onLeadCopySizeRemChange}
-              />
-              <BillboardControlField label="Body HTML">
-                <div className={`admin-billboard-hud-copy-editor is-bg-${String(bgTone || 'white').trim() || 'white'} ${String(bodyColorClassName || '').trim()}`}>
-                  <AdminHtmlEditor
-                    ariaLabel="Body HTML"
-                    value={String(bodyHtml || '')}
-                    onChange={(nextValue) => onBodyHtmlChange?.(nextValue)}
-                    onBlur={() => onBodyHtmlBlur?.()}
-                    baseColorClassName={bodyColorClassName}
-                    onBaseColorChange={onBodyColorChange}
-                    compact
-                    showFooterToggle
-                    paletteVariant="hud"
-                  />
-                </div>
-                <small>Rich content rendered after the lead copy.</small>
-              </BillboardControlField>
+              <div className="admin-billboard-editor-copy-fields">
+                <BillboardField label="Lead copy">
+                  <textarea aria-label="Lead copy" value={String(body || '')} onChange={(event) => onBodyChange?.(event.target.value)} onBlur={() => onBodyBlur?.()} rows={5} />
+                  <small>Plain text shown before the rich body.</small>
+                </BillboardField>
+                <BillboardControlField label="Body HTML">
+                  <div className={`admin-billboard-hud-copy-editor is-bg-${String(bgTone || 'white').trim() || 'white'} ${String(bodyColorClassName || '').trim()}`}>
+                    <AdminHtmlEditor
+                      ariaLabel="Body HTML"
+                      value={String(bodyHtml || '')}
+                      onChange={(nextValue) => onBodyHtmlChange?.(nextValue)}
+                      onBlur={() => onBodyHtmlBlur?.()}
+                      baseColorClassName={bodyColorClassName}
+                      onBaseColorChange={onBodyColorChange}
+                      compact
+                      showFooterToggle
+                      showAlignmentControls={false}
+                      paletteVariant="hud"
+                    />
+                  </div>
+                  <small>Rich content rendered after the lead copy.</small>
+                </BillboardControlField>
+              </div>
+              <div className="admin-billboard-editor-copy-controls">
+                <BillboardSlider
+                  label="Lead copy size"
+                  ariaLabel="Lead copy size"
+                  value={normalizeBillboardLeadCopySizeRem(leadCopySizeRem)}
+                  min={1}
+                  max={4}
+                  step={0.05}
+                  displayValue={`${normalizeBillboardLeadCopySizeRem(leadCopySizeRem).toFixed(2)}rem`}
+                  onChange={onLeadCopySizeRemChange}
+                />
+                <BillboardSegment label="Body alignment" options={bodyJustifyOptions} value={bodyJustify} onChange={onBodyJustifyChange} />
+                <BillboardWidthControl
+                  label="Body width"
+                  autoLabel="Page default"
+                  value={bodyMaxWidthPx}
+                  normalizeValue={normalizeBillboardBodyWidth}
+                  min={BILLBOARD_BODY_WIDTH_MIN_PX}
+                  max={BILLBOARD_BODY_WIDTH_MAX_PX}
+                  step={BILLBOARD_BODY_WIDTH_STEP_PX}
+                  onChange={onBodyMaxWidthPxChange}
+                />
+              </div>
             </div>
+            <p className="admin-page-content-layout-hint">Body alignment changes the text inside its centered column. Body width controls that column; it does not move the billboard title.</p>
           </BillboardPanel>
         ) : null}
 
@@ -559,7 +632,7 @@ export default function BillboardHudEditorPanel({
         ) : null}
 
         {activeSection === 'layout' ? (
-          <BillboardPanel id="04" title="Layout" description="Bounded width and surface">
+          <BillboardPanel id="04" title="Layout">
             <div className="admin-billboard-editor-width-grid">
               <BillboardWidthControl label="Content width" autoLabel="Page default" value={contentMaxWidthPx} onChange={onContentMaxWidthPxChange} />
               <BillboardSlider
@@ -574,6 +647,7 @@ export default function BillboardHudEditorPanel({
               />
               <BillboardSlider
                 label="Bottom padding"
+                className="admin-billboard-editor-bottom-padding"
                 ariaLabel="Billboard bottom padding"
                 value={normalizeBillboardPadding(paddingBottomRem) ?? 4}
                 min={BILLBOARD_PADDING_MIN_REM}

@@ -46,6 +46,24 @@ describe('PageContentHudEditorPanel', () => {
     expect(onSettingChange).toHaveBeenCalledWith('addressLines', '');
   });
 
+  it('loads legacy fineprint copy and promotes it to the editable html source', () => {
+    const onSettingChange = vi.fn();
+    renderPanel({
+      html: '<p></p>',
+      fineprint: 'AGFinancial is an equal opportunity employer.',
+    }, onSettingChange);
+
+    const editor = screen.getByRole('textbox', { name: 'HTML content' });
+    expect(editor.textContent).toContain('AGFinancial is an equal opportunity employer.');
+
+    editor.innerHTML = '<p>Updated careers copy.</p>';
+    fireEvent.input(editor);
+    fireEvent.blur(editor);
+
+    expect(onSettingChange).toHaveBeenCalledWith('html', '<p>Updated careers copy.</p>');
+    expect(onSettingChange).toHaveBeenCalledWith('fineprint', '');
+  });
+
   it('maps width presets onto the existing max-width field', () => {
     const onSettingChange = vi.fn();
 
@@ -80,7 +98,23 @@ describe('PageContentHudEditorPanel', () => {
 
     expect(screen.queryByLabelText('Space before (rem)')).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Advanced layout' }));
-    expect(screen.getByLabelText('Space before (rem)')).toBeTruthy();
-    expect(screen.getByLabelText('Content max width (px)')).toBeTruthy();
+    expect(screen.getByRole('slider', { name: 'Space before (rem)' })).toBeTruthy();
+    expect(screen.getByRole('slider', { name: 'Content max width (px)' })).toBeTruthy();
+    expect(screen.getByLabelText('Space before (rem) value')).toBeTruthy();
+  });
+
+  it('keeps Visual and HTML controls compact and maps advanced sliders to settings', () => {
+    const onSettingChange = vi.fn();
+    renderPanel({}, onSettingChange);
+
+    const modeGroup = screen.getByRole('group', { name: 'Page content editor type' });
+    expect(modeGroup.querySelectorAll('button')).toHaveLength(2);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Advanced layout' }));
+    fireEvent.change(screen.getByRole('slider', { name: 'Padding bottom (rem)' }), {
+      target: { value: '3.5' },
+    });
+
+    expect(onSettingChange).toHaveBeenCalledWith('paddingBottomRem', 3.5);
   });
 });

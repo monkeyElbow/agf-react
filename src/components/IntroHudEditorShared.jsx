@@ -33,6 +33,41 @@ function resolveIntroPreviewHeadingClassName(headingColor, textTone) {
   return resolvePanelTextToneClassName(textTone, 'dark');
 }
 
+function IntroAccentSlider({ label, value, min, max, step, onChange }) {
+  const numericValue = Number.isFinite(Number(value))
+    ? Math.max(min, Math.min(max, Number(value)))
+    : min;
+
+  return (
+    <label className="admin-front-hud-range">
+      <span>{label}</span>
+      <div className="admin-front-hud-range-controls">
+        <input
+          type="range"
+          min={min}
+          max={max}
+          step={step}
+          value={numericValue}
+          aria-label={label}
+          onChange={(event) => onChange?.(Number(event.target.value))}
+        />
+        <input
+          type="number"
+          min={min}
+          max={max}
+          step={step}
+          value={numericValue}
+          aria-label={`${label} value`}
+          onChange={(event) => {
+            const nextValue = event.target.value;
+            onChange?.(nextValue === '' ? '' : Number(nextValue));
+          }}
+        />
+      </div>
+    </label>
+  );
+}
+
 export default function IntroHudEditorPanel({
   heading,
   onHeadingChange,
@@ -50,6 +85,12 @@ export default function IntroHudEditorPanel({
   extraLineInputRef,
   extraLineTone,
   onExtraLineToneChange,
+  extraLineSizeRem,
+  onExtraLineSizeChange,
+  extraLineSpaceBeforeRem,
+  onExtraLineSpaceBeforeChange,
+  extraLineLineHeight,
+  onExtraLineLineHeightChange,
   bodyMiniEditorEnabled,
   onToggleBodyMiniEditor,
   bodyHtml,
@@ -80,7 +121,7 @@ export default function IntroHudEditorPanel({
     ? `${selectedHeadingText.slice(0, 25)}...`
     : selectedHeadingText;
   const headingColorLabel = hasHeadingSelection
-    ? `Selection Color "${selectedHeadingPreview}"`
+    ? `Selected Color "${selectedHeadingPreview}"`
     : 'Core Color';
   const backgroundOptions = allowWhiteBackground
     ? SURFACE_BG_TONE_OPTIONS
@@ -115,132 +156,164 @@ export default function IntroHudEditorPanel({
       label="Intro editor sections"
     >
       <HudEditorMain className="admin-intro-hud-main-stack">
-        <HudEditorSection className="admin-front-hud-card admin-intro-hud-card admin-intro-hud-card--layout" label="Layout settings">
-          <div className="admin-intro-hud-layout-control-grid is-stacked">
-            <div className="admin-front-hud-row">
-              <span>Background Color</span>
-              <ColorPalette
-                variant="hud"
-                className="is-compact is-icon-only"
-                ariaLabel="Intro background"
-                options={backgroundOptions}
-                value={bgTone}
-                onChange={(nextValue) => onBgToneChange?.(nextValue)}
-              />
-            </div>
-            <div className="admin-front-hud-row">
-              <span>Justify</span>
-              <div className="admin-front-hud-segment">
-                {INTRO_JUSTIFY_OPTIONS.map((option) => (
-                  <button
-                    key={`intro-justify-${option.value}`}
-                    type="button"
-                    className={`admin-front-hud-segment-btn${justify === option.value ? ' is-active' : ''}`}
-                    onClick={() => onJustifyChange?.(option.value)}
-                  >
-                    {option.label}
-                  </button>
-                ))}
+        <div className="admin-intro-hud-heading-page">
+          <div className="admin-intro-hud-heading-preview-column">
+            <div className="admin-front-hud-field-group admin-intro-hud-heading-group">
+              <span className="admin-front-hud-control-label">Heading Text</span>
+              <div className={`admin-intro-hud-heading-preview is-bg-${String(bgTone || 'white').trim() || 'white'} is-text-${String(textTone || 'dark').trim() || 'dark'} is-justify-${String(justify || 'center').trim() || 'center'}`}>
+                <div className="admin-intro-hud-heading-editor">
+                  <HeroInlineLiveEditor
+                    lines={[{
+                      key: 'heading',
+                      label: 'Heading',
+                      text: String(heading || ''),
+                      className: previewHeadingClassName,
+                      highlights: headingHighlights,
+                    }]}
+                    activeLineKey="heading"
+                    lineHeight={Number(lineSpacing || 1.04)}
+                    lineGap={0}
+                    placeholder="Start intro heading..."
+                    showPlaceholders
+                    onLineTextChange={(_lineKey, nextValue) => onHeadingChange?.(nextValue)}
+                    onLineInteract={(_lineKey, selectionMeta) => onHeadingSelectionCapture?.(selectionMeta)}
+                    setLineInputRef={(_lineKey, node) => {
+                      if (headingInputRef && typeof headingInputRef === 'object') {
+                        headingInputRef.current = node;
+                      }
+                    }}
+                    renderLineContent={(line) => renderHeroRangesAsNodes(line.text, line.highlights)}
+                    resolveLineTagName={() => 'h2'}
+                    resolveLineClassName={(line) => (
+                      `admin-intro-hud-live-heading${line.className ? ` ${line.className}` : ''}`
+                    )}
+                  />
+                </div>
               </div>
             </div>
-            <label className="admin-front-hud-range">
-              <span>Line Height {Number(lineSpacing || 0).toFixed(2)}</span>
-              <input
-                type="range"
-                min="0.85"
-                max="1.4"
-                step="0.01"
-                value={String(lineSpacing ?? 1.04)}
-                onChange={(event) => onLineSpacingChange?.(Number(event.target.value))}
-              />
-            </label>
           </div>
-        </HudEditorSection>
-        <div className="admin-front-hud-field-group admin-intro-hud-heading-group">
-          <span className="admin-front-hud-control-label">Heading Text</span>
-          <div className={`admin-intro-hud-heading-preview is-bg-${String(bgTone || 'white').trim() || 'white'} is-text-${String(textTone || 'dark').trim() || 'dark'} is-justify-${String(justify || 'center').trim() || 'center'}`}>
-            <div className="admin-intro-hud-heading-editor">
-              <HeroInlineLiveEditor
-                lines={[{
-                  key: 'heading',
-                  label: 'Heading',
-                  text: String(heading || ''),
-                  className: previewHeadingClassName,
-                  highlights: headingHighlights,
-                }]}
-                activeLineKey="heading"
-                lineHeight={Number(lineSpacing || 1.04)}
-                lineGap={0}
-                placeholder="Start intro heading..."
-                showPlaceholders
-                onLineTextChange={(_lineKey, nextValue) => onHeadingChange?.(nextValue)}
-                onLineInteract={(_lineKey, selectionMeta) => onHeadingSelectionCapture?.(selectionMeta)}
-                setLineInputRef={(_lineKey, node) => {
-                  if (headingInputRef && typeof headingInputRef === 'object') {
-                    headingInputRef.current = node;
-                  }
+          <div className="admin-intro-hud-heading-controls">
+            <HudEditorSection className="admin-front-hud-card admin-intro-hud-card admin-intro-hud-card--layout" label="Layout settings">
+              <div className="admin-intro-hud-layout-control-grid is-stacked">
+                <div className="admin-front-hud-row">
+                  <span>Background Color</span>
+                  <ColorPalette
+                    variant="hud"
+                    className="is-compact is-icon-only"
+                    ariaLabel="Intro background"
+                    options={backgroundOptions}
+                    value={bgTone}
+                    onChange={(nextValue) => onBgToneChange?.(nextValue)}
+                  />
+                </div>
+                <div className="admin-front-hud-row">
+                  <span>Justify</span>
+                  <div className="admin-front-hud-segment">
+                    {INTRO_JUSTIFY_OPTIONS.map((option) => (
+                      <button
+                        key={`intro-justify-${option.value}`}
+                        type="button"
+                        className={`admin-front-hud-segment-btn${justify === option.value ? ' is-active' : ''}`}
+                        onClick={() => onJustifyChange?.(option.value)}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <label className="admin-front-hud-range">
+                  <span>Line Height {Number(lineSpacing || 0).toFixed(2)}</span>
+                  <input
+                    type="range"
+                    min="0.85"
+                    max="1.4"
+                    step="0.01"
+                    value={String(lineSpacing ?? 1.04)}
+                    onChange={(event) => onLineSpacingChange?.(Number(event.target.value))}
+                  />
+                </label>
+              </div>
+            </HudEditorSection>
+            <div className="admin-intro-hud-heading-color-controls">
+              <TextHighlightColorControls
+                label={headingColorLabel}
+                ariaLabel={headingColorLabel}
+                options={SEMANTIC_TEXT_COLOR_OPTIONS}
+                value={activeHeadingColorValue}
+                onPaletteMouseDown={() => {
+                  const liveSelection = readLiveHeadingSelection();
+                  paletteSelectionRef.current = liveSelection;
+                  onHeadingSelectionCapture?.(liveSelection);
                 }}
-                renderLineContent={(line) => renderHeroRangesAsNodes(line.text, line.highlights)}
-                resolveLineTagName={() => 'h2'}
-                resolveLineClassName={(line) => (
-                  `admin-intro-hud-live-heading${line.className ? ` ${line.className}` : ''}`
-                )}
+                onChange={(nextValue) => {
+                  const liveSelection = paletteSelectionRef.current || readLiveHeadingSelection();
+                  paletteSelectionRef.current = null;
+                  const result = applyTextColorSelection({
+                    text: heading,
+                    lineClassName: headingColor,
+                    highlightsJson: headingHighlightsJson,
+                    selection: liveSelection,
+                    colorValue: nextValue,
+                  });
+                  if (result.target === 'selection') {
+                    onHeadingSelectionColorChange?.(nextValue, result.selection);
+                    return;
+                  }
+                  onHeadingColorChange?.(nextValue);
+                }}
+                sourceText={heading}
+                highlightRanges={headingHighlights}
+                onRemoveSpan={onRemoveHeadingSpan}
+                onClearSpans={onClearHeadingSpans}
+                swatchClassName="is-compact is-icon-only"
               />
             </div>
+            <div className="admin-front-hud-field-group admin-intro-hud-accent-group">
+              <label className="admin-front-hud-field">
+                <span>Accent Line</span>
+                <input
+                  ref={extraLineInputRef}
+                  type="text"
+                  value={String(extraLine || '')}
+                  onChange={(event) => onExtraLineChange?.(event.target.value)}
+                />
+              </label>
+              <ColorPalette
+                variant="hud"
+                className="is-compact is-icon-only is-field-linked"
+                ariaLabel="Intro accent line color"
+                options={INTRO_ACCENT_TONE_OPTIONS}
+                value={extraLineTone}
+                onChange={(nextValue) => onExtraLineToneChange?.(nextValue)}
+              />
+              <div className="admin-intro-hud-accent-controls">
+                <IntroAccentSlider
+                  label="Accent line size (rem)"
+                  value={extraLineSizeRem}
+                  min={1}
+                  max={5}
+                  step={0.05}
+                  onChange={onExtraLineSizeChange}
+                />
+                <IntroAccentSlider
+                  label="Accent line space above (rem)"
+                  value={extraLineSpaceBeforeRem}
+                  min={0}
+                  max={4}
+                  step={0.05}
+                  onChange={onExtraLineSpaceBeforeChange}
+                />
+                <IntroAccentSlider
+                  label="Accent line line height"
+                  value={extraLineLineHeight}
+                  min={0.8}
+                  max={1.5}
+                  step={0.01}
+                  onChange={onExtraLineLineHeightChange}
+                />
+              </div>
+            </div>
           </div>
-          <TextHighlightColorControls
-            label={headingColorLabel}
-            ariaLabel={headingColorLabel}
-            options={SEMANTIC_TEXT_COLOR_OPTIONS}
-            value={activeHeadingColorValue}
-            onPaletteMouseDown={() => {
-              const liveSelection = readLiveHeadingSelection();
-              paletteSelectionRef.current = liveSelection;
-              onHeadingSelectionCapture?.(liveSelection);
-            }}
-            onChange={(nextValue) => {
-              const liveSelection = paletteSelectionRef.current || readLiveHeadingSelection();
-              paletteSelectionRef.current = null;
-              const result = applyTextColorSelection({
-                text: heading,
-                lineClassName: headingColor,
-                highlightsJson: headingHighlightsJson,
-                selection: liveSelection,
-                colorValue: nextValue,
-              });
-              if (result.target === 'selection') {
-                onHeadingSelectionColorChange?.(nextValue, result.selection);
-                return;
-              }
-              onHeadingColorChange?.(nextValue);
-            }}
-            note="Highlight text first for span color. With no selection, color applies to full heading."
-            sourceText={heading}
-            highlightRanges={headingHighlights}
-            onRemoveSpan={onRemoveHeadingSpan}
-            onClearSpans={onClearHeadingSpans}
-            swatchClassName="is-compact is-icon-only"
-            notePlacement="inline"
-          />
-        </div>
-        <div className="admin-front-hud-field-group admin-intro-hud-accent-group">
-          <label className="admin-front-hud-field">
-            <span>Accent Line</span>
-            <input
-              ref={extraLineInputRef}
-              type="text"
-              value={String(extraLine || '')}
-              onChange={(event) => onExtraLineChange?.(event.target.value)}
-            />
-          </label>
-          <ColorPalette
-            variant="hud"
-            className="is-compact is-icon-only is-field-linked"
-            ariaLabel="Intro accent line color"
-            options={INTRO_ACCENT_TONE_OPTIONS}
-            value={extraLineTone}
-            onChange={(nextValue) => onExtraLineToneChange?.(nextValue)}
-          />
         </div>
 
         <HudEditorSection className="admin-front-hud-card admin-intro-hud-card admin-intro-hud-card--body" label="Body settings">

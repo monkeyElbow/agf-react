@@ -316,8 +316,8 @@ function ColumnSlotEditor({
     ? `${selectedTitleText.slice(0, 25)}...`
     : selectedTitleText;
   const titleColorLabel = hasTitleSelection
-    ? `${titleLabel} Selection Color ("${selectedTitlePreview}")`
-    : `${titleLabel} Color`;
+    ? `Selected Color "${selectedTitlePreview}"`
+    : 'Core Color';
   const bodyValue = String(draftValues[bodyFieldId] ?? settings[bodyFieldId] ?? '');
   const imageUrlValue = String(draftValues[imageUrlFieldId] ?? settings[imageUrlFieldId] ?? '');
   const imageAltValue = String(draftValues[imageAltFieldId] ?? settings[imageAltFieldId] ?? '');
@@ -760,8 +760,8 @@ function GenericColumnsHudEditorPanel({
     ? `${selectedTitleText.slice(0, 25)}...`
     : selectedTitleText;
   const headingColorLabel = hasTitleSelection
-    ? `Heading Selection Color ("${selectedTitlePreview}")`
-    : 'Heading Color';
+    ? `Selected Color "${selectedTitlePreview}"`
+    : 'Core Color';
 
   const handleAddColumn = () => {
     const nextSlot = visibleColumnSlots.length + 1;

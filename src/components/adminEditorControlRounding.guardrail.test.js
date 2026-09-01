@@ -166,6 +166,25 @@ describe('admin editor control rounding', () => {
     });
   });
 
+  it('uses the branded teal slider treatment across admin range controls', () => {
+    const appSource = readSource('../styles.css');
+    const adminSource = readSource('../styles/admin.css');
+    const hudSource = readSource('../styles/front-hud.css');
+
+    expect(adminSource).toContain('.admin-range-number-control input[type="range"]');
+    expect(adminSource).toContain('min-height: 6px !important;');
+    expect(adminSource).toContain('background: transparent !important;');
+    expect(adminSource).toContain('.admin-hero-inline-height-row input[type="range"]::-webkit-slider-thumb');
+    expect(hudSource).toContain('.admin-range-number-control input[type=\'range\']::-webkit-slider-thumb');
+    expect(hudSource).toContain('min-height: 6px !important;');
+    expect(hudSource).toContain('background: transparent !important;');
+    expect(appSource).toContain('.site-nav-admin-overlay-slider input[type=\'range\']::-webkit-slider-thumb');
+    expect(appSource).toContain('min-height: 6px !important;');
+    expect(appSource).toContain('background: transparent !important;');
+    expect(appSource).toContain('.site-nav-admin-overlay-slider input[type=\'range\']::-webkit-slider-runnable-track');
+    expect(appSource).toContain('background: linear-gradient(180deg, rgba(0, 138, 171, 0.12) 0%, rgba(0, 138, 171, 0.16) 100%);');
+  });
+
   it('keeps the Request Form button preview at public-button typography', () => {
     const hudSource = readSource('../styles/front-hud.css');
     const compactButtonRule = hudSource.indexOf(

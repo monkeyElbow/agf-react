@@ -108,7 +108,6 @@ describe('migration-temporary.block-only shell guardrail', () => {
       '/terms-of-service',
       '/vineyard',
       '/yourplan',
-      '/about-us/careers',
       '/forms',
       '/prospectus',
       '/search',

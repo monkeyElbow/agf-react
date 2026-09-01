@@ -24,13 +24,18 @@ const GRID_BULLET_SIZE_SET = new Set(['daf', 'large']);
 // fallbacks identical so missing legacy fields cannot silently shrink lists.
 export const DEFAULT_DYNAMIC_GRID_CARD_BULLET_SIZE_REM = 1.55;
 export const DEFAULT_DYNAMIC_GRID_CARD_BULLET_LINE_HEIGHT = 1.5;
+export const DEFAULT_DYNAMIC_GRID_CARD_TITLE_LINE_HEIGHT = 1.2;
 // Keep the header gap in the shared runtime contract so a legacy block with
 // no saved spacing key has the same result as a newly-authored block.
 export const DEFAULT_DYNAMIC_GRID_HEADER_SUBHEAD_SPACE_REM = 0.7;
+// The gap after the header/subhead is independent from the header-to-subhead
+// gap so header-only grids can still control the space before their cards.
+export const DEFAULT_DYNAMIC_GRID_HEADER_CARDS_SPACE_REM = 1.15;
 // Block-level subhead control keeps admin sizing separate from rich-text
 // selection markup. Missing legacy settings retain CSS's responsive default.
 export const DEFAULT_DYNAMIC_GRID_SUBHEAD_SIZE_REM = 1.26;
 export const DEFAULT_DYNAMIC_GRID_HEADER_SIZE_REM = 2.9;
+export const DEFAULT_DYNAMIC_GRID_HEADER_WIDTH_PERCENT = 100;
 
 export function normalizeGridBgTone(value) {
   const token = String(value || 'white').trim().toLowerCase();
@@ -158,6 +163,14 @@ export function normalizeDynamicGridHeaderSizeRem(value) {
   return Math.min(4.5, Math.max(1.9, Number(parsed.toFixed(2))));
 }
 
+export function normalizeDynamicGridHeaderWidthPercent(value) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) {
+    return DEFAULT_DYNAMIC_GRID_HEADER_WIDTH_PERCENT;
+  }
+  return Math.max(40, Math.min(100, Math.round(parsed)));
+}
+
 export function normalizeDynamicGridWidth(value) {
   const token = String(value || '').trim().toLowerCase();
   return GRID_WIDTH_SET.has(token) ? token : 'content';
@@ -177,6 +190,14 @@ export function normalizeDynamicGridCardTitleSizeRem(value) {
     return 1.14;
   }
   return Math.max(0.9, Math.min(3, Number(numeric.toFixed(2))));
+}
+
+export function normalizeDynamicGridCardTitleLineHeight(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return DEFAULT_DYNAMIC_GRID_CARD_TITLE_LINE_HEIGHT;
+  }
+  return Math.max(0.8, Math.min(1.5, Number(numeric.toFixed(2))));
 }
 
 export function normalizeDynamicGridCardBodySizeRem(value) {

@@ -68,7 +68,7 @@
   font-family: var(--ag-font-helv);
   font-size: var(--numbered-step-card-number-size) !important;
   font-weight: 800;
-  line-height: 1;
+  line-height: var(--dynamic-grid-card-title-line-height, 1) !important;
   letter-spacing: -0.04em;
 }
 
@@ -103,6 +103,17 @@
  * the top while plain-text steps center correctly. */
 .is-numbered-step-cards .service-native-card:not(:has(.service-native-action-row, .service-native-card-link-list, .service-native-card-bullet-list, .service-native-card-accordions)) .service-native-card-rich-body {
   grid-row: 1 / span 2;
+}
+
+/* The number and copy share the same grid center, but their font metrics do
+ * not share the same optical center. Nudge body-only copy down by a fraction
+ * of its own line so the visible text, not just its line box, centers with the
+ * large step number. Keep stacked mobile cards on their normal flow. */
+@media (min-width: 721px) {
+  .is-numbered-step-cards .service-native-card:not(:has(.service-native-action-row, .service-native-card-link-list, .service-native-card-bullet-list, .service-native-card-accordions))
+    > div:first-child > :is(p, .service-native-card-rich-body) {
+    transform: translateY(0.42em);
+  }
 }
 
 .is-numbered-step-cards .service-native-action-row {

@@ -11,7 +11,7 @@ function readSource(relativePath) {
 }
 
 describe('dynamic grid contrast guardrail', () => {
-  it('keeps shared dark-background contrast correction on the migrated grid family path', () => {
+  it('keeps grid background compatibility separate from authored card colors', () => {
     const helperSource = readSource('./dynamicGrid.js');
     const runtimeSource = readSource('./dynamicPageBlocks.js');
     const editorSource = readSource('../components/block-editors/migratedBlockEditors.jsx');
@@ -23,7 +23,7 @@ describe('dynamic grid contrast guardrail', () => {
 
     expect(runtimeSource).toContain('const titleTone = normalizeGridToneToken(');
     expect(runtimeSource).toContain('Background and card-title color are separate authored controls.');
-    expect(runtimeSource).toContain("const bodyTone = getGridSafeToneForBg(settings.bodyTone, bgTone, 'super-grey');");
+    expect(runtimeSource).toContain('const bodyTone = normalizeGridToneToken(');
 
     expect(editorSource).toContain('const titleToneField = titleToneFieldBase;');
     expect(editorSource).toContain('const bodyToneField = bodyToneFieldBase;');

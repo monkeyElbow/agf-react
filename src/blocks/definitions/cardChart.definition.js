@@ -2,7 +2,10 @@ import pageContentHudIcon from '../../assets/admin-block-icons/page-content.svg'
 import { buildDynamicCardChartFromBlock } from '../../lib/dynamicPageBlocks';
 import { createBlockDefinition } from '../foundation/models';
 import { defineEditorField } from '../foundation/editorDescriptors';
-import { SEMANTIC_TEXT_COLOR_OPTIONS_WITH_DEFAULT } from '../../lib/colorSystem';
+import {
+  SEMANTIC_TEXT_COLOR_OPTIONS_WITH_DEFAULT,
+  SURFACE_BG_TONE_OPTIONS,
+} from '../../lib/colorSystem';
 
 const CARD_CHART_COUNT_OPTIONS = [2, 3, 4, 5, 6].map((count) => ({ value: String(count), label: `${count} cards` }));
 const CARD_CHART_JUSTIFY_OPTIONS = [
@@ -40,6 +43,7 @@ const sections = [
     fields: [
       defineEditorField({ id: 'title', label: 'Chart heading', type: 'textarea', rows: 2 }),
       defineEditorField({ id: 'justify', label: 'Chart heading justify', type: 'select', defaultValue: 'center', options: CARD_CHART_JUSTIFY_OPTIONS }),
+      defineEditorField({ id: 'bgTone', label: 'Chart background', type: 'swatch', defaultValue: 'white', options: SURFACE_BG_TONE_OPTIONS }),
       defineEditorField({ id: 'titleClassName', label: 'Chart heading color', type: 'swatch', options: SEMANTIC_TEXT_COLOR_OPTIONS_WITH_DEFAULT }),
       defineEditorField({ id: 'titleHighlightsJson', label: 'Chart heading highlights', type: 'highlight_list', options: SEMANTIC_TEXT_COLOR_OPTIONS_WITH_DEFAULT.filter((option) => option.value) }),
       defineEditorField({ id: 'cardCount', label: 'Number of cards', type: 'select', options: CARD_CHART_COUNT_OPTIONS }),
@@ -131,7 +135,7 @@ export const cardChartBlockDefinition = createBlockDefinition({
   editorType: 'card_chart',
   allowedVariants: ['default'],
   supportedModes: ['dynamic'],
-  defaults: { title: 'Card Chart', justify: 'center', titleClassName: '', titleHighlightsJson: '', cardCount: '2', fineprint: '', fineprintDisclosureId: '', fineprintJustify: 'center', fineprintSizeRem: 0.88, valueAlignment: '', fullBleed: true, spaceBeforeRem: 0, spaceAfterRem: 0, headerGapRem: 2.4, paddingTopRem: 2.4, paddingBottomRem: 2.4, cellPaddingRem: 0.9, cellTextSizeRem: 1.05, cellTextWeight: '650', contentMaxWidthPx: 1180, sectionClassName: '', anchorId: '' },
+  defaults: { title: 'Card Chart', justify: 'center', bgTone: 'white', titleClassName: '', titleHighlightsJson: '', cardCount: '2', fineprint: '', fineprintDisclosureId: '', fineprintJustify: 'center', fineprintSizeRem: 0.88, valueAlignment: '', fullBleed: true, spaceBeforeRem: 0, spaceAfterRem: 0, headerGapRem: 2.4, paddingTopRem: 2.4, paddingBottomRem: 2.4, cellPaddingRem: 0.9, cellTextSizeRem: 1.05, cellTextWeight: '650', contentMaxWidthPx: 1180, sectionClassName: '', anchorId: '' },
   schema: { fields: sections.flatMap((section) => section.fields) },
   renderer: { buildRuntime: buildDynamicCardChartFromBlock },
   editor: { sections, hudSectionIds: ['content', 'spacing', 'cards', 'fineprint', 'layout'], adminSectionIds: ['content', 'spacing', 'cards', 'fineprint', 'layout'] },

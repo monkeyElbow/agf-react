@@ -42,7 +42,7 @@ const ASSERT_PREVIEW_BY_KIND = {
   },
   intro: () => {
     expect(screen.getByRole('radiogroup', { name: /Intro background/i })).toBeTruthy();
-    expect(screen.getByText(/Core text|Body Text Color|Core Color/i)).toBeTruthy();
+    expect(screen.getByText('Core Color')).toBeTruthy();
   },
   billboard: () => {
     expect(screen.getByRole('radiogroup', { name: /Billboard title color/i })).toBeTruthy();
@@ -67,7 +67,7 @@ const ASSERT_PREVIEW_BY_KIND = {
   card_grid: () => {
     expect(screen.getByRole('radiogroup', { name: /Grid background/i })).toBeTruthy();
     expect(screen.getByText(/Grid header|Grid intro heading|Intro handled outside this preset/i)).toBeTruthy();
-    expect(screen.getByText('Subtitle color')).toBeTruthy();
+    expect(screen.getByText('Core Color')).toBeTruthy();
   },
 };
 

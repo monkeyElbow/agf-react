@@ -193,7 +193,6 @@ describe('source-default content block blueprint coverage', () => {
       '/services/retirement/403b/403b-group-enrollment',
       '/services/retirement/403b/403b-individual-enrollment',
       '/services/retirement/403b/403b-terms-definitions',
-      '/about-us/careers',
       '/online-contributions',
       '/calculators',
       '/contact-us',
@@ -232,9 +231,8 @@ describe('source-default content block blueprint coverage', () => {
     expect(templateBlocks.some((block) => block?.kind === 'request_form')).toBe(true);
   });
 
-  it('keeps blockless functional routes explicit without fallback page-content blueprints', () => {
+  it('keeps genuinely blockless functional routes explicit without fallback page-content blueprints', () => {
     [
-      '/about-us/careers',
       '/forms',
       '/prospectus',
       '/search',
@@ -242,6 +240,33 @@ describe('source-default content block blueprint coverage', () => {
     ].forEach((pathname) => {
       expect(contentBlockBlueprintsByPath).toHaveProperty(pathname);
       expect(contentBlockBlueprintsByPath[pathname]).toEqual([]);
+    });
+  });
+
+  it('seeds Careers as an ordered editable block page with backend-owned jobs', () => {
+    const blocks = contentBlockBlueprintsByPath['/about-us/careers'];
+
+    expect(blocks.map((block) => block.id)).toEqual([
+      'hero',
+      'intro',
+      'benefits',
+      'ready',
+      'jobs',
+      'matters',
+      'fineprint',
+    ]);
+    expect(blocks.map((block) => block.kind)).toEqual([
+      'hero',
+      'intro',
+      'card_grid',
+      'billboard',
+      'content',
+      'billboard',
+      'content',
+    ]);
+    expect(blocks.find((block) => block.id === 'jobs')?.settings).toMatchObject({
+      widget: 'careers-jobs',
+      sectionClassName: 'careers-native-jobs-list',
     });
   });
 

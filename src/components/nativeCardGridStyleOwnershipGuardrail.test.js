@@ -37,6 +37,25 @@ describe('native card-grid style ownership guardrail', () => {
     expect(source).toContain('grid-template-columns: 1fr;\n    justify-items: center;');
   });
 
+  it('lets the block card-title size reach flex and preset card headings', () => {
+    const source = readSource('../styles/service-native.css');
+
+    expect(source).toContain('font-size: var(--dynamic-grid-card-title-size, clamp(1.68rem, 2.45vw, 2.14rem));');
+    expect(source).toContain('font-size: var(--dynamic-grid-card-title-size, clamp(1.4rem, 2.2vw, 1.85rem));');
+    expect(source).toContain('font-size: var(--dynamic-grid-card-title-size, clamp(2.55rem, 4.35vw, 3.2rem));');
+    expect(source).toContain('font-size: var(--dynamic-grid-card-title-size, clamp(1.42rem, 2.1vw, 1.78rem));');
+    expect(source).not.toContain('--dynamic-grid-card-title-size: clamp(');
+    expect(source).not.toContain('font-size: max(var(--dynamic-grid-card-title-size');
+  });
+
+  it('lets an explicit block card-title line-height override flex and preset headings', () => {
+    const source = readSource('../styles/service-native.css');
+
+    expect(source).toContain('line-height: var(--dynamic-grid-card-title-line-height, 1.2);');
+    expect(source).toContain('.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-title-line-height-controlled .service-native-card h3 {');
+    expect(source).toContain('line-height: var(--dynamic-grid-card-title-line-height) !important;');
+  });
+
   it('keeps planned-giving gift-card bullets regular weight with shared spacing', () => {
     const source = readSource('../styles/service-native.css');
 

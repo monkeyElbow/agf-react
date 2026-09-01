@@ -4,6 +4,11 @@ import { defineEditorField, defineTransitionalActionFields } from '../foundation
 import { buildDynamicIntroFromBlock } from '../../lib/dynamicPageBlocks';
 import { getTokenSwatch, SEMANTIC_TEXT_COLOR_OPTIONS_WITH_DEFAULT } from '../../lib/colorSystem';
 import { validateLinkFieldGroups } from '../../lib/linkValue';
+import {
+  DEFAULT_INTRO_EXTRA_LINE_HEIGHT,
+  DEFAULT_INTRO_EXTRA_LINE_SIZE_REM,
+  DEFAULT_INTRO_EXTRA_LINE_SPACE_BEFORE_REM,
+} from '../../lib/dynamicSectionTypography';
 
 const SHARED_HEADING_TONE_OPTIONS = SEMANTIC_TEXT_COLOR_OPTIONS_WITH_DEFAULT;
 
@@ -98,6 +103,34 @@ const sections = [
       defineEditorField({ id: 'lineSpacing', label: 'Intro heading line spacing', type: 'number' }),
       defineEditorField({ id: 'extraLine', label: 'Accent line (optional)', type: 'text' }),
       defineEditorField({
+        id: 'extraLineSizeRem',
+        label: 'Accent line size (rem)',
+        type: 'range',
+        min: 1,
+        max: 5,
+        step: 0.05,
+        defaultValue: DEFAULT_INTRO_EXTRA_LINE_SIZE_REM,
+      }),
+      defineEditorField({
+        id: 'extraLineSpaceBeforeRem',
+        label: 'Accent line space above (rem)',
+        type: 'range',
+        min: 0,
+        max: 4,
+        step: 0.05,
+        defaultValue: DEFAULT_INTRO_EXTRA_LINE_SPACE_BEFORE_REM,
+      }),
+      defineEditorField({
+        id: 'extraLineLineHeight',
+        label: 'Accent line line height',
+        type: 'range',
+        min: 0.8,
+        max: 1.5,
+        step: 0.01,
+        defaultValue: DEFAULT_INTRO_EXTRA_LINE_HEIGHT,
+      }),
+      defineEditorField({ id: 'extraLineClassName', label: 'Accent line class name', type: 'text' }),
+      defineEditorField({
         id: 'extraLineTone',
         label: 'Accent line color',
         type: 'swatch',
@@ -118,6 +151,7 @@ const sections = [
         options: INTRO_TEXT_TONE_OPTIONS,
       }),
       defineEditorField({ id: 'sectionClassName', label: 'Section class name', type: 'text' }),
+      defineEditorField({ id: 'copyClassName', label: 'Copy class name', type: 'text' }),
     ],
   },
   {

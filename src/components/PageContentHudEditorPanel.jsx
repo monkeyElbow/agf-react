@@ -79,6 +79,50 @@ function getPageContentSpacingValues(settings = {}) {
   };
 }
 
+function PageContentAdvancedSlider({
+  label,
+  value,
+  fallback,
+  min,
+  max,
+  step,
+  unit,
+  onChange,
+}) {
+  const numericValue = Math.min(max, Math.max(min, toPageContentNumber(value, fallback)));
+  const labelText = `${label} (${unit})`;
+
+  return (
+    <div className="admin-front-hud-range admin-page-content-advanced-slider">
+      <span id={`page-content-${label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}>{labelText}</span>
+      <div className="admin-range-number-control">
+        <input
+          type="range"
+          min={min}
+          max={max}
+          step={step}
+          value={numericValue}
+          aria-label={labelText}
+          onChange={(event) => onChange(Number(event.target.value))}
+        />
+        <input
+          type="number"
+          min={min}
+          max={max}
+          step={step}
+          value={value ?? fallback}
+          aria-label={`${labelText} value`}
+          onChange={(event) => {
+            const nextValue = event.target.value;
+            onChange(nextValue === '' ? '' : Number(nextValue));
+          }}
+        />
+        <span aria-hidden="true">{unit}</span>
+      </div>
+    </div>
+  );
+}
+
 function PageContentSurfaceToneControls({ settings = {}, onSettingChange }) {
   if (typeof onSettingChange !== 'function') {
     return null;
@@ -215,76 +259,56 @@ export function PageContentLayoutControls({
 
       {advancedOpen ? (
         <div className="admin-page-content-advanced-grid">
-          <label className="admin-front-hud-field">
-            <span>Space before (rem)</span>
-            <input
-              type="number"
-              min="0"
-              max="8"
-              step="0.25"
-              value={settings.spaceBeforeRem ?? 0.5}
-              onChange={(event) => {
-                const nextValue = event.target.value;
-                onSettingChange('spaceBeforeRem', nextValue === '' ? '' : Number(nextValue));
-              }}
-            />
-          </label>
-          <label className="admin-front-hud-field">
-            <span>Space after (rem)</span>
-            <input
-              type="number"
-              min="0"
-              max="8"
-              step="0.25"
-              value={settings.spaceAfterRem ?? 0.5}
-              onChange={(event) => {
-                const nextValue = event.target.value;
-                onSettingChange('spaceAfterRem', nextValue === '' ? '' : Number(nextValue));
-              }}
-            />
-          </label>
-          <label className="admin-front-hud-field">
-            <span>Padding top (rem)</span>
-            <input
-              type="number"
-              min="0"
-              max="8"
-              step="0.25"
-              value={settings.paddingTopRem ?? 2.4}
-              onChange={(event) => {
-                const nextValue = event.target.value;
-                onSettingChange('paddingTopRem', nextValue === '' ? '' : Number(nextValue));
-              }}
-            />
-          </label>
-          <label className="admin-front-hud-field">
-            <span>Padding bottom (rem)</span>
-            <input
-              type="number"
-              min="0"
-              max="8"
-              step="0.25"
-              value={settings.paddingBottomRem ?? 2.4}
-              onChange={(event) => {
-                const nextValue = event.target.value;
-                onSettingChange('paddingBottomRem', nextValue === '' ? '' : Number(nextValue));
-              }}
-            />
-          </label>
-          <label className="admin-front-hud-field">
-            <span>Content max width (px)</span>
-            <input
-              type="number"
-              min="560"
-              max="1440"
-              step="10"
-              value={settings.contentMaxWidthPx ?? 980}
-              onChange={(event) => {
-                const nextValue = event.target.value;
-                onSettingChange('contentMaxWidthPx', nextValue === '' ? '' : Number(nextValue));
-              }}
-            />
-          </label>
+          <PageContentAdvancedSlider
+            label="Space before"
+            value={settings.spaceBeforeRem}
+            fallback={0.5}
+            min={0}
+            max={8}
+            step={0.05}
+            unit="rem"
+            onChange={(nextValue) => onSettingChange('spaceBeforeRem', nextValue)}
+          />
+          <PageContentAdvancedSlider
+            label="Space after"
+            value={settings.spaceAfterRem}
+            fallback={0.5}
+            min={0}
+            max={8}
+            step={0.05}
+            unit="rem"
+            onChange={(nextValue) => onSettingChange('spaceAfterRem', nextValue)}
+          />
+          <PageContentAdvancedSlider
+            label="Padding top"
+            value={settings.paddingTopRem}
+            fallback={2.4}
+            min={0}
+            max={8}
+            step={0.05}
+            unit="rem"
+            onChange={(nextValue) => onSettingChange('paddingTopRem', nextValue)}
+          />
+          <PageContentAdvancedSlider
+            label="Padding bottom"
+            value={settings.paddingBottomRem}
+            fallback={2.4}
+            min={0}
+            max={8}
+            step={0.05}
+            unit="rem"
+            onChange={(nextValue) => onSettingChange('paddingBottomRem', nextValue)}
+          />
+          <PageContentAdvancedSlider
+            label="Content max width"
+            value={settings.contentMaxWidthPx}
+            fallback={980}
+            min={560}
+            max={1440}
+            step={10}
+            unit="px"
+            onChange={(nextValue) => onSettingChange('contentMaxWidthPx', nextValue)}
+          />
         </div>
       ) : null}
     </div>
@@ -310,6 +334,7 @@ export default function PageContentHudEditorPanel({
         onSettingChange?.(editorField, nextValue);
         if (usesLegacySource) {
           onSettingChange?.('body', '');
+          onSettingChange?.('fineprint', '');
           onSettingChange?.('addressTitle', '');
           onSettingChange?.('addressLines', '');
         }

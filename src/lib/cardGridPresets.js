@@ -1,6 +1,7 @@
 import {
   DEFAULT_DYNAMIC_GRID_CARD_BULLET_LINE_HEIGHT,
   DEFAULT_DYNAMIC_GRID_CARD_BULLET_SIZE_REM,
+  DEFAULT_DYNAMIC_GRID_CARD_TITLE_LINE_HEIGHT,
 } from './dynamicGrid';
 
 const CARD_GRID_PRESET_DEFINITIONS = Object.freeze([
@@ -18,6 +19,7 @@ const CARD_GRID_PRESET_DEFINITIONS = Object.freeze([
       bodyTone: 'super-grey',
       cardPaddingRem: 1.35,
       cardTitleSizeRem: 1.14,
+      cardTitleLineHeight: DEFAULT_DYNAMIC_GRID_CARD_TITLE_LINE_HEIGHT,
       cardBodySizeRem: 1,
       cardBulletSize: 'daf',
       cardBulletSizeRem: DEFAULT_DYNAMIC_GRID_CARD_BULLET_SIZE_REM,
@@ -51,6 +53,7 @@ const CARD_GRID_PRESET_DEFINITIONS = Object.freeze([
       bodyTone: 'super-grey',
       cardPaddingRem: 2.6,
       cardTitleSizeRem: 1.45,
+      cardTitleLineHeight: 1.04,
       cardBodySizeRem: 1.02,
       cardBulletSize: 'daf',
       cardBulletSizeRem: DEFAULT_DYNAMIC_GRID_CARD_BULLET_SIZE_REM,
@@ -84,6 +87,7 @@ const CARD_GRID_PRESET_DEFINITIONS = Object.freeze([
       bodyTone: 'super-grey',
       cardPaddingRem: 0.75,
       cardTitleSizeRem: 1.5,
+      cardTitleLineHeight: 0.98,
       cardBodySizeRem: 1.08,
       cardBulletSize: 'daf',
       cardBulletSizeRem: DEFAULT_DYNAMIC_GRID_CARD_BULLET_SIZE_REM,
@@ -117,6 +121,7 @@ const CARD_GRID_PRESET_DEFINITIONS = Object.freeze([
       bodyTone: 'super-grey',
       cardPaddingRem: 1.75,
       cardTitleSizeRem: 1.22,
+      cardTitleLineHeight: 1,
       cardBodySizeRem: 1.08,
       cardBulletSize: 'daf',
       cardBulletSizeRem: DEFAULT_DYNAMIC_GRID_CARD_BULLET_SIZE_REM,

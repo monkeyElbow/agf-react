@@ -8,6 +8,8 @@ import {
   isGridToneAllowedForBg,
   normalizeGridBgTone,
   normalizeDynamicGridHeaderSizeRem,
+  normalizeDynamicGridHeaderWidthPercent,
+  normalizeDynamicGridCardTitleLineHeight,
 } from './dynamicGrid';
 
 const SHARED_TONE_OPTIONS = [
@@ -59,5 +61,19 @@ describe('dynamic grid contrast helpers', () => {
     expect(normalizeDynamicGridHeaderSizeRem(3.275)).toBe(3.27);
     expect(normalizeDynamicGridHeaderSizeRem(99)).toBe(4.5);
     expect(normalizeDynamicGridHeaderSizeRem(undefined)).toBe(2.9);
+  });
+
+  it('normalizes the optional Card Grid header-width slider', () => {
+    expect(normalizeDynamicGridHeaderWidthPercent(72.6)).toBe(73);
+    expect(normalizeDynamicGridHeaderWidthPercent(20)).toBe(40);
+    expect(normalizeDynamicGridHeaderWidthPercent(140)).toBe(100);
+    expect(normalizeDynamicGridHeaderWidthPercent(undefined)).toBe(100);
+  });
+
+  it('normalizes the optional Card Grid card-title line-height slider', () => {
+    expect(normalizeDynamicGridCardTitleLineHeight(1.25)).toBe(1.25);
+    expect(normalizeDynamicGridCardTitleLineHeight(0.2)).toBe(0.8);
+    expect(normalizeDynamicGridCardTitleLineHeight(2)).toBe(1.5);
+    expect(normalizeDynamicGridCardTitleLineHeight(undefined)).toBe(1.2);
   });
 });

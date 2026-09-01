@@ -1010,6 +1010,11 @@ export function BillboardBlock({
     || String(runtime.sectionClassName || '').split(/\s+/).includes('retirement-do-the-math-billboard')
   );
   const effectiveJustify = runtime.justify || 'center';
+  const effectiveBodyJustify = runtime.bodyJustify || effectiveJustify;
+  const bodyJustifyClassName = `is-body-justify-${effectiveBodyJustify}`;
+  const bodyHeaderGapClassName = runtime.headerGapRem !== null && runtime.headerGapRem !== undefined
+    ? 'is-dynamic-billboard-header-gap'
+    : '';
   const copyClassName = [
     'native-info-section-copy',
     `is-justify-${effectiveJustify}`,
@@ -1046,14 +1051,14 @@ export function BillboardBlock({
           {runtime.bodyHtml ? (
             <SafeRichText
               as="div"
-              className={['native-info-rich-html', runtime.bodyColorClassName || '', runtime.bodyHtmlStyle ? 'is-dynamic-billboard-lead-copy-sized' : ''].filter(Boolean).join(' ')}
+              className={['native-info-rich-html', runtime.bodyColorClassName || '', runtime.bodyHtmlStyle ? 'is-dynamic-billboard-lead-copy-sized' : '', bodyJustifyClassName, bodyHeaderGapClassName].filter(Boolean).join(' ')}
               html={runtime.bodyHtml}
               style={runtime.bodyHtmlStyle || undefined}
             />
           ) : null}
           {!runtime.bodyHtml && runtime.body ? (
             <div
-              className={['native-info-rich-html', runtime.bodyColorClassName || '', runtime.bodyHtmlStyle ? 'is-dynamic-billboard-lead-copy-sized' : ''].filter(Boolean).join(' ')}
+              className={['native-info-rich-html', runtime.bodyColorClassName || '', runtime.bodyHtmlStyle ? 'is-dynamic-billboard-lead-copy-sized' : '', bodyJustifyClassName, bodyHeaderGapClassName].filter(Boolean).join(' ')}
               style={runtime.bodyHtmlStyle || undefined}
             >
               <p>{renderTextWithStrong(runtime.body)}</p>

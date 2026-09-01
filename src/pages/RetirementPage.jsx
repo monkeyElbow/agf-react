@@ -827,12 +827,20 @@ export default function RetirementPage() {
     [billboardCopyUsesScrollProgress, renderedBillboard],
   );
   const renderedBillboardJustify = 'center';
+  const renderedBillboardBodyJustify = renderedBillboard?.bodyJustify || renderedBillboard?.justify || 'center';
+  const renderedBillboardHeaderGapClassName = renderedBillboard?.headerGapRem !== null && renderedBillboard?.headerGapRem !== undefined
+    ? ' is-dynamic-billboard-header-gap'
+    : '';
   const renderedBillboardTitleStyle = renderedBillboard?.titleStyle || {};
   const rolloverBillboardCopyUsesScrollProgress = renderedRolloverBillboard?.scrollReveal === 'scale-up';
   const rolloverBillboardCopyClassName = useMemo(
     () => getRetirementBillboardCopyClassName(renderedRolloverBillboard, rolloverBillboardCopyUsesScrollProgress),
     [rolloverBillboardCopyUsesScrollProgress, renderedRolloverBillboard],
   );
+  const renderedRolloverBillboardBodyJustify = renderedRolloverBillboard?.bodyJustify || renderedRolloverBillboard?.justify || 'center';
+  const renderedRolloverBillboardHeaderGapClassName = renderedRolloverBillboard?.headerGapRem !== null && renderedRolloverBillboard?.headerGapRem !== undefined
+    ? ' is-dynamic-billboard-header-gap'
+    : '';
   const renderedRolloverBillboardTitleStyle = renderedRolloverBillboard?.titleStyle || {};
 
   useEffect(() => {
@@ -2036,7 +2044,7 @@ export default function RetirementPage() {
             {renderedBillboard.bodyHtml ? (
               <SafeRichText
                 as="div"
-                className={`native-info-rich-html${showFrontHud && billboardBlock ? ' admin-front-hud-click-edit-target' : ''}`}
+                className={`native-info-rich-html is-body-justify-${renderedBillboardBodyJustify}${renderedBillboardHeaderGapClassName}${showFrontHud && billboardBlock ? ' admin-front-hud-click-edit-target' : ''}`}
                 html={renderedBillboard.bodyHtml}
                 onClick={showFrontHud && billboardBlock ? handleBillboardBodyEditIntent : undefined}
                 onKeyDown={showFrontHud && billboardBlock ? (event) => handleBodyEditKeyDown(event, handleBillboardBodyEditIntent) : undefined}
@@ -2045,7 +2053,7 @@ export default function RetirementPage() {
                 aria-label={showFrontHud && billboardBlock ? 'Edit retirement billboard body HTML' : undefined}
               />
             ) : renderedBillboard.body ? (
-              <div className="native-info-rich-html">
+              <div className={`native-info-rich-html is-body-justify-${renderedBillboardBodyJustify}${renderedBillboardHeaderGapClassName}`}>
                 <p>{renderedBillboard.body}</p>
               </div>
             ) : null}
@@ -2120,7 +2128,7 @@ export default function RetirementPage() {
             {renderedRolloverBillboard.bodyHtml ? (
               <SafeRichText
                 as="div"
-                className={`native-info-rich-html${showFrontHud && rolloverBillboardBlock ? ' admin-front-hud-click-edit-target' : ''}`}
+                className={`native-info-rich-html is-body-justify-${renderedRolloverBillboardBodyJustify}${renderedRolloverBillboardHeaderGapClassName}${showFrontHud && rolloverBillboardBlock ? ' admin-front-hud-click-edit-target' : ''}`}
                 html={renderedRolloverBillboard.bodyHtml}
                 onClick={showFrontHud && rolloverBillboardBlock ? handleRolloverBillboardBodyEditIntent : undefined}
                 onKeyDown={showFrontHud && rolloverBillboardBlock ? (event) => handleBodyEditKeyDown(event, handleRolloverBillboardBodyEditIntent) : undefined}
@@ -2129,7 +2137,7 @@ export default function RetirementPage() {
                 aria-label={showFrontHud && rolloverBillboardBlock ? 'Edit retirement rollover billboard body HTML' : undefined}
               />
             ) : renderedRolloverBillboard.body ? (
-              <div className="native-info-rich-html">
+              <div className={`native-info-rich-html is-body-justify-${renderedRolloverBillboardBodyJustify}${renderedRolloverBillboardHeaderGapClassName}`}>
                 <p>{renderedRolloverBillboard.body}</p>
               </div>
             ) : null}

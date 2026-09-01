@@ -1,6 +1,8 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import BillboardHudEditorPanel, {
+  normalizeBillboardBodyWidth,
+  normalizeBillboardHeaderGap,
   normalizeBillboardPadding,
   normalizeBillboardWidth,
 } from './BillboardHudEditorPanel';
@@ -11,6 +13,13 @@ describe('BillboardHudEditorPanel reference layout', () => {
     expect(normalizeBillboardWidth('1450')).toBe(1440);
     expect(normalizeBillboardWidth('')).toBeNull();
     expect(normalizeBillboardWidth(null)).toBeNull();
+    expect(normalizeBillboardBodyWidth('315')).toBe(320);
+    expect(normalizeBillboardBodyWidth('645')).toBe(650);
+    expect(normalizeBillboardBodyWidth('1210')).toBe(1200);
+    expect(normalizeBillboardBodyWidth('')).toBeNull();
+    expect(normalizeBillboardHeaderGap('1.17')).toBe(1.15);
+    expect(normalizeBillboardHeaderGap('4.2')).toBe(4);
+    expect(normalizeBillboardHeaderGap('')).toBeNull();
     expect(normalizeBillboardPadding('8.2')).toBe(8);
     expect(normalizeBillboardPadding('7.5')).toBe(7.5);
     expect(normalizeBillboardPadding('')).toBeNull();
@@ -100,9 +109,44 @@ describe('BillboardHudEditorPanel reference layout', () => {
 
     expect(screen.getByText('Body HTML')).toBeTruthy();
     expect(screen.getByRole('toolbar', { name: 'Article body formatting' })).toBeTruthy();
+    expect(screen.queryByRole('group', { name: 'Text alignment' })).toBeNull();
     expect(screen.getByRole('textbox', { name: 'Body HTML' }).tagName).toBe('DIV');
     expect(screen.getByTitle('Bold')).toBeTruthy();
     expect(screen.getByTitle('Italic')).toBeTruthy();
+  });
+
+  it('separates title alignment from body alignment and body width on the Copy page', () => {
+    const onBodyJustifyChange = vi.fn();
+    const onBodyMaxWidthPxChange = vi.fn();
+    render(
+      <BillboardHudEditorPanel
+        justify="center"
+        justifyOptions={[
+          { value: 'left', label: 'Left' },
+          { value: 'center', label: 'Center' },
+          { value: 'right', label: 'Right' },
+        ]}
+        bodyJustify="left"
+        bodyJustifyOptions={[
+          { value: 'left', label: 'Left' },
+          { value: 'center', label: 'Center' },
+          { value: 'right', label: 'Right' },
+        ]}
+        bodyMaxWidthPx={640}
+        onBodyJustifyChange={onBodyJustifyChange}
+        onBodyMaxWidthPxChange={onBodyMaxWidthPxChange}
+      />,
+    );
+
+    expect(screen.getByText('Title alignment')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Copy' }));
+    expect(screen.getByRole('group', { name: 'Body alignment' })).toBeTruthy();
+    expect(screen.getByRole('slider', { name: 'Body width' }).value).toBe('640');
+
+    fireEvent.click(within(screen.getByRole('group', { name: 'Body alignment' })).getByRole('button', { name: 'Center' }));
+    expect(onBodyJustifyChange).toHaveBeenCalledWith('center');
+    fireEvent.change(screen.getByRole('slider', { name: 'Body width' }), { target: { value: '700' } });
+    expect(onBodyMaxWidthPxChange).toHaveBeenCalledWith(700);
   });
 
   it('provides a lead-copy size slider in the copy panel', () => {
@@ -163,6 +207,24 @@ describe('BillboardHudEditorPanel reference layout', () => {
     expect(onTitleFontWeightChange).toHaveBeenCalledWith(600);
   });
 
+  it('provides a separate header gap slider from title leading', () => {
+    const onHeaderGapRemChange = vi.fn();
+    render(
+      <BillboardHudEditorPanel
+        headerGapRem={1.5}
+        onHeaderGapRemChange={onHeaderGapRemChange}
+        lineSpacing={1.05}
+      />,
+    );
+
+    expect(screen.getByRole('slider', { name: 'Title line height' }).value).toBe('1.05');
+    const slider = screen.getByRole('slider', { name: 'Header gap' });
+    expect(slider.value).toBe('1.5');
+
+    fireEvent.change(slider, { target: { value: '2' } });
+    expect(onHeaderGapRemChange).toHaveBeenCalledWith(2);
+  });
+
   it('lets the layout slider leave Auto and restores Auto when clicked', () => {
     const onContentMaxWidthPxChange = vi.fn();
     render(
@@ -178,6 +240,25 @@ describe('BillboardHudEditorPanel reference layout', () => {
 
     fireEvent.change(slider, { target: { value: '900' } });
     expect(onContentMaxWidthPxChange).toHaveBeenCalledWith(900);
+  });
+
+  it('uses the branded range treatment for width sliders and places bottom padding under top padding', () => {
+    render(
+      <BillboardHudEditorPanel
+        contentMaxWidthPx={900}
+        bodyMaxWidthPx={640}
+        paddingTopRem={4}
+        paddingBottomRem={4}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Layout' }));
+    expect(screen.queryByText('Bounded width and surface')).toBeNull();
+    expect(screen.getByRole('slider', { name: 'Content width' }).closest('.admin-front-hud-range')).toBeTruthy();
+    expect(screen.getByRole('slider', { name: 'Billboard top padding' }).closest('.admin-billboard-editor-width-grid')?.querySelector('.admin-billboard-editor-bottom-padding')).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Copy' }));
+    expect(screen.getByRole('slider', { name: 'Body width' }).closest('.admin-front-hud-range')).toBeTruthy();
   });
 
   it('wires the billboard bottom padding slider', () => {

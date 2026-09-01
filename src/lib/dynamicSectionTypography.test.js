@@ -5,6 +5,10 @@ import {
   buildBillboardTitleStyle,
   normalizeBillboardLeadCopySizeRem,
   normalizeBillboardSubtitleSizeRem,
+  getIntroExtraLineDefaults,
+  normalizeIntroExtraLineHeight,
+  normalizeIntroExtraLineSizeRem,
+  normalizeIntroExtraLineSpaceBeforeRem,
   normalizeIntroLineSpacing,
 } from './dynamicSectionTypography';
 
@@ -14,6 +18,25 @@ describe('dynamicSectionTypography', () => {
     expect(normalizeIntroLineSpacing(1.237)).toBe(1.24);
     expect(normalizeIntroLineSpacing(2)).toBe(1.4);
     expect(normalizeIntroLineSpacing(0.1)).toBe(0.85);
+  });
+
+  it('keeps intro accent typography bounded and preserves the Careers visual defaults', () => {
+    expect(normalizeIntroExtraLineSizeRem(2.237)).toBe(2.24);
+    expect(normalizeIntroExtraLineSizeRem(8)).toBe(5);
+    expect(normalizeIntroExtraLineSpaceBeforeRem(-1)).toBe(0);
+    expect(normalizeIntroExtraLineSpaceBeforeRem(8)).toBe(4);
+    expect(normalizeIntroExtraLineHeight(1.117)).toBe(1.12);
+    expect(normalizeIntroExtraLineHeight(0.1)).toBe(0.8);
+    expect(getIntroExtraLineDefaults('careers-native-top-intro')).toEqual({
+      extraLineSizeRem: 4.15,
+      extraLineSpaceBeforeRem: 2.4,
+      extraLineLineHeight: 0.94,
+    });
+    expect(getIntroExtraLineDefaults('some-other-intro')).toEqual({
+      extraLineSizeRem: 1.7,
+      extraLineSpaceBeforeRem: 1,
+      extraLineLineHeight: 1.35,
+    });
   });
 
   it('keeps billboard subtitle sizes on their own normalization path', () => {

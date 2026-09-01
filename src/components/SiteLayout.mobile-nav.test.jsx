@@ -381,4 +381,77 @@ describe('SiteLayout mobile nav drawer', () => {
     display: none;
   }`);
   });
+
+  it('puts Search before Login with no utility gap and taller hover surfaces', () => {
+    mockMatchMedia(true);
+
+    const { container } = renderLayout();
+    const utility = container.querySelector('.site-nav-links-utility');
+    const searchLink = utility?.querySelector('.nav-search-link');
+    const loginLink = utility?.querySelector('.nav-login-link');
+    const cssSource = readSource('../styles.css');
+
+    expect(searchLink).toBeTruthy();
+    expect(loginLink).toBeTruthy();
+    expect(searchLink.compareDocumentPosition(loginLink) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(cssSource).toContain('.site-nav-links-utility {\n  gap: 0;\n}');
+    expect(cssSource).toContain('.site-nav-links-utility > .nav-search-link,');
+    expect(cssSource).toContain('min-height: 46px;');
+    expect(cssSource).toContain('padding-block: 0.45rem;');
+  });
+
+  it('toggles the desktop search layer in place and expands it for results', () => {
+    mockMatchMedia(true);
+
+    const { container } = renderLayout();
+    const searchButton = screen.getByRole('button', { name: 'Search' });
+    const searchLayer = container.querySelector('#site-header-search-layer');
+    const cssSource = readSource('../styles.css');
+
+    expect(searchLayer?.className).not.toContain('is-open');
+    fireEvent.click(searchButton);
+
+    expect(searchButton.getAttribute('aria-expanded')).toBe('true');
+    expect(searchLayer?.className).toContain('is-open');
+    const searchInput = within(searchLayer).getByRole('searchbox', { name: 'Search this site' });
+    fireEvent.change(searchInput, { target: { value: 'retirement' } });
+    expect(searchLayer?.className).toContain('has-query');
+
+    fireEvent.click(within(searchLayer).getByRole('button', { name: 'Clear search' }));
+    expect(searchInput.value).toBe('');
+    expect(searchLayer?.className).not.toContain('has-query');
+
+    fireEvent.click(searchButton);
+    expect(searchButton.getAttribute('aria-expanded')).toBe('false');
+    expect(searchLayer?.className).not.toContain('is-open');
+    expect(cssSource).not.toContain('site-header-search-close');
+  });
+
+  it('hides open desktop search when a main menu group is hovered', () => {
+    mockMatchMedia(true);
+
+    const { container } = renderLayout();
+    const searchButton = screen.getByRole('button', { name: 'Search' });
+    const searchLayer = container.querySelector('#site-header-search-layer');
+    const mainMenuGroup = container.querySelector('.site-nav-links-primary .site-nav-group');
+
+    fireEvent.click(searchButton);
+    expect(searchLayer?.className).toContain('is-open');
+
+    fireEvent.mouseEnter(mainMenuGroup);
+    expect(searchButton.getAttribute('aria-expanded')).toBe('false');
+    expect(searchLayer?.className).not.toContain('is-open');
+  });
+
+  it('closes the mobile menu when the inline search layer opens', () => {
+    mockMatchMedia(false);
+
+    const { container } = renderLayout();
+    fireEvent.click(screen.getByRole('button', { name: 'Open menu' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Search' }));
+
+    expect(screen.getByRole('button', { name: 'Open menu' }).getAttribute('aria-expanded')).toBe('false');
+    expect(container.querySelector('#site-header-search-layer')?.className).toContain('is-mobile');
+    expect(container.querySelector('#site-header-search-layer')?.className).toContain('is-open');
+  });
 });

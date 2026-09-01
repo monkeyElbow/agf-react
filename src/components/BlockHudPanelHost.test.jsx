@@ -7,6 +7,7 @@ import useLocalBlockDrafts from '../hooks/useLocalBlockDrafts';
 import { LOCAL_BLOCK_DRAFT_IDLE_COMMIT_DELAY_MS } from '../lib/contentAdminTiming';
 import { getEditableFieldsForKind } from '../blocks/registry';
 import BlockHudPanelHost from './BlockHudPanelHost';
+import { GridBlockEditor } from './block-editors/migratedBlockEditors';
 
 function IntroHudLocalDraftProbe({
   blocks,
@@ -48,6 +49,38 @@ function CardGridSettingsProbe({ initialSettings, routeOptions = [], onSettingCh
 }
 
 describe('BlockHudPanelHost', () => {
+  it('keeps Card Grid button URL overrides editable through a stale parent rerender', () => {
+    const onSettingChange = vi.fn();
+    const block = {
+      id: 'card-grid-route-link-probe',
+      kind: 'card_grid',
+      mode: 'dynamic',
+      settings: {
+        cardCount: '1',
+        card1Title: 'First card',
+        card1ButtonLabel: 'Open card',
+        card1ButtonUrl: '/contact',
+      },
+    };
+    const renderEditor = () => createElement(GridBlockEditor, {
+      block,
+      onSettingChange,
+      routeOptions: [{ title: 'Contact', path: '/contact' }, { title: 'Forms', path: '/forms' }],
+    });
+    const { rerender } = render(renderEditor());
+
+    fireEvent.click(screen.getByRole('button', { name: /^Buttons/ }));
+    const destination = screen.getAllByLabelText('Destination')[0];
+    fireEvent.change(destination, { target: { value: '/forms' } });
+    rerender(renderEditor());
+
+    expect(screen.getAllByLabelText('Destination')[0].value).toBe('/forms');
+    expect(onSettingChange).toHaveBeenCalledWith(
+      'card1ButtonLinkJson',
+      '{"kind":"internal","openInNewWindow":false,"to":"/forms"}',
+    );
+  });
+
   it('routes CTA form HUD blocks through the reference CTA editor', () => {
     render(createElement(BlockHudPanelHost, {
       block: {
@@ -117,13 +150,14 @@ describe('BlockHudPanelHost', () => {
     expect(screen.getByRole('slider', { name: 'Block padding above' })).toBeTruthy();
     expect(screen.getByRole('slider', { name: 'Block padding below' })).toBeTruthy();
     expect(screen.getByRole('slider', { name: 'Header/subhead space' })).toBeTruthy();
+    expect(screen.getByRole('slider', { name: 'Space below subhead' })).toBeTruthy();
     const subheadSize = screen.getByRole('slider', { name: 'Grid subhead size (rem)' });
     fireEvent.change(subheadSize, { target: { value: '1.95' } });
     expect(onSettingChange).toHaveBeenCalledWith('subheadSizeRem', 1.95);
     const headerPage = document.querySelector('.admin-card-grid-hud-page--header');
     expect(headerPage?.querySelector('.admin-card-grid-header-editor-copy')).toBeTruthy();
     expect(headerPage?.querySelector('.admin-card-grid-header-editor-controls')).toBeTruthy();
-    expect(headerPage?.querySelectorAll('.admin-card-grid-header-editor-controls input[type="range"]')).toHaveLength(5);
+    expect(headerPage?.querySelectorAll('.admin-card-grid-header-editor-controls input[type="range"]')).toHaveLength(7);
     expect([...headerPage?.querySelectorAll('.admin-card-grid-header-editor-controls input[type="range"]') || []][0]?.getAttribute('aria-label')).toBe('Header size (rem)');
     expect(document.querySelector('.admin-card-grid-hud-page--appearance .admin-card-grid-hud-group--spacing')).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Appearance' }));
@@ -140,6 +174,26 @@ describe('BlockHudPanelHost', () => {
     expect(screen.getByRole('button', { name: 'Card 6' })).toBeTruthy();
     expect(document.querySelector('.admin-card-grid-card-preview')).toBeNull();
     expect(document.querySelector('.admin-card-grid-hud-reference .admin-front-hud-swatch-row')).toBeTruthy();
+  });
+
+  it('hides header-to-subhead spacing when the subhead is empty but keeps header-to-card spacing', () => {
+    render(createElement(BlockHudPanelHost, {
+      block: {
+        id: 'card-grid-header-only',
+        kind: 'card_grid',
+        mode: 'dynamic',
+        settings: {
+          title: 'Header only grid',
+          introHtml: '',
+          subtitle: '',
+          card1Title: 'First card',
+        },
+      },
+      onSettingChange: vi.fn(),
+    }));
+
+    expect(screen.queryByRole('slider', { name: 'Header/subhead space' })).toBeNull();
+    expect(screen.getByRole('slider', { name: 'Space below header' })).toBeTruthy();
   });
 
   it('keeps card title and body swatches independent from the grid background', () => {

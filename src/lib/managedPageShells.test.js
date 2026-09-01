@@ -60,11 +60,10 @@ describe('managed page shells', () => {
     expect(isBlockOnlyManagedPagePath('/test')).toBe(true);
   });
 
-  it('keeps functional routes blockless instead of seeding empty page-content fallbacks', () => {
+  it('keeps genuinely functional routes blockless instead of seeding empty page-content fallbacks', () => {
     expect(BLOCKLESS_MANAGED_PAGE_PATHS).toBeInstanceOf(Set);
 
     [
-      '/about-us/careers',
       '/forms',
       '/prospectus',
       '/search',
@@ -73,6 +72,9 @@ describe('managed page shells', () => {
       expect(isBlocklessManagedPagePath(pathname)).toBe(true);
       expect(isBlockOnlyManagedPagePath(pathname)).toBe(false);
     });
+
+    expect(isBlockOnlyManagedPagePath('/about-us/careers')).toBe(true);
+    expect(isBlocklessManagedPagePath('/about-us/careers')).toBe(false);
   });
 
   it('classifies special routes outside the block-only marketing inventory', () => {
