@@ -32,8 +32,8 @@ describe('AdminDisclosuresPage', () => {
     expect(screen.getByRole('button', { name: /Loan calculator disclosure/i })).toBeTruthy();
     expect(screen.getByRole('button', { name: /IRA rates disclosure/i })).toBeTruthy();
     expect(screen.getByText('Select a disclosure to edit')).toBeTruthy();
-    expect(screen.getByText(/Changes save automatically into the shared draft/i)).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Make live' })).toBeTruthy();
+    expect(screen.getByText(/Changes stay on this page until you click Save/i)).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Save' })).toBeTruthy();
   });
 
   it('resets a selected disclosure back to its seeded default', () => {
@@ -50,7 +50,7 @@ describe('AdminDisclosuresPage', () => {
     expect(textarea.value).toBe('This calculator uses example data and is not an AGFinancial official quote or recommendation.');
   });
 
-  it('shows autosave and reference-only guidance for a selected disclosure', () => {
+  it('shows save-only and reference-only guidance for a selected disclosure', () => {
     renderAdminDisclosuresPage();
 
     fireEvent.click(screen.getByRole('button', { name: /Rates page IRA disclosure/i }));
@@ -58,6 +58,6 @@ describe('AdminDisclosuresPage', () => {
     expect(screen.getByText('Reference details')).toBeTruthy();
     expect(screen.getByText(/These fields explain where the disclosure is used. They are read-only./i)).toBeTruthy();
     expect(screen.getByText('Editable public copy')).toBeTruthy();
-    expect(screen.getByText(/Editing affects the shared draft only./i)).toBeTruthy();
+    expect(screen.getByText(/Changes stay here until saved./i)).toBeTruthy();
   });
 });

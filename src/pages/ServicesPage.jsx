@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import BlockOwnershipOverlay, { getBlockOwnershipVisual } from '../components/BlockOwnershipOverlay';
 import DynamicCtaSection from '../components/DynamicCtaSection';
 import FrontHudAnchorTag from '../components/FrontHudAnchorTag';
+import ManagedBlockOrder from '../components/ManagedBlockOrder';
 import SafeRichText from '../components/SafeRichText';
 import { useContentAdmin } from '../context/ContentAdminContextCore';
 import { useFrontHud } from '../context/FrontHudContext';
@@ -178,6 +179,10 @@ export default function ServicesPage() {
     registerExternalDraftFlushHandler,
     registerExternalDraftStatusHandler,
   });
+  const managedBlockOrderStyle = (blockId) => {
+    const index = managedBlocks.findIndex((block) => String(block?.id || '').trim() === blockId);
+    return { order: index >= 0 ? index : managedBlocks.length };
+  };
   const heroPieBlock = useMemo(() => (
     managedBlocks.find((block) => (
       block?.id === 'hero_pie'
@@ -721,11 +726,12 @@ export default function ServicesPage() {
           </Suspense>
         </FrontHudPanelShell>
       ) : null}
+      <ManagedBlockOrder className="services-native-page-content" blocks={managedBlocks}>
       <section
         ref={heroPieSectionRef}
         className={`services-pie-hero${getOwnershipVisualForBlockId('hero_pie').className || ''}`}
         data-block-id="hero_pie"
-        style={activeSliceAccentStyle}
+        style={{ ...activeSliceAccentStyle, ...managedBlockOrderStyle('hero_pie') }}
       >
         <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('hero_pie')} />
         {renderHudAnchor('hero_pie')}
@@ -810,7 +816,7 @@ export default function ServicesPage() {
         </div>
       </section>
 
-      <section className={`services-native-intro dynamic-intro is-bg-${resolvedIntro.bgTone || 'white'} is-text-${resolvedIntro.textTone || 'dark'}${getHudBlockStateClassName('intro')}${getOwnershipVisualForBlockId('intro').className || ''}`} data-block-id="intro">
+      <section className={`services-native-intro dynamic-intro is-bg-${resolvedIntro.bgTone || 'white'} is-text-${resolvedIntro.textTone || 'dark'}${getHudBlockStateClassName('intro')}${getOwnershipVisualForBlockId('intro').className || ''}`} data-block-id="intro" style={managedBlockOrderStyle('intro')}>
         <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('intro')} />
         {renderHudAnchor('intro')}
         <div className="ag-panel-rail">
@@ -877,6 +883,7 @@ export default function ServicesPage() {
         ref={servicesBreakdownSectionRef}
         className={`${servicesBreakdownRuntime.sectionClassName || 'services-native-grid-wrap services-breakdown-section'}${getOwnershipVisualForBlockId('services_cards').className || ''}`}
         data-block-id="services_cards"
+        style={managedBlockOrderStyle('services_cards')}
       >
         <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('services_cards')} />
         {renderHudAnchor('services_cards')}
@@ -925,6 +932,7 @@ export default function ServicesPage() {
         ref={servicesMattersSectionRef}
         className={`${servicesMattersRuntime.sectionClassName || 'services-native-matters'}${getOwnershipVisualForBlockId('matters_band').className || ''}`}
         data-block-id="matters_band"
+        style={managedBlockOrderStyle('matters_band')}
       >
         <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('matters_band')} />
         {renderHudAnchor('matters_band')}
@@ -967,7 +975,7 @@ export default function ServicesPage() {
       </section>
       ) : null}
 
-      <div ref={ctaSectionRef}>
+      <div ref={ctaSectionRef} data-block-id="cta_form" style={managedBlockOrderStyle('cta_form')}>
         <DynamicCtaSection
           managedBlocks={managedBlocks}
           defaultSettings={defaultServicesCtaSettings}
@@ -980,7 +988,7 @@ export default function ServicesPage() {
         />
       </div>
 
-      <section ref={testimonialsSectionRef} className={`services-native-testimonials${getOwnershipVisualForBlockId('testimonials').className || ''}`} data-block-id="testimonials">
+      <section ref={testimonialsSectionRef} className={`services-native-testimonials${getOwnershipVisualForBlockId('testimonials').className || ''}`} data-block-id="testimonials" style={managedBlockOrderStyle('testimonials')}>
         <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('testimonials')} />
         {renderHudAnchor('testimonials')}
         <div className="ag-panel-rail">
@@ -1004,6 +1012,7 @@ export default function ServicesPage() {
           ) : null}
         </div>
       </section>
+      </ManagedBlockOrder>
     </div>
   );
 }

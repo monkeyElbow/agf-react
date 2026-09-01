@@ -59,10 +59,8 @@ export default function AdminDisclosuresPage() {
     updateDisclosure,
     resetDisclosures,
     restoreDisclosureDraftFromLive,
-    publishDisclosures,
+    saveDisclosuresLive,
     hasUnpublishedDisclosureChanges,
-    draftUpdatedAt,
-    draftUpdatedBy,
     publishedAt,
     publishedBy,
   } = useDisclosures();
@@ -70,12 +68,9 @@ export default function AdminDisclosuresPage() {
     draftLegalCopy,
     ratesMeta,
     setLegalCopy,
-    resetDraftLegalCopy,
     restoreDraftLegalCopyFromLive,
-    publishDraftLegalCopy,
+    applyLegalCopySnapshot,
     hasUnpublishedLegalCopyChanges,
-    legalCopyDraftUpdatedAt,
-    legalCopyDraftUpdatedBy,
     legalCopyPublishedAt,
     legalCopyPublishedBy,
   } = useRates();
@@ -85,15 +80,11 @@ export default function AdminDisclosuresPage() {
   const [activeGroup, setActiveGroup] = useState('all');
   const [workflowMessage, setWorkflowMessage] = useState('');
   const [workflowError, setWorkflowError] = useState('');
-  const [isPublishing, setIsPublishing] = useState(false);
-  const [isRestoringDraft, setIsRestoringDraft] = useState(false);
-  const [isResettingDraft, setIsResettingDraft] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const offeringCircularDoc = resolveDocumentLink('prospectus-prospectus-download-offering-circular')
     || resolveDocumentLink('document-aglf-offering-circular');
-  const hasDraftChanges = hasUnpublishedDisclosureChanges || hasUnpublishedLegalCopyChanges;
-  const latestDraftUpdatedAt = Math.max(Number(draftUpdatedAt) || 0, Number(legalCopyDraftUpdatedAt) || 0);
+  const hasChanges = hasUnpublishedDisclosureChanges || hasUnpublishedLegalCopyChanges;
   const latestPublishedAt = Math.max(Number(publishedAt) || 0, Number(legalCopyPublishedAt) || 0);
-  const latestDraftActor = latestDraftUpdatedAt >= (Number(legalCopyDraftUpdatedAt) || 0) ? draftUpdatedBy : legalCopyDraftUpdatedBy;
   const latestPublishedActor = latestPublishedAt >= (Number(legalCopyPublishedAt) || 0) ? publishedBy : legalCopyPublishedBy;
 
   const rateEntries = useMemo(() => ([
@@ -204,54 +195,40 @@ export default function AdminDisclosuresPage() {
     updateDisclosure(selectedEntry.id, defaultEntry?.value ?? '');
   };
 
-  const handleResetAllDefaults = async () => {
+  const handleResetAllDefaults = () => {
     setWorkflowMessage('');
     setWorkflowError('');
-    setIsResettingDraft(true);
-    try {
-      await Promise.all([
-        resetDisclosures(),
-        resetDraftLegalCopy(),
-      ]);
-      setWorkflowMessage('Draft reset to seeded defaults. Public/live disclosures were not changed.');
-    } catch {
-      setWorkflowError('Unable to reset the disclosure draft right now.');
-    } finally {
-      setIsResettingDraft(false);
-    }
+    resetDisclosures();
+    setLegalCopy({ ...DEFAULT_RATES_LEGAL_COPY_SETTINGS });
+    setWorkflowMessage('Defaults loaded. Save to publish them.');
   };
 
-  const handleRestoreLive = async () => {
+  const handleDiscardChanges = async () => {
     setWorkflowMessage('');
     setWorkflowError('');
-    setIsRestoringDraft(true);
     try {
       await Promise.all([
         restoreDisclosureDraftFromLive(),
         restoreDraftLegalCopyFromLive(),
       ]);
-      setWorkflowMessage('Draft restored from the current live disclosures.');
+      setWorkflowMessage('Unsaved changes discarded.');
     } catch {
-      setWorkflowError('Unable to restore the current live disclosures into draft right now.');
-    } finally {
-      setIsRestoringDraft(false);
+      setWorkflowError('Unable to discard the current changes right now.');
     }
   };
 
-  const handleMakeLive = async () => {
+  const handleSave = async () => {
     setWorkflowMessage('');
     setWorkflowError('');
-    setIsPublishing(true);
+    setIsSaving(true);
     try {
-      await Promise.all([
-        publishDisclosures(),
-        publishDraftLegalCopy(),
-      ]);
-      setWorkflowMessage('Draft disclosures are now live for every user.');
+      const snapshot = await saveDisclosuresLive({ legalCopy: draftLegalCopy });
+      applyLegalCopySnapshot(snapshot);
+      setWorkflowMessage('Disclosures saved and live.');
     } catch {
-      setWorkflowError('Unable to make the disclosure draft live right now.');
+      setWorkflowError('Unable to save disclosures right now.');
     } finally {
-      setIsPublishing(false);
+      setIsSaving(false);
     }
   };
 
@@ -322,40 +299,37 @@ export default function AdminDisclosuresPage() {
                 <button
                   type="button"
                   className="action-btn action-btn-outline"
-                  onClick={handleRestoreLive}
-                  disabled={isRestoringDraft}
+                  onClick={handleDiscardChanges}
+                  disabled={!hasChanges || isSaving}
                 >
-                  Restore live draft
+                  Discard changes
                 </button>
                 <button
                   type="button"
                   className="action-btn action-btn-danger"
                   onClick={handleResetAllDefaults}
-                  disabled={isResettingDraft}
+                  disabled={isSaving}
                 >
                   Reset all defaults
                 </button>
                 <button
                   type="button"
                   className="action-btn"
-                  onClick={handleMakeLive}
-                  disabled={!hasDraftChanges || isPublishing}
+                  onClick={handleSave}
+                  disabled={!hasChanges || isSaving}
                 >
-                  Make live
+                  {isSaving ? 'Saving…' : 'Save'}
                 </button>
               </div>
               <p className="admin-content-note admin-disclosures-toolbar-note">
-                Draft changes save automatically for admins. The public site keeps showing the live version until you click Make live.
+                Changes stay on this page until you click Save. Save publishes them for every user.
               </p>
               <div className="admin-disclosures-workflow-status">
                 <p className="admin-content-note">
-                  Draft: {latestDraftUpdatedAt ? formatActivityTimestamp(latestDraftUpdatedAt, latestDraftActor) : 'Not saved yet'}
+                  Updated: {latestPublishedAt ? formatActivityTimestamp(latestPublishedAt, latestPublishedActor) : 'Not saved yet'}
                 </p>
-                <p className="admin-content-note">
-                  Live: {latestPublishedAt ? formatActivityTimestamp(latestPublishedAt, latestPublishedActor) : 'Not published yet'}
-                </p>
-                <p className={`admin-content-note ${hasDraftChanges ? 'admin-disclosures-status-draft' : 'admin-disclosures-status-live'}`}>
-                  {hasDraftChanges ? 'Unpublished draft changes are waiting for review.' : 'Draft matches the live site.'}
+                <p className={`admin-content-note ${hasChanges ? 'admin-disclosures-status-draft' : 'admin-disclosures-status-live'}`}>
+                  {hasChanges ? 'Unsaved changes are on this page.' : 'Saved changes are live.'}
                 </p>
                 {workflowMessage ? (
                   <p className="admin-content-note admin-disclosures-status-success">{workflowMessage}</p>
@@ -408,7 +382,7 @@ export default function AdminDisclosuresPage() {
                 </div>
 
                 <div className="admin-disclosures-editor-note">
-                  <strong>Editing affects the shared draft only.</strong> The fields below are split into reference details and editable public copy. Review the preview here, then use Make live when you are ready to publish for everyone.
+                  <strong>Changes stay here until saved.</strong> The fields below are split into reference details and editable public copy. Review the preview, then Save to publish for everyone.
                 </div>
 
                 <section className="admin-content-section admin-disclosures-metadata-section">
@@ -488,7 +462,7 @@ export default function AdminDisclosuresPage() {
               <div className="admin-disclosures-empty-editor">
                 <h3>Select a disclosure to edit</h3>
                 <p>The editor stays inactive until you choose an item from the left list. That reduces accidental edits and makes the page feel less noisy.</p>
-                <p>Changes save automatically into the shared draft. Use `text` for plain copy, `lines` for separated fine-print paragraphs, and `html` only when the disclosure needs links or richer formatting.</p>
+                <p>Changes stay on this page until saved. Use `text` for plain copy, `lines` for separated fine-print paragraphs, and `html` only when the disclosure needs links or richer formatting.</p>
               </div>
             )}
           </aside>

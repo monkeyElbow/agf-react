@@ -633,6 +633,18 @@
 
 /* Investments certificate polish is page-specific: the shared certificate
    shell is also reused by retirement and insurance content. */
+.investments-native-page-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.services-native-page-content,
+.loans-native-page-content,
+.retirement-native-page-content {
+  display: flex;
+  flex-direction: column;
+}
+
 .investments-native-page .retirement-account-card--certificate h3 {
   font-size: clamp(2.185rem, 3.8525vw, 2.8175rem);
 }

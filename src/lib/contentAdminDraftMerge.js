@@ -97,7 +97,14 @@ export function summarizePageWorkflowActivity(collaborationByPath, pathname, act
     toComparableAuthoringState(publishedState),
     normalizedPath,
   );
-  const changedBlockIds = new Set(publishSummary.changedBlockIds);
+  // A moved block can be content-identical, so it is absent from
+  // changedBlockIds. Include order participants when determining who owns a
+  // page draft; otherwise a valid reorder has no Save affordance.
+  const changedBlockIds = new Set([
+    ...(publishSummary.changedBlockIds || []),
+    ...(publishSummary.orderChangedBlockIds || []),
+  ]);
+  const orderChangedBlockIds = new Set(publishSummary.orderChangedBlockIds || []);
   const blocks = collaborationByPath?.[normalizedPath]?.blocks || {};
   let currentActorBlockCount = 0;
   let otherActorBlockCount = 0;
@@ -128,6 +135,14 @@ export function summarizePageWorkflowActivity(collaborationByPath, pathname, act
         && (
           normalizedMeta.savedBy?.userId !== currentUserId
           || normalizedMeta.savedAt !== normalizedMeta.draftedAt
+        )
+        // During a reorder the local move deliberately has not been saved
+        // yet, but it does hold the mover's optimistic lock. Treat that as
+        // an unsaved page action so the explicit Save button remains usable.
+        || (
+          orderChangedBlockIds.has(String(blockId || '').trim())
+          && normalizedMeta.lockedBy?.userId === currentUserId
+          && normalizedMeta.draftedBy?.userId !== currentUserId
         )
       ) {
         currentActorUnsavedSaveBlockCount += 1;

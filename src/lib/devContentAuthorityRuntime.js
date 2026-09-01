@@ -46,6 +46,12 @@ export async function saveSharedDisclosures(...args) {
   return client.saveSharedDisclosures(...args);
 }
 
+export async function saveSharedDisclosuresLive(...args) {
+  const client = await loadClient();
+  if (!client) throw unavailableClientError();
+  return client.saveSharedDisclosuresLive(...args);
+}
+
 export async function resetSharedDisclosures(...args) {
   const client = await loadClient();
   if (!client) throw unavailableClientError();

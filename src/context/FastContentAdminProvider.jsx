@@ -174,18 +174,33 @@ export default function FastContentAdminProvider({ children }) {
     }
 
     let active = true;
-    fetchPublishedContentRouteSnapshot(locationPathname)
-      .then((snapshot) => {
-        if (active && snapshot?.initialized) {
-          setPublishedSnapshot(snapshot);
-        }
-      })
-      .catch(() => {
-        // Public rendering remains available from the code-owned page map and native content.
-      });
+    const syncPublishedRoute = () => {
+      void fetchPublishedContentRouteSnapshot(locationPathname)
+        .then((snapshot) => {
+          if (active && snapshot?.initialized) {
+            setPublishedSnapshot(snapshot);
+          }
+        })
+        .catch(() => {
+          // Public rendering remains available from the code-owned page map and native content.
+        });
+    };
+
+    // Route snapshots can be large. Refresh on navigation, focus, and return
+    // to a visible tab instead of polling every public tab continuously.
+    syncPublishedRoute();
+    const syncWhenVisible = () => {
+      if (document.visibilityState === 'visible') {
+        syncPublishedRoute();
+      }
+    };
+    window.addEventListener('focus', syncPublishedRoute);
+    document.addEventListener('visibilitychange', syncWhenVisible);
 
     return () => {
       active = false;
+      window.removeEventListener('focus', syncPublishedRoute);
+      document.removeEventListener('visibilitychange', syncWhenVisible);
     };
   }, [locationPathname, shouldLoadHeavy]);
 

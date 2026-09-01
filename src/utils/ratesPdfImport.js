@@ -1,5 +1,7 @@
-import * as pdfjsLib from 'pdfjs-dist';
-import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+// Keep the API and worker on the same legacy build. Rates import must work in
+// browsers that do not provide newer Promise APIs used by PDF.js 5.x.
+import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
+import pdfWorker from 'pdfjs-dist/legacy/build/pdf.worker.min.mjs?url';
 import {
   applyParsedRowsToImportReport,
   extractSpecialRateMetaFromParsedRows,
@@ -16,6 +18,74 @@ const Y_LINE_TOLERANCE = 2.5;      // groups text items into the same visual row
 const Y_PAIR_TOLERANCE = 8;        // pairs label rows to numeric rows by vertical closeness
 const MIN_VALUE_X = 280;           // first numeric rate column in current PDF family starts around x=288
 const MAX_LABEL_X = 340;           // labels usually live left of this (with some overlap tolerance)
+export const RATES_PDF_PARSE_TIMEOUT_MS = 12_000;
+
+export const RATES_PDF_IMPORT_STAGE = Object.freeze({
+  FILE_SELECTED: 'FILE_SELECTED',
+  FILE_ARRAY_BUFFER_STARTED: 'FILE_ARRAY_BUFFER_STARTED',
+  FILE_ARRAY_BUFFER_COMPLETE: 'FILE_ARRAY_BUFFER_COMPLETE',
+  PDFJS_GET_DOCUMENT_STARTED: 'PDFJS_GET_DOCUMENT_STARTED',
+  PDFJS_DOCUMENT_LOADED: 'PDFJS_DOCUMENT_LOADED',
+  PAGE_EXTRACTION_STARTED: 'PAGE_EXTRACTION_STARTED',
+  PAGE_EXTRACTION_COMPLETE: 'PAGE_EXTRACTION_COMPLETE',
+  ROW_NORMALIZATION_STARTED: 'ROW_NORMALIZATION_STARTED',
+  IMPORT_COMPLETE: 'IMPORT_COMPLETE',
+  IMPORT_FAILED: 'IMPORT_FAILED',
+  IMPORT_TIMEOUT: 'IMPORT_TIMEOUT',
+});
+
+export function resolveRatesPdfWorkerUrl({ assetUrl = pdfWorker, baseUrl = '' } = {}) {
+  const resolvedBaseUrl = baseUrl || (typeof window !== 'undefined' ? window.location.href : '');
+  if (!resolvedBaseUrl) {
+    return String(assetUrl || '');
+  }
+  try {
+    return new URL(String(assetUrl || ''), resolvedBaseUrl).href;
+  } catch {
+    return String(assetUrl || '');
+  }
+}
+
+function createImportDiagnostics(onStage) {
+  const startedAt = typeof performance !== 'undefined' ? performance.now() : Date.now();
+  const workerUrl = resolveRatesPdfWorkerUrl();
+  const entries = [];
+
+  const mark = (stage, details = {}) => {
+    const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+    const entry = {
+      stage,
+      elapsedMs: Math.round(now - startedAt),
+      workerUrl,
+      ...details,
+    };
+    entries.push(entry);
+    onStage?.(entry);
+    if (import.meta.env.DEV && typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('agf:rates-pdf-import-stage', { detail: entry }));
+    }
+    return entry;
+  };
+
+  return {
+    mark,
+    snapshot: () => entries.map((entry) => ({ ...entry })),
+  };
+}
+
+function describeImportStage(stage) {
+  return {
+    [RATES_PDF_IMPORT_STAGE.FILE_ARRAY_BUFFER_STARTED]: 'reading the selected file',
+    [RATES_PDF_IMPORT_STAGE.PDFJS_GET_DOCUMENT_STARTED]: 'initializing PDF.js',
+    [RATES_PDF_IMPORT_STAGE.PAGE_EXTRACTION_STARTED]: 'extracting PDF page text',
+    [RATES_PDF_IMPORT_STAGE.ROW_NORMALIZATION_STARTED]: 'matching extracted rows',
+  }[stage] || 'processing the PDF';
+}
+
+function createPdfParseTimeoutError(timeoutMs, stage) {
+  const seconds = Math.max(1, Math.ceil(Number(timeoutMs) / 1000));
+  return new Error(`Rates PDF parsing timed out after ${seconds} seconds while ${describeImportStage(stage)}.`);
+}
 
 export function normalizeRateProductName(text = '') {
   return text
@@ -61,8 +131,11 @@ function groupItemsIntoRows(items, tolerance = Y_LINE_TOLERANCE) {
 
   const rows = [];
   for (const item of sorted) {
-    let row = rows.find((r) => Math.abs(r.y - item.y) <= tolerance);
-    if (!row) {
+    // Items are already ordered top-to-bottom. Only the current row can be
+    // within tolerance, so searching every prior row turns a text-heavy PDF
+    // into quadratic work on slower browsers.
+    let row = rows.at(-1);
+    if (!row || Math.abs(row.y - item.y) > tolerance) {
       row = { y: item.y, items: [] };
       rows.push(row);
     }
@@ -230,48 +303,141 @@ function parseEffectiveDateFromPage(items) {
   return match ? match[1] : '';
 }
 
-export async function parseRatesPdf(file, draft) {
+export async function parseRatesPdf(file, draft, {
+  timeoutMs = RATES_PDF_PARSE_TIMEOUT_MS,
+  onStage = null,
+} = {}) {
   if (!file) throw new Error('No file provided.');
   if (!draft) throw new Error('Draft state is required for row matching.');
 
-  const buffer = await file.arrayBuffer();
-  const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
+  const normalizedTimeoutMs = Number.isFinite(Number(timeoutMs)) && Number(timeoutMs) > 0
+    ? Number(timeoutMs)
+    : RATES_PDF_PARSE_TIMEOUT_MS;
+  let loadingTask = null;
+  let pdf = null;
+  let cleanupPromise = null;
+  let timedOut = false;
+  let timeoutId = null;
+  let activeStage = RATES_PDF_IMPORT_STAGE.FILE_SELECTED;
+  const diagnostics = createImportDiagnostics(onStage);
+  const markStage = (stage, details = {}) => {
+    activeStage = stage;
+    return diagnostics.mark(stage, details);
+  };
+  markStage(RATES_PDF_IMPORT_STAGE.FILE_SELECTED, {
+    fileName: String(file?.name || ''),
+    fileSize: Number(file?.size) || 0,
+  });
 
-  const report = {
-    effectiveDate: '',
-    certificates: [],
-    ira: [],
-    retirement403bMbaRate: '',
-    retirement403bMbaApy: '',
-    retirement403bMbaLabel: '',
-    warnings: [],
-    unmatchedPdfRows: [],
-    missingCertificateRows: [],
-    missingIraRows: [],
+  const destroyPdf = () => {
+    if (!cleanupPromise) {
+      cleanupPromise = Promise.resolve(
+        pdf?.destroy?.() || loadingTask?.destroy?.(),
+      ).catch(() => {});
+    }
+    return cleanupPromise;
   };
 
-  for (let pageNum = 1; pageNum <= pdf.numPages; pageNum += 1) {
-    const page = await pdf.getPage(pageNum);
-    const textContent = await page.getTextContent();
+  const timeoutPromise = new Promise((_, reject) => {
+    timeoutId = setTimeout(() => {
+      timedOut = true;
+      void destroyPdf();
+      const error = createPdfParseTimeoutError(normalizedTimeoutMs, activeStage);
+      diagnostics.mark(RATES_PDF_IMPORT_STAGE.IMPORT_TIMEOUT, {
+        failureStage: activeStage,
+        errorName: error.name,
+        errorMessage: error.message,
+      });
+      error.pdfImportDiagnostics = diagnostics.snapshot();
+      reject(error);
+    }, normalizedTimeoutMs);
+  });
 
-    if (!report.effectiveDate) {
-      report.effectiveDate = parseEffectiveDateFromPage(textContent.items) || report.effectiveDate;
+  const parsePromise = (async () => {
+    markStage(RATES_PDF_IMPORT_STAGE.FILE_ARRAY_BUFFER_STARTED);
+    const buffer = await file.arrayBuffer();
+    markStage(RATES_PDF_IMPORT_STAGE.FILE_ARRAY_BUFFER_COMPLETE, {
+      bufferBytes: Number(buffer?.byteLength) || 0,
+    });
+    if (timedOut) {
+      throw createPdfParseTimeoutError(normalizedTimeoutMs, activeStage);
     }
 
-    const pageData = extractRowsFromPage(textContent.items);
-    const parsedRows = normalizeParsedRowsFromPage(pageData, report);
-    const specialMeta = extractSpecialRateMetaFromParsedRows(parsedRows, report);
-    if (specialMeta.retirement403bMbaRate) report.retirement403bMbaRate = specialMeta.retirement403bMbaRate;
-    if (specialMeta.retirement403bMbaApy) report.retirement403bMbaApy = specialMeta.retirement403bMbaApy;
-    if (specialMeta.retirement403bMbaLabel) report.retirement403bMbaLabel = specialMeta.retirement403bMbaLabel;
-    applyParsedRowsToImportReport(parsedRows, draft, report);
+    markStage(RATES_PDF_IMPORT_STAGE.PDFJS_GET_DOCUMENT_STARTED, {
+      workerUrl: resolveRatesPdfWorkerUrl(),
+    });
+    loadingTask = pdfjsLib.getDocument({ data: buffer });
+    pdf = await loadingTask.promise;
+    markStage(RATES_PDF_IMPORT_STAGE.PDFJS_DOCUMENT_LOADED, {
+      pageCount: Number(pdf?.numPages) || 0,
+    });
+
+    const report = {
+      effectiveDate: '',
+      certificates: [],
+      ira: [],
+      retirement403bMbaRate: '',
+      retirement403bMbaApy: '',
+      retirement403bMbaLabel: '',
+      warnings: [],
+      unmatchedPdfRows: [],
+      missingCertificateRows: [],
+      missingIraRows: [],
+    };
+
+    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum += 1) {
+      markStage(RATES_PDF_IMPORT_STAGE.PAGE_EXTRACTION_STARTED, { pageNum });
+      const page = await pdf.getPage(pageNum);
+      const textContent = await page.getTextContent();
+
+      if (!report.effectiveDate) {
+        report.effectiveDate = parseEffectiveDateFromPage(textContent.items) || report.effectiveDate;
+      }
+
+      markStage(RATES_PDF_IMPORT_STAGE.ROW_NORMALIZATION_STARTED, {
+        pageNum,
+        textItemCount: Array.isArray(textContent?.items) ? textContent.items.length : 0,
+      });
+      const pageData = extractRowsFromPage(textContent.items);
+      const parsedRows = normalizeParsedRowsFromPage(pageData, report);
+      const specialMeta = extractSpecialRateMetaFromParsedRows(parsedRows, report);
+      if (specialMeta.retirement403bMbaRate) report.retirement403bMbaRate = specialMeta.retirement403bMbaRate;
+      if (specialMeta.retirement403bMbaApy) report.retirement403bMbaApy = specialMeta.retirement403bMbaApy;
+      if (specialMeta.retirement403bMbaLabel) report.retirement403bMbaLabel = specialMeta.retirement403bMbaLabel;
+      applyParsedRowsToImportReport(parsedRows, draft, report);
+      markStage(RATES_PDF_IMPORT_STAGE.PAGE_EXTRACTION_COMPLETE, { pageNum });
+    }
+
+    finalizeImportReportMissingRows(draft, report);
+
+    if (!report.effectiveDate) {
+      report.warnings.push('Effective date not found in PDF.');
+    }
+
+    return report;
+  })();
+
+  try {
+    const report = await Promise.race([parsePromise, timeoutPromise]);
+    markStage(RATES_PDF_IMPORT_STAGE.IMPORT_COMPLETE, {
+      pageCount: Number(pdf?.numPages) || 0,
+    });
+    return report;
+  } catch (error) {
+    diagnostics.mark(RATES_PDF_IMPORT_STAGE.IMPORT_FAILED, {
+      failureStage: activeStage,
+      errorName: error?.name || 'Error',
+      errorMessage: error?.message || 'PDF import failed.',
+    });
+    error.pdfImportDiagnostics = diagnostics.snapshot();
+    throw error;
+  } finally {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+    // PDF.js cleanup can itself stall when a malformed/scanned document has
+    // already wedged the worker. Cleanup must never hold the admin spinner
+    // open after the parse timeout has reported a failure.
+    void destroyPdf();
   }
-
-  finalizeImportReportMissingRows(draft, report);
-
-  if (!report.effectiveDate) {
-    report.warnings.push('Effective date not found in PDF.');
-  }
-
-  return report;
 }

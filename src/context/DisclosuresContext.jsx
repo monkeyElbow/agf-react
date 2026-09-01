@@ -4,9 +4,7 @@ import {
   fetchSharedDisclosuresSnapshot,
   isDevContentAuthorityEnabled,
   publishSharedDisclosures,
-  resetSharedDisclosures,
-  restoreSharedDisclosuresDraftFromLive,
-  saveSharedDisclosures,
+  saveSharedDisclosuresLive,
 } from '../lib/devContentAuthorityRuntime';
 import { getOrCreateDevIdentity, toDevIdentitySummary } from '../lib/devIdentity';
 
@@ -125,6 +123,7 @@ const defaultDisclosuresValue = {
     return entry ? cloneValue(entry.value) : cloneValue(fallback);
   },
   updateDisclosure: () => {},
+  saveDisclosuresLive: async () => null,
   resetDisclosures: () => {},
   restoreDisclosureDraftFromLive: async () => null,
   publishDisclosures: async () => null,
@@ -148,6 +147,7 @@ export function DisclosuresProvider({ children }) {
   const [publishedAt, setPublishedAt] = useState(0);
   const [publishedBy, setPublishedBy] = useState(null);
   const pendingSharedMutationCountRef = useRef(0);
+  const hasLocalChangesRef = useRef(false);
 
   useEffect(() => {
     if (sharedAuthorityEnabled) {
@@ -172,13 +172,14 @@ export function DisclosuresProvider({ children }) {
       if (cancelled || !snapshot) {
         return;
       }
-      if (!force && pendingSharedMutationCountRef.current > 0) {
+      if (!force && (pendingSharedMutationCountRef.current > 0 || hasLocalChangesRef.current)) {
         return;
       }
       const normalized = normalizeSharedSnapshot(snapshot);
       setPublishedDisclosures(normalized.publishedDisclosures);
-      setDraftDisclosures(normalized.draftDisclosures);
-      setHasUnpublishedDisclosureChanges(normalized.hasUnpublishedChanges);
+      setDraftDisclosures(normalized.publishedDisclosures);
+      setHasUnpublishedDisclosureChanges(false);
+      hasLocalChangesRef.current = false;
       setDraftUpdatedAt(normalized.draftUpdatedAt);
       setDraftUpdatedBy(normalized.draftUpdatedBy);
       setPublishedAt(normalized.publishedAt);
@@ -235,27 +236,36 @@ export function DisclosuresProvider({ children }) {
           return;
         }
         setHasUnpublishedDisclosureChanges(!areDisclosureSetsEqual(nextDraftEntries, publishedDisclosures));
+        hasLocalChangesRef.current = !areDisclosureSetsEqual(nextDraftEntries, publishedDisclosures);
+      },
+      saveDisclosuresLive: async ({ legalCopy = null } = {}) => {
+        if (!sharedAuthorityEnabled) {
+          setPublishedDisclosures(draftDisclosures);
+          setHasUnpublishedDisclosureChanges(false);
+          return null;
+        }
         pendingSharedMutationCountRef.current += 1;
-        void saveSharedDisclosures(
-          { disclosures: nextDraftEntries },
-          readCurrentActorSummary(),
-        )
-          .then((snapshot) => {
-            const normalized = normalizeSharedSnapshot(snapshot);
-            setPublishedDisclosures(normalized.publishedDisclosures);
-            setDraftDisclosures(normalized.draftDisclosures);
-            setHasUnpublishedDisclosureChanges(normalized.hasUnpublishedChanges);
-            setDraftUpdatedAt(normalized.draftUpdatedAt);
-            setDraftUpdatedBy(normalized.draftUpdatedBy);
-            setPublishedAt(normalized.publishedAt);
-            setPublishedBy(normalized.publishedBy);
-          })
-          .catch(() => {
-            // keep optimistic draft state; polling will reconcile once the shared store is reachable again
-          })
-          .finally(() => {
-            pendingSharedMutationCountRef.current = Math.max(0, pendingSharedMutationCountRef.current - 1);
-          });
+        try {
+          const snapshot = await saveSharedDisclosuresLive(
+            {
+              disclosures: draftDisclosures,
+              ...(legalCopy && typeof legalCopy === 'object' ? { legalCopy } : {}),
+            },
+            readCurrentActorSummary(),
+          );
+          const normalized = normalizeSharedSnapshot(snapshot);
+          setPublishedDisclosures(normalized.publishedDisclosures);
+          setDraftDisclosures(normalized.publishedDisclosures);
+          setHasUnpublishedDisclosureChanges(false);
+          hasLocalChangesRef.current = false;
+          setDraftUpdatedAt(normalized.draftUpdatedAt);
+          setDraftUpdatedBy(normalized.draftUpdatedBy);
+          setPublishedAt(normalized.publishedAt);
+          setPublishedBy(normalized.publishedBy);
+          return snapshot;
+        } finally {
+          pendingSharedMutationCountRef.current = Math.max(0, pendingSharedMutationCountRef.current - 1);
+        }
       },
       resetDisclosures: () => {
         const defaults = buildDefaultDisclosuresLibrary();
@@ -266,46 +276,13 @@ export function DisclosuresProvider({ children }) {
           return;
         }
         setHasUnpublishedDisclosureChanges(!areDisclosureSetsEqual(defaults, publishedDisclosures));
-        pendingSharedMutationCountRef.current += 1;
-        void resetSharedDisclosures(readCurrentActorSummary())
-          .then((snapshot) => {
-            const normalized = normalizeSharedSnapshot(snapshot);
-            setPublishedDisclosures(normalized.publishedDisclosures);
-            setDraftDisclosures(normalized.draftDisclosures);
-            setHasUnpublishedDisclosureChanges(normalized.hasUnpublishedChanges);
-            setDraftUpdatedAt(normalized.draftUpdatedAt);
-            setDraftUpdatedBy(normalized.draftUpdatedBy);
-            setPublishedAt(normalized.publishedAt);
-            setPublishedBy(normalized.publishedBy);
-          })
-          .catch(() => {
-            // keep optimistic draft state; polling will reconcile once the shared store is reachable again
-          })
-          .finally(() => {
-            pendingSharedMutationCountRef.current = Math.max(0, pendingSharedMutationCountRef.current - 1);
-          });
+        hasLocalChangesRef.current = !areDisclosureSetsEqual(defaults, publishedDisclosures);
       },
       restoreDisclosureDraftFromLive: async () => {
-        if (!sharedAuthorityEnabled) {
-          setDraftDisclosures(publishedDisclosures);
-          setHasUnpublishedDisclosureChanges(false);
-          return null;
-        }
-        pendingSharedMutationCountRef.current += 1;
-        try {
-          const snapshot = await restoreSharedDisclosuresDraftFromLive(readCurrentActorSummary());
-          const normalized = normalizeSharedSnapshot(snapshot);
-          setPublishedDisclosures(normalized.publishedDisclosures);
-          setDraftDisclosures(normalized.draftDisclosures);
-          setHasUnpublishedDisclosureChanges(normalized.hasUnpublishedChanges);
-          setDraftUpdatedAt(normalized.draftUpdatedAt);
-          setDraftUpdatedBy(normalized.draftUpdatedBy);
-          setPublishedAt(normalized.publishedAt);
-          setPublishedBy(normalized.publishedBy);
-          return snapshot;
-        } finally {
-          pendingSharedMutationCountRef.current = Math.max(0, pendingSharedMutationCountRef.current - 1);
-        }
+        setDraftDisclosures(publishedDisclosures);
+        setHasUnpublishedDisclosureChanges(false);
+        hasLocalChangesRef.current = false;
+        return null;
       },
       publishDisclosures: async () => {
         if (!sharedAuthorityEnabled) {

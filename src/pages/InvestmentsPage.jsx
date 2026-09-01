@@ -951,6 +951,10 @@ export default function InvestmentsPage() {
     registerExternalDraftFlushHandler,
     registerExternalDraftStatusHandler,
   });
+  const managedBlockOrderStyle = (blockId) => {
+    const index = managedBlocks.findIndex((block) => String(block?.id || '').trim() === blockId);
+    return { order: index >= 0 ? index : managedBlocks.length };
+  };
   const heroBlockRecord = useMemo(() => (
     managedBlocks.find((block) => (
       block?.id === 'hero'
@@ -2012,11 +2016,13 @@ export default function InvestmentsPage() {
           </FrontHudPanelShell>
         </Suspense>
       ) : null}
+      <div className="investments-native-page-content">
       {heroBlockIsHidden ? null : (
         <section
           ref={heroSectionRef}
           className={`service-native-hero investments-native-hero${dynamicHero ? ` is-bg-${dynamicHero.bgTone || 'white'} is-justify-${dynamicHero.justify || 'left'}` : ''}${showFrontHud ? ' has-admin-front-hud' : ''}${hasOpenHudPanel ? (isHeroHudFocusTarget ? ' is-hud-focus-target' : ' is-hud-dimmed') : ''}${getOwnershipVisualForBlockId('hero').className || ''}`}
           data-block-id="hero"
+          style={managedBlockOrderStyle('hero')}
         >
         <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('hero')} />
         {renderHudAnchor('hero')}
@@ -2086,6 +2092,7 @@ export default function InvestmentsPage() {
           ref={introSectionRef}
           className={`service-native-intro investments-native-intro fade-out dynamic-intro is-bg-${resolvedIntro.bgTone || defaultInvestmentsIntroSettings.bgTone} is-text-${resolvedIntro.textTone || defaultInvestmentsIntroSettings.textTone}${showFrontHud ? ' has-admin-front-hud' : ''}${hasOpenHudPanel ? (isIntroHudFocusTarget ? ' is-hud-focus-target' : ' is-hud-dimmed') : ''}${getOwnershipVisualForBlockId('intro').className || ''}`}
           data-block-id="intro"
+          style={managedBlockOrderStyle('intro')}
         >
         <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('intro')} />
         {renderHudAnchor('intro')}
@@ -2196,6 +2203,7 @@ export default function InvestmentsPage() {
           className={`service-native-section investments-native-panel${getHudBlockStateClassName('certificates')}${getOwnershipVisualForBlockId('certificates').className || ''}`}
           id="certificates"
           data-block-id="certificates"
+          style={managedBlockOrderStyle('certificates')}
         >
           <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('certificates')} />
           {renderHudAnchor('certificates')}
@@ -2246,7 +2254,7 @@ export default function InvestmentsPage() {
       ) : null}
 
       {renderedGrowthFeatureBlock ? (
-        <div ref={growthFeatureSectionRef}>
+        <div ref={growthFeatureSectionRef} style={managedBlockOrderStyle('growth_feature')}>
           <PageBlocksRenderer
             blocks={[renderedGrowthFeatureBlock]}
             ownershipEnabled={showFrontHud}
@@ -2261,7 +2269,7 @@ export default function InvestmentsPage() {
       ) : null}
 
       {renderedCtaFormBlock ? (
-        <div ref={ctaSectionRef}>
+        <div ref={ctaSectionRef} style={managedBlockOrderStyle('cta_form')}>
           <PageBlocksRenderer
             blocks={[renderedCtaFormBlock]}
             ownershipEnabled={showFrontHud}
@@ -2280,6 +2288,7 @@ export default function InvestmentsPage() {
           ref={ratesSectionRef}
           className={`service-native-section investments-native-rates-section${getHudBlockStateClassName('certificates_table')}${getOwnershipVisualForBlockId('certificates_table').className || ''}`}
           data-block-id="certificates_table"
+          style={managedBlockOrderStyle('certificates_table')}
         >
           <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('certificates_table')} />
           {renderHudAnchor('certificates_table')}
@@ -2309,6 +2318,7 @@ export default function InvestmentsPage() {
           className={`service-native-section investments-native-ladder-section${getHudBlockStateClassName('laddering')}${getOwnershipVisualForBlockId('laddering').className || ''}`}
           id="laddering-calculator"
           data-block-id="laddering"
+          style={managedBlockOrderStyle('laddering')}
         >
         <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('laddering')} />
         {renderHudAnchor('laddering')}
@@ -2992,6 +3002,7 @@ export default function InvestmentsPage() {
           ref={testimonialsSectionRef}
           className={`service-native-section${getHudBlockStateClassName('testimonials')}${getOwnershipVisualForBlockId('testimonials').className || ''}`}
           data-block-id="testimonials"
+          style={managedBlockOrderStyle('testimonials')}
         >
           <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('testimonials')} />
           {renderHudAnchor('testimonials')}
@@ -3026,6 +3037,7 @@ export default function InvestmentsPage() {
           ref={featurePanelSectionRef}
           className={`service-native-section service-native-article-teaser${getHudBlockStateClassName('cash_reserves')}${getOwnershipVisualForBlockId('cash_reserves').className || ''}`}
           data-block-id="cash_reserves"
+          style={managedBlockOrderStyle('cash_reserves')}
         >
           <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('cash_reserves')} />
           {renderHudAnchor('cash_reserves')}
@@ -3081,6 +3093,7 @@ export default function InvestmentsPage() {
           </div>
         </section>
       ) : null}
+      </div>
     </div>
   );
 }

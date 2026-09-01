@@ -51,6 +51,7 @@ import {
 } from './ctaFormSeeds';
 import { formsLibraryLinks } from './formsLibraryLinks';
 import { defaultLoansIntroSettings } from './loansIntroSeed';
+import { defaultIraRates, defaultRates, defaultRatesMeta } from './ratesDefault';
 import { normalizeSplitLinkFieldSettings } from '../lib/linkValue';
 import { getResourceArticleFeatureConfig } from './resourceArticles';
 import {
@@ -8110,6 +8111,10 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         panelId: 'rates-certificates',
         anchorId: 'certificates-rates',
         displayName: 'Certificates Rates',
+        rowsJson: JSON.stringify(defaultRates),
+        effectiveDate: defaultRatesMeta.certificatesEffectiveDate,
+        retirement403bMbaRate: defaultRatesMeta.retirement403bMbaRate,
+        retirement403bMbaApy: defaultRatesMeta.retirement403bMbaApy,
       },
       editableFields: ratesEditableFields,
     },
@@ -8123,6 +8128,8 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         panelId: 'rates-ira',
         anchorId: 'ira-rates',
         displayName: 'IRA Rates',
+        rowsJson: JSON.stringify(defaultIraRates),
+        effectiveDate: defaultRatesMeta.iraEffectiveDate,
       },
       editableFields: ratesEditableFields,
     },

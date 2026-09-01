@@ -9,6 +9,13 @@ const DATASET_OPTIONS = [
   { value: '403b', label: '403(b) Investment Rate' },
 ];
 
+const dataSchemaFields = [
+  defineEditorField({ id: 'rowsJson', label: 'Rate rows', type: 'textarea' }),
+  defineEditorField({ id: 'effectiveDate', label: 'Effective date', type: 'text' }),
+  defineEditorField({ id: 'retirement403bMbaRate', label: '403(b) MBA rate', type: 'text' }),
+  defineEditorField({ id: 'retirement403bMbaApy', label: '403(b) MBA APY', type: 'text' }),
+];
+
 const sections = [
   {
     id: 'management',
@@ -37,7 +44,7 @@ export const ratesBlockDefinition = createBlockDefinition({
     anchorId: 'certificates-rates',
   },
   schema: {
-    fields: sections.flatMap((section) => section.fields),
+    fields: [...sections.flatMap((section) => section.fields), ...dataSchemaFields],
   },
   renderer: {
     buildRuntime: buildDynamicRatesFromBlock,

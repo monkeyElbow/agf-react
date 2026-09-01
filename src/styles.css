@@ -3356,7 +3356,7 @@ html.ag-browser-safari button.action-btn {
 
 .rates-page-subheading {
   width: min(100%, var(--rates-page-certificates-max-width, 64rem));
-  margin: 2rem auto 0;
+  margin: 2rem auto 1.35rem;
   font-size: clamp(1.82rem, 3.25vw, 2.63rem);
   line-height: 1.08;
   text-align: center;

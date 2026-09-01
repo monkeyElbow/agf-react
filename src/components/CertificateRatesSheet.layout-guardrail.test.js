@@ -23,10 +23,13 @@ describe('certificate rates sheet layout guardrail', () => {
     expect(componentSource).toContain('data-rates-mobile="term-cards"');
     expect(componentSource).toContain("const [mobileMetric, setMobileMetric] = useState('apy');");
     expect(componentSource).toContain('Investment Type');
-    expect(componentSource).toContain('Standard APY*');
-    expect(componentSource).toContain('Standard Rate');
-    expect(componentSource).toContain('Premium APY*');
-    expect(componentSource).toContain('Premium Rate**');
+    expect(componentSource).toContain('<th scope="col">Rate</th>');
+    expect(componentSource).toContain('<th scope="col">APY*</th>');
+    expect(componentSource).toContain('<h3 id="certificate-rates-premium-heading" className="certificate-rates-sheet__band-title">Premium*</h3>');
+    expect(componentSource).toContain("renderValue(row.standardRate, 'is-rate')");
+    expect(componentSource).toContain("renderValue(row.standardApy, 'is-apy')");
+    expect(componentSource).toContain("renderValue(row.premiumRate, 'is-rate')");
+    expect(componentSource).toContain("renderValue(row.premiumApy, 'is-apy')");
     expect(componentSource).toContain('className="certificate-rates-sheet__mobile-toolbar"');
     expect(componentSource).toContain('className="certificate-rates-sheet__mobile-toggle"');
     expect(componentSource).toContain('className={`certificate-rates-sheet__mobile-toggle-button${isApyMode ? \' is-active\' : \'\'}');
@@ -55,7 +58,9 @@ describe('certificate rates sheet layout guardrail', () => {
     expect(cssSource).toContain('padding: 0.46rem 0.8rem;');
     expect(cssSource).toContain('.certificate-rates-sheet__table tbody th,');
     expect(cssSource).toContain('padding: 0.64rem 0.84rem;');
-    expect(cssSource).toContain('.certificate-rates-sheet__table--standard tbody td:nth-child(2) {');
+    expect(cssSource).toContain('.certificate-rates-sheet__table thead th:not(:first-child) {\n  text-align: center;');
+    expect(cssSource).toContain('.certificate-rates-sheet__table--standard tbody td:nth-child(3) {');
+    expect(cssSource).toContain('.certificate-rates-sheet__table--premium tbody td:nth-child(2) {');
     expect(cssSource).toContain('.certificate-rates-sheet__table--premium thead th,');
     expect(cssSource).toContain('.certificate-rates-sheet__mobile-toggle {');
     expect(cssSource).toContain('.certificate-rates-sheet__mobile-toggle-button.is-active {');

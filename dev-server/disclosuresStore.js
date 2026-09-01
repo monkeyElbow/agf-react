@@ -181,6 +181,30 @@ export function createSharedDisclosuresStore({ persistenceFile }) {
       return publishSnapshot();
     },
 
+    saveLivePatch(patch, actor = null) {
+      const source = patch && typeof patch === 'object' ? patch : {};
+      const timestamp = Date.now();
+      const nextDraft = {
+        disclosures: Object.prototype.hasOwnProperty.call(source, 'disclosures')
+          ? normalizeDisclosures(source.disclosures)
+          : record.draft.disclosures,
+        legalCopy: Object.prototype.hasOwnProperty.call(source, 'legalCopy')
+          ? normalizeLegalCopy(source.legalCopy)
+          : record.draft.legalCopy,
+      };
+      record = {
+        ...record,
+        draftUpdatedAt: timestamp,
+        draftUpdatedBy: normalizeActor(actor),
+        publishedAt: timestamp,
+        publishedBy: normalizeActor(actor),
+        draft: nextDraft,
+        published: cloneJson(nextDraft),
+      };
+      persist();
+      return publishSnapshot();
+    },
+
     resetDraftToDefaults(actor = null) {
       record = {
         ...record,

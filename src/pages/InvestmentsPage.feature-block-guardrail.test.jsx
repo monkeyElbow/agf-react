@@ -87,6 +87,25 @@ describe('investments feature block guardrails', () => {
     expect(blueprintSource).not.toContain("id: 'rates_table'");
   });
 
+  it('uses the managed block list for the visible order of every investments section', () => {
+    const pageSource = readSource('./InvestmentsPage.jsx');
+
+    expect(pageSource).toContain('className="investments-native-page-content"');
+    [
+      'hero',
+      'intro',
+      'certificates',
+      'growth_feature',
+      'cta_form',
+      'certificates_table',
+      'laddering',
+      'testimonials',
+      'cash_reserves',
+    ].forEach((blockId) => {
+      expect(pageSource).toContain(`managedBlockOrderStyle('${blockId}')`);
+    });
+  });
+
   it('keeps the investments laddering calculator on the managed calculator-cta block path', () => {
     const pageSource = readSource('./InvestmentsPage.jsx');
     const blueprintSource = readSource('../data/contentBlockBlueprints.js');

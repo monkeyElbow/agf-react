@@ -14,6 +14,7 @@ import BlockOwnershipOverlay, { getBlockOwnershipVisual } from '../components/Bl
 import FrontHudAnchorTag from '../components/FrontHudAnchorTag';
 import DynamicCtaSection from '../components/DynamicCtaSection';
 import DynamicRequestFormSection from '../components/DynamicRequestFormSection';
+import ManagedBlockOrder from '../components/ManagedBlockOrder';
 import SafeRichText from '../components/SafeRichText';
 import { BillboardBlock, ColumnsBlock, renderHighlightedText } from '../components/blocks/PageBlocksRenderer';
 import { useDisclosures } from '../context/DisclosuresContext';
@@ -753,6 +754,10 @@ export default function LoansPage({ sectionsOnly = false }) {
       return next;
     }, new Map())
   ), [managedBlocks]);
+  const managedBlockOrderStyle = (blockId) => {
+    const index = managedBlockIndexById.get(String(blockId || '').trim());
+    return { order: Number.isFinite(index) ? index * 10 : 999 };
+  };
   const additionalBillboardBlocks = useMemo(() => (
     managedBlocks.filter((block) => (
       block
@@ -1018,7 +1023,7 @@ export default function LoansPage({ sectionsOnly = false }) {
         onClick={hudAnchor.onClick}
         style={hudAnchor.style}
         structureControls={(
-          <FrontHudStructureControls pathname="/services/loans" blockId={blockId} placement="anchor" />
+          <FrontHudStructureControls pathname="/services/loans" blockId={blockId} canReorder={blockId !== 'cta_band'} placement="anchor" />
         )}
       />
     );
@@ -1056,14 +1061,19 @@ export default function LoansPage({ sectionsOnly = false }) {
     return slotBlocks.map((block) => {
       const blockId = String(block?.id || '').trim();
       return (
-        <BillboardBlock
+        <div
           key={`loans-extra-billboard-${blockId}`}
-          block={block}
-          resolveTo={resolveRoutePath}
-          ownership={getOwnershipVisualForBlockId(blockId)}
-          hudAnchor={resolveHudAnchor(blockId)}
-          extraSectionClassName={getHudBlockStateClassName(blockId).trim()}
-        />
+          data-block-id={blockId}
+          style={managedBlockOrderStyle(blockId)}
+        >
+          <BillboardBlock
+            block={block}
+            resolveTo={resolveRoutePath}
+            ownership={getOwnershipVisualForBlockId(blockId)}
+            hudAnchor={resolveHudAnchor(blockId)}
+            extraSectionClassName={getHudBlockStateClassName(blockId).trim()}
+          />
+        </div>
       );
     });
   };
@@ -1159,11 +1169,13 @@ export default function LoansPage({ sectionsOnly = false }) {
           />
         </FrontHudPanelShell>
       ) : null}
+      <ManagedBlockOrder className="loans-native-page-content" blocks={managedBlocks}>
       {renderAdditionalBillboardsAfter('__start')}
       {!sectionsOnly ? (
       <section
         className={`service-native-hero${dynamicHero ? ` is-bg-${dynamicHero.bgTone || 'white'} is-justify-${dynamicHero.justify || 'center'}` : ''}${getHudBlockStateClassName('hero')}${getOwnershipVisualForBlockId('hero').className || ''}`}
         data-block-id="hero"
+        style={managedBlockOrderStyle('hero')}
       >
         <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('hero')} />
         {renderHudAnchor('hero')}
@@ -1208,6 +1220,7 @@ export default function LoansPage({ sectionsOnly = false }) {
       <section
         className={`service-native-intro loans-native-intro dynamic-intro is-bg-${resolvedIntro.bgTone || 'sand'} is-text-${resolvedIntro.textTone || 'dark'}${getHudBlockStateClassName('intro')}${getOwnershipVisualForBlockId('intro').className || ''}`}
         data-block-id="intro"
+        style={managedBlockOrderStyle('intro')}
       >
         <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('intro')} />
         {renderHudAnchor('intro')}
@@ -1277,6 +1290,7 @@ export default function LoansPage({ sectionsOnly = false }) {
         className={`service-native-section loans-native-options${getHudBlockStateClassName('loan_options')}${getOwnershipVisualForBlockId('loan_options').className || ''}`}
         id="loan-options"
         data-block-id="loan_options"
+        style={managedBlockOrderStyle('loan_options')}
       >
         <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('loan_options')} />
         {renderHudAnchor('loan_options')}
@@ -1389,7 +1403,7 @@ export default function LoansPage({ sectionsOnly = false }) {
       ) : null}
       {renderAdditionalBillboardsAfter('loan_options')}
 
-      <section className={`service-native-section loans-native-inquiry native-dynamic-request is-request-form-preset-loans-inquiry is-bg-blue is-text-white${getHudBlockStateClassName('request_form')}${getOwnershipVisualForBlockId('request_form').className || ''}`} id="form" data-block-id="request_form">
+      <section className={`service-native-section loans-native-inquiry native-dynamic-request is-request-form-preset-loans-inquiry is-bg-blue is-text-white${getHudBlockStateClassName('request_form')}${getOwnershipVisualForBlockId('request_form').className || ''}`} id="form" data-block-id="request_form" style={managedBlockOrderStyle('request_form')}>
         <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('request_form')} />
         {renderHudAnchor('request_form')}
         <div className="ag-panel-rail">
@@ -1399,18 +1413,20 @@ export default function LoansPage({ sectionsOnly = false }) {
       {renderAdditionalBillboardsAfter('request_form')}
 
       {renderedValueCardsBlock ? (
-        <ColumnsBlock
-          block={renderedValueCardsBlock}
-          resolveTo={resolveRoutePath}
-          ownership={getOwnershipVisualForBlockId('value_cards')}
-          hudAnchor={resolveHudAnchor('value_cards')}
-          sectionId="theresmore"
-          extraSectionClassName={`loans-native-more${getHudBlockStateClassName('value_cards')}`}
-        />
+        <div data-block-id="value_cards" style={managedBlockOrderStyle('value_cards')}>
+          <ColumnsBlock
+            block={renderedValueCardsBlock}
+            resolveTo={resolveRoutePath}
+            ownership={getOwnershipVisualForBlockId('value_cards')}
+            hudAnchor={resolveHudAnchor('value_cards')}
+            sectionId="theresmore"
+            extraSectionClassName={`loans-native-more${getHudBlockStateClassName('value_cards')}`}
+          />
+        </div>
       ) : null}
       {renderAdditionalBillboardsAfter('value_cards')}
 
-      <section className="service-native-section loans-native-calculator-wrap" id="run-some-numbers">
+      <section className="service-native-section loans-native-calculator-wrap" id="run-some-numbers" style={{ order: 45 }}>
         <div className="ag-panel-rail">
           <h2 className="loans-native-calculator-title">
             Run some numbers.
@@ -1614,7 +1630,7 @@ export default function LoansPage({ sectionsOnly = false }) {
         <section
           className={`service-native-section dynamic-billboard loans-native-vision-fuel is-bg-${resolvedVisionFuel.bgTone || 'white'} is-text-${resolvedVisionFuel.textTone || 'dark'}${getHudBlockStateClassName('vision_fuel')}${getOwnershipVisualForBlockId('vision_fuel').className || ''}`}
           data-block-id="vision_fuel"
-          style={visionFuelSectionStyle || undefined}
+          style={{ ...managedBlockOrderStyle('vision_fuel'), ...(visionFuelSectionStyle || {}) }}
         >
           <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('vision_fuel')} />
           {renderHudAnchor('vision_fuel')}
@@ -1678,35 +1694,37 @@ export default function LoansPage({ sectionsOnly = false }) {
       ) : null}
       {renderAdditionalBillboardsAfter('vision_fuel')}
 
-      <DynamicCtaSection
-        managedBlocks={managedBlocks}
-        defaultSettings={defaultLoansCtaSettings}
-        sectionClassName="service-native-section loans-native-cta-addon"
-        sectionHudClassName={getHudBlockStateClassName('cta_form').trim()}
-        ownership={getOwnershipVisualForBlockId('cta_form')}
-        hudAnchor={renderHudAnchor('cta_form')}
-        formWrapperClassName="loans-native-addon-form"
-        fieldIdPrefix="loans-connect"
-        renderDefaultWhenMissing={false}
-        onSubmitData={({ values }) => {
-          const payload = {
-            fields: values,
-            loan: {
-              amount: parseNumber(loanAmount),
-              rateAnnualPct: Number.parseFloat(interestRate) || 0,
-              termYears: Number.parseFloat(loanTerm) || 0,
-              displayOption,
-              estPayment: Number(estimatedPayment.toFixed(2)),
-              estTotalPaid: Number(estimatedTotalPaid.toFixed(2)),
-              estTotalInterest: Number(estimatedTotalInterest.toFixed(2)),
-            },
-          };
-          document.dispatchEvent(new CustomEvent('agf:cta-submit', { detail: payload }));
-        }}
-      />
+      <div data-block-id="cta_form" style={managedBlockOrderStyle('cta_form')}>
+        <DynamicCtaSection
+          managedBlocks={managedBlocks}
+          defaultSettings={defaultLoansCtaSettings}
+          sectionClassName="service-native-section loans-native-cta-addon"
+          sectionHudClassName={getHudBlockStateClassName('cta_form').trim()}
+          ownership={getOwnershipVisualForBlockId('cta_form')}
+          hudAnchor={renderHudAnchor('cta_form')}
+          formWrapperClassName="loans-native-addon-form"
+          fieldIdPrefix="loans-connect"
+          renderDefaultWhenMissing={false}
+          onSubmitData={({ values }) => {
+            const payload = {
+              fields: values,
+              loan: {
+                amount: parseNumber(loanAmount),
+                rateAnnualPct: Number.parseFloat(interestRate) || 0,
+                termYears: Number.parseFloat(loanTerm) || 0,
+                displayOption,
+                estPayment: Number(estimatedPayment.toFixed(2)),
+                estTotalPaid: Number(estimatedTotalPaid.toFixed(2)),
+                estTotalInterest: Number(estimatedTotalInterest.toFixed(2)),
+              },
+            };
+            document.dispatchEvent(new CustomEvent('agf:cta-submit', { detail: payload }));
+          }}
+        />
+      </div>
       {renderAdditionalBillboardsAfter('cta_form')}
 
-      <section className={`service-native-section loans-native-testimonials${getHudBlockStateClassName('testimonials')}${getOwnershipVisualForBlockId('testimonials').className || ''}`} data-block-id="testimonials">
+      <section className={`service-native-section loans-native-testimonials${getHudBlockStateClassName('testimonials')}${getOwnershipVisualForBlockId('testimonials').className || ''}`} data-block-id="testimonials" style={managedBlockOrderStyle('testimonials')}>
         <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('testimonials')} />
         {renderHudAnchor('testimonials')}
         <div className="ag-panel-rail">
@@ -1725,7 +1743,7 @@ export default function LoansPage({ sectionsOnly = false }) {
       </section>
       {renderAdditionalBillboardsAfter('testimonials')}
 
-      <section className="service-native-section service-native-article-teaser loans-native-tariffs">
+      <section className="service-native-section service-native-article-teaser loans-native-tariffs" style={{ order: 90 }}>
         <div className="ag-panel-rail-wide">
           <div className="service-native-dark-feature fade-up">
             <div className="service-native-dark-feature-inner">
@@ -1748,6 +1766,7 @@ export default function LoansPage({ sectionsOnly = false }) {
           </div>
         </div>
       </section>
+      </ManagedBlockOrder>
     </div>
   );
 }

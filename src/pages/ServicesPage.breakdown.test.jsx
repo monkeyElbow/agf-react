@@ -1,8 +1,11 @@
 import { render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import ServicesPage from './ServicesPage';
 import { DEFAULT_SERVICE_HERO_PIE_SLICES } from '../lib/dynamicPageBlocks';
+import { contentBlockBlueprintsByPath } from '../data/contentBlockBlueprints';
+
+const mockServicesState = vi.hoisted(() => ({ blocks: null }));
 
 vi.mock('../hooks/useNativeEnhancements', () => ({
   default: () => {},
@@ -46,7 +49,7 @@ vi.mock('../context/ContentAdminContextCore', async () => {
     ...actual,
     useContentAdmin: () => ({
       blocksByPath: {
-        '/services': servicesBlocks,
+        '/services': mockServicesState.blocks || servicesBlocks,
       },
       pageHierarchy: {
         '/services': { path: '/services', title: 'Services', breadcrumbLabel: 'Services', parentPath: '/' },
@@ -79,6 +82,27 @@ function renderServicesPage() {
 }
 
 describe('ServicesPage breakdown directory', () => {
+  beforeEach(() => {
+    mockServicesState.blocks = null;
+  });
+
+  it('renders reordered managed blocks in the saved DOM order', () => {
+    const sourceBlocks = contentBlockBlueprintsByPath['/services'].map((block) => ({
+      ...block,
+      settings: { ...(block.settings || {}) },
+    }));
+    const savedOrder = ['cta_form', 'matters_band', 'hero_pie', 'testimonials', 'intro', 'services_cards'];
+    mockServicesState.blocks = savedOrder.map((id) => sourceBlocks.find((block) => block.id === id));
+
+    const { container } = renderServicesPage();
+    const managedRoot = container.querySelector('.services-native-page-content');
+    const renderedOrder = Array.from(managedRoot.children)
+      .map((element) => element.getAttribute('data-block-id'))
+      .filter(Boolean);
+
+    expect(renderedOrder).toEqual(savedOrder);
+  });
+
   it('renders the requested breakdown intro, rows, and revised service copy', () => {
     renderServicesPage();
 

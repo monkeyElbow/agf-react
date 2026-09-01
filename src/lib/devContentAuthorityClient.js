@@ -91,6 +91,10 @@ async function sendJson(pathname, options = {}) {
       const response = await fetch(requestUrl, {
         ...requestOptions,
         credentials: 'same-origin',
+        // Published snapshots are the cross-browser source of truth during
+        // development. A browser must never satisfy one from its HTTP cache
+        // after another operator has saved a newer version.
+        cache: requestOptions.cache || 'no-store',
         ...(controller ? { signal: controller.signal } : {}),
         headers: {
           'Content-Type': 'application/json',
@@ -250,6 +254,16 @@ export async function saveSharedAnnouncement(announcement, actor = null) {
 
 export async function saveSharedDisclosures(patch, actor = null) {
   return sendJson('/disclosures/save', {
+    method: 'POST',
+    body: JSON.stringify({
+      patch: cloneJson(patch),
+      actor: cloneJson(actor),
+    }),
+  });
+}
+
+export async function saveSharedDisclosuresLive(patch, actor = null) {
+  return sendJson('/disclosures/save-live', {
     method: 'POST',
     body: JSON.stringify({
       patch: cloneJson(patch),

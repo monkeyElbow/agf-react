@@ -1,0 +1,440 @@
+{
+  "version": 1,
+  "draftUpdatedAt": 1788274863428,
+  "draftUpdatedBy": {
+    "userId": "dev-user-3",
+    "displayName": "Marilyn",
+    "initials": "LI",
+    "accentColor": "#96d35f"
+  },
+  "publishedAt": 0,
+  "publishedBy": null,
+  "draft": {
+    "disclosures": [
+      {
+        "id": "loans-calculator-disclosure",
+        "title": "Loan calculator disclosure",
+        "group": "Loans",
+        "scope": "product",
+        "format": "text",
+        "usage": "Shown beneath the loan calculator actions and the follow-up contact prompt.",
+        "tokenHelp": [],
+        "value": "This calculator uses example data and is not an AGFinancial official quote or recommendation."
+      },
+      {
+        "id": "calculator-emergency-fund-disclosure",
+        "title": "Emergency fund calculator disclosure",
+        "group": "Calculators",
+        "scope": "shared",
+        "format": "text",
+        "usage": "Shown below the emergency fund calculator results.",
+        "tokenHelp": [],
+        "value": "Estimates are for illustration only and do not include inflation or all possible tax outcomes. Review with your financial and tax advisors."
+      },
+      {
+        "id": "calculator-net-worth-disclosure",
+        "title": "Net worth calculator disclosure",
+        "group": "Calculators",
+        "scope": "shared",
+        "format": "text",
+        "usage": "Shown below the net worth calculator results.",
+        "tokenHelp": [],
+        "value": "Illustration only. Estimates depend on the values entered and should not be used as financial, legal, or tax advice."
+      },
+      {
+        "id": "calculator-increased-contribution-disclosure",
+        "title": "Increased contribution calculator disclosure",
+        "group": "Calculators",
+        "scope": "shared",
+        "format": "text",
+        "usage": "Shown below the increased contribution calculator projection.",
+        "tokenHelp": [],
+        "value": "Educational estimate only. This projection is based on your assumptions and simplified annual compounding; results do not guarantee future performance."
+      },
+      {
+        "id": "planned-giving-cga-test-drive-disclosure",
+        "title": "Charitable Gift test drive disclosure",
+        "group": "Planned Giving",
+        "scope": "product",
+        "format": "text",
+        "usage": "Shown below the Charitable Gift test drive widget.",
+        "tokenHelp": [],
+        "value": "Figures are illustrations for education only and may differ from a personalized ACGA/§7520-based calculation. For a compliant multi-page PDF, please chat with an AGFinancial representative."
+      },
+      {
+        "id": "investments-certificates-rates-details-html",
+        "title": "Investments certificates rates detail copy",
+        "group": "Investments",
+        "scope": "product",
+        "format": "html",
+        "usage": "Shown on the Investments overview page under AGFinancial Investment Certificates Rates.",
+        "tokenHelp": [
+          "{{certificatesEffectiveDate}}",
+          "{{prospectusHref}}"
+        ],
+        "value": "<p class=\"investments-native-rates-disclaimer-lead\"><strong>*Annual Percentage Yield</strong><br /><strong>**Premium rates may be available for investments of $250,000 or greater.</strong><br /><strong>Effective {{certificatesEffectiveDate}}.</strong></p><p>Rates subject to change. Demand certificates are investments that do not represent cash and are payable within 30 days after demand by the investor. Penalties may apply to redemptions prior to maturity.</p><p>This is not an offer to sell securities referred to herein and we are not soliciting you to purchase these securities. The offering is made only by the Offering Circular which includes risk factors. The Offering Circular may be obtained by writing or calling AGFinancial or by clicking to <a href=\"{{prospectusHref}}\" target=\"_blank\" rel=\"noreferrer noopener\">read the prospectus</a>. AGFinancial investments are offered and sold only in states where authorized or exempt from authorization. A limited offering is available in Washington. Not available in Ohio.</p>"
+      },
+      {
+        "id": "investments-ladder-details-html",
+        "title": "Investments ladder calculator detail copy",
+        "group": "Investments",
+        "scope": "product",
+        "format": "html",
+        "usage": "Shown below the ladder calculator controls on the Investments overview page.",
+        "tokenHelp": [
+          "{{certificatesEffectiveDate}}",
+          "{{offeringCircularHref}}"
+        ],
+        "value": "<p>*Premium rates may be available for individual investments of $250,000 or greater. **Annual Percentage Yield. ***Monthly interest will vary due to differences in compounded cycles. ****Approximate future value assumes that any funds reinvested at maturity will be reinvested at the same rate. 8-Month, 7-Year, and 10-Year terms available for new investments only; funds may not be transferred from an existing or renewing investment. Rates effective {{certificatesEffectiveDate}}, and subject to change. Penalties may apply to redemptions prior to maturity. This is not an offering to sell securities referred to herein and we are not soliciting you to purchase these securities. The offering is made only by the Offering Circular which includes risk factors. The offering circular may be obtained <a href=\"{{offeringCircularHref}}\" target=\"_blank\" rel=\"noreferrer noopener\">here</a> or by calling AGFinancial. AGFinancial investments are offered and sold only in states where authorized or exempt from authorization. A limited offering is available in Washington. Not available in Ohio.</p>"
+      },
+      {
+        "id": "investments-shared-risk-warning",
+        "title": "Investments shared risk warning",
+        "group": "Investments",
+        "scope": "shared",
+        "format": "text",
+        "usage": "Shared warning used on investment disclosures across rates and calculator sections.",
+        "tokenHelp": [],
+        "value": "Not FDIC or SIPC Insured. Not a Bank Deposit. No AGFinancial Guarantee."
+      },
+      {
+        "id": "investments-shared-affiliation",
+        "title": "Investments shared affiliation line",
+        "group": "Investments",
+        "scope": "shared",
+        "format": "text",
+        "usage": "Shared AGFinancial affiliation line used on investment disclosures.",
+        "tokenHelp": [],
+        "value": "AGFinancial is a DBA of Assemblies of God Loan Fund, an affiliated entity of Assemblies of God Financial Services Group."
+      },
+      {
+        "id": "investments-shared-data-note",
+        "title": "Investments shared data note",
+        "group": "Investments",
+        "scope": "shared",
+        "format": "text",
+        "usage": "Shared reliability note used on investment calculator disclosures.",
+        "tokenHelp": [],
+        "value": "Note: Information is from sources determined reliable. Information is subject to error, omission, withdrawal, or change."
+      },
+      {
+        "id": "insurance-property-casualty-coverage-notice",
+        "title": "Property & casualty coverage notice",
+        "group": "Insurance",
+        "scope": "product",
+        "format": "lines",
+        "usage": "Shown on the property & casualty insurance page.",
+        "tokenHelp": [],
+        "value": [
+          "**CM0045 (04-2020)**",
+          "This material may include only a general description of insurance coverages and does not include all terms, conditions, and limitations found in Church Mutual Insurance Company, S.I. (“Church Mutual”) policies. The insurance policy, not any general descriptions of coverage that may be found in this material, will form the contract between the insured and Church Mutual. Neither Church Mutual nor its employees, representatives, or agents shall be liable to any party for the use of any information or statements made or contained herein.",
+          "(C) 2020 Church Mutual Insurance Company, S.I. Church Mutual is a registered trademark of Church Mutual Insurance Company, S.I. S.I.= a stock insurer. AGFinancial Insurance is a service mark of the General Council of the Assemblies of God."
+        ]
+      },
+      {
+        "id": "planned-giving-cga-qcd-fineprint",
+        "title": "CGA QCD supporting fine print",
+        "group": "Planned Giving",
+        "scope": "product",
+        "format": "lines",
+        "usage": "Shown under the SECURE 2.0 / QCD note on the charitable gift annuities page.",
+        "tokenHelp": [],
+        "value": [
+          "*Indexed annually for inflation",
+          "**Also available for Charitable Remainder Unitrust (CRUT) or Charitable Remainder Annuity Trust (CRAT)",
+          "This is a one-time, lifetime opportunity; not available on an annual basis",
+          "Restrictions apply."
+        ]
+      },
+      {
+        "id": "planned-giving-cga-state-notices",
+        "title": "CGA state notices",
+        "group": "Planned Giving",
+        "scope": "product",
+        "format": "lines",
+        "usage": "Shown at the bottom of the charitable gift annuities page.",
+        "tokenHelp": [],
+        "value": [
+          "Except for California, your Assemblies of God Charitable Gift Annuity will be issued by Assemblies of God Foundation (“AG Foundation”) and will be a general obligation of the organization. Charitable Gift Annuities are not available in Alabama, Hawaii, Montana, New Jersey, New York, or Washington.",
+          "Additional information for California residents: Annuities are subject to regulation by the State of California. Payments under this agreement, however, are not protected or otherwise guaranteed by any government agency or the California Life and Health Insurance Guarantee Association. AG Foundation does not practice law and no legal advice is provided. If you need legal advice, you should consult your own legal counsel. Your Assemblies of God Charitable Gift Annuity will be issued by the General Council of the Assemblies of God (“General Council”) and will be a general obligation of that organization. AG Foundation is responsible for the management of your gift annuity.",
+          "Additional information for Oklahoma residents: A Charitable Gift Annuity is not regulated by the Oklahoma Insurance Department and is not protected by a guaranty association with the Oklahoma Insurance Department.",
+          "Additional information for South Dakota residents: Charitable Gift Annuities are not regulated by and are not under the jurisdiction of the South Dakota Division of Insurance."
+        ]
+      },
+      {
+        "id": "retirement-403b-contribution-limits-disclosure",
+        "title": "403(b) contribution limits disclosure",
+        "group": "Retirement",
+        "scope": "product",
+        "format": "lines",
+        "usage": "Shown below the 403(b) contribution limits table.",
+        "tokenHelp": [],
+        "value": [
+          "*Beginning in 2026, participants who have FICA wages exceeding $150,000 (adjusted for inflation) in the previous calendar year will be required to make any catch-up contributions on a Roth (after-tax) basis. It is the Employer’s responsibility to ensure contributions are correctly submitted to the Plan. Employees below the $150,000 threshold, as well as ministers who earn SECA wages may continue to make catch-up contributions on either a pre-tax or Roth basis, depending on your plan’s design.",
+          "**The rule applies to individuals who will attain age 60 in the taxable year and continues until the taxable year in which they turn 64. So, a participant would be eligible for the entire year in which they turn 60 (even if their birthday is December 31), and they would not be eligible in the year in which they turn 64.",
+          "***All types of contributions including deferrals, employer, and traditional after-tax. Cannot exceed includible compensation.",
+          "†All types of contributions including deferrals, employer, and traditional after-tax; amounts over the general overall limit must be age 50 catch-up deferrals. Cannot exceed includible compensation except to the extent that the age 50 or older catch-up deferral has been utilized.",
+          "Contact your own tax advisor before taking any action that would have a tax consequence. This information is not tax advice. Information is from sources deemed reliable. Information is subject to error, omission, withdrawal, or change."
+        ]
+      },
+      {
+        "id": "retirement-403b-501c3-note",
+        "title": "403(b) 501(c)(3) note",
+        "group": "Retirement",
+        "scope": "shared",
+        "format": "lines",
+        "usage": "Shared note used on 403(b) eligibility sections.",
+        "tokenHelp": [],
+        "value": [
+          "*501(c)(3) organizations are tax-exempt entities organized and operated exclusively for religious, charitable, scientific, testing for public safety, literary, or educational purposes, among other qualified purposes under the Internal Revenue Code."
+        ]
+      },
+      {
+        "id": "retirement-ira-rates-disclosure",
+        "title": "IRA rates disclosure",
+        "group": "Retirement",
+        "scope": "product",
+        "format": "lines",
+        "usage": "Shown below the IRA rates widget.",
+        "tokenHelp": [],
+        "value": [
+          "Rates subject to change. Demand certificates are investments that do not represent cash and are payable within 30 days after demand by the investor. Penalties may apply to redemptions prior to maturity.",
+          "This is not an offer to sell securities referred to herein and we are not soliciting you to purchase these securities. The offering is made only by the Offering Circular which includes risk factors. The Offering Circular may be obtained by writing or calling AGFinancial or by clicking **here**.",
+          "Not FDIC or SIPC Insured. Not a Bank Deposit. No AGFinancial Guarantee.",
+          "**AGFinancial is a DBA of Assemblies of God Loan Fund, an affiliated entity of Assemblies of God Financial Services Group.**"
+        ]
+      },
+      {
+        "id": "retirement-ira-contribution-limits-disclosure",
+        "title": "IRA contribution limits disclosure",
+        "group": "Retirement",
+        "scope": "product",
+        "format": "lines",
+        "usage": "Shown below the IRA contribution limits table.",
+        "tokenHelp": [],
+        "value": [
+          "Your modified adjusted gross income (MAGI) may affect your eligibility to make contributions to a Roth IRA, as well as limit the deductibility of contributions to a Traditional IRA.",
+          "**Contact your own tax advisor before taking any action that would have a tax consequence. This information is not tax advice. Information is from sources deemed reliable. Information is subject to error, omission, withdrawal, or change.**"
+        ]
+      }
+    ],
+    "legalCopy": {
+      "certificatesHtml": "<p>*Annual Percentage Yield<br />**Premium rates may be available for investments of $250,000 or greater.<br />Effective {{certificatesEffectiveDate}}.</p><p>Demand certificates are investments that do not represent cash and are payable within 30 days after demand by the investor. Penalties may apply to redemptions prior to maturity.</p><p>This is not an offer to sell securities. The offering is made only by the Offering Circular, which includes risk factors.</p><p>Not FDIC or SIPC insured. Not a bank deposit. No AGFinancial guarantee.</p>",
+      "iraHtml": "<p>*Annual Percentage Yield<br />Effective {{iraEffectiveDate}}.</p><p>Demand certificates are investments that do not represent cash and are payable within 30 days after demand by the investor. Penalties may apply to redemptions prior to maturity.</p><p>This is not an offer to sell securities. The offering is made only by the Offering Circular, which includes risk factors.</p><p>Not FDIC or SIPC insured. Not a bank deposit. No AGFinancial guarantee.</p>"
+    }
+  },
+  "published": {
+    "disclosures": [
+      {
+        "id": "loans-calculator-disclosure",
+        "title": "Loan calculator disclosure",
+        "group": "Loans",
+        "scope": "product",
+        "format": "text",
+        "usage": "Shown beneath the loan calculator actions and the follow-up contact prompt.",
+        "tokenHelp": [],
+        "value": "This calculator uses example data and is not an AGFinancial official quote or recommendation."
+      },
+      {
+        "id": "calculator-emergency-fund-disclosure",
+        "title": "Emergency fund calculator disclosure",
+        "group": "Calculators",
+        "scope": "shared",
+        "format": "text",
+        "usage": "Shown below the emergency fund calculator results.",
+        "tokenHelp": [],
+        "value": "Estimates are for illustration only and do not include inflation or all possible tax outcomes. Review with your financial and tax advisors."
+      },
+      {
+        "id": "calculator-net-worth-disclosure",
+        "title": "Net worth calculator disclosure",
+        "group": "Calculators",
+        "scope": "shared",
+        "format": "text",
+        "usage": "Shown below the net worth calculator results.",
+        "tokenHelp": [],
+        "value": "Illustration only. Estimates depend on the values entered and should not be used as financial, legal, or tax advice."
+      },
+      {
+        "id": "calculator-increased-contribution-disclosure",
+        "title": "Increased contribution calculator disclosure",
+        "group": "Calculators",
+        "scope": "shared",
+        "format": "text",
+        "usage": "Shown below the increased contribution calculator projection.",
+        "tokenHelp": [],
+        "value": "Educational estimate only. This projection is based on your assumptions and simplified annual compounding; results do not guarantee future performance."
+      },
+      {
+        "id": "planned-giving-cga-test-drive-disclosure",
+        "title": "Charitable Gift test drive disclosure",
+        "group": "Planned Giving",
+        "scope": "product",
+        "format": "text",
+        "usage": "Shown below the Charitable Gift test drive widget.",
+        "tokenHelp": [],
+        "value": "Figures are illustrations for education only and may differ from a personalized ACGA/§7520-based calculation. For a compliant multi-page PDF, please chat with an AGFinancial representative."
+      },
+      {
+        "id": "investments-certificates-rates-details-html",
+        "title": "Investments certificates rates detail copy",
+        "group": "Investments",
+        "scope": "product",
+        "format": "html",
+        "usage": "Shown on the Investments overview page under AGFinancial Investment Certificates Rates.",
+        "tokenHelp": [
+          "{{certificatesEffectiveDate}}",
+          "{{prospectusHref}}"
+        ],
+        "value": "<p class=\"investments-native-rates-disclaimer-lead\"><strong>*Annual Percentage Yield</strong><br /><strong>**Premium rates may be available for investments of $250,000 or greater.</strong><br /><strong>Effective {{certificatesEffectiveDate}}.</strong></p><p>Rates subject to change. Demand certificates are investments that do not represent cash and are payable within 30 days after demand by the investor. Penalties may apply to redemptions prior to maturity.</p><p>This is not an offer to sell securities referred to herein and we are not soliciting you to purchase these securities. The offering is made only by the Offering Circular which includes risk factors. The Offering Circular may be obtained by writing or calling AGFinancial or by clicking to <a href=\"{{prospectusHref}}\" target=\"_blank\" rel=\"noreferrer noopener\">read the prospectus</a>. AGFinancial investments are offered and sold only in states where authorized or exempt from authorization. A limited offering is available in Washington. Not available in Ohio.</p>"
+      },
+      {
+        "id": "investments-ladder-details-html",
+        "title": "Investments ladder calculator detail copy",
+        "group": "Investments",
+        "scope": "product",
+        "format": "html",
+        "usage": "Shown below the ladder calculator controls on the Investments overview page.",
+        "tokenHelp": [
+          "{{certificatesEffectiveDate}}",
+          "{{offeringCircularHref}}"
+        ],
+        "value": "<p>*Premium rates may be available for individual investments of $250,000 or greater. **Annual Percentage Yield. ***Monthly interest will vary due to differences in compounded cycles. ****Approximate future value assumes that any funds reinvested at maturity will be reinvested at the same rate. 8-Month, 7-Year, and 10-Year terms available for new investments only; funds may not be transferred from an existing or renewing investment. Rates effective {{certificatesEffectiveDate}}, and subject to change. Penalties may apply to redemptions prior to maturity. This is not an offering to sell securities referred to herein and we are not soliciting you to purchase these securities. The offering is made only by the Offering Circular which includes risk factors. The offering circular may be obtained <a href=\"{{offeringCircularHref}}\" target=\"_blank\" rel=\"noreferrer noopener\">here</a> or by calling AGFinancial. AGFinancial investments are offered and sold only in states where authorized or exempt from authorization. A limited offering is available in Washington. Not available in Ohio.</p>"
+      },
+      {
+        "id": "investments-shared-risk-warning",
+        "title": "Investments shared risk warning",
+        "group": "Investments",
+        "scope": "shared",
+        "format": "text",
+        "usage": "Shared warning used on investment disclosures across rates and calculator sections.",
+        "tokenHelp": [],
+        "value": "Not FDIC or SIPC Insured. Not a Bank Deposit. No AGFinancial Guarantee."
+      },
+      {
+        "id": "investments-shared-affiliation",
+        "title": "Investments shared affiliation line",
+        "group": "Investments",
+        "scope": "shared",
+        "format": "text",
+        "usage": "Shared AGFinancial affiliation line used on investment disclosures.",
+        "tokenHelp": [],
+        "value": "AGFinancial is a DBA of Assemblies of God Loan Fund, an affiliated entity of Assemblies of God Financial Services Group."
+      },
+      {
+        "id": "investments-shared-data-note",
+        "title": "Investments shared data note",
+        "group": "Investments",
+        "scope": "shared",
+        "format": "text",
+        "usage": "Shared reliability note used on investment calculator disclosures.",
+        "tokenHelp": [],
+        "value": "Note: Information is from sources determined reliable. Information is subject to error, omission, withdrawal, or change."
+      },
+      {
+        "id": "insurance-property-casualty-coverage-notice",
+        "title": "Property & casualty coverage notice",
+        "group": "Insurance",
+        "scope": "product",
+        "format": "lines",
+        "usage": "Shown on the property & casualty insurance page.",
+        "tokenHelp": [],
+        "value": [
+          "**CM0045 (04-2020)**",
+          "This material may include only a general description of insurance coverages and does not include all terms, conditions, and limitations found in Church Mutual Insurance Company, S.I. (“Church Mutual”) policies. The insurance policy, not any general descriptions of coverage that may be found in this material, will form the contract between the insured and Church Mutual. Neither Church Mutual nor its employees, representatives, or agents shall be liable to any party for the use of any information or statements made or contained herein.",
+          "(C) 2020 Church Mutual Insurance Company, S.I. Church Mutual is a registered trademark of Church Mutual Insurance Company, S.I. S.I.= a stock insurer. AGFinancial Insurance is a service mark of the General Council of the Assemblies of God."
+        ]
+      },
+      {
+        "id": "planned-giving-cga-qcd-fineprint",
+        "title": "CGA QCD supporting fine print",
+        "group": "Planned Giving",
+        "scope": "product",
+        "format": "lines",
+        "usage": "Shown under the SECURE 2.0 / QCD note on the charitable gift annuities page.",
+        "tokenHelp": [],
+        "value": [
+          "*Indexed annually for inflation",
+          "**Also available for Charitable Remainder Unitrust (CRUT) or Charitable Remainder Annuity Trust (CRAT)",
+          "This is a one-time, lifetime opportunity; not available on an annual basis",
+          "Restrictions apply."
+        ]
+      },
+      {
+        "id": "planned-giving-cga-state-notices",
+        "title": "CGA state notices",
+        "group": "Planned Giving",
+        "scope": "product",
+        "format": "lines",
+        "usage": "Shown at the bottom of the charitable gift annuities page.",
+        "tokenHelp": [],
+        "value": [
+          "Except for California, your Assemblies of God Charitable Gift Annuity will be issued by Assemblies of God Foundation (“AG Foundation”) and will be a general obligation of the organization. Charitable Gift Annuities are not available in Alabama, Hawaii, Montana, New Jersey, New York, or Washington.",
+          "Additional information for California residents: Annuities are subject to regulation by the State of California. Payments under this agreement, however, are not protected or otherwise guaranteed by any government agency or the California Life and Health Insurance Guarantee Association. AG Foundation does not practice law and no legal advice is provided. If you need legal advice, you should consult your own legal counsel. Your Assemblies of God Charitable Gift Annuity will be issued by the General Council of the Assemblies of God (“General Council”) and will be a general obligation of that organization. AG Foundation is responsible for the management of your gift annuity.",
+          "Additional information for Oklahoma residents: A Charitable Gift Annuity is not regulated by the Oklahoma Insurance Department and is not protected by a guaranty association with the Oklahoma Insurance Department.",
+          "Additional information for South Dakota residents: Charitable Gift Annuities are not regulated by and are not under the jurisdiction of the South Dakota Division of Insurance."
+        ]
+      },
+      {
+        "id": "retirement-403b-contribution-limits-disclosure",
+        "title": "403(b) contribution limits disclosure",
+        "group": "Retirement",
+        "scope": "product",
+        "format": "lines",
+        "usage": "Shown below the 403(b) contribution limits table.",
+        "tokenHelp": [],
+        "value": [
+          "*Beginning in 2026, participants who have FICA wages exceeding $150,000 (adjusted for inflation) in the previous calendar year will be required to make any catch-up contributions on a Roth (after-tax) basis. It is the Employer’s responsibility to ensure contributions are correctly submitted to the Plan. Employees below the $150,000 threshold, as well as ministers who earn SECA wages may continue to make catch-up contributions on either a pre-tax or Roth basis, depending on your plan’s design.",
+          "**The rule applies to individuals who will attain age 60 in the taxable year and continues until the taxable year in which they turn 64. So, a participant would be eligible for the entire year in which they turn 60 (even if their birthday is December 31), and they would not be eligible in the year in which they turn 64.",
+          "***All types of contributions including deferrals, employer, and traditional after-tax. Cannot exceed includible compensation.",
+          "†All types of contributions including deferrals, employer, and traditional after-tax; amounts over the general overall limit must be age 50 catch-up deferrals. Cannot exceed includible compensation except to the extent that the age 50 or older catch-up deferral has been utilized.",
+          "Contact your own tax advisor before taking any action that would have a tax consequence. This information is not tax advice. Information is from sources deemed reliable. Information is subject to error, omission, withdrawal, or change."
+        ]
+      },
+      {
+        "id": "retirement-403b-501c3-note",
+        "title": "403(b) 501(c)(3) note",
+        "group": "Retirement",
+        "scope": "shared",
+        "format": "lines",
+        "usage": "Shared note used on 403(b) eligibility sections.",
+        "tokenHelp": [],
+        "value": [
+          "*501(c)(3) organizations are tax-exempt entities organized and operated exclusively for religious, charitable, scientific, testing for public safety, literary, or educational purposes, among other qualified purposes under the Internal Revenue Code."
+        ]
+      },
+      {
+        "id": "retirement-ira-rates-disclosure",
+        "title": "IRA rates disclosure",
+        "group": "Retirement",
+        "scope": "product",
+        "format": "lines",
+        "usage": "Shown below the IRA rates widget.",
+        "tokenHelp": [],
+        "value": [
+          "Rates subject to change. Demand certificates are investments that do not represent cash and are payable within 30 days after demand by the investor. Penalties may apply to redemptions prior to maturity.",
+          "This is not an offer to sell securities referred to herein and we are not soliciting you to purchase these securities. The offering is made only by the Offering Circular which includes risk factors. The Offering Circular may be obtained by writing or calling AGFinancial or by clicking **here**.",
+          "Not FDIC or SIPC Insured. Not a Bank Deposit. No AGFinancial Guarantee.",
+          "**AGFinancial is a DBA of Assemblies of God Loan Fund, an affiliated entity of Assemblies of God Financial Services Group.**"
+        ]
+      },
+      {
+        "id": "retirement-ira-contribution-limits-disclosure",
+        "title": "IRA contribution limits disclosure",
+        "group": "Retirement",
+        "scope": "product",
+        "format": "lines",
+        "usage": "Shown below the IRA contribution limits table.",
+        "tokenHelp": [],
+        "value": [
+          "Your modified adjusted gross income (MAGI) may affect your eligibility to make contributions to a Roth IRA, as well as limit the deductibility of contributions to a Traditional IRA.",
+          "**Contact your own tax advisor before taking any action that would have a tax consequence. This information is not tax advice. Information is from sources deemed reliable. Information is subject to error, omission, withdrawal, or change.**"
+        ]
+      }
+    ],
+    "legalCopy": {
+      "certificatesHtml": "<p>*Annual Percentage Yield<br />**Premium rates may be available for investments of $250,000 or greater.<br />Effective {{certificatesEffectiveDate}}.</p><p>Demand certificates are investments that do not represent cash and are payable within 30 days after demand by the investor. Penalties may apply to redemptions prior to maturity.</p><p>This is not an offer to sell securities. The offering is made only by the Offering Circular, which includes risk factors.</p><p>Not FDIC or SIPC insured. Not a bank deposit. No AGFinancial guarantee.</p>",
+      "iraHtml": "<p>*Annual Percentage Yield<br />Effective {{iraEffectiveDate}}.</p><p>Demand certificates are investments that do not represent cash and are payable within 30 days after demand by the investor. Penalties may apply to redemptions prior to maturity.</p><p>This is not an offer to sell securities. The offering is made only by the Offering Circular, which includes risk factors.</p><p>Not FDIC or SIPC insured. Not a bank deposit. No AGFinancial guarantee.</p>"
+    }
+  }
+}

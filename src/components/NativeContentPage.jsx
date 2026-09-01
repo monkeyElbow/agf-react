@@ -5481,8 +5481,14 @@ export default function NativeContentPage({ page }) {
   const mobileSelectedHudBlockIndex = mobileSelectedHudBlockId
     ? editablePageBlocks.findIndex((block) => block.id === mobileSelectedHudBlockId)
     : -1;
-  const canMoveMobileSelectedHudBlockUp = mobileSelectedHudBlockIndex > 0;
-  const canMoveMobileSelectedHudBlockDown = mobileSelectedHudBlockIndex >= 0
+  const mobileSelectedHudBlockIsPinnedPrimarySlot = !isBlockOnlyManagedPage && (
+    mobileSelectedHudBlockId === String(content.primaryHeroBlock?.id || '').trim()
+    || mobileSelectedHudBlockId === String(content.primaryIntroBlock?.id || '').trim()
+  );
+  const canMoveMobileSelectedHudBlockUp = !mobileSelectedHudBlockIsPinnedPrimarySlot
+    && mobileSelectedHudBlockIndex > 0;
+  const canMoveMobileSelectedHudBlockDown = !mobileSelectedHudBlockIsPinnedPrimarySlot
+    && mobileSelectedHudBlockIndex >= 0
     && mobileSelectedHudBlockIndex < editablePageBlocks.length - 1;
   const heroHudPanelId = heroHudPanel?.id || '';
   const introHudPanelId = introHudPanel?.id || '';
@@ -5944,7 +5950,7 @@ export default function NativeContentPage({ page }) {
   };
 
   const handleMobileHudMove = (direction) => {
-    if (!editableBlockPath || !mobileSelectedHudBlockId) {
+    if (!editableBlockPath || !mobileSelectedHudBlockId || mobileSelectedHudBlockIsPinnedPrimarySlot) {
       return;
     }
     moveBlock(editableBlockPath, mobileSelectedHudBlockId, direction);
@@ -6159,7 +6165,7 @@ export default function NativeContentPage({ page }) {
               onClick={() => toggleHudPanel(heroHudPanelId, { scrollToTarget: true })}
               style={{ '--ag-admin-front-hud-opacity': String(frontHudOpacityRatio) }}
               structureControls={(
-                <FrontHudStructureControls pathname={hudContentPath} blockId={dynamicHeroBlock?.id || 'hero'} placement="anchor" />
+                <FrontHudStructureControls pathname={hudContentPath} blockId={dynamicHeroBlock?.id || 'hero'} canReorder={false} placement="anchor" />
               )}
             />
           ) : null}
@@ -6310,7 +6316,7 @@ export default function NativeContentPage({ page }) {
               anchorClassName="is-intro"
               style={{ '--ag-admin-front-hud-opacity': String(frontHudOpacityRatio) }}
               structureControls={(
-                <FrontHudStructureControls pathname={hudContentPath} blockId={dynamicIntroBlock?.id || 'intro'} placement="anchor" />
+                <FrontHudStructureControls pathname={hudContentPath} blockId={dynamicIntroBlock?.id || 'intro'} canReorder={false} placement="anchor" />
               )}
             />
           ) : null}

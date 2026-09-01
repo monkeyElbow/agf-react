@@ -34,6 +34,8 @@ describe('rates page renderer guardrail', () => {
     expect(source).toContain('className="rates-page-managed-block"');
     expect(source).toContain('className={`rates-page-managed-rate rates-page-managed-rate--${dataset || \'unknown\'} fade-up`}');
     expect(source).toContain('<BlockHudPanelHost');
+    expect(source).toContain("dataset === 'ira' ? (");
+    expect(source).toContain('<h2 className="rates-page-subheading">IRA Investment Rates</h2>');
     expect(source).toContain('<RatesBlock runtime={runtime} rates={rates} iraRates={iraRates} ratesMeta={ratesMeta} />');
     expect(source).toContain('<SafeRichText');
     expect(source).toContain('const legalHtml = dataset === \'ira\'');

@@ -19,6 +19,31 @@ afterEach(() => {
 });
 
 describe('createSharedDisclosuresStore', () => {
+  it('saves the whole disclosure patch live in one transaction', () => {
+    const persistenceFile = createTempFile();
+    const store = createSharedDisclosuresStore({ persistenceFile });
+
+    const result = store.saveLivePatch({
+      disclosures: [
+        {
+          id: 'loans-calculator-disclosure',
+          value: 'Saved disclosure copy',
+        },
+      ],
+      legalCopy: {
+        certificatesHtml: 'Saved certificates copy',
+      },
+    }, {
+      userId: 'dev-1',
+      displayName: 'Taylor QA',
+    });
+
+    expect(result.hasUnpublishedChanges).toBe(false);
+    expect(result.publishedBy.displayName).toBe('Taylor QA');
+    expect(result.published.disclosures.find((entry) => entry.id === 'loans-calculator-disclosure')?.value).toBe('Saved disclosure copy');
+    expect(result.published.legalCopy.certificatesHtml).toBe('Saved certificates copy');
+  });
+
   it('persists shared draft disclosure updates without changing the live snapshot', () => {
     const persistenceFile = createTempFile();
     const store = createSharedDisclosuresStore({ persistenceFile });

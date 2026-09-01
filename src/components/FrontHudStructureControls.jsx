@@ -9,7 +9,12 @@ function getChoiceLabel(choice) {
   return String(choice?.name || choice?.kind || choice?.templateId || 'Block').trim() || 'Block';
 }
 
-export default function FrontHudStructureControls({ pathname = '', blockId = '', activeBlockId = '' }) {
+export default function FrontHudStructureControls({
+  pathname = '',
+  blockId = '',
+  activeBlockId = '',
+  canReorder = true,
+}) {
   const {
     availableBlockTemplates = [],
     authoringBlocksByPath = {},
@@ -52,6 +57,7 @@ export default function FrontHudStructureControls({ pathname = '', blockId = '',
     )
     : null;
   const canEditTarget = targetIndex >= 0 && !isForeignOwnedBlockOwnership(targetOwnership);
+  const canReorderTarget = canEditTarget && canReorder;
   const targetLabel = currentBlocks[targetIndex]?.label || currentBlocks[targetIndex]?.kind || targetBlockId || 'block';
   const [pendingInsertIndex, setPendingInsertIndex] = useState(null);
 
@@ -128,7 +134,7 @@ export default function FrontHudStructureControls({ pathname = '', blockId = '',
   };
 
   const handleMove = (direction) => {
-    if (!canEditTarget) {
+    if (!canReorderTarget) {
       return;
     }
     moveBlock(pathname, targetBlockId, direction);
@@ -212,7 +218,7 @@ export default function FrontHudStructureControls({ pathname = '', blockId = '',
           type="button"
           className="admin-front-hud-structure-circle"
           onClick={() => handleMove('up')}
-          disabled={!canEditTarget || targetIndex === 0}
+          disabled={!canReorderTarget || targetIndex === 0}
           aria-label={`Move ${targetLabel} up`}
           title={`Move ${targetLabel} up`}
         >
@@ -222,7 +228,7 @@ export default function FrontHudStructureControls({ pathname = '', blockId = '',
           type="button"
           className="admin-front-hud-structure-circle"
           onClick={() => handleMove('down')}
-          disabled={!canEditTarget || targetIndex === currentBlocks.length - 1}
+          disabled={!canReorderTarget || targetIndex === currentBlocks.length - 1}
           aria-label={`Move ${targetLabel} down`}
           title={`Move ${targetLabel} down`}
         >

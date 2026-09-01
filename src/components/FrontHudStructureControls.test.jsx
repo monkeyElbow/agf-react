@@ -83,4 +83,25 @@ describe('FrontHudStructureControls', () => {
     expect(addAbove.getAttribute('aria-expanded')).toBe('false');
     expect(addBelow.getAttribute('aria-expanded')).toBe('true');
   });
+
+  it('does not pretend a structural fixed slot can move', () => {
+    const moveBlock = vi.fn();
+    render(
+      <ContentAdminContext.Provider value={{
+        availableBlockTemplates: [],
+        authoringBlocksByPath: { '/test': [{ id: 'hero', label: 'Hero' }, { id: 'content', label: 'Content' }] },
+        addBlock: vi.fn(),
+        moveBlock,
+        getBlockCollaboration: () => null,
+        devIdentity: { userId: 'admin' },
+      }}>
+        <FrontHudStructureControls pathname="/test" blockId="hero" canReorder={false} />
+      </ContentAdminContext.Provider>,
+    );
+
+    const moveDown = screen.getByRole('button', { name: 'Move Hero down' });
+    expect(moveDown.disabled).toBe(true);
+    fireEvent.click(moveDown);
+    expect(moveBlock).not.toHaveBeenCalled();
+  });
 });

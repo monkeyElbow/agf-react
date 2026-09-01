@@ -72,4 +72,36 @@ describe('content admin draft merge', () => {
     expect(activity.currentActorUnsavedSaveBlockIds).toEqual(['intro']);
     expect(activity.hasOtherActorDraft).toBe(false);
   });
+
+  it('keeps an optimistic moved-block lock saveable even when its content is unchanged', () => {
+    const current = pageState([
+      { id: 'cta', kind: 'cta_form', settings: { title: 'Same' } },
+      { id: 'hero', kind: 'hero', settings: { heading: 'Same' } },
+    ]);
+    const published = pageState([
+      { id: 'hero', kind: 'hero', settings: { heading: 'Same' } },
+      { id: 'cta', kind: 'cta_form', settings: { title: 'Same' } },
+    ]);
+
+    const activity = summarizePageWorkflowActivity(
+      {
+        '/test': {
+          blocks: {
+            cta: {
+              draftedBy: null,
+              savedBy: null,
+              lockedBy: { userId: 'admin-2', displayName: 'Admin 2' },
+            },
+          },
+        },
+      },
+      '/test',
+      { userId: 'admin-2', displayName: 'Admin 2' },
+      current,
+      published,
+    );
+
+    expect(activity.currentActorBlockIds).toEqual(['cta']);
+    expect(activity.currentActorUnsavedSaveBlockIds).toEqual(['cta']);
+  });
 });

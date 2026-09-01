@@ -513,6 +513,19 @@ function mergePageDraftForSafeSave(pathname, currentState, incomingState, actor,
   const incomingOrder = incomingBlocks.map((block) => String(block?.id || '').trim()).filter(Boolean);
   const hasStructuralDiff = JSON.stringify(currentOrder) !== JSON.stringify(incomingOrder);
   const hasBlockedStructuralConflict = hasStructuralDiff && blockedBlockIdSet.size > 0;
+  // A reorder changes the position of several blocks, but only the block the
+  // current admin moved belongs to their draft. The client includes that
+  // block's optimistic lock in the route state before the server lock round
+  // trip completes. Use it as the authoritative intent marker so a reorder
+  // neither loses its saved-draft record nor claims adjacent blocks.
+  const orderChangedBlockIds = new Set(findManagedOrderChangedBlockIds(currentOrder, incomingOrder));
+  const orderDraftBlockIds = new Set(
+    [...orderChangedBlockIds].filter((blockId) => {
+      const incomingMeta = normalizeBlockMeta(incomingEntry.blocks?.[blockId]);
+      return incomingMeta.lockedBy?.userId === normalizedActor?.userId
+        || incomingMeta.draftedBy?.userId === normalizedActor?.userId;
+    }),
+  );
 
   let mergedBlocks;
   if (hasBlockedStructuralConflict) {
@@ -569,7 +582,11 @@ function mergePageDraftForSafeSave(pathname, currentState, incomingState, actor,
         || currentMetaNormalized.lockedBy?.userId === normalizedActor.userId
       )
     );
-    if (!areBlocksEquivalent(currentBlock, incomingBlock) || hasUnsavedDraftMetadata) {
+    if (
+      !areBlocksEquivalent(currentBlock, incomingBlock)
+      || hasUnsavedDraftMetadata
+      || orderDraftBlockIds.has(blockId)
+    ) {
       savedBlockIds.push(blockId);
       nextBlocksMeta[blockId] = buildSavedBlockMeta(currentMeta, actor, timestamp);
       return;
@@ -1391,6 +1408,8 @@ export function createJsonContentStore({
   let exposeLoadedStaleOwnership = false;
   let publishedRevisionSource = null;
   let publishedRevisionValue = '';
+  let seedBaselineInfoMtimeMs = null;
+  let seedBaselineInfo = null;
   let legacyRevisionsByPath = {};
   const externalRevisionStorageEnabled = Boolean(String(revisionDirectory || '').trim());
   const dirtyExternalRevisionPaths = new Set();
@@ -1526,13 +1545,30 @@ export function createJsonContentStore({
     };
   };
 
-  const getSeedBaselineInfo = () => {
-    if (!seedBaselineFile || !fs.existsSync(seedBaselineFile)) {
+  const readSeedBaselineMtimeMs = () => {
+    if (!seedBaselineFile) {
       return null;
     }
     try {
+      return fs.statSync(seedBaselineFile).mtimeMs;
+    } catch {
+      return null;
+    }
+  };
+
+  const getSeedBaselineInfo = () => {
+    const baselineMtimeMs = readSeedBaselineMtimeMs();
+    if (baselineMtimeMs == null) {
+      seedBaselineInfoMtimeMs = null;
+      seedBaselineInfo = null;
+      return null;
+    }
+    if (seedBaselineInfo && seedBaselineInfoMtimeMs === baselineMtimeMs) {
+      return cloneJson(seedBaselineInfo);
+    }
+    try {
       const baseline = readSeedBaselinePayload(seedBaselineFile);
-      return {
+      seedBaselineInfo = {
         fileName: baseline.fileName,
         createdAt: Number.isFinite(Number(baseline.meta?.createdAt)) ? Number(baseline.meta.createdAt) : 0,
         timestamp: String(baseline.meta?.timestamp || '').trim(),
@@ -1541,7 +1577,11 @@ export function createJsonContentStore({
         actor: normalizeActor(baseline.meta?.actor),
         metadata: safeBackupMetadata(baseline.meta),
       };
+      seedBaselineInfoMtimeMs = baselineMtimeMs;
+      return cloneJson(seedBaselineInfo);
     } catch {
+      seedBaselineInfoMtimeMs = baselineMtimeMs;
+      seedBaselineInfo = null;
       return null;
     }
   };
@@ -1568,7 +1608,8 @@ export function createJsonContentStore({
     };
     fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(seedBaselineFile, stringifyPersistedJson(payload));
-    return {
+    seedBaselineInfoMtimeMs = readSeedBaselineMtimeMs();
+    seedBaselineInfo = {
       fileName: path.basename(seedBaselineFile),
       createdAt,
       timestamp: payload.meta.timestamp,
@@ -1577,6 +1618,7 @@ export function createJsonContentStore({
       actor: normalizedActor,
       metadata: safeBackupMetadata(payload.meta),
     };
+    return cloneJson(seedBaselineInfo);
   };
 
   const resolveSeedResetTarget = (fallbackSeedState) => {

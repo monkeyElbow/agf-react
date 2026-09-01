@@ -1,20 +1,27 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { defaultIraRates, defaultRates, defaultRatesMeta } from '../data/ratesDefault';
 import { DEFAULT_RATES_LEGAL_COPY_SETTINGS } from '../lib/ratesLegalCopyDefaults';
 import {
   fetchSharedDisclosuresSnapshot,
+  fetchPublishedContentRouteSnapshot,
   isDevContentAuthorityEnabled,
   publishSharedDisclosures,
   resetSharedDisclosures,
-  restoreSharedDisclosuresDraftFromLive,
-  saveSharedDisclosures,
 } from '../lib/devContentAuthorityRuntime';
 import { getOrCreateDevIdentity, toDevIdentitySummary } from '../lib/devIdentity';
+import { useOptionalContentAdmin } from './ContentAdminContextCore';
+import { RATES_CONTENT_PATH, readRatesTablesFromBlocks } from '../lib/ratesBlockData';
 
-const STORAGE_KEY = 'agf-rates-v2';
+const LEGACY_RATES_STORAGE_KEY = 'agf-rates-v2';
 const CONTENT_ADMIN_STORAGE_KEY = 'agf-content-admin-v1';
 const RatesContext = createContext(null);
 const SHARED_POLL_INTERVAL_MS = 1500;
+const PUBLISHED_RATES_REFRESH_INTERVAL_MS = 15000;
+
+function readPublishedRouteBlocks(snapshot, pathname) {
+  const source = snapshot?.baseSnapshot || snapshot?.state || {};
+  const blocks = source?.blocksByPath?.[pathname];
+  return Array.isArray(blocks) ? blocks : null;
+}
 
 function readLegacyRatesLegalCopyFromContentAdminStorage() {
   try {
@@ -58,42 +65,6 @@ function normalizeStoredRatesLegalCopy(payload) {
   };
 }
 
-function normalizeStoredRates(payload) {
-  if (!payload) {
-    return {
-      rates: defaultRates,
-      iraRates: defaultIraRates,
-      ratesMeta: defaultRatesMeta,
-      legalCopy: { ...DEFAULT_RATES_LEGAL_COPY_SETTINGS },
-    };
-  }
-
-  if (Array.isArray(payload)) {
-    return {
-      rates: payload,
-      iraRates: defaultIraRates,
-      ratesMeta: defaultRatesMeta,
-      legalCopy: { ...DEFAULT_RATES_LEGAL_COPY_SETTINGS },
-    };
-  }
-
-  if (Array.isArray(payload.rates) && Array.isArray(payload.iraRates)) {
-    return {
-      rates: payload.rates,
-      iraRates: payload.iraRates,
-      ratesMeta: { ...defaultRatesMeta, ...(payload.ratesMeta || {}) },
-      legalCopy: normalizeStoredRatesLegalCopy(payload),
-    };
-  }
-
-  return {
-    rates: defaultRates,
-    iraRates: defaultIraRates,
-    ratesMeta: defaultRatesMeta,
-    legalCopy: { ...DEFAULT_RATES_LEGAL_COPY_SETTINGS },
-  };
-}
-
 function readCurrentActorSummary() {
   if (typeof window === 'undefined') {
     return null;
@@ -123,56 +94,54 @@ function normalizeSharedLegalCopySnapshot(snapshot) {
 
 export function RatesProvider({ children }) {
   const sharedAuthorityEnabled = isDevContentAuthorityEnabled();
-  const initialRateTables = useMemo(() => {
+  const contentAdmin = useOptionalContentAdmin();
+  const contentAdminRateBlocks = contentAdmin?.blocksByPath?.[RATES_CONTENT_PATH];
+  // The lightweight public provider deliberately loads only the visible page.
+  // Rates are global content, though, so routes such as Investments need their
+  // own published /rates feed rather than falling back to code defaults.
+  const isLightweightPublicContext = !Array.isArray(
+    contentAdmin?.authoringBlocksByPath?.[RATES_CONTENT_PATH],
+  );
+  const [publishedRateBlocks, setPublishedRateBlocks] = useState(null);
+  const rateTables = useMemo(
+    () => readRatesTablesFromBlocks(
+      isLightweightPublicContext
+        ? (publishedRateBlocks || contentAdminRateBlocks)
+        : contentAdminRateBlocks,
+    ),
+    [contentAdminRateBlocks, isLightweightPublicContext, publishedRateBlocks],
+  );
+  const initialLegalCopy = useMemo(() => {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      return normalizeStoredRates(raw ? JSON.parse(raw) : null);
+      const raw = localStorage.getItem(LEGACY_RATES_STORAGE_KEY);
+      return normalizeStoredRatesLegalCopy(raw ? JSON.parse(raw) : null);
     } catch {
-      return {
-        rates: defaultRates,
-        iraRates: defaultIraRates,
-        ratesMeta: defaultRatesMeta,
-        legalCopy: { ...DEFAULT_RATES_LEGAL_COPY_SETTINGS },
-      };
+      return { ...DEFAULT_RATES_LEGAL_COPY_SETTINGS };
     }
   }, []);
-  const [rateTables, setRateTables] = useState(initialRateTables);
-  const [draftLegalCopy, setDraftLegalCopyState] = useState(initialRateTables.legalCopy);
+  const [legalCopy, setLegalCopyState] = useState(initialLegalCopy);
+  const [draftLegalCopy, setDraftLegalCopyState] = useState(initialLegalCopy);
   const [hasUnpublishedLegalCopyChanges, setHasUnpublishedLegalCopyChanges] = useState(false);
   const [legalCopyDraftUpdatedAt, setLegalCopyDraftUpdatedAt] = useState(0);
   const [legalCopyDraftUpdatedBy, setLegalCopyDraftUpdatedBy] = useState(null);
   const [legalCopyPublishedAt, setLegalCopyPublishedAt] = useState(0);
   const [legalCopyPublishedBy, setLegalCopyPublishedBy] = useState(null);
   const pendingSharedMutationCountRef = useRef(0);
+  const hasLocalLegalCopyChangesRef = useRef(false);
 
-  const { rates, iraRates, ratesMeta, legalCopy } = rateTables;
-
-  function setRates(nextRates) {
-    setRateTables((current) => ({ ...current, rates: nextRates }));
-  }
-
-  function setIraRates(nextIraRates) {
-    setRateTables((current) => ({ ...current, iraRates: nextIraRates }));
-  }
-
-  function setRatesMeta(nextRatesMeta) {
-    setRateTables((current) => ({
-      ...current,
-      ratesMeta: { ...current.ratesMeta, ...nextRatesMeta },
-    }));
-  }
+  const { rates, iraRates, ratesMeta } = rateTables;
 
   function applySharedSnapshot(snapshot, { force = false } = {}) {
-    if (!snapshot || (!force && pendingSharedMutationCountRef.current > 0)) {
+    if (!snapshot || (!force && (
+      pendingSharedMutationCountRef.current > 0 || hasLocalLegalCopyChangesRef.current
+    ))) {
       return;
     }
     const normalized = normalizeSharedLegalCopySnapshot(snapshot);
-    setRateTables((current) => ({
-      ...current,
-      legalCopy: normalized.publishedLegalCopy,
-    }));
-    setDraftLegalCopyState(normalized.draftLegalCopy);
-    setHasUnpublishedLegalCopyChanges(normalized.hasUnpublishedChanges);
+    setLegalCopyState(normalized.publishedLegalCopy);
+    setDraftLegalCopyState(normalized.publishedLegalCopy);
+    setHasUnpublishedLegalCopyChanges(false);
+    hasLocalLegalCopyChangesRef.current = false;
     setLegalCopyDraftUpdatedAt(normalized.draftUpdatedAt);
     setLegalCopyDraftUpdatedBy(normalized.draftUpdatedBy);
     setLegalCopyPublishedAt(normalized.publishedAt);
@@ -188,39 +157,53 @@ export function RatesProvider({ children }) {
     setDraftLegalCopyState(normalizedDraft);
 
     if (!sharedAuthorityEnabled) {
-      setRateTables((current) => ({
-        ...current,
-        legalCopy: normalizedDraft,
-      }));
+      setLegalCopyState(normalizedDraft);
       setHasUnpublishedLegalCopyChanges(false);
       return;
     }
 
     setHasUnpublishedLegalCopyChanges(JSON.stringify(normalizedDraft) !== JSON.stringify(legalCopy));
-    pendingSharedMutationCountRef.current += 1;
-    void saveSharedDisclosures(
-      { legalCopy: normalizedDraft },
-      readCurrentActorSummary(),
-    )
-      .then((snapshot) => {
-        applySharedSnapshot(snapshot, { force: true });
-      })
-      .catch(() => {
-        // keep optimistic draft state; polling will reconcile once the shared store is reachable again
-      })
-      .finally(() => {
-        pendingSharedMutationCountRef.current = Math.max(0, pendingSharedMutationCountRef.current - 1);
-      });
+    hasLocalLegalCopyChangesRef.current = JSON.stringify(normalizedDraft) !== JSON.stringify(legalCopy);
   }
 
   useEffect(() => {
-    if (sharedAuthorityEnabled) {
+    if (!sharedAuthorityEnabled || !isLightweightPublicContext) {
       return undefined;
     }
 
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(rateTables));
-    return undefined;
-  }, [rateTables, sharedAuthorityEnabled]);
+    let cancelled = false;
+    const syncPublishedRates = async () => {
+      try {
+        const snapshot = await fetchPublishedContentRouteSnapshot(RATES_CONTENT_PATH);
+        const blocks = readPublishedRouteBlocks(snapshot, RATES_CONTENT_PATH);
+        if (!cancelled && blocks) {
+          setPublishedRateBlocks(blocks);
+        }
+      } catch {
+        // Keep the most recent published values if the development authority
+        // is briefly unavailable.
+      }
+    };
+
+    void syncPublishedRates();
+    const intervalId = window.setInterval(() => {
+      void syncPublishedRates();
+    }, PUBLISHED_RATES_REFRESH_INTERVAL_MS);
+    const syncWhenVisible = () => {
+      if (document.visibilityState === 'visible') {
+        void syncPublishedRates();
+      }
+    };
+    window.addEventListener('focus', syncPublishedRates);
+    document.addEventListener('visibilitychange', syncWhenVisible);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(intervalId);
+      window.removeEventListener('focus', syncPublishedRates);
+      document.removeEventListener('visibilitychange', syncWhenVisible);
+    };
+  }, [isLightweightPublicContext, sharedAuthorityEnabled]);
 
   useEffect(() => {
     if (!sharedAuthorityEnabled) {
@@ -259,17 +242,12 @@ export function RatesProvider({ children }) {
       ratesMeta,
       legalCopy,
       draftLegalCopy,
-      setRates,
-      setIraRates,
-      setRatesMeta,
       setLegalCopy,
+      applyLegalCopySnapshot: (snapshot) => applySharedSnapshot(snapshot, { force: true }),
       resetDraftLegalCopy: async () => {
         if (!sharedAuthorityEnabled) {
           setDraftLegalCopyState({ ...DEFAULT_RATES_LEGAL_COPY_SETTINGS });
-          setRateTables((current) => ({
-            ...current,
-            legalCopy: { ...DEFAULT_RATES_LEGAL_COPY_SETTINGS },
-          }));
+          setLegalCopyState({ ...DEFAULT_RATES_LEGAL_COPY_SETTINGS });
           setHasUnpublishedLegalCopyChanges(false);
           return null;
         }
@@ -283,26 +261,14 @@ export function RatesProvider({ children }) {
         }
       },
       restoreDraftLegalCopyFromLive: async () => {
-        if (!sharedAuthorityEnabled) {
-          setDraftLegalCopyState(legalCopy);
-          setHasUnpublishedLegalCopyChanges(false);
-          return null;
-        }
-        pendingSharedMutationCountRef.current += 1;
-        try {
-          const snapshot = await restoreSharedDisclosuresDraftFromLive(readCurrentActorSummary());
-          applySharedSnapshot(snapshot, { force: true });
-          return snapshot;
-        } finally {
-          pendingSharedMutationCountRef.current = Math.max(0, pendingSharedMutationCountRef.current - 1);
-        }
+        setDraftLegalCopyState(legalCopy);
+        setHasUnpublishedLegalCopyChanges(false);
+        hasLocalLegalCopyChangesRef.current = false;
+        return null;
       },
       publishDraftLegalCopy: async () => {
         if (!sharedAuthorityEnabled) {
-          setRateTables((current) => ({
-            ...current,
-            legalCopy: draftLegalCopy,
-          }));
+          setLegalCopyState(draftLegalCopy);
           setHasUnpublishedLegalCopyChanges(false);
           return null;
         }

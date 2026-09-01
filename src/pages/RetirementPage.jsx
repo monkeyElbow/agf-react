@@ -16,6 +16,7 @@ import ColorPalette from '../components/ColorPalette';
 import DynamicCtaSection from '../components/DynamicCtaSection';
 import FrontHudAnchorTag from '../components/FrontHudAnchorTag';
 import InvestmentsGrowthFeature from '../components/InvestmentsGrowthFeature';
+import ManagedBlockOrder from '../components/ManagedBlockOrder';
 import SafeRichText from '../components/SafeRichText';
 import { HomeDoTheMathBadge } from '../components/blocks/PageBlocksRenderer';
 import { getResourceArticleFeatureConfig } from '../data/resourceArticleFeatureIndex';
@@ -601,6 +602,10 @@ export default function RetirementPage() {
     registerExternalDraftFlushHandler,
     registerExternalDraftStatusHandler,
   });
+  const managedBlockOrderStyle = (blockId) => {
+    const index = managedBlocks.findIndex((block) => String(block?.id || '').trim() === blockId);
+    return { order: index >= 0 ? index * 10 : 999 };
+  };
   const heroBlock = useMemo(() => (
     managedBlocks.find((block) => (
       block?.id === 'hero'
@@ -1781,10 +1786,12 @@ export default function RetirementPage() {
           />
         </FrontHudPanelShell>
       ) : null}
+      <ManagedBlockOrder className="retirement-native-page-content" blocks={managedBlocks}>
       <section
         ref={heroSectionRef}
         className={`service-native-hero${dynamicHero ? ` is-bg-${dynamicHero.bgTone || 'white'} is-justify-${dynamicHero.justify || 'center'}` : ''}${showFrontHud ? ' has-admin-front-hud' : ''}${hasOpenHudPanel ? (isHeroHudFocusTarget ? ' is-hud-focus-target' : ' is-hud-dimmed') : ''}${getOwnershipVisualForBlockId('hero').className || ''}`}
         data-block-id="hero"
+        style={managedBlockOrderStyle('hero')}
       >
         <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('hero')} />
         {renderHudAnchor('hero')}
@@ -1847,6 +1854,7 @@ export default function RetirementPage() {
           ref={introSectionRef}
           className={`service-native-intro retirement-native-intro dynamic-intro is-bg-${resolvedIntro.bgTone || 'white'} is-text-${resolvedIntro.textTone || 'dark'}${showFrontHud ? ' has-admin-front-hud' : ''}${hasOpenHudPanel ? (isIntroHudFocusTarget ? ' is-hud-focus-target' : ' is-hud-dimmed') : ''}${getOwnershipVisualForBlockId('intro').className || ''}`}
           data-block-id="intro"
+          style={managedBlockOrderStyle('intro')}
         >
           <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('intro')} />
           {renderHudAnchor('intro')}
@@ -1911,19 +1919,22 @@ export default function RetirementPage() {
       ) : null}
 
       {retirementPlanFeatureRuntime ? (
-        <InvestmentsGrowthFeature
-          blockId="retirement_plan_feature"
-          runtime={retirementPlanFeatureRuntime}
-          ownership={getOwnershipVisualForBlockId('retirement_plan_feature')}
-          hudAnchor={renderHudAnchor('retirement_plan_feature')}
-          sectionHudClassName={getHudBlockStateClassName('retirement_plan_feature').trim()}
-        />
+        <div data-block-id="retirement_plan_feature" style={managedBlockOrderStyle('retirement_plan_feature')}>
+          <InvestmentsGrowthFeature
+            blockId="retirement_plan_feature"
+            runtime={retirementPlanFeatureRuntime}
+            ownership={getOwnershipVisualForBlockId('retirement_plan_feature')}
+            hudAnchor={renderHudAnchor('retirement_plan_feature')}
+            sectionHudClassName={getHudBlockStateClassName('retirement_plan_feature').trim()}
+          />
+        </div>
       ) : null}
 
       {splitPanelRuntime ? (
         <section
           className={`service-native-section retirement-accounts-section${getHudBlockStateClassName('split_options')}${getOwnershipVisualForBlockId('split_options').className || ''}`}
           data-block-id="split_options"
+          style={managedBlockOrderStyle('split_options')}
         >
           <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('split_options')} />
           {renderHudAnchor('split_options')}
@@ -2007,7 +2018,7 @@ export default function RetirementPage() {
         ref={billboardSectionRef}
         className={`service-native-section dynamic-billboard retirement-everyday is-bg-${renderedBillboard.bgTone || 'white'} is-text-${renderedBillboard.textTone || 'dark'} retirement-daily-billboard${showFrontHud && billboardBlock ? ' has-admin-front-hud' : ''}${hasOpenHudPanel ? (isBillboardHudFocusTarget ? ' is-hud-focus-target' : ' is-hud-dimmed') : ''}${getOwnershipVisualForBlockId('billboard').className || ''}`}
         data-block-id="billboard"
-        style={billboardSectionStyle || undefined}
+        style={{ ...managedBlockOrderStyle('billboard'), ...(billboardSectionStyle || {}) }}
       >
         <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('billboard')} />
         {renderHudAnchor('billboard')}
@@ -2094,7 +2105,7 @@ export default function RetirementPage() {
         ref={rolloverBillboardSectionRef}
         className={`service-native-section dynamic-billboard retirement-everyday retirement-rollover-billboard is-bg-${renderedRolloverBillboard.bgTone || 'white'} is-text-${renderedRolloverBillboard.textTone || 'dark'}${showFrontHud && rolloverBillboardBlock ? ' has-admin-front-hud' : ''}${hasOpenHudPanel ? (isRolloverBillboardHudFocusTarget ? ' is-hud-focus-target' : ' is-hud-dimmed') : ''}${getOwnershipVisualForBlockId('rollover_billboard').className || ''}`}
         data-block-id="rollover_billboard"
-        style={rolloverBillboardSectionStyle || undefined}
+        style={{ ...managedBlockOrderStyle('rollover_billboard'), ...(rolloverBillboardSectionStyle || {}) }}
       >
         <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('rollover_billboard')} />
         {renderHudAnchor('rollover_billboard')}
@@ -2181,7 +2192,7 @@ export default function RetirementPage() {
         <section
           className={`service-native-section retirement-do-the-math-billboard${showFrontHud && columnsMathBlock ? ' has-admin-front-hud' : ''}${hasOpenHudPanel ? (isColumnsMathHudFocusTarget ? ' is-hud-focus-target' : ' is-hud-dimmed') : ''}${getOwnershipVisualForBlockId('columns_math').className || ''}`}
           data-block-id="columns_math"
-          style={doTheMathSectionStyle}
+          style={{ ...managedBlockOrderStyle('columns_math'), ...(doTheMathSectionStyle || {}) }}
         >
           <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('columns_math')} />
           {renderHudAnchor('columns_math')}
@@ -2256,7 +2267,7 @@ export default function RetirementPage() {
         </section>
       ) : null}
 
-      <section className="service-native-section retirement-calc-section" id="retirement-savings-calculator">
+      <section className="service-native-section retirement-calc-section" id="retirement-savings-calculator" style={{ order: 65 }}>
         <div className="ag-panel-rail">
           <div className="retirement-calc-intro">
             <h2 className="retirement-calc-title">
@@ -2485,7 +2496,7 @@ export default function RetirementPage() {
         </div>
       </section>
 
-      <div ref={ctaSectionRef}>
+      <div ref={ctaSectionRef} data-block-id="cta_form" style={managedBlockOrderStyle('cta_form')}>
         <DynamicCtaSection
           managedBlocks={managedBlocks}
           defaultSettings={defaultRetirementCtaSettings}
@@ -2505,6 +2516,7 @@ export default function RetirementPage() {
         ref={testimonialsSectionRef}
         className={`service-native-section retirement-testimonials${getHudBlockStateClassName('testimonials')}${getOwnershipVisualForBlockId('testimonials').className || ''}`}
         data-block-id="testimonials"
+        style={managedBlockOrderStyle('testimonials')}
       >
         <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('testimonials')} />
         {renderHudAnchor('testimonials')}
@@ -2526,14 +2538,14 @@ export default function RetirementPage() {
       </section>
 
       {testimonialsData.showFineprint ? (
-        <section className="service-native-section retirement-fineprint">
+        <section className="service-native-section retirement-fineprint" style={{ order: 85 }}>
           <div className="ag-panel-rail">
             <p className="service-native-note">{testimonialsData.fineprint}</p>
           </div>
         </section>
       ) : null}
 
-      <section className="service-native-section service-native-article-teaser retirement-top3">
+      <section className="service-native-section service-native-article-teaser retirement-top3" style={{ order: 90 }}>
         <div className="ag-panel-rail-wide">
           <div className="service-native-dark-feature">
             <div className="service-native-dark-feature-inner">
@@ -2554,6 +2566,7 @@ export default function RetirementPage() {
           </div>
         </div>
       </section>
+      </ManagedBlockOrder>
     </div>
   );
 }

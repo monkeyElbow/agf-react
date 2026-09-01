@@ -3845,7 +3845,6 @@ export function ContentAdminProvider({ children, initialState = null }) {
         && currentActor
         && getBlockCollaboration(pathname, blockId).lockedBy?.userId !== currentActor.userId
       );
-      let didMove = false;
       saveState((prevState) => {
         const prevBlocksByPath = prevState.blocksByPath || {};
         const pageBlocks = prevBlocksByPath[pathname] || [];
@@ -3859,7 +3858,6 @@ export function ContentAdminProvider({ children, initialState = null }) {
         if (toIndex < 0 || toIndex >= pageBlocks.length) {
           return prevState;
         }
-        didMove = true;
         const nextBlocks = [...pageBlocks];
         const [moved] = nextBlocks.splice(fromIndex, 1);
         nextBlocks.splice(toIndex, 0, moved);
@@ -3890,9 +3888,9 @@ export function ContentAdminProvider({ children, initialState = null }) {
           { mergeCollaborationOnlyWhenDirty: true, scopedPath: pathname },
         );
       }
-      if (didMove && sharedAuthorityEnabled && currentActor) {
-        void queueSharedRouteDraftSave('Move block in page draft', pathname);
-      }
+      // Structural changes use the same explicit page-draft workflow as the
+      // rest of the editor. Saving here raced the ownership-lock request and
+      // could persist a new order without a usable saved-draft record.
     };
 
     const moveBlockToIndex = (pathname, blockId, toIndexRaw) => {
@@ -3901,7 +3899,6 @@ export function ContentAdminProvider({ children, initialState = null }) {
         && currentActor
         && getBlockCollaboration(pathname, blockId).lockedBy?.userId !== currentActor.userId
       );
-      let didMove = false;
       saveState((prevState) => {
         const prevBlocksByPath = prevState.blocksByPath || {};
         const pageBlocks = prevBlocksByPath[pathname] || [];
@@ -3918,7 +3915,6 @@ export function ContentAdminProvider({ children, initialState = null }) {
         if (toIndex === fromIndex) {
           return prevState;
         }
-        didMove = true;
         const nextBlocks = [...pageBlocks];
         const [moved] = nextBlocks.splice(fromIndex, 1);
         nextBlocks.splice(toIndex, 0, moved);
@@ -3949,9 +3945,8 @@ export function ContentAdminProvider({ children, initialState = null }) {
           { mergeCollaborationOnlyWhenDirty: true, scopedPath: pathname },
         );
       }
-      if (didMove && sharedAuthorityEnabled && currentActor) {
-        void queueSharedRouteDraftSave('Move block in page draft', pathname);
-      }
+      // See moveBlock: keep the reorder local until the admin saves the page
+      // draft, rather than racing an automatic route save against its lock.
     };
 
   const addBlock = (pathname, templateId, insertIndex) => {

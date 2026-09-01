@@ -225,6 +225,9 @@ export default function RatesPage() {
         data-rates-managed-panel-id={runtime.panelId}
       >
         {renderHudAnchor(runtime.panelId)}
+        {dataset === 'ira' ? (
+          <h2 className="rates-page-subheading">IRA Investment Rates</h2>
+        ) : null}
         <RatesBlock runtime={runtime} rates={rates} iraRates={iraRates} ratesMeta={ratesMeta} />
         {legalHtml ? (
           <SafeRichText as="div" html={legalHtml} className="rates-disclaimer fade-up" />

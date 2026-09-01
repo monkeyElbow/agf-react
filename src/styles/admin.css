@@ -2807,6 +2807,14 @@
   gap: 0.6rem;
 }
 
+.admin-rates-actions {
+  margin-block: 1rem;
+}
+
+.admin-rates-actions .action-btn {
+  font-weight: 600;
+}
+
 .admin-page-save-bar-disabled-action {
   opacity: 0.58;
 }
@@ -2909,6 +2917,24 @@
   box-shadow: 0 10px 24px rgba(11, 40, 57, 0.05);
 }
 
+.admin-rates-page-meta {
+  display: flex;
+  margin: 0.68rem 0 1rem;
+}
+
+.admin-rates-updated-badge {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid #b8d7e5;
+  border-radius: 999px;
+  background: #eff8fc;
+  color: #274c67;
+  font-size: 0.76rem;
+  font-weight: 750;
+  line-height: 1.2;
+  padding: 0.36rem 0.64rem;
+}
+
 .admin-rates-chart-panel + .admin-rates-chart-panel,
 .admin-rates-chart-panel + .admin-rates-lower-grid,
 .admin-rates-lower-grid + .admin-rates-chart-panel {
@@ -2970,6 +2996,38 @@
   margin: 0;
   color: #9b2d24;
   font-weight: 700;
+}
+
+.admin-rates-import-diagnostics {
+  margin-top: 0.8rem;
+  font-size: 0.84rem;
+}
+
+.admin-rates-import-diagnostics summary {
+  cursor: pointer;
+  color: var(--super-grey, #414042);
+  font-weight: 700;
+}
+
+.admin-rates-import-diagnostics dl {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0.6rem 0 0;
+}
+
+.admin-rates-import-diagnostics dl > div {
+  display: grid;
+  gap: 0.4rem;
+  grid-template-columns: minmax(12rem, auto) minmax(0, 1fr);
+}
+
+.admin-rates-import-diagnostics dt {
+  font-weight: 700;
+}
+
+.admin-rates-import-diagnostics dd {
+  margin: 0;
+  overflow-wrap: anywhere;
 }
 
 .admin-rates-import-report {
@@ -3066,6 +3124,10 @@
   font-weight: 700 !important;
   line-height: 1.16 !important;
   text-transform: uppercase;
+}
+
+.admin-rates-chart-table thead th:not(:first-child) {
+  text-align: center !important;
 }
 
 .admin-rates-chart-table thead th + th,

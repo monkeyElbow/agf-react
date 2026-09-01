@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import PageShell from '../components/PageShell';
 import { pageByPath } from '../data/siteMap';
 import { useContentAdmin } from '../context/ContentAdminContextCore';
@@ -19,12 +19,7 @@ export default function AdminProfilePage() {
     selectDevAdminProfile = () => null,
     updateDevAdminProfile = () => null,
   } = useContentAdmin();
-  const profiles = useMemo(() => {
-    const knownIds = new Set(devAdminProfiles.map((profile) => profile.userId));
-    return devIdentity && !knownIds.has(devIdentity.userId)
-      ? [...devAdminProfiles, devIdentity]
-      : devAdminProfiles;
-  }, [devAdminProfiles, devIdentity]);
+  const profiles = devAdminProfiles;
   const [selectedId, setSelectedId] = useState(devIdentity?.userId || profiles[0]?.userId || '');
   const selectedProfile = profiles.find((profile) => profile.userId === selectedId) || profiles[0] || null;
   const [form, setForm] = useState(() => profileFormFrom(selectedProfile));
@@ -75,10 +70,7 @@ export default function AdminProfilePage() {
                   key={profile.userId}
                   type="button"
                   className={`admin-profile-card${isSelected ? ' is-selected' : ''}`}
-                  onClick={() => {
-                    setSelectedId(profile.userId);
-                    setMessage('');
-                  }}
+                  onClick={() => chooseProfile(profile)}
                   aria-pressed={isSelected}
                 >
                   <span className="admin-profile-avatar" style={{ backgroundColor: profile.accentColor }}>

@@ -1,13 +1,44 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import PageShell from '../components/PageShell';
 import SafeRichText from '../components/SafeRichText';
 import { pageByPath } from '../data/siteMap';
 import { defaultIraRates, defaultRates, defaultRatesMeta } from '../data/ratesDefault';
 import { useRates } from '../context/RatesContext';
+import { useContentAdmin } from '../context/ContentAdminContextCore';
 import { buildDynamicLegalCopyFromBlock } from '../lib/dynamicPageBlocks';
-import { DEFAULT_RATES_LEGAL_COPY_SETTINGS } from '../lib/ratesLegalCopyDefaults';
-import { parseRatesPdf } from '../utils/ratesPdfImport';
+import {
+  CERTIFICATES_RATES_BLOCK_ID,
+  IRA_RATES_BLOCK_ID,
+  RATES_CONTENT_PATH,
+  buildRatesBlockSettingsPatch,
+} from '../lib/ratesBlockData';
+import { RUNTIME_BUILD_ID } from '../lib/runtimeBuild';
+import { parseRatesPdf, resolveRatesPdfWorkerUrl } from '../utils/ratesPdfImport';
+
+const PDF_IMPORT_STAGE_LABELS = {
+  FILE_SELECTED: 'Preparing selected file…',
+  FILE_ARRAY_BUFFER_STARTED: 'Reading selected file…',
+  FILE_ARRAY_BUFFER_COMPLETE: 'File read. Starting PDF engine…',
+  PDFJS_GET_DOCUMENT_STARTED: 'Starting PDF engine…',
+  PDFJS_DOCUMENT_LOADED: 'PDF loaded. Extracting text…',
+  PAGE_EXTRACTION_STARTED: 'Extracting PDF page text…',
+  PAGE_EXTRACTION_COMPLETE: 'Page text extracted…',
+  ROW_NORMALIZATION_STARTED: 'Matching PDF rows…',
+  IMPORT_COMPLETE: 'Import complete.',
+  IMPORT_TIMEOUT: 'PDF import timed out.',
+  IMPORT_FAILED: 'PDF import failed.',
+};
+
+function formatAdminUpdatedTimestamp(entry) {
+  const timestamp = Number(entry?.createdAt) || 0;
+  if (!timestamp) {
+    return 'Not yet saved';
+  }
+  const savedBy = String(entry?.actor?.displayName || '').trim();
+  const formatted = new Date(timestamp).toLocaleString();
+  return savedBy ? `${formatted} by ${savedBy}` : formatted;
+}
 
 export default function AdminRatesPage() {
   const {
@@ -15,25 +46,38 @@ export default function AdminRatesPage() {
     iraRates,
     ratesMeta,
     legalCopy,
-    setRates,
-    setIraRates,
-    setRatesMeta,
-    setLegalCopy,
   } = useRates();
-  const [draft, setDraft] = useState({ rates, iraRates, ratesMeta, legalCopy });
+  const {
+    blocksByPath = {},
+    updateBlock = () => {},
+    getPageHistory = () => [],
+    publishSharedPageNow = async () => ({ ok: false, reason: 'content-admin-unavailable' }),
+  } = useContentAdmin();
+  const [draft, setDraft] = useState({ rates, iraRates, ratesMeta });
   const [importReport, setImportReport] = useState(null);
+  const [hasAppliedImport, setHasAppliedImport] = useState(false);
   const [isParsingPdf, setIsParsingPdf] = useState(false);
   const [importError, setImportError] = useState('');
+  const [importStage, setImportStage] = useState('');
+  const [importDiagnostics, setImportDiagnostics] = useState([]);
+  const [isEditingDraft, setIsEditingDraft] = useState(false);
+  const [saveState, setSaveState] = useState('');
+  const [saveError, setSaveError] = useState('');
 
   const hasChanges = useMemo(
     () => (
       JSON.stringify(draft.rates) !== JSON.stringify(rates)
       || JSON.stringify(draft.iraRates) !== JSON.stringify(iraRates)
       || JSON.stringify(draft.ratesMeta) !== JSON.stringify(ratesMeta)
-      || JSON.stringify(draft.legalCopy) !== JSON.stringify(legalCopy)
     ),
-    [draft, rates, iraRates, ratesMeta, legalCopy],
+    [draft, rates, iraRates, ratesMeta],
   );
+
+  useEffect(() => {
+    if (!isEditingDraft) {
+      setDraft({ rates, iraRates, ratesMeta });
+    }
+  }, [isEditingDraft, iraRates, rates, ratesMeta]);
 
   const disclosurePreview = useMemo(
     () => buildDynamicLegalCopyFromBlock(
@@ -41,7 +85,7 @@ export default function AdminRatesPage() {
         id: 'disclaimer',
         kind: 'legal_copy',
         mode: 'dynamic',
-        settings: draft.legalCopy,
+        settings: legalCopy,
       },
       {
         certificatesEffectiveDate: draft.ratesMeta?.certificatesEffectiveDate,
@@ -49,7 +93,7 @@ export default function AdminRatesPage() {
       },
     ),
     [
-      draft.legalCopy,
+      legalCopy,
       draft.ratesMeta?.certificatesEffectiveDate,
       draft.ratesMeta?.iraEffectiveDate,
     ],
@@ -58,6 +102,11 @@ export default function AdminRatesPage() {
   const certificateRowTotal = draft.rates.length;
   const iraRowTotal = draft.iraRates.length;
   const mbaMatched = Boolean(importReport?.retirement403bMbaRate && importReport?.retirement403bMbaApy);
+  const lastAdminUpdate = useMemo(() => (
+    getPageHistory(RATES_CONTENT_PATH)
+      .filter((entry) => entry?.action === 'page-published')
+      .sort((first, second) => (Number(second?.createdAt) || 0) - (Number(first?.createdAt) || 0))[0] || null
+  ), [getPageHistory]);
 
   async function handleRatesPdfSelected(file) {
     if (!file) {
@@ -66,12 +115,24 @@ export default function AdminRatesPage() {
 
     setIsParsingPdf(true);
     setImportError('');
+    setImportStage('FILE_SELECTED');
+    setImportDiagnostics([]);
+    setHasAppliedImport(false);
 
     try {
-      const report = await parseRatesPdf(file, draft);
+      const report = await parseRatesPdf(file, draft, {
+        onStage: (entry) => {
+          setImportStage(entry.stage);
+          setImportDiagnostics((current) => [...current, entry]);
+        },
+      });
       setImportReport(report);
     } catch (error) {
       console.error(error);
+      setImportStage('IMPORT_FAILED');
+      if (Array.isArray(error?.pdfImportDiagnostics)) {
+        setImportDiagnostics(error.pdfImportDiagnostics);
+      }
       setImportError(error?.message || 'Failed to parse PDF.');
     } finally {
       setIsParsingPdf(false);
@@ -83,6 +144,8 @@ export default function AdminRatesPage() {
       return;
     }
 
+    setSaveState('');
+    setIsEditingDraft(true);
     setDraft((current) => {
       const nextRates = current.rates.map((row) => {
         const match = importReport.certificates.find((item) => item.matchedId === row.id);
@@ -127,9 +190,12 @@ export default function AdminRatesPage() {
         ratesMeta: nextMeta,
       };
     });
+    setHasAppliedImport(true);
   }
 
   function updateCertificateCell(id, key, value) {
+    setSaveState('');
+    setIsEditingDraft(true);
     setDraft((current) => ({
       ...current,
       rates: current.rates.map((row) => (row.id === id ? { ...row, [key]: value } : row)),
@@ -137,23 +203,64 @@ export default function AdminRatesPage() {
   }
 
   function updateIraCell(id, key, value) {
+    setSaveState('');
+    setIsEditingDraft(true);
     setDraft((current) => ({
       ...current,
       iraRates: current.iraRates.map((row) => (row.id === id ? { ...row, [key]: value } : row)),
     }));
   }
 
-  function saveChanges() {
-    setRates(draft.rates);
-    setIraRates(draft.iraRates);
-    setRatesMeta(draft.ratesMeta);
-    setLegalCopy(draft.legalCopy);
+  function writeDraftToRateBlocks() {
+    const rateBlocks = Array.isArray(blocksByPath[RATES_CONTENT_PATH])
+      ? blocksByPath[RATES_CONTENT_PATH]
+      : [];
+    const certificatesBlock = rateBlocks.find((block) => block?.id === CERTIFICATES_RATES_BLOCK_ID);
+    const iraBlock = rateBlocks.find((block) => block?.id === IRA_RATES_BLOCK_ID);
+    if (!certificatesBlock || !iraBlock) {
+      throw new Error('The Certificates and IRA rate blocks must both exist before rates can be saved.');
+    }
+
+    const nextRateTables = {
+      rates: draft.rates,
+      iraRates: draft.iraRates,
+      ratesMeta: draft.ratesMeta,
+    };
+    updateBlock(RATES_CONTENT_PATH, certificatesBlock.id, {
+      settings: buildRatesBlockSettingsPatch(certificatesBlock, nextRateTables),
+    });
+    updateBlock(RATES_CONTENT_PATH, iraBlock.id, {
+      settings: buildRatesBlockSettingsPatch(iraBlock, nextRateTables),
+    });
+  }
+
+  async function saveChanges() {
+    setSaveState('saving');
+    setSaveError('');
+    try {
+      writeDraftToRateBlocks();
+      // Rates are operational data, not an editorial review surface. Keep
+      // their single-button admin action, while using the normal block
+      // authority's save-and-publish transaction underneath.
+      const result = await publishSharedPageNow(RATES_CONTENT_PATH, 'Rates admin save');
+      if (!result?.ok) {
+        throw new Error(result?.reason || 'The rates could not be saved.');
+      }
+      setIsEditingDraft(false);
+      setSaveState('published');
+    } catch (error) {
+      setSaveState('');
+      setSaveError(error?.message || 'The rates could not be saved.');
+    }
   }
 
   function resetChanges() {
-    setDraft({ rates, iraRates, ratesMeta, legalCopy });
+    setDraft({ rates, iraRates, ratesMeta });
+    setIsEditingDraft(false);
     setImportReport(null);
     setImportError('');
+    setSaveState('');
+    setSaveError('');
   }
 
   function resetDefaults() {
@@ -161,18 +268,18 @@ export default function AdminRatesPage() {
       rates: defaultRates,
       iraRates: defaultIraRates,
       ratesMeta: defaultRatesMeta,
-      legalCopy: { ...DEFAULT_RATES_LEGAL_COPY_SETTINGS },
     };
     setDraft(next);
+    setIsEditingDraft(true);
     setImportReport(null);
     setImportError('');
-    setRates(defaultRates);
-    setIraRates(defaultIraRates);
-    setRatesMeta(defaultRatesMeta);
-    setLegalCopy(DEFAULT_RATES_LEGAL_COPY_SETTINGS);
+    setSaveState('');
+    setSaveError('');
   }
 
   function updateMeta(key, value) {
+    setSaveState('');
+    setIsEditingDraft(true);
     setDraft((current) => ({
       ...current,
       ratesMeta: {
@@ -188,6 +295,11 @@ export default function AdminRatesPage() {
         <div className="admin-info-note">
           Edit the public rate tables and effective dates here. Public disclosure copy is now centralized in the disclosures manager.
         </div>
+        <div className="admin-rates-page-meta">
+          <span className="admin-rates-updated-badge" title="Last successful Rates admin save">
+            Updated: {formatAdminUpdatedTimestamp(lastAdminUpdate)}
+          </span>
+        </div>
 
         <section className="admin-rates-chart-panel">
           <div className="admin-rates-chart-header">
@@ -198,7 +310,7 @@ export default function AdminRatesPage() {
               </p>
             </div>
             <label className="action-btn action-btn-outline admin-rates-import-trigger">
-              {isParsingPdf ? 'Parsing…' : 'Choose PDF'}
+              {isParsingPdf ? (PDF_IMPORT_STAGE_LABELS[importStage] || 'Parsing PDF…') : 'Choose PDF'}
               <input
                 type="file"
                 accept="application/pdf"
@@ -209,6 +321,21 @@ export default function AdminRatesPage() {
           </div>
 
           {importError ? <p className="admin-rates-import-error">{importError}</p> : null}
+          {importDiagnostics.length ? (
+            <details className="admin-rates-import-diagnostics" open={Boolean(importError)}>
+              <summary>PDF import diagnostics</summary>
+              <dl>
+                <div><dt>Runtime build</dt><dd>{RUNTIME_BUILD_ID}</dd></div>
+                <div><dt>Resolved worker URL</dt><dd>{resolveRatesPdfWorkerUrl()}</dd></div>
+                {importDiagnostics.map((entry, index) => (
+                  <div key={`${entry.stage}-${entry.elapsedMs}-${index}`}>
+                    <dt>{entry.stage}</dt>
+                    <dd>{entry.elapsedMs} ms{entry.pageNum ? ` · page ${entry.pageNum}` : ''}{entry.failureStage ? ` · failed at ${entry.failureStage}` : ''}</dd>
+                  </div>
+                ))}
+              </dl>
+            </details>
+          ) : null}
 
           {importReport ? (
             <div className="admin-rates-import-report">
@@ -274,13 +401,28 @@ export default function AdminRatesPage() {
               ) : null}
 
               <div>
-                <button type="button" className="action-btn action-btn-primary" onClick={applyImportReport}>
-                  Apply Parsed Values to Draft
+                <button
+                  type="button"
+                  className="action-btn action-btn-primary"
+                  onClick={applyImportReport}
+                  disabled={hasAppliedImport}
+                >
+                  {hasAppliedImport ? 'Updated' : 'Update fields'}
                 </button>
               </div>
             </div>
           ) : null}
         </section>
+
+        <div className="admin-actions admin-rates-actions">
+          <button type="button" onClick={saveChanges} disabled={!hasChanges || saveState === 'saving' || saveState === 'published'} className="action-btn action-btn-primary">
+            {saveState === 'saving' ? 'Saving…' : 'Save'}
+          </button>
+          <button type="button" onClick={resetChanges} disabled={!hasChanges} className="action-btn action-btn-outline">Discard</button>
+          <button type="button" onClick={resetDefaults} className="action-btn action-btn-danger">Reset Defaults</button>
+        </div>
+        {saveError ? <p className="admin-rates-import-error" role="alert">{saveError}</p> : null}
+        {saveState === 'published' ? <p className="admin-info-note">Rates saved and live.</p> : null}
 
         <section className="admin-rates-chart-panel">
           <div className="admin-rates-chart-header">
@@ -298,10 +440,10 @@ export default function AdminRatesPage() {
               <thead>
                 <tr>
                   <th>Investment Type</th>
-                  <th>Standard Rate</th>
-                  <th>Standard APY*</th>
-                  <th>Premium Rate**</th>
-                  <th>Premium APY*</th>
+                  <th>Rate</th>
+                  <th>APY*</th>
+                  <th>Rate</th>
+                  <th>APY*</th>
                 </tr>
               </thead>
               <tbody>
@@ -461,8 +603,10 @@ export default function AdminRatesPage() {
           </div>
         </section>
 
-        <div className="admin-actions">
-          <button type="button" onClick={saveChanges} disabled={!hasChanges} className="action-btn action-btn-primary">Save</button>
+        <div className="admin-actions admin-rates-actions">
+          <button type="button" onClick={saveChanges} disabled={!hasChanges || saveState === 'saving' || saveState === 'published'} className="action-btn action-btn-primary">
+            {saveState === 'saving' ? 'Saving…' : 'Save'}
+          </button>
           <button type="button" onClick={resetChanges} disabled={!hasChanges} className="action-btn action-btn-outline">Discard</button>
           <button type="button" onClick={resetDefaults} className="action-btn action-btn-danger">Reset Defaults</button>
         </div>

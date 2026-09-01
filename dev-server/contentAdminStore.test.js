@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createDevContentAuthorityStore, createJsonContentStore } from './contentAdminStore';
 import {
   normalizeSplitLinkFieldSettings,
@@ -586,6 +586,34 @@ describe('createDevContentAuthorityStore', () => {
     expect(routeSnapshot.state.blocksByPath['/services/loans'][0].settings.line1Text).toBe('Original title');
     expect(routeSnapshot.state.blocksByPath['/services/investments']).toBeUndefined();
     expect(routeSnapshot.state.collaborationByPath).toEqual({});
+  });
+
+  it('reads and normalizes seed baseline metadata once across repeated public route snapshots', () => {
+    const persistenceFile = makeTempFile();
+    const seedBaselineFile = path.join(path.dirname(persistenceFile), 'content-admin-seed-baseline.json');
+    fs.writeFileSync(seedBaselineFile, JSON.stringify({
+      meta: {
+        createdAt: 1710000000000,
+        timestamp: '2024-03-09T16:00:00.000Z',
+        reason: 'test baseline',
+      },
+      seedState: buildSeedState(),
+    }));
+    const store = createJsonStore(persistenceFile, { seedBaselineFile });
+    const readFileSync = fs.readFileSync;
+    let baselineReadCount = 0;
+    const readSpy = vi.spyOn(fs, 'readFileSync').mockImplementation((...args) => {
+      if (args[0] === seedBaselineFile) {
+        baselineReadCount += 1;
+      }
+      return readFileSync(...args);
+    });
+
+    store.getPublishedRouteSnapshot('/services/loans');
+    store.getPublishedRouteSnapshot('/services/loans');
+
+    expect(baselineReadCount).toBe(1);
+    readSpy.mockRestore();
   });
 
   it('returns clear validation findings for malformed blocks', () => {
@@ -2518,6 +2546,39 @@ describe('createDevContentAuthorityStore', () => {
     expect(published.state.blocksByPath['/services/loans'][1].settings.line1Text)
       .toBe('Keep this content draft unpublished');
     expect(published.state.collaborationByPath['/services/loans'].blocks.hero.draftedBy).toEqual(otherActor);
+  });
+
+  it('records only the moved block as a saved route draft when its optimistic lock arrives with the reorder', () => {
+    const persistenceFile = makeTempFile();
+    const actor = createActor();
+    const store = createStore(persistenceFile);
+    store.resetFromSeed(buildSeedState(), { actor });
+
+    const reorderedState = cloneJson(store.readCurrentState());
+    reorderedState.blocksByPath['/services/loans'] = [
+      reorderedState.blocksByPath['/services/loans'][1],
+      reorderedState.blocksByPath['/services/loans'][0],
+    ];
+    reorderedState.collaborationByPath['/services/loans'].blocks.cta_form = {
+      draftedBy: null,
+      draftedAt: null,
+      savedBy: null,
+      savedAt: null,
+      lockedBy: actor,
+      lockedAt: 1710000000000,
+    };
+
+    const saved = store.saveRouteDraft('/services/loans', {
+      pageHierarchy: { '/services/loans': reorderedState.pageHierarchy['/services/loans'] },
+      blocksByPath: { '/services/loans': reorderedState.blocksByPath['/services/loans'] },
+      collaborationByPath: { '/services/loans': reorderedState.collaborationByPath['/services/loans'] },
+      pathAliases: reorderedState.pathAliases,
+    }, { actor, summary: 'move CTA above hero' });
+
+    expect(saved.ok).toBe(true);
+    expect(saved.saveResult.savedBlockIdsByPath['/services/loans']).toEqual(['cta_form']);
+    expect(saved.state.collaborationByPath['/services/loans'].blocks.cta_form.draftedBy).toEqual(actor);
+    expect(saved.state.collaborationByPath['/services/loans'].blocks.hero.draftedBy).toBe(null);
   });
 
   it('publishes a deleted hero while preserving foreign drafts on the remaining page blocks', () => {

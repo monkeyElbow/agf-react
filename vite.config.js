@@ -396,6 +396,11 @@ function contentAdminDevPlugin() {
             return;
           }
 
+          if (url.pathname === '/disclosures/save-live') {
+            sendJson(res, 200, sharedDisclosuresStore.saveLivePatch(body.patch, body.actor));
+            return;
+          }
+
           if (url.pathname === '/disclosures/reset') {
             sendJson(res, 200, sharedDisclosuresStore.resetDraftToDefaults(body.actor));
             return;

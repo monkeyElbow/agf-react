@@ -95,6 +95,22 @@ describe('LoansPage front HUD', () => {
     expect(screen.getByRole('button', { name: 'Open Request Form HUD panel' })).toBeTruthy();
   });
 
+  it('renders the saved block sequence in DOM order', () => {
+    const sourceBlocks = cloneLoansDynamicBlocks();
+    const savedOrder = ['testimonials', 'intro', 'cta_form', 'vision_fuel', 'hero', 'request_form', 'value_cards', 'loan_options'];
+    mockBlocksByPath = {
+      '/services/loans': savedOrder.map((id) => sourceBlocks.find((block) => block.id === id)),
+    };
+
+    const { container } = renderLoansPage();
+    const managedRoot = container.querySelector('.loans-native-page-content');
+    const renderedOrder = Array.from(managedRoot.children)
+      .map((element) => element.getAttribute('data-block-id'))
+      .filter(Boolean);
+
+    expect(renderedOrder).toEqual(savedOrder);
+  });
+
   it('opens the request form, billboard, CTA, and testimonials HUD panels', async () => {
     renderLoansPage();
 

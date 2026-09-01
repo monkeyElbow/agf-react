@@ -18,12 +18,16 @@ describe('CertificateRatesSheet', () => {
     const { container } = render(<CertificateRatesSheet rates={CERTIFICATE_RATES} />);
 
     expect(screen.getAllByText('Standard').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('Premium').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Premium*').length).toBeGreaterThan(0);
     expect(screen.getByText('Investment Type')).toBeTruthy();
-    expect(screen.getByText('Standard APY*')).toBeTruthy();
-    expect(screen.getByText('Standard Rate')).toBeTruthy();
-    expect(screen.getByText('Premium APY*')).toBeTruthy();
-    expect(screen.getByText('Premium Rate**')).toBeTruthy();
+    const tables = Array.from(container.querySelectorAll('.certificate-rates-sheet__table'));
+    expect(tables[0].querySelectorAll('thead th')).toHaveLength(3);
+    expect(Array.from(tables[0].querySelectorAll('thead th')).map((cell) => cell.textContent)).toEqual([
+      'Investment Type', 'Rate', 'APY*',
+    ]);
+    expect(Array.from(tables[1].querySelectorAll('thead th')).map((cell) => cell.textContent)).toEqual([
+      'Rate', 'APY*',
+    ]);
     expect(container.querySelector('.certificate-rates-sheet__desktop')).toBeTruthy();
     expect(container.querySelector('.certificate-rates-sheet__mobile')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'APY*' }).getAttribute('aria-pressed')).toBe('true');
@@ -61,6 +65,15 @@ describe('CertificateRatesSheet', () => {
     expect(screen.getAllByText('4.000%').length).toBeGreaterThan(0);
     expect(screen.getAllByText('4.074%').length).toBeGreaterThan(0);
     expect(screen.getAllByText('N/A').length).toBeGreaterThan(0);
+  });
+
+  it('keeps each desktop row aligned Rate then APY, including premium values', () => {
+    const { container } = render(<CertificateRatesSheet rates={CERTIFICATE_RATES} />);
+    const [standardRow] = container.querySelectorAll('.certificate-rates-sheet__table--standard tbody tr');
+    const [premiumRow] = container.querySelectorAll('.certificate-rates-sheet__table--premium tbody tr');
+
+    expect(Array.from(standardRow.querySelectorAll('td')).map((cell) => cell.textContent)).toEqual(['3.625%', '3.686%']);
+    expect(Array.from(premiumRow.querySelectorAll('td')).map((cell) => cell.textContent)).toEqual(['N/A', 'N/A']);
   });
 
   it('defaults mobile cards to APY and can switch to rate mode using the same row data', () => {

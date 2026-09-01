@@ -58,6 +58,16 @@ describe('native page content renderer guardrail', () => {
     expect(shellSource).toContain('hideIntro: false,');
   });
 
+  it('does not offer mobile move controls for hero or intro when a non-block-only route pins those shell slots', () => {
+    const source = readSource('./NativeContentPage.jsx');
+
+    expect(source).toContain('const mobileSelectedHudBlockIsPinnedPrimarySlot = !isBlockOnlyManagedPage && (');
+    expect(source).toContain('mobileSelectedHudBlockId === String(content.primaryHeroBlock?.id || \'\').trim()');
+    expect(source).toContain('mobileSelectedHudBlockId === String(content.primaryIntroBlock?.id || \'\').trim()');
+    expect(source).toContain('const canMoveMobileSelectedHudBlockUp = !mobileSelectedHudBlockIsPinnedPrimarySlot');
+    expect(source).toContain('!editableBlockPath || !mobileSelectedHudBlockId || mobileSelectedHudBlockIsPinnedPrimarySlot');
+  });
+
   it('keeps site features on the shared dynamic section path instead of bespoke page ownership', () => {
     const source = readSource('./NativeContentPage.jsx');
     const compositionSource = readSource('../lib/managedPageComposition.js');

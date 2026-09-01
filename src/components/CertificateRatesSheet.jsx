@@ -37,16 +37,16 @@ export default function CertificateRatesSheet({ rates = [], className = '' }) {
             <thead>
               <tr>
                 <th scope="col">Investment Type</th>
-                <th scope="col">Standard APY*</th>
-                <th scope="col">Standard Rate</th>
+                <th scope="col">Rate</th>
+                <th scope="col">APY*</th>
               </tr>
             </thead>
             <tbody>
               {normalizedRates.map((row) => (
                 <tr key={`standard-${row.id}`}>
                   <th scope="row">{row.displayProduct}</th>
-                  <td>{renderValue(row.standardApy, 'is-apy')}</td>
                   <td>{renderValue(row.standardRate, 'is-rate')}</td>
+                  <td>{renderValue(row.standardApy, 'is-apy')}</td>
                 </tr>
               ))}
             </tbody>
@@ -55,20 +55,20 @@ export default function CertificateRatesSheet({ rates = [], className = '' }) {
 
         <section className="certificate-rates-sheet__band certificate-rates-sheet__band--premium" aria-labelledby="certificate-rates-premium-heading">
           <div className="certificate-rates-sheet__band-chrome">
-            <h3 id="certificate-rates-premium-heading" className="certificate-rates-sheet__band-title">Premium</h3>
+            <h3 id="certificate-rates-premium-heading" className="certificate-rates-sheet__band-title">Premium*</h3>
           </div>
           <table className="certificate-rates-sheet__table certificate-rates-sheet__table--premium">
             <thead>
               <tr>
-                <th scope="col">Premium APY*</th>
-                <th scope="col">Premium Rate**</th>
+                <th scope="col">Rate</th>
+                <th scope="col">APY*</th>
               </tr>
             </thead>
             <tbody>
               {normalizedRates.map((row) => (
                 <tr key={`premium-${row.id}`}>
-                  <td>{renderValue(row.premiumApy, 'is-apy')}</td>
                   <td>{renderValue(row.premiumRate, 'is-rate')}</td>
+                  <td>{renderValue(row.premiumApy, 'is-apy')}</td>
                 </tr>
               ))}
             </tbody>
@@ -112,9 +112,9 @@ export default function CertificateRatesSheet({ rates = [], className = '' }) {
               </section>
 
               <section className="certificate-rates-sheet__term-side certificate-rates-sheet__term-side--premium" aria-label={`${row.displayProduct} Premium rates`}>
-                <p className="certificate-rates-sheet__term-side-label">Premium</p>
+                <p className="certificate-rates-sheet__term-side-label">Premium*</p>
                 <div className="certificate-rates-sheet__term-metric">
-                  <span className="certificate-rates-sheet__term-metric-label">{isApyMode ? 'APY*' : 'Rate**'}</span>
+                  <span className="certificate-rates-sheet__term-metric-label">{isApyMode ? 'APY*' : 'Rate'}</span>
                   {renderValue(isApyMode ? row.premiumApy : row.premiumRate, isApyMode ? 'is-apy' : 'is-rate is-mobile-rate')}
                 </div>
               </section>
