@@ -5,20 +5,15 @@ const NATIVE_PANEL_ID_BY_BLOCK_ID = Object.freeze({
   intro: 'intro-main',
 });
 
-const NATIVE_DEFAULT_ANCHOR_SELECTOR_BY_BLOCK_ID = Object.freeze({
-  hero: '.service-native-hero',
-  intro: '.service-native-intro',
-});
-
 export function buildNativeHudPanels({ blocks = [], includeHidden = false } = {}) {
   const anchorSelectorById = (Array.isArray(blocks) ? blocks : []).reduce((next, block) => {
     const blockId = String(block?.id || '').trim();
     if (!blockId || next[blockId]) {
       return next;
     }
-    next[blockId] = NATIVE_DEFAULT_ANCHOR_SELECTOR_BY_BLOCK_ID[blockId] || `[data-block-id="${blockId}"]`;
+    next[blockId] = `[data-block-id="${blockId}"]`;
     return next;
-  }, { ...NATIVE_DEFAULT_ANCHOR_SELECTOR_BY_BLOCK_ID });
+  }, {});
 
   return buildHudPanelsFromBlocks(blocks, {
     panelIdById: NATIVE_PANEL_ID_BY_BLOCK_ID,

@@ -1217,6 +1217,8 @@ describe('NativeContentPage functional routes', () => {
     expect(careersEmphasis?.className).toContain('billboard-scroll-reveal-scale-up');
     expect(screen.getByRole('heading', { name: 'A few reasons you’ll love working here…' })?.className).toContain('careers-native-benefits-title--roll');
     expect(document.querySelector('.careers-native-ready-copy.fade-up.fade-up-force-observe')).toBeTruthy();
+    const careersReadyCopy = screen.getByText('See all positions below and apply online.');
+    expect(careersReadyCopy.className).toContain('is-mango');
     expect(screen.getByRole('heading', { name: 'Marketing Manager' })).toBeTruthy();
     expect(screen.getByText('Springfield, MO')).toBeTruthy();
     expect(screen.getByText('Posted March 20, 2026')).toBeTruthy();

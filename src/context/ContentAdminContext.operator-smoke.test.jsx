@@ -700,6 +700,12 @@ describe('ContentAdminContext operator smoke and recovery', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Move billboard up' }));
     await waitFor(() => {
+      expect(screen.getByTestId('block-ids').textContent).toBe('billboard,hero');
+    });
+    expect(authorityMocks.saveSharedRouteDraft).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
+    await waitFor(() => {
       expect(authorityMocks.saveSharedRouteDraft).toHaveBeenCalledTimes(2);
     });
     const lastRouteState = authorityMocks.saveSharedRouteDraft.mock.calls.at(-1)?.[1] || {};

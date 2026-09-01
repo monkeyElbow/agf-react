@@ -21,11 +21,13 @@ describe('native HUD targeting guardrail', () => {
     expect(source).toContain('const dynamicSectionPanel = dynamicSectionBlockId ? (renderHudPanelByBlockId[dynamicSectionBlockId] || null) : null;');
     expect(source).toContain('activeHudBlockId === dynamicSectionBlockId');
     expect(source).toContain('dynamicHudSectionRefs.current[dynamicSectionBlockId] = node;');
+    expect(source).toContain('const target = dynamicHudSectionRefs.current[panelBlockId]');
     expect(source).toContain('const fallbackSelector = String(panel?.anchorSelector || \'\').trim();');
     expect(source).not.toContain("const dynamicGridBlock = findVisibleDynamicBlockByKind(visibleEditablePageBlocks, 'card_grid');");
     expect(source).not.toContain('const firstDynamicSectionIndexByHudPanel = useMemo(() => {');
     expect(source).not.toContain('const panelId = getDynamicSectionHudPanelId(section);');
     expect(source).not.toContain('const fallbackSelector = NATIVE_HUD_FALLBACK_SELECTORS_BY_PANEL_ID[panelId]');
+    expect(source).not.toContain("panelBlockId === 'intro' ? introHudSectionRef.current : (dynamicHudSectionRefs.current[panelBlockId] || null)");
     expect(source).not.toContain("const dynamicHeroBlock = visibleEditablePageBlocks.find((block) => block?.id === 'hero' && block?.mode === 'dynamic') || null;");
     expect(source).not.toContain("return section?.id === 'dynamic-cta-form' || className.includes('dynamic-cta');");
   });

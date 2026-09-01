@@ -303,29 +303,29 @@ const PARITY_ASSERTIONS = {
       expect(screen.getByRole('toolbar', { name: 'Article body formatting' })).toBeTruthy();
       expect(screen.getByRole('region', { name: 'Page content block preview' })).toBeTruthy();
       expect(screen.getByRole('button', { name: 'View HTML (advanced)' })).toBeTruthy();
-      expect(screen.getByRole('group', { name: 'Page content width presets' })).toBeTruthy();
-      expect(screen.getByRole('button', { name: 'Advanced layout' })).toBeTruthy();
+      expect(screen.getByRole('slider', { name: 'Body font size (rem)' })).toBeTruthy();
+      expect(screen.getByRole('slider', { name: 'Content max width (px)' })).toBeTruthy();
     },
     hud: () => {
       expect(screen.getByRole('group', { name: 'Page content editor type' })).toBeTruthy();
       expect(screen.getByRole('toolbar', { name: 'Article body formatting' })).toBeTruthy();
-      expect(screen.getByRole('region', { name: 'Page content block preview' })).toBeTruthy();
-      expect(screen.getByRole('group', { name: 'Page content width presets' })).toBeTruthy();
-      expect(screen.getByRole('button', { name: 'Advanced layout' })).toBeTruthy();
+      expect(screen.queryByRole('region', { name: 'Page content block preview' })).toBeNull();
+      expect(screen.getByRole('slider', { name: 'Body font size (rem)' })).toBeTruthy();
+      expect(screen.getByRole('slider', { name: 'Content max width (px)' })).toBeTruthy();
     },
   },
   page_content: {
     admin: () => {
       expect(screen.getByRole('toolbar', { name: 'Article body formatting' })).toBeTruthy();
       expect(screen.getByRole('button', { name: 'View HTML (advanced)' })).toBeTruthy();
-      expect(screen.getByRole('group', { name: 'Page content width presets' })).toBeTruthy();
-      expect(screen.getByRole('button', { name: 'Advanced layout' })).toBeTruthy();
+      expect(screen.getByRole('slider', { name: 'Body font size (rem)' })).toBeTruthy();
+      expect(screen.getByRole('slider', { name: 'Content max width (px)' })).toBeTruthy();
     },
     hud: () => {
       expect(screen.getByRole('group', { name: 'Page content editor type' })).toBeTruthy();
       expect(screen.getByRole('toolbar', { name: 'Article body formatting' })).toBeTruthy();
-      expect(screen.getByRole('group', { name: 'Page content width presets' })).toBeTruthy();
-      expect(screen.getByRole('button', { name: 'Advanced layout' })).toBeTruthy();
+      expect(screen.getByRole('slider', { name: 'Body font size (rem)' })).toBeTruthy();
+      expect(screen.getByRole('slider', { name: 'Content max width (px)' })).toBeTruthy();
     },
   },
   newsletter: {

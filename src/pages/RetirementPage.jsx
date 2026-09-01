@@ -11,7 +11,8 @@ import {
   preloadBlockHudPanelHost,
   preloadFrontHudChrome,
 } from '../components/BlockHudPanelHostLoader';
-import BlockOwnershipOverlay, { getBlockOwnershipVisual, isForeignOwnedBlockOwnership } from '../components/BlockOwnershipOverlay';
+import { getBlockOwnershipVisual, isForeignOwnedBlockOwnership } from '../components/BlockOwnershipOverlay';
+import BlockSurfaceLayers from '../components/BlockSurfaceLayers';
 import ColorPalette from '../components/ColorPalette';
 import DynamicCtaSection from '../components/DynamicCtaSection';
 import FrontHudAnchorTag from '../components/FrontHudAnchorTag';
@@ -1793,8 +1794,7 @@ export default function RetirementPage() {
         data-block-id="hero"
         style={managedBlockOrderStyle('hero')}
       >
-        <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('hero')} />
-        {renderHudAnchor('hero')}
+        <BlockSurfaceLayers ownership={getOwnershipVisualForBlockId('hero')} hudAnchor={renderHudAnchor('hero')} />
         <div className="ag-panel-rail">
           {shouldRenderHeroInlineEditor({
             hudEnabled: showFrontHud,
@@ -1856,8 +1856,7 @@ export default function RetirementPage() {
           data-block-id="intro"
           style={managedBlockOrderStyle('intro')}
         >
-          <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('intro')} />
-          {renderHudAnchor('intro')}
+          <BlockSurfaceLayers ownership={getOwnershipVisualForBlockId('intro')} hudAnchor={renderHudAnchor('intro')} />
           <div className="ag-panel-rail">
             <div
               className={`service-native-intro-copy is-justify-${resolvedIntro.justify || 'center'}`}
@@ -1936,8 +1935,7 @@ export default function RetirementPage() {
           data-block-id="split_options"
           style={managedBlockOrderStyle('split_options')}
         >
-          <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('split_options')} />
-          {renderHudAnchor('split_options')}
+          <BlockSurfaceLayers ownership={getOwnershipVisualForBlockId('split_options')} hudAnchor={renderHudAnchor('split_options')} />
           <div className="ag-panel-rail">
             <div className="service-native-grid is-two retirement-account-grid">
               {splitPanelRuntime.items.map((item) => {
@@ -2020,8 +2018,7 @@ export default function RetirementPage() {
         data-block-id="billboard"
         style={{ ...managedBlockOrderStyle('billboard'), ...(billboardSectionStyle || {}) }}
       >
-        <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('billboard')} />
-        {renderHudAnchor('billboard')}
+        <BlockSurfaceLayers ownership={getOwnershipVisualForBlockId('billboard')} hudAnchor={renderHudAnchor('billboard')} />
         <div className="ag-panel-rail" style={billboardRailStyle || undefined}>
           <div
             ref={billboardCopyRef}
@@ -2107,8 +2104,7 @@ export default function RetirementPage() {
         data-block-id="rollover_billboard"
         style={{ ...managedBlockOrderStyle('rollover_billboard'), ...(rolloverBillboardSectionStyle || {}) }}
       >
-        <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('rollover_billboard')} />
-        {renderHudAnchor('rollover_billboard')}
+        <BlockSurfaceLayers ownership={getOwnershipVisualForBlockId('rollover_billboard')} hudAnchor={renderHudAnchor('rollover_billboard')} />
         <div className="ag-panel-rail" style={rolloverBillboardRailStyle || undefined}>
           <div
             ref={rolloverBillboardCopyRef}
@@ -2194,8 +2190,7 @@ export default function RetirementPage() {
           data-block-id="columns_math"
           style={{ ...managedBlockOrderStyle('columns_math'), ...(doTheMathSectionStyle || {}) }}
         >
-          <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('columns_math')} />
-          {renderHudAnchor('columns_math')}
+          <BlockSurfaceLayers ownership={getOwnershipVisualForBlockId('columns_math')} hudAnchor={renderHudAnchor('columns_math')} />
           <div className="ag-panel-rail" style={doTheMathRailStyle}>
             <div
               className={`native-info-section-copy is-justify-${doTheMathJustify}${doTheMathCopyClassName ? ` ${doTheMathCopyClassName}` : ''}`}
@@ -2518,8 +2513,7 @@ export default function RetirementPage() {
         data-block-id="testimonials"
         style={managedBlockOrderStyle('testimonials')}
       >
-        <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('testimonials')} />
-        {renderHudAnchor('testimonials')}
+        <BlockSurfaceLayers ownership={getOwnershipVisualForBlockId('testimonials')} hudAnchor={renderHudAnchor('testimonials')} />
         <div className="ag-panel-rail">
           <div className="carousel-stack">
             {testimonialsData.items.length ? testimonialsData.items.map((item, index) => (

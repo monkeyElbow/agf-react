@@ -2224,6 +2224,70 @@
   background: linear-gradient(180deg, #ffffff 0%, #ffffff 100%);
 }
 
+/* Canonical block background effects. The visual sits behind the content rail
+   and below all HUD/ownership layers; each light is independently positioned
+   from the block center. */
+:is(.service-native-section, .service-native-intro, .service-native-hero).has-block-background-effects {
+  position: relative;
+  isolation: isolate;
+}
+
+:is(.service-native-section, .service-native-intro, .service-native-hero).has-block-background-effects > :is(.ag-panel-rail, .ag-panel-rail-wide) {
+  position: relative;
+  z-index: 1;
+}
+
+/* An uncropped light may extend beyond its own block. The next real block
+   surface must always sit above that decorative overflow, so cards, forms,
+   and other authored content never become a light layer's canvas. */
+:is(.service-native-section, .service-native-intro, .service-native-hero):not(.has-block-background-effects) {
+  position: relative;
+  z-index: 1;
+}
+
+.block-background-effects {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.block-background-effects.is-clipped {
+  overflow: hidden;
+}
+
+.block-background-effects.is-uncropped {
+  overflow: visible;
+}
+
+.block-background-light {
+  position: absolute;
+  left: calc(50% + var(--block-background-light-x));
+  top: calc(50% + var(--block-background-light-y));
+  width: var(--block-background-light-size);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  opacity: calc(0.12 + (var(--block-background-light-strength) * 0.5));
+  background: radial-gradient(ellipse at center, rgba(var(--block-background-light-rgb), 0.95) 0%, rgba(var(--block-background-light-rgb), 0.34) 34%, rgba(var(--block-background-light-rgb), 0) 72%);
+  filter: blur(2px);
+}
+
+.block-background-light.is-animated {
+  animation: block-background-light-drift 8.5s linear var(--block-background-light-delay, 0s) infinite alternate;
+}
+
+@keyframes block-background-light-drift {
+  from { transform: translate(-50%, -50%) scale(1); }
+  to { transform: translate(-37%, -63%) scale(1.14); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .block-background-light.is-animated {
+    animation: none;
+  }
+}
+
 .investments-native-cert-grid {
   margin-top: 0;
   width: 100%;
@@ -5608,6 +5672,11 @@
   margin: 0 auto;
 }
 
+.service-native-section:is(.native-dynamic-page-content, .test-dynamic-page-content).is-page-content-body-size-controlled .native-info-section-copy > p,
+.service-native-section:is(.native-dynamic-page-content, .test-dynamic-page-content) .native-info-rich-html.is-page-content-body-size-controlled > :is(p, ul, ol, li) {
+  font-size: var(--dyn-content-body-size) !important;
+}
+
 .service-native-section.native-dynamic-grid,
 .service-native-section.native-dynamic-columns,
 .service-native-section.test-dynamic-grid,
@@ -6011,6 +6080,37 @@
 .service-native-section.test-dynamic-grid .service-native-card.borderless-shadow:hover {
   box-shadow: 0 20px 42px rgba(5, 30, 54, 0.22);
   transform: translateY(-3px);
+}
+
+/* Explicit appearance toggles sit above legacy card skins. This lets admins
+   combine an outline and a shadow without changing the base card surface. */
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-outline {
+  --dynamic-grid-card-outline-color: rgba(65, 64, 66, 0.34);
+}
+
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-outline:is(.is-bg-blue, .is-bg-grey) {
+  --dynamic-grid-card-outline-color: rgba(255, 255, 255, 0.58);
+}
+
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-outline .service-native-card:not(.investments-native-cert-card):not(.retirement-account-card--certificate) {
+  border: 1.5px solid var(--dynamic-grid-card-outline-color) !important;
+}
+
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-outline-off .service-native-card:not(.investments-native-cert-card):not(.retirement-account-card--certificate) {
+  border: 0 !important;
+}
+
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-shadow .service-native-card:not(.investments-native-cert-card):not(.retirement-account-card--certificate) {
+  box-shadow: 0 12px 26px rgba(5, 30, 54, 0.14) !important;
+}
+
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-shadow .service-native-card:not(.investments-native-cert-card):not(.retirement-account-card--certificate):hover {
+  box-shadow: 0 18px 34px rgba(5, 30, 54, 0.2) !important;
+}
+
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-shadow-off .service-native-card:not(.investments-native-cert-card):not(.retirement-account-card--certificate),
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-shadow-off .service-native-card:not(.investments-native-cert-card):not(.retirement-account-card--certificate):hover {
+  box-shadow: none !important;
 }
 
 .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-title-alternating {
@@ -6637,6 +6737,18 @@
 .service-native-section.is-cards-preset-value-cards > .ag-panel-rail {
   position: relative;
   z-index: 1;
+}
+
+/* The Loans "There's more to every loan" feature uses a deliberately stronger
+   blue light field than the general growth surface. Keep it owned by the
+   reusable value-cards preset, not by the Loans route. */
+.service-native-section:is(.native-dynamic-columns, .test-dynamic-columns).is-columns-preset-value-cards .native-columns-growth-surface .investments-native-growth-surface-layer.is-blue,
+.service-native-section.is-cards-preset-value-cards .native-columns-growth-surface .investments-native-growth-surface-layer.is-blue {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.72) 0%, rgba(255, 255, 255, 0.18) 34%, rgba(255, 255, 255, 0) 62%),
+    radial-gradient(circle at 18% 16%, rgba(0, 173, 187, 0.28), rgba(0, 173, 187, 0) 46%),
+    radial-gradient(circle at 84% 72%, rgba(0, 138, 171, 0.2), rgba(0, 138, 171, 0) 48%),
+    linear-gradient(160deg, rgba(234, 248, 250, 0.98) 0%, rgba(255, 255, 255, 1) 100%);
 }
 
 .service-native-section:is(.native-dynamic-columns, .test-dynamic-columns).is-columns-preset-value-cards > .ag-panel-rail-wide,
@@ -13641,8 +13753,8 @@ p.impact-proof-story-proof-body {
   margin-top: 0;
   font-size: clamp(1.2rem, 2.3vw, 1.75rem);
   line-height: 1.35;
-  white-space: nowrap;
-  text-wrap: nowrap;
+  white-space: normal;
+  text-wrap: balance;
 }
 
 @media (max-width: 760px) {
@@ -22918,6 +23030,31 @@ p.impact-proof-story-proof-body {
   width: min(var(--dynamic-billboard-body-max-width, 760px), 100%);
   max-width: 100%;
   margin-inline: auto;
+}
+
+/* Plain-text billboard bodies receive the same semantic swatches as rich HTML bodies. */
+.service-native-section:is(.dynamic-billboard, .test-dynamic-billboard, .home-native-billboard) .native-info-section-copy > p.billboard-body-copy.is-atlantean {
+  color: var(--ag-color-atlantean) !important;
+}
+
+.service-native-section:is(.dynamic-billboard, .test-dynamic-billboard, .home-native-billboard) .native-info-section-copy > p.billboard-body-copy.is-mango {
+  color: var(--ag-color-mango) !important;
+}
+
+.service-native-section:is(.dynamic-billboard, .test-dynamic-billboard, .home-native-billboard) .native-info-section-copy > p.billboard-body-copy.is-melon {
+  color: var(--ag-color-melon) !important;
+}
+
+.service-native-section:is(.dynamic-billboard, .test-dynamic-billboard, .home-native-billboard) .native-info-section-copy > p.billboard-body-copy.is-sandstone {
+  color: var(--ag-color-sandstone-dark) !important;
+}
+
+.service-native-section:is(.dynamic-billboard, .test-dynamic-billboard, .home-native-billboard) .native-info-section-copy > p.billboard-body-copy.is-super-grey {
+  color: var(--ag-color-super-grey) !important;
+}
+
+.service-native-section:is(.dynamic-billboard, .test-dynamic-billboard, .home-native-billboard) .native-info-section-copy > p.billboard-body-copy.is-white {
+  color: #ffffff !important;
 }
 
 .service-native-section:is(.dynamic-billboard, .test-dynamic-billboard, .home-native-billboard) .native-info-rich-html.is-body-justify-left,

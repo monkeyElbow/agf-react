@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import PageContentHudEditorPanel from './PageContentHudEditorPanel';
 
@@ -20,7 +20,7 @@ describe('PageContentHudEditorPanel', () => {
     renderPanel({ html: '<p>Page content body.</p>' });
 
     expect(screen.getByRole('toolbar', { name: 'Article body formatting' })).toBeTruthy();
-    expect(screen.getByRole('region', { name: 'Page content block preview' })).toBeTruthy();
+    expect(screen.queryByRole('region', { name: 'Page content block preview' })).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'HTML' }));
     expect(screen.getByLabelText('Body HTML')).toBeTruthy();
   });
@@ -64,42 +64,32 @@ describe('PageContentHudEditorPanel', () => {
     expect(onSettingChange).toHaveBeenCalledWith('fineprint', '');
   });
 
-  it('maps width presets onto the existing max-width field', () => {
+  it('shows the numeric Page Content controls as sliders', () => {
     const onSettingChange = vi.fn();
 
     renderPanel({}, onSettingChange);
 
-    fireEvent.click(
-      within(screen.getByRole('group', { name: 'Page content width presets' }))
-        .getByRole('button', { name: 'Wide' }),
-    );
-
-    expect(onSettingChange).toHaveBeenCalledWith('contentMaxWidthPx', 1200);
+    expect(screen.getByRole('slider', { name: 'Body font size (rem)' })).toBeTruthy();
+    expect(screen.getByRole('slider', { name: 'Content max width (px)' })).toBeTruthy();
+    expect(screen.getByRole('slider', { name: 'Space before (rem)' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Advanced layout' })).toBeNull();
   });
 
-  it('maps spacing presets onto the existing spacing and padding fields', () => {
+  it('maps the body font-size slider into the saved setting', () => {
     const onSettingChange = vi.fn();
 
     renderPanel({}, onSettingChange);
 
-    fireEvent.click(
-      within(screen.getByRole('group', { name: 'Page content spacing presets' }))
-        .getByRole('button', { name: 'Relaxed' }),
-    );
+    fireEvent.change(screen.getByRole('slider', { name: 'Body font size (rem)' }), {
+      target: { value: '1.45' },
+    });
 
-    expect(onSettingChange).toHaveBeenCalledWith('spaceBeforeRem', 1);
-    expect(onSettingChange).toHaveBeenCalledWith('spaceAfterRem', 1);
-    expect(onSettingChange).toHaveBeenCalledWith('paddingTopRem', 3.25);
-    expect(onSettingChange).toHaveBeenCalledWith('paddingBottomRem', 3.25);
+    expect(onSettingChange).toHaveBeenCalledWith('bodyFontSizeRem', 1.45);
   });
 
-  it('keeps advanced raw controls available without showing them by default', () => {
+  it('keeps slider number inputs available for precise values', () => {
     renderPanel();
 
-    expect(screen.queryByLabelText('Space before (rem)')).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: 'Advanced layout' }));
-    expect(screen.getByRole('slider', { name: 'Space before (rem)' })).toBeTruthy();
-    expect(screen.getByRole('slider', { name: 'Content max width (px)' })).toBeTruthy();
     expect(screen.getByLabelText('Space before (rem) value')).toBeTruthy();
   });
 
@@ -110,7 +100,6 @@ describe('PageContentHudEditorPanel', () => {
     const modeGroup = screen.getByRole('group', { name: 'Page content editor type' });
     expect(modeGroup.querySelectorAll('button')).toHaveLength(2);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Advanced layout' }));
     fireEvent.change(screen.getByRole('slider', { name: 'Padding bottom (rem)' }), {
       target: { value: '3.5' },
     });

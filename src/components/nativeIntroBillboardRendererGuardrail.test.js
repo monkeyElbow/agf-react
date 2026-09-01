@@ -57,9 +57,23 @@ describe('native intro and billboard renderer guardrail', () => {
     expect(source).toContain('bodyJustify: normalizeHeroJustify(runtime.bodyJustify || \'center\')');
     expect(source).toContain('is-dynamic-billboard-header-gap');
     expect(source).toContain('is-body-justify-${sectionBodyJustifyToken}');
+    expect(source).toContain("'billboard-body-copy',");
+    expect(source).toContain("section.htmlClassName || '',");
     expect(source).not.toContain('copyClassName: `is-justify-${normalizeHeroJustify(runtime.justify)}`');
     expect(source).not.toContain('function buildTestDynamicIntro(');
     expect(source).not.toContain('function buildTestDynamicBillboard(');
+  });
+
+  it('keeps semantic body swatches working for plain-text native billboards', () => {
+    const cssSource = readSource('../styles/service-native.css');
+    const selector = '.native-info-section-copy > p.billboard-body-copy';
+
+    expect(cssSource).toContain(`${selector}.is-atlantean`);
+    expect(cssSource).toContain(`${selector}.is-mango`);
+    expect(cssSource).toContain(`${selector}.is-melon`);
+    expect(cssSource).toContain(`${selector}.is-sandstone`);
+    expect(cssSource).toContain(`${selector}.is-super-grey`);
+    expect(cssSource).toContain(`${selector}.is-white`);
   });
 
   it('keeps shared intro heading color overrides available in generic runtime CSS, not only the test route', () => {

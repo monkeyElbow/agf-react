@@ -2852,18 +2852,16 @@ describe('dynamic block control wiring', () => {
 
     render(<PageContentBlockEditor block={block} onSettingChange={onSettingChange} />);
 
-    fireEvent.click(
-      within(screen.getByRole('group', { name: 'Page content width presets' }))
-        .getByRole('button', { name: 'Wide' }),
-    );
-
-    expect(onSettingChange).toHaveBeenCalledWith('contentMaxWidthPx', 1200);
-
-    fireEvent.click(screen.getByRole('button', { name: 'Advanced layout' }));
-    fireEvent.change(screen.getByLabelText('Content max width (px)'), {
+    fireEvent.change(screen.getByRole('slider', { name: 'Content max width (px)' }), {
       target: { value: '1140' },
     });
 
     expect(onSettingChange).toHaveBeenCalledWith('contentMaxWidthPx', 1140);
+
+    fireEvent.change(screen.getByRole('slider', { name: 'Body font size (rem)' }), {
+      target: { value: '1.35' },
+    });
+
+    expect(onSettingChange).toHaveBeenCalledWith('bodyFontSizeRem', 1.35);
   });
 });

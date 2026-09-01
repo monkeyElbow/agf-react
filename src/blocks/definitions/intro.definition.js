@@ -155,6 +155,14 @@ const sections = [
     ],
   },
   {
+    id: 'background',
+    title: 'Background',
+    surfaces: ['hud', 'admin'],
+    fields: [
+      defineEditorField({ id: 'backgroundEffectsJson', label: 'Background lights', type: 'background_lights' }),
+    ],
+  },
+  {
     id: 'actions',
     title: 'Actions',
     surfaces: ['hud', 'admin'],
@@ -214,6 +222,7 @@ export const introBlockDefinition = createBlockDefinition({
     button2Style: 'blue',
     button2Tone: 'atlantean',
     sectionClassName: '',
+    backgroundEffectsJson: '',
   },
   schema: {
     fields: sections.flatMap((section) => section.fields),
@@ -223,8 +232,8 @@ export const introBlockDefinition = createBlockDefinition({
   },
   editor: {
     sections,
-    hudSectionIds: ['content', 'actions'],
-    adminSectionIds: ['content', 'actions'],
+    hudSectionIds: ['content', 'background', 'actions'],
+    adminSectionIds: ['content', 'background', 'actions'],
   },
   validators: [
     (block) => Boolean(buildDynamicIntroFromBlock(block)),

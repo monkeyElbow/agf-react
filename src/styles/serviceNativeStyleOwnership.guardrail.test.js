@@ -153,7 +153,7 @@ describe('implementation-ownership.service-native style ownership', () => {
     expect(source).toContain('padding: clamp(1.8rem, 3vw, 2.6rem) clamp(2.2rem, 4vw, 3rem);');
     expect(source).toContain('.native-info-page--legacy-giving .service-native-section.native-dynamic-grid.legacy-giving-types .service-native-card:not(.investments-native-cert-card) {');
     expect(source).toContain('.native-info-page--legacy-giving .service-native-section.native-dynamic-grid.legacy-giving-types .service-native-card:not(.investments-native-cert-card) h3 {');
-    expect(source).toContain('font-size: max(var(--dynamic-grid-card-title-size, 1.14rem), clamp(1.55rem, 2.35vw, 1.9rem));');
+    expect(source).toContain('font-size: var(--dynamic-grid-card-title-size, clamp(1.55rem, 2.35vw, 1.9rem));');
   });
 
   it('keeps planned-giving route fixes on their declared hero, preset, and section owners', () => {
@@ -164,7 +164,7 @@ describe('implementation-ownership.service-native style ownership', () => {
       'padding-block: clamp(3.8rem, 7.2vw, 5.2rem);',
       '.legacy-child-native-trusts-differences .native-info-section-copy > h2 {',
       'font-size: clamp(2.55rem, 4.8vw, 4.1rem);',
-      'font-size: clamp(1.8rem, 2.9vw, 2.35rem);',
+      'font-size: var(--dynamic-grid-card-title-size, clamp(1.8rem, 2.9vw, 2.35rem));',
       'font-size: clamp(1.28rem, 1.95vw, 1.48rem);',
       '.legacy-child-native-trusts-crt-types.native-dynamic-grid .service-native-card.card2 {',
       '.legacy-child-native-trusts-clt-types.native-dynamic-grid .service-native-card.card2 {',

@@ -36,6 +36,7 @@ const sections = [
       defineEditorField({ id: 'body', label: 'Section body', type: 'textarea', rows: 4 }),
       defineEditorField({ id: 'html', label: 'Page Content HTML', type: 'html' }),
       defineEditorField({ id: 'bodyColorClassName', label: 'Body color', type: 'swatch', options: PAGE_CONTENT_HEADING_TONE_OPTIONS }),
+      defineEditorField({ id: 'bodyFontSizeRem', label: 'Body font size (rem)', type: 'range', min: 0.8, max: 2.4, step: 0.05 }),
       defineEditorField({
         id: 'bgTone',
         label: 'Section background',
@@ -69,11 +70,11 @@ const sections = [
     surfaces: ['hud', 'admin'],
     fields: [
       defineEditorField({ id: 'fullBleed', label: 'Full bleed rail', type: 'boolean' }),
-      defineEditorField({ id: 'spaceBeforeRem', label: 'Space before (rem)', type: 'number', min: 0, max: 8, step: 0.25 }),
-      defineEditorField({ id: 'spaceAfterRem', label: 'Space after (rem)', type: 'number', min: 0, max: 8, step: 0.25 }),
-      defineEditorField({ id: 'paddingTopRem', label: 'Padding top (rem)', type: 'number', min: 0, max: 8, step: 0.25 }),
-      defineEditorField({ id: 'paddingBottomRem', label: 'Padding bottom (rem)', type: 'number', min: 0, max: 8, step: 0.25 }),
-      defineEditorField({ id: 'contentMaxWidthPx', label: 'Content max width (px)', type: 'number', min: 560, max: 1440, step: 10 }),
+      defineEditorField({ id: 'spaceBeforeRem', label: 'Space before (rem)', type: 'range', min: 0, max: 8, step: 0.05 }),
+      defineEditorField({ id: 'spaceAfterRem', label: 'Space after (rem)', type: 'range', min: 0, max: 8, step: 0.05 }),
+      defineEditorField({ id: 'paddingTopRem', label: 'Padding top (rem)', type: 'range', min: 0, max: 8, step: 0.05 }),
+      defineEditorField({ id: 'paddingBottomRem', label: 'Padding bottom (rem)', type: 'range', min: 0, max: 8, step: 0.05 }),
+      defineEditorField({ id: 'contentMaxWidthPx', label: 'Content max width (px)', type: 'range', min: 560, max: 1440, step: 10 }),
     ],
   },
   {
@@ -171,6 +172,7 @@ export const pageContentBlockDefinition = createBlockDefinition({
     body: '',
     html: '',
     bodyColorClassName: '',
+    bodyFontSizeRem: null,
     bgTone: 'white',
     textTone: 'dark',
     widget: '',

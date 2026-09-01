@@ -53,6 +53,8 @@ describe('careers route review polish guardrail', () => {
     expect(cssSource).toContain('color: var(--ag-color-super-grey);');
     expect(cssSource).toContain('.native-info-page--careers .careers-native-ready .native-info-section-copy > h2,');
     expect(cssSource).toContain('color: #ffffff;');
+    expect(cssSource).toContain('text-wrap: balance;');
+    expect(cssSource).not.toContain('.native-info-page--careers .careers-native-ready .native-info-section-copy > p {\n  width: max-content;\n  max-width: 100%;\n  margin-top: 0;\n  font-size: clamp(1.2rem, 2.3vw, 1.75rem);\n  line-height: 1.35;\n  white-space: nowrap;');
     expect(pageSource).toContain("const benefitsHeading = benefitsSection?.querySelector('h2');");
     expect(pageSource).toContain("const readyHeading = readySection?.querySelector('h2');");
     expect(pageSource).toContain('const endY = readyHeadingMid - (viewportHeight * 0.72);');

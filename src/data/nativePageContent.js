@@ -453,7 +453,8 @@ function companyChildContent(path, title) {
           copyClassName: 'careers-native-ready-copy fade-up fade-up-force-observe',
           justify: 'center',
           title: 'Ready when you are.',
-          body: ['See all open positions below and apply online.'],
+          body: ['See all positions below and apply online.'],
+          bodyColorClassName: 'is-mango',
         },
         {
           className: 'careers-native-jobs-list',

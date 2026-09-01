@@ -90,4 +90,20 @@ describe('buildNativeHudPanels', () => {
     expect(panels.map((panel) => panel.id)).toEqual(['block:who_qualifies', 'block:loan_apply']);
     expect(new Set(panels.map((panel) => panel.icon)).size).toBe(1);
   });
+
+  it('anchors every repeated Intro instance by block ID rather than a shared kind selector', () => {
+    const panels = buildNativeHudPanels({
+      blocks: [
+        { id: 'intro_2', kind: 'intro', mode: 'dynamic' },
+        { id: 'intro', kind: 'intro', mode: 'dynamic' },
+        { id: 'intro_3', kind: 'intro', mode: 'dynamic' },
+      ],
+    });
+
+    expect(panels.map((panel) => panel.anchorSelector)).toEqual([
+      '[data-block-id="intro_2"]',
+      '[data-block-id="intro"]',
+      '[data-block-id="intro_3"]',
+    ]);
+  });
 });

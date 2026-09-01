@@ -668,6 +668,7 @@ describe('buildDynamicIntroFromBlock', () => {
         textTone: 'dark',
         justify: 'left',
         lineSpacing: 1.1,
+        backgroundEffectsJson: '{"enabled":true,"clip":true,"lights":[{"tone":"mango","strength":55,"x":-24,"y":18,"size":88,"motion":true}]}',
         button1Label: 'Learn more',
         button1LinkJson: serializeLinkValue({
           kind: 'internal',
@@ -695,6 +696,11 @@ describe('buildDynamicIntroFromBlock', () => {
       textTone: 'dark',
       justify: 'left',
       lineSpacing: 1.1,
+      backgroundEffects: {
+        enabled: true,
+        clip: true,
+        lights: [expect.objectContaining({ tone: 'mango', strength: 55, x: -24, y: 18, size: 88, motion: true })],
+      },
       actions: [
         expect.objectContaining({
           label: 'Learn more',
@@ -727,6 +733,7 @@ describe('buildDynamicBillboardFromBlock', () => {
         textTone: 'white',
         justify: 'right',
         lineSpacing: 1.05,
+        backgroundEffectsJson: '{"enabled":true,"clip":false,"lights":[{"tone":"blue","strength":42,"x":-30,"y":-20,"size":82}]}',
         titleFontFamily: 'helv',
         titleFontWeight: 700,
         titleSizeRem: 3.4,
@@ -765,6 +772,11 @@ describe('buildDynamicBillboardFromBlock', () => {
       textTone: 'white',
       justify: 'right',
       bodyJustify: 'right',
+      backgroundEffects: {
+        enabled: true,
+        clip: false,
+        lights: [expect.objectContaining({ tone: 'blue', strength: 42, x: -30, y: -20, size: 82 })],
+      },
       copyClassName: '',
       copyFadeRootMargin: '',
       copyStyle: { '--dynamic-billboard-copy-max-width': '1100px' },
@@ -2544,6 +2556,25 @@ describe('buildDynamicGridFromBlock', () => {
     ]);
   });
 
+  it('preserves independently authored card outline and shadow choices', () => {
+    const runtime = buildDynamicGridFromBlock({
+      id: 'grid',
+      kind: 'card_grid',
+      mode: 'dynamic',
+      settings: {
+        bgTone: 'white',
+        cardStyle: 'card2',
+        cardOutline: true,
+        cardShadow: false,
+        card1Title: 'Coverage',
+      },
+    });
+
+    expect(runtime?.cardStyle).toBe('card2');
+    expect(runtime?.cardOutline).toBe(true);
+    expect(runtime?.cardShadow).toBe(false);
+  });
+
   it('keeps a grid card mounted when it still has an action during title edits', () => {
     const runtime = buildDynamicGridFromBlock({
       id: 'grid',
@@ -2995,6 +3026,7 @@ describe('buildDynamicPageContentFromBlock', () => {
         subtitle: 'Updated for 2026',
         body: ['Line one.', 'Line two.'],
         html: '<p>Body copy.</p>',
+        bodyFontSizeRem: 1.35,
         widget: 'retirement-403b-rate-table',
         logoImage: '/logo.png',
         logoAlt: 'Partner logo',
@@ -3031,6 +3063,7 @@ describe('buildDynamicPageContentFromBlock', () => {
       subtitle: 'Updated for 2026',
       body: ['Line one.', 'Line two.'],
       html: '<p>Body copy.</p>',
+      bodyFontSizeRem: 1.35,
       widget: 'retirement-403b-rate-table',
       logoImage: '/logo.png',
       logoAlt: 'Partner logo',

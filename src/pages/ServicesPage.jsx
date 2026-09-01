@@ -2,7 +2,8 @@ import { lazy, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState }
 import '../styles/home-native.css';
 import '../styles/service-native.css';
 import { Link } from 'react-router-dom';
-import BlockOwnershipOverlay, { getBlockOwnershipVisual } from '../components/BlockOwnershipOverlay';
+import { getBlockOwnershipVisual } from '../components/BlockOwnershipOverlay';
+import BlockSurfaceLayers from '../components/BlockSurfaceLayers';
 import DynamicCtaSection from '../components/DynamicCtaSection';
 import FrontHudAnchorTag from '../components/FrontHudAnchorTag';
 import ManagedBlockOrder from '../components/ManagedBlockOrder';
@@ -733,8 +734,7 @@ export default function ServicesPage() {
         data-block-id="hero_pie"
         style={{ ...activeSliceAccentStyle, ...managedBlockOrderStyle('hero_pie') }}
       >
-        <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('hero_pie')} />
-        {renderHudAnchor('hero_pie')}
+        <BlockSurfaceLayers ownership={getOwnershipVisualForBlockId('hero_pie')} hudAnchor={renderHudAnchor('hero_pie')} />
         <div className="ag-panel-rail">
           <div className="services-pie-interactive-shell fade-up">
             <div className="services-pie-hero-grid">
@@ -817,8 +817,7 @@ export default function ServicesPage() {
       </section>
 
       <section className={`services-native-intro dynamic-intro is-bg-${resolvedIntro.bgTone || 'white'} is-text-${resolvedIntro.textTone || 'dark'}${getHudBlockStateClassName('intro')}${getOwnershipVisualForBlockId('intro').className || ''}`} data-block-id="intro" style={managedBlockOrderStyle('intro')}>
-        <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('intro')} />
-        {renderHudAnchor('intro')}
+        <BlockSurfaceLayers ownership={getOwnershipVisualForBlockId('intro')} hudAnchor={renderHudAnchor('intro')} />
         <div className="ag-panel-rail">
           <div
             className={`service-native-intro-copy is-justify-${resolvedIntro.justify || 'center'}`}
@@ -885,8 +884,7 @@ export default function ServicesPage() {
         data-block-id="services_cards"
         style={managedBlockOrderStyle('services_cards')}
       >
-        <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('services_cards')} />
-        {renderHudAnchor('services_cards')}
+        <BlockSurfaceLayers ownership={getOwnershipVisualForBlockId('services_cards')} hudAnchor={renderHudAnchor('services_cards')} />
         <div className="services-native-grid-bleed">
           <div className="services-breakdown-shell">
             <header className="services-breakdown-header fade-up">
@@ -934,8 +932,7 @@ export default function ServicesPage() {
         data-block-id="matters_band"
         style={managedBlockOrderStyle('matters_band')}
       >
-        <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('matters_band')} />
-        {renderHudAnchor('matters_band')}
+        <BlockSurfaceLayers ownership={getOwnershipVisualForBlockId('matters_band')} hudAnchor={renderHudAnchor('matters_band')} />
         <div className="ag-panel-rail">
           {servicesMattersRuntime.title === 'What you do matters.' ? (
             <h2>
@@ -989,8 +986,7 @@ export default function ServicesPage() {
       </div>
 
       <section ref={testimonialsSectionRef} className={`services-native-testimonials${getOwnershipVisualForBlockId('testimonials').className || ''}`} data-block-id="testimonials" style={managedBlockOrderStyle('testimonials')}>
-        <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('testimonials')} />
-        {renderHudAnchor('testimonials')}
+        <BlockSurfaceLayers ownership={getOwnershipVisualForBlockId('testimonials')} hudAnchor={renderHudAnchor('testimonials')} />
         <div className="ag-panel-rail">
           <div className="carousel-stack">
             {testimonialsData.items.length ? testimonialsData.items.map((item, index) => (

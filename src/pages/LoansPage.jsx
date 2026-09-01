@@ -10,7 +10,8 @@ import {
   preloadBlockHudPanelHost,
   preloadFrontHudChrome,
 } from '../components/BlockHudPanelHostLoader';
-import BlockOwnershipOverlay, { getBlockOwnershipVisual } from '../components/BlockOwnershipOverlay';
+import { getBlockOwnershipVisual } from '../components/BlockOwnershipOverlay';
+import BlockSurfaceLayers from '../components/BlockSurfaceLayers';
 import FrontHudAnchorTag from '../components/FrontHudAnchorTag';
 import DynamicCtaSection from '../components/DynamicCtaSection';
 import DynamicRequestFormSection from '../components/DynamicRequestFormSection';
@@ -1177,8 +1178,7 @@ export default function LoansPage({ sectionsOnly = false }) {
         data-block-id="hero"
         style={managedBlockOrderStyle('hero')}
       >
-        <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('hero')} />
-        {renderHudAnchor('hero')}
+        <BlockSurfaceLayers ownership={getOwnershipVisualForBlockId('hero')} hudAnchor={renderHudAnchor('hero')} />
         <div className="ag-panel-rail">
           {dynamicHero?.lines?.length ? dynamicHero.lines.map((line, index) => {
             const animationClass = heroAnimationClassForLine(dynamicHero.animationPreset, index + 1);
@@ -1222,8 +1222,7 @@ export default function LoansPage({ sectionsOnly = false }) {
         data-block-id="intro"
         style={managedBlockOrderStyle('intro')}
       >
-        <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('intro')} />
-        {renderHudAnchor('intro')}
+        <BlockSurfaceLayers ownership={getOwnershipVisualForBlockId('intro')} hudAnchor={renderHudAnchor('intro')} />
         <div className="ag-panel-rail">
           <div
             className={`service-native-intro-copy is-justify-${resolvedIntro.justify || 'center'}`}
@@ -1292,8 +1291,7 @@ export default function LoansPage({ sectionsOnly = false }) {
         data-block-id="loan_options"
         style={managedBlockOrderStyle('loan_options')}
       >
-        <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('loan_options')} />
-        {renderHudAnchor('loan_options')}
+        <BlockSurfaceLayers ownership={getOwnershipVisualForBlockId('loan_options')} hudAnchor={renderHudAnchor('loan_options')} />
         <div className="ag-panel-rail-wide">
           {loanOptionsGrid?.title ? (
             <h2 className={loanOptionsGrid.titleClassName || 'loans-native-display-heading loans-native-options-title'}>
@@ -1365,8 +1363,7 @@ export default function LoansPage({ sectionsOnly = false }) {
               className={`loans-native-option-question-wrap fade-up${getHudBlockStateClassName('cta_band')}${getOwnershipVisualForBlockId('cta_band').className || ''}`}
               data-block-id="cta_band"
             >
-              <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('cta_band')} />
-              {renderHudAnchor('cta_band')}
+              <BlockSurfaceLayers ownership={getOwnershipVisualForBlockId('cta_band')} hudAnchor={renderHudAnchor('cta_band')} />
               <div className="native-info-section-copy is-justify-center">
                 {loanOptionsBillboard.title ? <h2>{loanOptionsBillboard.title}</h2> : null}
                 {loanOptionsBillboard.bodyHtml ? (
@@ -1404,8 +1401,7 @@ export default function LoansPage({ sectionsOnly = false }) {
       {renderAdditionalBillboardsAfter('loan_options')}
 
       <section className={`service-native-section loans-native-inquiry native-dynamic-request is-request-form-preset-loans-inquiry is-bg-blue is-text-white${getHudBlockStateClassName('request_form')}${getOwnershipVisualForBlockId('request_form').className || ''}`} id="form" data-block-id="request_form" style={managedBlockOrderStyle('request_form')}>
-        <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('request_form')} />
-        {renderHudAnchor('request_form')}
+        <BlockSurfaceLayers ownership={getOwnershipVisualForBlockId('request_form')} hudAnchor={renderHudAnchor('request_form')} />
         <div className="ag-panel-rail">
           <DynamicRequestFormSection config={inquiryConfig} />
         </div>
@@ -1632,8 +1628,7 @@ export default function LoansPage({ sectionsOnly = false }) {
           data-block-id="vision_fuel"
           style={{ ...managedBlockOrderStyle('vision_fuel'), ...(visionFuelSectionStyle || {}) }}
         >
-          <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('vision_fuel')} />
-          {renderHudAnchor('vision_fuel')}
+          <BlockSurfaceLayers ownership={getOwnershipVisualForBlockId('vision_fuel')} hudAnchor={renderHudAnchor('vision_fuel')} />
           <div className="ag-panel-rail" style={visionFuelRailStyle || undefined}>
             <div
               className={visionFuelCopyClassName}
@@ -1725,8 +1720,7 @@ export default function LoansPage({ sectionsOnly = false }) {
       {renderAdditionalBillboardsAfter('cta_form')}
 
       <section className={`service-native-section loans-native-testimonials${getHudBlockStateClassName('testimonials')}${getOwnershipVisualForBlockId('testimonials').className || ''}`} data-block-id="testimonials" style={managedBlockOrderStyle('testimonials')}>
-        <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('testimonials')} />
-        {renderHudAnchor('testimonials')}
+        <BlockSurfaceLayers ownership={getOwnershipVisualForBlockId('testimonials')} hudAnchor={renderHudAnchor('testimonials')} />
         <div className="ag-panel-rail">
           <div className="carousel-stack">
             {testimonialsData.items.map((item, index) => (

@@ -14,7 +14,7 @@ import { RATES_CONTENT_PATH, readRatesTablesFromBlocks } from '../lib/ratesBlock
 const LEGACY_RATES_STORAGE_KEY = 'agf-rates-v2';
 const CONTENT_ADMIN_STORAGE_KEY = 'agf-content-admin-v1';
 const RatesContext = createContext(null);
-const SHARED_POLL_INTERVAL_MS = 1500;
+const SHARED_DISCLOSURES_REFRESH_INTERVAL_MS = 15000;
 const PUBLISHED_RATES_REFRESH_INTERVAL_MS = 15000;
 
 function readPublishedRouteBlocks(snapshot, pathname) {
@@ -227,11 +227,20 @@ export function RatesProvider({ children }) {
     void syncSnapshot({ force: true });
     const intervalId = window.setInterval(() => {
       void syncSnapshot();
-    }, SHARED_POLL_INTERVAL_MS);
+    }, SHARED_DISCLOSURES_REFRESH_INTERVAL_MS);
+    const syncWhenVisible = () => {
+      if (document.visibilityState === 'visible') {
+        void syncSnapshot();
+      }
+    };
+    window.addEventListener('focus', syncSnapshot);
+    document.addEventListener('visibilitychange', syncWhenVisible);
 
     return () => {
       cancelled = true;
       window.clearInterval(intervalId);
+      window.removeEventListener('focus', syncSnapshot);
+      document.removeEventListener('visibilitychange', syncWhenVisible);
     };
   }, [sharedAuthorityEnabled]);
 

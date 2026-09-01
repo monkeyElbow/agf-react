@@ -30,6 +30,7 @@ const GRID_BACKGROUND_OPTIONS = [
 
 const GRID_CARD_STYLE_OPTIONS = [
   { value: 'card1', label: 'Card 1' },
+  { value: 'card2', label: 'Outlined' },
   { value: 'card3', label: 'Card 3' },
   { value: 'card4', label: 'Card 4' },
   { value: 'none', label: 'Minimal card' },
@@ -196,10 +197,12 @@ const sections = [
       }),
       defineEditorField({
         id: 'cardStyle',
-        label: 'Card style',
+        label: 'Card base style',
         type: 'select',
         options: GRID_CARD_STYLE_OPTIONS,
       }),
+      defineEditorField({ id: 'cardOutline', label: 'Card outline', type: 'boolean' }),
+      defineEditorField({ id: 'cardShadow', label: 'Card shadow', type: 'boolean' }),
       defineEditorField({ id: 'cardHoverScale', label: 'Scale cards on hover', type: 'boolean' }),
       defineEditorField({ id: 'cardPaddingRem', label: 'Card padding (rem)', type: 'number', min: 0.75, max: 3, step: 0.05 }),
       defineEditorField({ id: 'cardTitleSizeRem', label: 'Card title size (rem)', type: 'number', min: 0.9, max: 3, step: 0.05 }),

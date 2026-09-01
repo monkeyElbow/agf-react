@@ -1092,8 +1092,8 @@ describe('BlockHudPanelHost', () => {
 
     expect(screen.getByRole('group', { name: 'Page content editor type' })).toBeTruthy();
     expect(screen.getByRole('toolbar', { name: 'Article body formatting' })).toBeTruthy();
-    expect(screen.getByRole('group', { name: 'Page content width presets' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Advanced layout' })).toBeTruthy();
+    expect(screen.getByRole('slider', { name: 'Body font size (rem)' })).toBeTruthy();
+    expect(screen.getByRole('slider', { name: 'Content max width (px)' })).toBeTruthy();
   });
 
   it('renders top strip blocks with the dedicated top strip HUD editor', () => {

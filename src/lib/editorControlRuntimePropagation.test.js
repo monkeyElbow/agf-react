@@ -81,6 +81,8 @@ describe('editor control runtime propagation', () => {
       columns: 'four',
       contentWidth: 'browser',
       cardStyle: 'borderless-shadow',
+      cardOutline: true,
+      cardShadow: true,
       titleTone: 'alternating',
     });
     const runtime = definition.renderer.buildRuntime(draftBlock);
@@ -89,6 +91,8 @@ describe('editor control runtime propagation', () => {
     expect(runtime.columns).toBe('four');
     expect(runtime.contentWidth).toBe('browser');
     expect(runtime.cardStyle).toBe('borderless-shadow');
+    expect(runtime.cardOutline).toBe(true);
+    expect(runtime.cardShadow).toBe(true);
     expect(runtime.titleTone).toBe('alternating');
     expect(runtime.cards[0]).toEqual(expect.objectContaining({
       title: 'First draft card',

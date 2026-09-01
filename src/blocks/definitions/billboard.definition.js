@@ -225,6 +225,14 @@ const sections = [
       defineEditorField({ id: 'copyClassName', label: 'Copy class name', type: 'text' }),
     ],
   },
+  {
+    id: 'background',
+    title: 'Background',
+    surfaces: ['hud', 'admin'],
+    fields: [
+      defineEditorField({ id: 'backgroundEffectsJson', label: 'Background lights', type: 'background_lights' }),
+    ],
+  },
 ];
 
 export const billboardBlockDefinition = createBlockDefinition({
@@ -253,6 +261,7 @@ export const billboardBlockDefinition = createBlockDefinition({
     anchorId: '',
     sectionClassName: '',
     copyClassName: '',
+    backgroundEffectsJson: '',
     fineprint: '',
     fineprintDisclosureId: '',
     buttonAction: '',
@@ -267,8 +276,8 @@ export const billboardBlockDefinition = createBlockDefinition({
   },
   editor: {
     sections,
-    hudSectionIds: ['content', 'actions', 'placement'],
-    adminSectionIds: ['content', 'actions', 'placement'],
+    hudSectionIds: ['content', 'background', 'actions', 'placement'],
+    adminSectionIds: ['content', 'background', 'actions', 'placement'],
   },
   validators: [
     (block) => Boolean(buildDynamicBillboardFromBlock(block)),

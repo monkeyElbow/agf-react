@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
 import AdminHtmlEditor from './AdminHtmlEditor';
+import BackgroundLightsEditor from './BackgroundLightsEditor';
 import ColorPalette from './ColorPalette';
 import RouteLinkField from './RouteLinkField';
 import {
@@ -28,6 +29,7 @@ export const BILLBOARD_EDITOR_SECTIONS = Object.freeze([
   { id: 'copy', label: 'Copy', icon: '¶' },
   { id: 'buttons', label: 'Buttons', icon: '↗' },
   { id: 'layout', label: 'Layout', icon: '▦' },
+  { id: 'background', label: 'Background', icon: '◌' },
 ]);
 
 function billboardPreviewButtonClassName(style, tone) {
@@ -367,6 +369,8 @@ export default function BillboardHudEditorPanel({
   onPaddingTopRemChange,
   paddingBottomRem,
   onPaddingBottomRemChange,
+  backgroundEffectsJson,
+  onBackgroundEffectsChange,
   blockOptions = null,
 }) {
   const [activeSection, setActiveSection] = useState('heading');
@@ -658,6 +662,16 @@ export default function BillboardHudEditorPanel({
               />
             </div>
             <p className="admin-page-content-layout-hint">The heading follows this same content width before it wraps. Top and bottom padding control the space around the billboard copy and actions.</p>
+          </BillboardPanel>
+        ) : null}
+
+        {activeSection === 'background' ? (
+          <BillboardPanel id="05" title="Background">
+            <BackgroundLightsEditor
+              value={backgroundEffectsJson}
+              onChange={onBackgroundEffectsChange}
+              paletteVariant="hud"
+            />
           </BillboardPanel>
         ) : null}
 

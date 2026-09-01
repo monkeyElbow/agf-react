@@ -39,6 +39,7 @@ import {
   normalizeSurfaceBgTone,
   resolveIntroAccentColor,
 } from './colorSystem';
+import { normalizeBackgroundEffects } from './backgroundEffects';
 import {
   normalizeHeroTitleLetterSpacingEm,
   normalizeHeroTitleSizeRem,
@@ -1093,6 +1094,7 @@ export function buildDynamicIntroFromBlock(block) {
     lineSpacing,
     sectionClassName,
     copyClassName: sanitizeClassName(settings.copyClassName || ''),
+    backgroundEffects: normalizeBackgroundEffects(settings.backgroundEffectsJson),
     actions,
   };
 }
@@ -1243,6 +1245,7 @@ export function buildDynamicBillboardFromBlock(block) {
     fineprintDisclosureId: String(settings.fineprintDisclosureId || '').trim(),
     bgTone,
     textTone,
+    backgroundEffects: normalizeBackgroundEffects(settings.backgroundEffectsJson),
     justify,
     bodyJustify,
     lineSpacing,
@@ -2566,6 +2569,8 @@ export function buildDynamicGridFromBlock(block) {
       }
     : null;
   const cardStyle = getGridSafeCardStyleForBg(settings.cardStyle, bgTone);
+  const cardOutline = typeof settings.cardOutline === 'boolean' ? settings.cardOutline : null;
+  const cardShadow = typeof settings.cardShadow === 'boolean' ? settings.cardShadow : null;
   // Background and card-title color are separate authored controls. Cards
   // have their own surface, so changing the section background must not
   // silently replace the admin's title color with white.
@@ -2773,6 +2778,8 @@ export function buildDynamicGridFromBlock(block) {
     consultantService,
     locationFilter,
     cardStyle,
+    cardOutline,
+    cardShadow,
     titleTone,
     bodyTone,
     subheadTone,
@@ -2886,6 +2893,12 @@ export function buildDynamicPageContentFromBlock(block) {
   const body = parsePageContentTextLines(settings.body);
   const html = String(settings.html || '').trim();
   const bodyColorClassName = normalizeHighlightClassName(settings.bodyColorClassName || '');
+  const hasBodyFontSize = settings.bodyFontSizeRem !== null
+    && settings.bodyFontSizeRem !== ''
+    && Number.isFinite(Number(settings.bodyFontSizeRem));
+  const bodyFontSizeRem = hasBodyFontSize
+    ? normalizePageContentSpaceRem(settings.bodyFontSizeRem, 1.1, 0.8, 2.4)
+    : null;
   const bgTone = normalizeSurfaceBgTone(settings.bgTone, 'white');
   const textTone = normalizeSharedPanelTextTone(settings.textTone, 'dark');
   const widget = String(settings.widget || '').trim();
@@ -2966,6 +2979,7 @@ export function buildDynamicPageContentFromBlock(block) {
     body,
     html: normalizedHtml,
     ...(bodyColorClassName ? { bodyColorClassName } : {}),
+    bodyFontSizeRem,
     bgTone,
     textTone,
     widget,

@@ -8,7 +8,16 @@ function getProbeValue(field, currentValue) {
     return currentValue === true ? false : true;
   }
   if (field.type === 'number' || field.type === 'range') {
-    return Number(currentValue || 0) + Number(field.step || 1);
+    const current = Number(currentValue);
+    const step = Number(field.step || 1);
+    const min = Number(field.min);
+    const max = Number(field.max);
+    const hasMin = Number.isFinite(min);
+    const hasMax = Number.isFinite(max);
+    const base = Number.isFinite(current) ? current : (hasMin ? min : 0);
+    const candidate = hasMax && base >= max ? base - step : base + step;
+
+    return Math.min(hasMax ? max : candidate, Math.max(hasMin ? min : candidate, candidate));
   }
   if (field.type === 'select' || field.type === 'swatch') {
     return field.options?.find((option) => String(option.value) !== String(currentValue))?.value

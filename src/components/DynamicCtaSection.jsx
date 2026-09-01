@@ -10,7 +10,7 @@ import {
   buildDynamicCtaFormFromBlock,
   renderTextWithHighlights,
 } from '../lib/dynamicPageBlocks';
-import BlockOwnershipOverlay from './BlockOwnershipOverlay';
+import BlockSurfaceLayers from './BlockSurfaceLayers';
 import SafeRichText from './SafeRichText';
 const CTA_DYNAMIC_SUBMIT_STYLE_SET = new Set(['blue', 'dark', 'outline']);
 const CTA_DYNAMIC_SUBMIT_TONE_SET = new Set(['atlantean', 'super-grey', 'mango', 'melon', 'white']);
@@ -197,8 +197,7 @@ export default function DynamicCtaSection({
       data-cta-display-mode={runtime?.displayMode || 'default'}
       data-cta-trigger-mode={runtime?.triggerMode || 'default'}
     >
-      <BlockOwnershipOverlay ownership={ownership} />
-      {hudAnchor}
+      <BlockSurfaceLayers ownership={ownership} hudAnchor={hudAnchor} />
       <div className="ag-panel-rail">
         {!renderTitleInsideShell ? (
           <div className="native-info-section-copy">

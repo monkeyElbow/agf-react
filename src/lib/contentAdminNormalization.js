@@ -221,7 +221,7 @@ export function normalizeRetirementIraRatesBlock(pathname, rawBlock) {
   };
 }
 
-export function normalizeLegacyIraContributionLimitsChart(pathname, rawBlock) {
+export function normalizeIraContributionLimitsChart(pathname, rawBlock) {
   if (normalizeManagedContentPath(pathname) !== '/services/retirement/iras' || !isObject(rawBlock)) {
     return rawBlock;
   }
@@ -292,7 +292,7 @@ export function normalizeLegacyIraContributionLimitsChart(pathname, rawBlock) {
   };
 }
 
-export function normalizeLegacy403bContributionLimitsChart(pathname, rawBlock) {
+export function normalize403bContributionLimitsChart(pathname, rawBlock) {
   if (normalizeManagedContentPath(pathname) !== '/services/retirement/403b' || !isObject(rawBlock)) {
     return rawBlock;
   }
@@ -582,9 +582,9 @@ export function normalizeContentAdminState(rawState, options = {}) {
             pathname,
             normalizeRetirementIraRatesBlock(
               pathname,
-              normalizeLegacyIraContributionLimitsChart(
+              normalizeIraContributionLimitsChart(
                 pathname,
-                normalizeLegacy403bContributionLimitsChart(
+                normalize403bContributionLimitsChart(
                   pathname,
                   normalizeLegacyCharitableTrustTypeChart(
                     pathname,

@@ -93,8 +93,7 @@ describe('ministers group life native page content', () => {
     expect(cssSource).toContain('min-height: 0 !important;');
     expect(cssSource).toContain('display: block;');
     expect(cssSource).toContain('padding-bottom: 0 !important;');
-    expect(cssSource).toContain('--dynamic-grid-card-title-size: clamp(2.26rem, 3.55vw, 2.85rem);');
-    expect(cssSource).toContain('font-size: clamp(2.26rem, 3.55vw, 2.85rem) !important;');
+    expect(cssSource).toContain('font-size: var(--dynamic-grid-card-title-size, clamp(1.4rem, 2.2vw, 1.85rem));');
     expect(cssSource).toContain('text-align: center;');
     expect(cssSource).toContain('.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).ministers-group-life-native-details .service-native-card h3::after {');
     expect(cssSource).toContain('display: none !important;');

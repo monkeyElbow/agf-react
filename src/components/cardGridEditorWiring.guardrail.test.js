@@ -87,4 +87,20 @@ describe('card-grid editor wiring', () => {
     expect(nativeCssSource).toContain('transform: translateY(-4px) scale(1.02);');
     expect(nativeCssSource).toContain('.insurance-native-coverage.is-card-hover-scale-disabled');
   });
+
+  it('keeps outlined cards selectable and separates outline from shadow', () => {
+    expect(definitionSource).toContain("{ value: 'card2', label: 'Outlined' }");
+    expect(definitionSource).toContain("id: 'cardOutline'");
+    expect(definitionSource).toContain("label: 'Card outline'");
+    expect(definitionSource).toContain("id: 'cardShadow'");
+    expect(definitionSource).toContain("label: 'Card shadow'");
+    expect(editorSource).toContain("allowedLayoutFieldIds.add('cardOutline')");
+    expect(editorSource).toContain("allowedLayoutFieldIds.add('cardShadow')");
+    const rendererSource = readFileSync(path.resolve(__dirname, './NativeContentPage.jsx'), 'utf8');
+    const nativeCssSource = readFileSync(path.resolve(__dirname, '../styles/service-native.css'), 'utf8');
+    expect(rendererSource).toContain("cardOutline === true ? ' is-card-outline' : ''");
+    expect(rendererSource).toContain("cardShadow === true ? ' is-card-shadow' : ''");
+    expect(nativeCssSource).toContain('.is-card-outline .service-native-card');
+    expect(nativeCssSource).toContain('.is-card-shadow .service-native-card');
+  });
 });

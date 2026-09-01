@@ -8,6 +8,10 @@ const serviceNativeCss = readFileSync(
   path.resolve(__dirname, '../styles/front-hud.css'),
   'utf8',
 );
+const cardGridCss = readFileSync(
+  path.resolve(__dirname, '../styles/service-native.css'),
+  'utf8',
+);
 
 describe('FrontHudAnchorTag', () => {
   it('renders the block icon and name together in one compact control', () => {
@@ -46,6 +50,18 @@ describe('FrontHudAnchorTag', () => {
     expect(serviceNativeCss).toMatch(/\.admin-front-hud-layer\s*\{[\s\S]*?z-index: 1000;/);
     expect(serviceNativeCss).toMatch(/\.admin-front-hud-anchor\s*\{[\s\S]*?z-index: 1001;/);
     expect(serviceNativeCss).toContain('padding: 2px 0.5rem;');
+  });
+
+  it('keeps the shared dimming layer above lifted card-grid hovers', () => {
+    expect(cardGridCss).toMatch(/\.service-native-card\.card1:hover\s*\{[\s\S]*?z-index: 10;/);
+    expect(cardGridCss).toMatch(/\.service-native-card\.card3:hover\s*\{[\s\S]*?z-index: 10;/);
+    expect(serviceNativeCss).toMatch(
+      /\.service-native-page :is\(\.service-native-hero, \.service-native-intro, \.service-native-section\)::after\s*\{[\s\S]*?z-index: 100;/,
+    );
+    expect(serviceNativeCss).toMatch(
+      /\.home-native-page :is\([\s\S]*?\)::after\s*\{[\s\S]*?z-index: 100;/,
+    );
+    expect(serviceNativeCss).toMatch(/\.admin-front-hud-layer\s*\{[\s\S]*?z-index: 1000;/);
   });
 
   it('keeps the Intro workflow action row explicitly above the editor', () => {

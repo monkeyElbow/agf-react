@@ -27,7 +27,7 @@ describe('planned giving review polish guardrail', () => {
     expect(cssSource).toContain('.native-info-page--legacy-giving .legacy-giving-types .service-native-card > div:first-child {');
     expect(cssSource).toContain('flex: 1 1 auto;');
     expect(cssSource).toContain('.native-info-page--legacy-giving .service-native-section.native-dynamic-grid.legacy-giving-types .service-native-card:not(.investments-native-cert-card) h3 {');
-    expect(cssSource).toContain('font-size: max(var(--dynamic-grid-card-title-size, 1.14rem), clamp(1.55rem, 2.35vw, 1.9rem));');
+    expect(cssSource).toContain('font-size: var(--dynamic-grid-card-title-size, clamp(1.55rem, 2.35vw, 1.9rem));');
     expect(cssSource).toContain('min-height: 0;');
     expect(cssSource).toContain('.native-info-page--legacy-giving .legacy-giving-types .service-native-action-row {');
     expect(cssSource).toContain('margin-top: auto;');

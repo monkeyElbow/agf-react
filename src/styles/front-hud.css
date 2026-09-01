@@ -17,7 +17,8 @@
   content: '';
   position: absolute;
   inset: 0;
-  z-index: 9;
+  /* Stay above interactive content such as elevated card-grid hovers (z-index: 10). */
+  z-index: 100;
   pointer-events: none;
   background: linear-gradient(160deg, rgba(11, 21, 33, 0.78) 0%, rgba(11, 21, 33, 0.92) 100%);
   opacity: 0;
@@ -53,7 +54,8 @@
   content: '';
   position: absolute;
   inset: 0;
-  z-index: 9;
+  /* Match the shared native-page dimmer stacking level. HUD controls remain at 1000+. */
+  z-index: 100;
   pointer-events: none;
   background: linear-gradient(160deg, rgba(11, 21, 33, 0.78) 0%, rgba(11, 21, 33, 0.92) 100%);
   opacity: 0;
@@ -3153,8 +3155,138 @@
   font-size: 0.66rem;
 }
 
+/* Page 1: keep the mode switch distinct from the writing surface. */
+.admin-front-hud-page-content-content-panel .admin-front-hud-page-content-mode-group {
+  margin-bottom: 1rem;
+}
+
 .admin-front-hud-page-content-mini-html-wrap .admin-html-editor {
   border-color: rgba(var(--ag-admin-hud-accent-rgb), 0.24);
+}
+
+/* Shared Background editor: the same persisted light model is used by every
+   supported block, so the controls stay compact and consistent in HUD/admin. */
+.admin-background-lights-editor {
+  display: grid;
+  gap: 0.65rem;
+  width: 100%;
+}
+
+.admin-background-lights-heading,
+.admin-background-lights-options,
+.admin-background-light-card-topline,
+.admin-background-lights-clip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.55rem;
+}
+
+.admin-background-lights-heading > div:first-child {
+  display: grid;
+  gap: 0.08rem;
+}
+
+.admin-background-lights-heading strong {
+  color: var(--ag-color-super-grey);
+  font-size: 0.84rem;
+}
+
+.admin-background-lights-heading span,
+.admin-background-lights-clip > span {
+  color: #627688;
+  font-size: 0.7rem;
+  line-height: 1.25;
+}
+
+.admin-background-lights-add,
+.admin-background-lights-remove {
+  border: 1px solid rgba(var(--ag-admin-hud-accent-rgb), 0.38);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.82);
+  color: var(--ag-color-atlantean-dark);
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.32rem 0.58rem;
+}
+
+.admin-background-lights-add:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+
+.admin-background-lights-list {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.admin-background-light-card {
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0.58rem 0.62rem 0.66rem;
+  border: 1px solid rgba(var(--ag-admin-hud-accent-rgb), 0.25);
+  border-radius: 12px;
+}
+
+.admin-background-light-card legend {
+  padding: 0 0.22rem;
+  color: var(--ag-color-super-grey);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.admin-background-light-card-topline {
+  justify-content: flex-start;
+  margin-bottom: 0.5rem;
+}
+
+.admin-background-lights-remove {
+  margin-left: auto;
+  min-width: 1.8rem;
+  padding-inline: 0.3rem;
+}
+
+.admin-background-light-slider-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem 0.7rem;
+}
+
+.admin-background-light-slider {
+  display: grid;
+  gap: 0.22rem;
+  min-width: 0;
+}
+
+.admin-background-light-slider > span {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.3rem;
+  color: #627688;
+  font-size: 0.67rem;
+}
+
+.admin-background-light-slider strong {
+  color: var(--ag-color-super-grey);
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-background-light-slider input[type='range'] {
+  width: 100%;
+}
+
+@media (max-width: 640px) {
+  .admin-background-lights-heading,
+  .admin-background-lights-options,
+  .admin-background-lights-clip {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .admin-background-light-slider-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 .admin-front-hud-page-content-mini-html-wrap .admin-html-editor-toolbar {
@@ -3174,28 +3306,16 @@
   min-height: 280px;
 }
 
-.admin-front-hud-page-content-editor .admin-page-content-editor-preview {
-  margin-top: 0.55rem;
-}
-
-.admin-front-hud-page-content-editor .admin-page-content-editor-preview-surface {
-  min-height: 5rem;
-  padding: 0.85rem 1rem;
-  border-radius: 12px;
-}
-
-.admin-front-hud-page-content-editor .admin-page-content-editor-preview-surface h3 {
-  font-size: 1rem;
-}
-
-.admin-front-hud-page-content-editor .admin-page-content-editor-preview-surface .native-info-rich-html,
-.admin-front-hud-page-content-editor .admin-page-content-editor-preview-surface .native-info-rich-html p {
-  font-size: 0.9rem;
-  line-height: 1.35;
-}
-
 .admin-front-hud-page-content-settings {
   align-content: start;
+}
+
+/* Page 2: surface on the left; width and spacing controls share the right. */
+.admin-front-hud-page-content-layout-panel {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.82fr) minmax(240px, 1.18fr);
+  gap: 0.8rem;
+  align-items: start;
 }
 
 .admin-front-hud-page-content-settings .admin-page-content-layout-basic,
@@ -3236,6 +3356,10 @@
       "mode"
       "editor"
       "settings";
+  }
+
+  .admin-front-hud-page-content-layout-panel {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -5365,7 +5489,8 @@
 
 .admin-front-hud-range input[type='range'],
 .admin-range-number-control input[type='range'],
-.admin-hero-inline-height-row input[type='range'] {
+.admin-hero-inline-height-row input[type='range'],
+.admin-background-light-slider input[type='range'] {
   width: 100%;
   min-height: 6px !important;
   height: 6px !important;
@@ -5381,7 +5506,8 @@
 
 .admin-front-hud-range input[type='range']::-webkit-slider-runnable-track,
 .admin-range-number-control input[type='range']::-webkit-slider-runnable-track,
-.admin-hero-inline-height-row input[type='range']::-webkit-slider-runnable-track {
+.admin-hero-inline-height-row input[type='range']::-webkit-slider-runnable-track,
+.admin-background-light-slider input[type='range']::-webkit-slider-runnable-track {
   height: 6px;
   border-radius: 999px;
   background: linear-gradient(
@@ -5393,7 +5519,8 @@
 
 .admin-front-hud-range input[type='range']::-webkit-slider-thumb,
 .admin-range-number-control input[type='range']::-webkit-slider-thumb,
-.admin-hero-inline-height-row input[type='range']::-webkit-slider-thumb {
+.admin-hero-inline-height-row input[type='range']::-webkit-slider-thumb,
+.admin-background-light-slider input[type='range']::-webkit-slider-thumb {
   -webkit-appearance: none;
   width: 16px;
   height: 16px;
@@ -5406,7 +5533,8 @@
 
 .admin-front-hud-range input[type='range']::-moz-range-track,
 .admin-range-number-control input[type='range']::-moz-range-track,
-.admin-hero-inline-height-row input[type='range']::-moz-range-track {
+.admin-hero-inline-height-row input[type='range']::-moz-range-track,
+.admin-background-light-slider input[type='range']::-moz-range-track {
   height: 6px;
   border: 0;
   border-radius: 999px;
@@ -5419,7 +5547,8 @@
 
 .admin-front-hud-range input[type='range']::-moz-range-thumb,
 .admin-range-number-control input[type='range']::-moz-range-thumb,
-.admin-hero-inline-height-row input[type='range']::-moz-range-thumb {
+.admin-hero-inline-height-row input[type='range']::-moz-range-thumb,
+.admin-background-light-slider input[type='range']::-moz-range-thumb {
   width: 16px;
   height: 16px;
   border: 2px solid #ffffff;
@@ -6727,10 +6856,27 @@
 
 .admin-hud-editor-shared-surface .admin-hud-editor-shell--intro.is-section-heading
   .admin-intro-hud-card--body,
+.admin-hud-editor-shared-surface .admin-hud-editor-shell--intro.is-section-heading
+  .admin-intro-hud-background-page,
 .admin-hud-editor-shared-surface .admin-hud-editor-shell--intro.is-section-body
   .admin-intro-hud-heading-page,
+.admin-hud-editor-shared-surface .admin-hud-editor-shell--intro.is-section-body
+  .admin-intro-hud-background-page,
 .admin-hud-editor-shared-surface .admin-hud-editor-shell--intro.is-section-actions
+  .admin-intro-hud-main-stack,
+.admin-hud-editor-shared-surface .admin-hud-editor-shell--intro.is-section-actions
+  .admin-intro-hud-background-page,
+.admin-hud-editor-shared-surface .admin-hud-editor-shell--intro.is-section-background
   .admin-intro-hud-main-stack {
+  display: none;
+}
+
+.admin-hud-editor-shared-surface .admin-hud-editor-shell--intro.is-section-background
+  .admin-intro-hud-background-page {
+  display: grid;
+}
+
+.admin-intro-hud-background-page {
   display: none;
 }
 

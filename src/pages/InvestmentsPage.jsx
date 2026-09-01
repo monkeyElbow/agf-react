@@ -3,7 +3,8 @@ import '../styles/service-native.css';
 import '../styles/calculator-foundation.css';
 import '../styles/investments-native-ladder.css';
 import { Link } from 'react-router-dom';
-import BlockOwnershipOverlay, { getBlockOwnershipVisual, isForeignOwnedBlockOwnership } from '../components/BlockOwnershipOverlay';
+import { getBlockOwnershipVisual, isForeignOwnedBlockOwnership } from '../components/BlockOwnershipOverlay';
+import BlockSurfaceLayers from '../components/BlockSurfaceLayers';
 import FrontHudAnchorTag from '../components/FrontHudAnchorTag';
 import PageBlocksRenderer from '../components/blocks/PageBlocksRenderer';
 import { inspectDynamicHeroSettings } from '../lib/dynamicHeroSettings';
@@ -2024,8 +2025,7 @@ export default function InvestmentsPage() {
           data-block-id="hero"
           style={managedBlockOrderStyle('hero')}
         >
-        <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('hero')} />
-        {renderHudAnchor('hero')}
+        <BlockSurfaceLayers ownership={getOwnershipVisualForBlockId('hero')} hudAnchor={renderHudAnchor('hero')} />
         <div className="ag-panel-rail">
           {shouldRenderHeroInlineEditor({
             hudEnabled: showFrontHud,
@@ -2094,8 +2094,7 @@ export default function InvestmentsPage() {
           data-block-id="intro"
           style={managedBlockOrderStyle('intro')}
         >
-        <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('intro')} />
-        {renderHudAnchor('intro')}
+        <BlockSurfaceLayers ownership={getOwnershipVisualForBlockId('intro')} hudAnchor={renderHudAnchor('intro')} />
         <div className="ag-panel-rail">
           <div
             className={`service-native-intro-copy is-justify-${resolvedIntro.justify || 'center'}`}
@@ -2205,8 +2204,7 @@ export default function InvestmentsPage() {
           data-block-id="certificates"
           style={managedBlockOrderStyle('certificates')}
         >
-          <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('certificates')} />
-          {renderHudAnchor('certificates')}
+          <BlockSurfaceLayers ownership={getOwnershipVisualForBlockId('certificates')} hudAnchor={renderHudAnchor('certificates')} />
           <div className="ag-panel-rail">
             <div className="service-native-grid is-two retirement-account-grid">
               {resolvedCertificateCards.map((card) => (
@@ -2290,8 +2288,7 @@ export default function InvestmentsPage() {
           data-block-id="certificates_table"
           style={managedBlockOrderStyle('certificates_table')}
         >
-          <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('certificates_table')} />
-          {renderHudAnchor('certificates_table')}
+          <BlockSurfaceLayers ownership={getOwnershipVisualForBlockId('certificates_table')} hudAnchor={renderHudAnchor('certificates_table')} />
           <div className="ag-panel-rail" id="rates">
             <h2 className="investments-native-rates-title">AGFinancial Investment Certificates Rates</h2>
             <div className="investments-native-rates-wrap fade-up">
@@ -2320,8 +2317,7 @@ export default function InvestmentsPage() {
           data-block-id="laddering"
           style={managedBlockOrderStyle('laddering')}
         >
-        <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('laddering')} />
-        {renderHudAnchor('laddering')}
+        <BlockSurfaceLayers ownership={getOwnershipVisualForBlockId('laddering')} hudAnchor={renderHudAnchor('laddering')} />
         <div className="ag-panel-rail">
           <div className="investments-native-ladder-box calculator-surface fade-up">
             <div className="investments-native-ladder-intro" data-ladder-intro>
@@ -3004,8 +3000,7 @@ export default function InvestmentsPage() {
           data-block-id="testimonials"
           style={managedBlockOrderStyle('testimonials')}
         >
-          <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('testimonials')} />
-          {renderHudAnchor('testimonials')}
+          <BlockSurfaceLayers ownership={getOwnershipVisualForBlockId('testimonials')} hudAnchor={renderHudAnchor('testimonials')} />
           <div className="ag-panel-rail">
             <div className="service-native-testimonials-wrap carousel-stack">
               {testimonialsData.items.length ? testimonialsData.items.map((item, index) => (
@@ -3039,8 +3034,7 @@ export default function InvestmentsPage() {
           data-block-id="cash_reserves"
           style={managedBlockOrderStyle('cash_reserves')}
         >
-          <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('cash_reserves')} />
-          {renderHudAnchor('cash_reserves')}
+          <BlockSurfaceLayers ownership={getOwnershipVisualForBlockId('cash_reserves')} hudAnchor={renderHudAnchor('cash_reserves')} />
           <div className="ag-panel-rail-wide">
             <div className="service-native-dark-feature fade-up">
               <div className="service-native-dark-feature-inner">

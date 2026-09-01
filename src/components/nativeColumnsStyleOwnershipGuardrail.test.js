@@ -33,6 +33,9 @@ describe('native columns style ownership guardrail', () => {
 
     expect(source).toContain('.service-native-section:is(.native-dynamic-columns, .test-dynamic-columns).is-columns-preset-value-cards {');
     expect(source).toContain('.service-native-section:is(.native-dynamic-columns, .test-dynamic-columns).is-columns-preset-value-cards .native-columns-grid {');
+    expect(source).toContain('.is-columns-preset-value-cards .native-columns-growth-surface .investments-native-growth-surface-layer.is-blue,');
+    expect(source).toContain('rgba(0, 173, 187, 0.28)');
+    expect(source).toContain('rgba(0, 138, 171, 0.2)');
     expect(source).not.toContain('.service-native-section.native-dynamic-columns.is-columns-style-loans-value,');
     expect(source).not.toContain('.service-native-section.native-dynamic-columns.is-columns-style-loans-value .native-columns-grid,');
     expect(source).not.toContain('.loans-native-more-grid {');

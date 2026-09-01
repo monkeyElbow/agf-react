@@ -1,6 +1,7 @@
 import { useContext, useEffect, useId, useMemo, useRef, useState } from 'react';
 import AdminNumberInput from '../AdminNumberInput';
 import AdminHtmlEditor from '../AdminHtmlEditor';
+import BackgroundLightsEditor from '../BackgroundLightsEditor';
 import PageContentEditorPreview from '../PageContentEditorPreview';
 import SharedRouteLinkField from '../RouteLinkField';
 import BillboardHudEditorPanel, {
@@ -4777,6 +4778,7 @@ export function IntroBlockEditor({ block, onSettingChange, routeOptions = [], so
     && field.id !== 'bodyHtml'
     && field.id !== 'bodyColorClassName'
     && field.id !== 'bgTone'
+    && field.id !== 'backgroundEffectsJson'
     && field.id !== 'textTone'
     && field.id !== 'justify'
     && field.id !== 'lineSpacing'
@@ -4925,6 +4927,12 @@ export function IntroBlockEditor({ block, onSettingChange, routeOptions = [], so
               </div>
             </section>
           ) : null}
+
+          <BackgroundLightsEditor
+            value={settings.backgroundEffectsJson}
+            onChange={(nextValue) => onSettingChange('backgroundEffectsJson', nextValue)}
+            paletteVariant="admin"
+          />
         </div>
       </div>
 
@@ -5155,6 +5163,8 @@ function IntroHudBlockEditor({ block, onSettingChange, routeOptions = [], blockO
       onTextToneChange={(nextValue) => onSettingChange('textTone', nextValue)}
       bgTone={String(settings.bgTone || 'sand')}
       onBgToneChange={(nextValue) => onSettingChange('bgTone', nextValue)}
+      backgroundEffectsJson={settings.backgroundEffectsJson}
+      onBackgroundEffectsChange={(nextValue) => onSettingChange('backgroundEffectsJson', nextValue)}
       justify={String(settings.justify || 'center')}
       onJustifyChange={(nextValue) => onSettingChange('justify', nextValue)}
       lineSpacing={Number.isFinite(Number(settings.lineSpacing)) ? Number(settings.lineSpacing) : 1.04}
@@ -5449,6 +5459,8 @@ export function BillboardBlockEditor({ block, onSettingChange, routeOptions = []
       onPaddingTopRemChange={(nextValue) => onSettingChange('paddingTopRem', normalizeBillboardPadding(nextValue))}
       paddingBottomRem={effectiveBillboardSettings.paddingBottomRem ?? null}
       onPaddingBottomRemChange={(nextValue) => onSettingChange('paddingBottomRem', normalizeBillboardPadding(nextValue))}
+      backgroundEffectsJson={effectiveBillboardSettings.backgroundEffectsJson}
+      onBackgroundEffectsChange={(nextValue) => onSettingChange('backgroundEffectsJson', nextValue)}
       blockOptions={blockOptions}
     />
   );
@@ -6788,6 +6800,12 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
   const layoutSettings = {
     ...settings,
     ...(!hasExplicitCardCount ? { cardCount: String(inferredCardCount) } : {}),
+    ...(!Object.prototype.hasOwnProperty.call(settings, 'cardOutline')
+      ? { cardOutline: !['none', 'borderless-shadow'].includes(normalizeGridCardStyleToken(settings.cardStyle)) }
+      : {}),
+    ...(!Object.prototype.hasOwnProperty.call(settings, 'cardShadow')
+      ? { cardShadow: ['card1', 'card3', 'card4', 'borderless-shadow'].includes(normalizeGridCardStyleToken(settings.cardStyle)) }
+      : {}),
     ...(
       isInsuranceCoverageGrid
       && !Object.prototype.hasOwnProperty.call(settings, 'cardHoverScale')
@@ -6802,6 +6820,12 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
   );
   if (fieldById.has('cardCount')) {
     allowedLayoutFieldIds.add('cardCount');
+  }
+  if (fieldById.has('cardOutline')) {
+    allowedLayoutFieldIds.add('cardOutline');
+  }
+  if (fieldById.has('cardShadow')) {
+    allowedLayoutFieldIds.add('cardShadow');
   }
   if (isInsuranceCoverageGrid && fieldById.has('cardHoverScale')) {
     allowedLayoutFieldIds.add('cardHoverScale');
@@ -6827,6 +6851,8 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
     fieldById.get('contentWidth'),
     fieldById.get('columns'),
     cardStyleField,
+    fieldById.get('cardOutline'),
+    fieldById.get('cardShadow'),
     cardHoverScaleField,
     fieldById.get('cardCount'),
   ].filter((field) => field && allowedLayoutFieldIds.has(field.id));

@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react';
 import AdminHtmlEditor from './AdminHtmlEditor';
 import ColorPalette from './ColorPalette';
-import PageContentEditorPreview from './PageContentEditorPreview';
 import useBufferedFieldDrafts from '../hooks/useBufferedFieldDrafts';
 import {
   getPageContentEditorField,
@@ -181,83 +180,42 @@ export function PageContentLayoutControls({
   onSettingChange,
   className = '',
 }) {
-  const [advancedOpen, setAdvancedOpen] = useState(false);
-
   if (typeof onSettingChange !== 'function') {
     return null;
   }
 
-  const widthPresetId = resolvePageContentWidthPreset(settings);
-  const spacingPresetId = resolvePageContentSpacingPreset(settings);
-  const currentWidth = getPageContentWidthValue(settings);
-  const currentSpacing = getPageContentSpacingValues(settings);
-
   return (
     <div className={`admin-page-content-layout-shell${className ? ` ${className}` : ''}`}>
-      <div className="admin-page-content-layout-basic">
-        <section className="admin-page-content-layout-card">
-          <span className="admin-front-hud-control-label">Width</span>
-          <div className="admin-page-content-preset-row" role="group" aria-label="Page content width presets">
-            {PAGE_CONTENT_WIDTH_PRESETS.map((preset) => (
-              <button
-                key={`page-content-width-${preset.id}`}
-                type="button"
-                className={`admin-front-hud-segment-btn${widthPresetId === preset.id ? ' is-active' : ''}`}
-                aria-pressed={widthPresetId === preset.id}
-                onClick={() => onSettingChange('contentMaxWidthPx', preset.maxWidthPx)}
-              >
-                {preset.label}
-              </button>
-            ))}
-          </div>
-          <p className="admin-page-content-preset-status">
-            {widthPresetId ? `${PAGE_CONTENT_WIDTH_PRESETS.find((preset) => preset.id === widthPresetId)?.label || 'Standard'} width` : `Custom width: ${currentWidth}px`}
-          </p>
-        </section>
+      <section className="admin-page-content-layout-card">
+        <span className="admin-front-hud-control-label">Typography</span>
+        <PageContentAdvancedSlider
+          label="Body font size"
+          value={settings.bodyFontSizeRem}
+          fallback={1.1}
+          min={0.8}
+          max={2.4}
+          step={0.05}
+          unit="rem"
+          onChange={(nextValue) => onSettingChange('bodyFontSizeRem', nextValue)}
+        />
+      </section>
 
-        <section className="admin-page-content-layout-card">
-          <span className="admin-front-hud-control-label">Spacing</span>
-          <div className="admin-page-content-preset-row" role="group" aria-label="Page content spacing presets">
-            {PAGE_CONTENT_SPACING_PRESETS.map((preset) => (
-              <button
-                key={`page-content-spacing-${preset.id}`}
-                type="button"
-                className={`admin-front-hud-segment-btn${spacingPresetId === preset.id ? ' is-active' : ''}`}
-                aria-pressed={spacingPresetId === preset.id}
-                onClick={() => {
-                  onSettingChange('spaceBeforeRem', preset.values.spaceBeforeRem);
-                  onSettingChange('spaceAfterRem', preset.values.spaceAfterRem);
-                  onSettingChange('paddingTopRem', preset.values.paddingTopRem);
-                  onSettingChange('paddingBottomRem', preset.values.paddingBottomRem);
-                }}
-              >
-                {preset.label}
-              </button>
-            ))}
-          </div>
-          <p className="admin-page-content-preset-status">
-            {spacingPresetId
-              ? `${PAGE_CONTENT_SPACING_PRESETS.find((preset) => preset.id === spacingPresetId)?.label || 'Standard'} spacing`
-              : `Custom spacing: ${currentSpacing.spaceBeforeRem}/${currentSpacing.spaceAfterRem}/${currentSpacing.paddingTopRem}/${currentSpacing.paddingBottomRem}rem`}
-          </p>
-        </section>
-      </div>
+      <section className="admin-page-content-layout-card">
+        <span className="admin-front-hud-control-label">Width</span>
+        <PageContentAdvancedSlider
+          label="Content max width"
+          value={settings.contentMaxWidthPx}
+          fallback={980}
+          min={560}
+          max={1440}
+          step={10}
+          unit="px"
+          onChange={(nextValue) => onSettingChange('contentMaxWidthPx', nextValue)}
+        />
+      </section>
 
-      <div className="admin-page-content-layout-meta">
-        <p className="admin-page-content-layout-hint">
-          Use presets for most content blocks. Advanced keeps the raw spacing and width controls available when you need a custom rail.
-        </p>
-        <button
-          type="button"
-          className="admin-front-hud-mini-action admin-page-content-advanced-toggle"
-          aria-expanded={advancedOpen}
-          onClick={() => setAdvancedOpen((current) => !current)}
-        >
-          {advancedOpen ? 'Hide advanced layout' : 'Advanced layout'}
-        </button>
-      </div>
-
-      {advancedOpen ? (
+      <section className="admin-page-content-layout-card">
+        <span className="admin-front-hud-control-label">Spacing</span>
         <div className="admin-page-content-advanced-grid">
           <PageContentAdvancedSlider
             label="Space before"
@@ -299,18 +257,8 @@ export function PageContentLayoutControls({
             unit="rem"
             onChange={(nextValue) => onSettingChange('paddingBottomRem', nextValue)}
           />
-          <PageContentAdvancedSlider
-            label="Content max width"
-            value={settings.contentMaxWidthPx}
-            fallback={980}
-            min={560}
-            max={1440}
-            step={10}
-            unit="px"
-            onChange={(nextValue) => onSettingChange('contentMaxWidthPx', nextValue)}
-          />
         </div>
-      ) : null}
+      </section>
     </div>
   );
 }
@@ -400,10 +348,6 @@ export default function PageContentHudEditorPanel({
               onBaseColorChange={(nextValue) => onSettingChange('bodyColorClassName', nextValue)}
               placeholder="Start page content..."
             />
-            <PageContentEditorPreview
-              settings={settings}
-              html={draftValues[editorField] ?? getPageContentEditorHtml(settings)}
-            />
           </div>
         ) : (
           <div className="admin-front-hud-field admin-front-hud-page-content-html-field">
@@ -413,10 +357,6 @@ export default function PageContentHudEditorPanel({
               value={draftValues[editorField] ?? getPageContentEditorHtml(settings)}
               onChange={(event) => updateDraftValue(editorField, event.target.value)}
               onBlur={() => commitDraftValue(editorField)}
-            />
-            <PageContentEditorPreview
-              settings={settings}
-              html={draftValues[editorField] ?? getPageContentEditorHtml(settings)}
             />
           </div>
         )}

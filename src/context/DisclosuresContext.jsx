@@ -9,7 +9,7 @@ import {
 import { getOrCreateDevIdentity, toDevIdentitySummary } from '../lib/devIdentity';
 
 const STORAGE_KEY = 'agf-disclosures-library-v1';
-const SHARED_POLL_INTERVAL_MS = 1500;
+const SHARED_DISCLOSURES_REFRESH_INTERVAL_MS = 15000;
 
 function cloneValue(value) {
   return value == null ? value : JSON.parse(JSON.stringify(value));
@@ -198,11 +198,20 @@ export function DisclosuresProvider({ children }) {
     void syncSnapshot({ force: true });
     const intervalId = window.setInterval(() => {
       void syncSnapshot();
-    }, SHARED_POLL_INTERVAL_MS);
+    }, SHARED_DISCLOSURES_REFRESH_INTERVAL_MS);
+    const syncWhenVisible = () => {
+      if (document.visibilityState === 'visible') {
+        void syncSnapshot();
+      }
+    };
+    window.addEventListener('focus', syncSnapshot);
+    document.addEventListener('visibilitychange', syncWhenVisible);
 
     return () => {
       cancelled = true;
       window.clearInterval(intervalId);
+      window.removeEventListener('focus', syncSnapshot);
+      document.removeEventListener('visibilitychange', syncWhenVisible);
     };
   }, [sharedAuthorityEnabled]);
 

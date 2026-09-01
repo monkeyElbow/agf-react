@@ -54,8 +54,8 @@ import {
   isRetiredNonDynamicContentAdminBlock,
   normalizeContentAdminBlock,
   normalizeContentAdminState,
-  normalizeLegacyIraContributionLimitsChart,
-  normalizeLegacy403bContributionLimitsChart,
+  normalizeIraContributionLimitsChart,
+  normalize403bContributionLimitsChart,
   normalizeRetirementIraRatesBlock,
   normalizeRetirement403bRatesBlock,
 } from '../lib/contentAdminNormalization';
@@ -1861,8 +1861,8 @@ export function normalizeStoredConfig(payload) {
     const defaultForPath = Array.isArray(defaultBlocks[path]) ? defaultBlocks[path] : [];
     const defaultById = new Map(defaultForPath.map((block) => [block.id, block]));
     const normalizedStoredBlocks = dedupeBlocksByIdPreferLatest(storedBlocks)
-      .map((block) => normalizeLegacyIraContributionLimitsChart(path, block))
-      .map((block) => normalizeLegacy403bContributionLimitsChart(path, block))
+      .map((block) => normalizeIraContributionLimitsChart(path, block))
+      .map((block) => normalize403bContributionLimitsChart(path, block))
       .map((block) => normalizeRetirementIraRatesBlock(path, block))
       .map((block) => normalizeRetirement403bRatesBlock(path, block));
     const canonicalFormOwner = inferCanonicalFormOwner(defaultForPath);

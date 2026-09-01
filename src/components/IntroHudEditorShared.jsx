@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import AdminHtmlEditor from './AdminHtmlEditor';
+import BackgroundLightsEditor from './BackgroundLightsEditor';
 import ColorPalette from './ColorPalette';
 import {
   HudEditorBlockOptionsPage,
@@ -101,6 +102,8 @@ export default function IntroHudEditorPanel({
   textTone,
   bgTone,
   onBgToneChange,
+  backgroundEffectsJson,
+  onBackgroundEffectsChange,
   justify,
   onJustifyChange,
   lineSpacing,
@@ -144,6 +147,7 @@ export default function IntroHudEditorPanel({
   const editorSections = appendHudBlockOptionsSection([
     { id: 'heading', label: 'Heading', icon: 'Aa' },
     { id: 'body', label: 'Body', icon: '¶' },
+    { id: 'background', label: 'Background', icon: '◌' },
     ...(actionsSlot ? [{ id: 'actions', label: 'Actions', icon: '↗' }] : []),
   ], blockOptions);
 
@@ -356,6 +360,29 @@ export default function IntroHudEditorPanel({
           </div>
         </HudEditorSection>
       </HudEditorMain>
+
+      <div className="admin-intro-hud-background-page">
+        <HudEditorSection className="admin-front-hud-card admin-intro-hud-card" label="Background settings">
+          <div className="admin-intro-hud-layout-control-grid is-stacked">
+            <div className="admin-front-hud-row">
+              <span>Background Color</span>
+              <ColorPalette
+                variant="hud"
+                className="is-compact is-icon-only"
+                ariaLabel="Intro background"
+                options={backgroundOptions}
+                value={bgTone}
+                onChange={(nextValue) => onBgToneChange?.(nextValue)}
+              />
+            </div>
+            <BackgroundLightsEditor
+              value={backgroundEffectsJson}
+              onChange={onBackgroundEffectsChange}
+              paletteVariant="hud"
+            />
+          </div>
+        </HudEditorSection>
+      </div>
 
       {actionsSlot ? (
         <div className="admin-hud-editor-actions-page admin-hud-editor-settings-rail admin-intro-hud-actions-rail">

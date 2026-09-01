@@ -1,7 +1,6 @@
-import { isValidElement, useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import BlockOwnershipOverlay from './BlockOwnershipOverlay';
-import FrontHudAnchorTag from './FrontHudAnchorTag';
+import BlockSurfaceLayers from './BlockSurfaceLayers';
 import SafeRichText from './SafeRichText';
 import { isExternalLinkHref } from '../lib/dynamicPageBlocks';
 import {
@@ -31,29 +30,6 @@ function easeInvestmentsScrollProgress(value) {
 
 function interpolateInvestmentsValue(start, end, progress) {
   return start + ((end - start) * progress);
-}
-
-function SharedBlockHudAnchor({ hudAnchor }) {
-  if (!hudAnchor) {
-    return null;
-  }
-
-  // Retirement supplies the fully composed anchor so it can include the
-  // shared page-structure controls and ownership context. Investments passes
-  // the anchor data object. Preserve both contracts.
-  if (isValidElement(hudAnchor)) {
-    return hudAnchor;
-  }
-
-  return (
-    <FrontHudAnchorTag
-      label={hudAnchor.label}
-      icon={hudAnchor.icon}
-      isActive={hudAnchor.isActive}
-      onClick={hudAnchor.onClick}
-      style={hudAnchor.style}
-    />
-  );
 }
 
 function FeatureAction({ action, resolveTo }) {
@@ -195,13 +171,17 @@ export default function InvestmentsGrowthFeature({
       className={`service-native-section investments-native-growth-feature${runtime?.className ? ` ${runtime.className}` : ''}${hudAnchor ? ' has-admin-front-hud' : ''}${sectionHudClassName ? ` ${sectionHudClassName}` : ''}${ownership?.className || ''}`}
       data-block-id={blockId}
     >
-      <BlockOwnershipOverlay ownership={ownership} />
-      <SharedBlockHudAnchor hudAnchor={hudAnchor} />
-      <div className="investments-native-growth-surface" aria-hidden="true">
-        <div className="investments-native-growth-surface-layer is-blue" />
-        <div className="investments-native-growth-surface-layer is-mango" />
-        <div className="investments-native-growth-surface-layer is-white" />
-      </div>
+      <BlockSurfaceLayers
+        ownership={ownership}
+        hudAnchor={hudAnchor}
+        backgroundEffects={(
+          <div className="investments-native-growth-surface" aria-hidden="true">
+            <div className="investments-native-growth-surface-layer is-blue" />
+            <div className="investments-native-growth-surface-layer is-mango" />
+            <div className="investments-native-growth-surface-layer is-white" />
+          </div>
+        )}
+      />
       <div className="ag-panel-rail">
         <h2 className="investments-native-build-title">
           <span
