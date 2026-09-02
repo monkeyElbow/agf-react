@@ -55,6 +55,10 @@ export const SERVICES_MATTERS_BILLBOARD_MIGRATION_ID = 'services-matters-billboa
 export const SERVICES_MATTERS_BILLBOARD_MIGRATION_VERSION = 1;
 export const SERVICES_MATTERS_PATH = '/services';
 
+export const SERVICES_DIRECTORY_MIGRATION_ID = 'services-breakdown-card-grid';
+export const SERVICES_DIRECTORY_MIGRATION_VERSION = 1;
+export const SERVICES_DIRECTORY_PATH = '/services';
+
 export const SUPPORT_LIBRARY_BLOCK_MIGRATION_ID = 'support-library-block-kind';
 export const SUPPORT_LIBRARY_BLOCK_MIGRATION_VERSION = 1;
 export const SUPPORT_LIBRARY_PATH = '/services/insurance/ministers-group-life-plan';
@@ -523,6 +527,97 @@ export function migrateServicesMattersBillboardState(rawState) {
   );
   return {
     state: changed ? { ...source, blocksByPath } : source,
+    changed,
+  };
+}
+
+function buildServicesDirectorySettings(settings = {}) {
+  const source = settings && typeof settings === 'object' ? settings : {};
+  const runtime = resolveSiteFeatureCatalogEntry('services_breakdown')?.buildRuntime?.({ settings: source }) || {};
+  const rows = Array.isArray(runtime.rows) ? runtime.rows : [];
+  const nextSettings = {
+    ...source,
+    title: String(source.title || runtime.title || 'What would you like to explore?').trim(),
+    titleClassName: String(source.titleClassName || '').trim(),
+    titleHighlightsJson: String(source.titleHighlightsJson || '').trim(),
+    body: String(source.body || '').trim(),
+    bodyHtml: String(source.bodyHtml || '').trim(),
+    cardCount: rows.length || 5,
+    bgTone: String(source.bgTone || 'white').trim() || 'white',
+    contentWidth: String(source.contentWidth || 'browser').trim() || 'browser',
+    columns: 'one',
+    cardStyle: String(source.cardStyle || 'none').trim() || 'none',
+    titleTone: String(source.titleTone || 'super-grey').trim() || 'super-grey',
+    bodyTone: String(source.bodyTone || 'super-grey').trim() || 'super-grey',
+    cardPaddingRem: source.cardPaddingRem ?? 1.35,
+    cardTitleSizeRem: source.cardTitleSizeRem ?? 1.45,
+    cardTitleLineHeight: source.cardTitleLineHeight ?? 1.08,
+    cardBodySizeRem: source.cardBodySizeRem ?? 1.02,
+    cardBodyLineHeight: source.cardBodyLineHeight ?? 1.56,
+  };
+
+  rows.forEach((row, index) => {
+    const slot = index + 1;
+    nextSettings[`card${slot}Title`] = String(row.title || '').trim();
+    nextSettings[`card${slot}TitleLinkJson`] = JSON.stringify({
+      kind: 'internal',
+      to: String(row.path || '').trim(),
+      openInNewWindow: false,
+    });
+    nextSettings[`card${slot}Body`] = String(row.description || '').trim();
+    nextSettings[`card${slot}LinksJson`] = JSON.stringify((Array.isArray(row.links) ? row.links : []).map((link) => ({
+      label: String(link?.label || '').trim(),
+      link: {
+        kind: 'internal',
+        to: String(link?.path || '').trim(),
+        openInNewWindow: false,
+      },
+    })));
+  });
+  return nextSettings;
+}
+
+export function migrateServicesDirectoryBlock(pathname, block) {
+  const source = cloneJson(block);
+  if (
+    String(pathname || '').trim() !== SERVICES_DIRECTORY_PATH
+    || String(source?.id || '').trim() !== 'services_cards'
+    || String(source?.kind || '').trim() !== 'site_feature'
+    || String(source?.mode || '').trim() !== 'dynamic'
+    || String(source?.settings?.featureId || '').trim() !== 'services_breakdown'
+  ) {
+    return source;
+  }
+
+  return {
+    ...source,
+    name: 'Services Directory',
+    templateId: 'card_grid',
+    presetId: 'services-directory',
+    kind: 'card_grid',
+    settings: {
+      ...buildServicesDirectorySettings(source.settings),
+      sectionClassName: String(source.settings?.sectionClassName || 'services-native-grid-wrap services-breakdown-section').trim(),
+    },
+  };
+}
+
+export function migrateServicesDirectoryState(rawState) {
+  const source = cloneJson(rawState) || {};
+  const blocks = source?.blocksByPath?.[SERVICES_DIRECTORY_PATH];
+  const migratedBlocks = (Array.isArray(blocks) ? blocks : [])
+    .map((block) => migrateServicesDirectoryBlock(SERVICES_DIRECTORY_PATH, block));
+  const changed = JSON.stringify(migratedBlocks) !== JSON.stringify(blocks);
+  return {
+    state: changed
+      ? {
+          ...source,
+          blocksByPath: {
+            ...(source.blocksByPath || {}),
+            [SERVICES_DIRECTORY_PATH]: migratedBlocks,
+          },
+        }
+      : source,
     changed,
   };
 }

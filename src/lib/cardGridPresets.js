@@ -141,6 +141,43 @@ const CARD_GRID_PRESET_DEFINITIONS = Object.freeze([
       }),
     }),
   }),
+  Object.freeze({
+    id: 'services-directory',
+    label: 'Services directory',
+    description: 'Editable service directory rows with a clear name, description, and link column.',
+    templateIds: Object.freeze([]),
+    defaults: Object.freeze({
+      bgTone: 'white',
+      contentWidth: 'browser',
+      columns: 'one',
+      cardStyle: 'none',
+      cardOutline: true,
+      cardShadow: true,
+      titleTone: 'super-grey',
+      bodyTone: 'super-grey',
+      cardPaddingRem: 1.35,
+      cardTitleSizeRem: 1.45,
+      cardTitleLineHeight: 1.08,
+      cardBodySizeRem: 1.02,
+      cardBulletSize: 'daf',
+      cardBulletSizeRem: DEFAULT_DYNAMIC_GRID_CARD_BULLET_SIZE_REM,
+      cardBulletLineHeight: DEFAULT_DYNAMIC_GRID_CARD_BULLET_LINE_HEIGHT,
+      cardBodyLineHeight: 1.56,
+    }),
+    editor: Object.freeze({
+      introFields: true,
+      layoutFieldIds: Object.freeze([]),
+      typographyFields: true,
+      maxCards: 8,
+      cardFeatures: Object.freeze({
+        primaryAction: false,
+        secondaryAction: false,
+        directLinks: true,
+        accordions: false,
+        bullets: false,
+      }),
+    }),
+  }),
 ]);
 
 function clonePresetForDefinition(preset) {

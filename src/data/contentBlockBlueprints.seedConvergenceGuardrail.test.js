@@ -53,7 +53,7 @@ describe('source-default content block blueprint construction', () => {
     expect(source).toMatch(/\/test': \[[\s\S]*?id: 'cta_form'[\s\S]*?editableFields:[\s\S]*?createDynamicColumnsBlueprint/);
     expect(contentBlockBlueprintsByPath['/test'].some((block) => block?.id === 'newsletter')).toBe(false);
     expect(source).toMatch(/createDynamicCardGridBlueprint\(\{[\s\S]*?id: 'loan_options'[\s\S]*?presetId:/);
-    expect(source).toMatch(/id: 'services_cards'[\s\S]*?kind: 'site_feature'[\s\S]*?featureId: 'services_breakdown'/);
+    expect(source).toMatch(/id: 'services_cards'[\s\S]*?kind: 'card_grid'[\s\S]*?presetId: 'services-directory'[\s\S]*?buildServicesDirectorySettings\(\)/);
     expect(source).toMatch(/id: 'matters_band'[\s\S]*?kind: 'billboard'[\s\S]*?buildBillboardPresetSettings\('default'/);
     expect(source).toMatch(/createDynamicBillboardBlueprint\(\{[\s\S]*?id: 'cta_band'[\s\S]*?presetId:/);
     expect(source).toMatch(/id: 'billboard'[\s\S]*?name: 'Retire Every Day Billboard'[\s\S]*?editableFields: sharedDynamicBillboardEditableFields,/);

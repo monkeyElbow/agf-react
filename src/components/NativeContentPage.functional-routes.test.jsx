@@ -1105,6 +1105,7 @@ describe('NativeContentPage functional routes', () => {
     );
 
     expect(screen.getByText('Our culture is delivering the best financial products and experiences that align with biblical values.')).toBeTruthy();
+    expect(screen.getByText('Our mission is your financial health and ministry growth.')).toBeTruthy();
     expect(document.querySelector('.service-native-intro.about-native-top-intro')).toBeTruthy();
   });
 

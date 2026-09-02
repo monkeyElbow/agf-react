@@ -26,6 +26,7 @@ describe('BackgroundLightsEditor', () => {
     expect(movedSave.lights[0].x).toBe(23);
     rerender(<BackgroundLightsEditor value={JSON.stringify(movedSave)} onChange={onChange} />);
     expect(screen.getByLabelText('Light 1 position').getAttribute('aria-valuetext')).toContain('23% from left');
+    expect(screen.queryByText('Light position')).toBeNull();
   });
 
   it('maps square pointer coordinates to responsive edge percentages', () => {

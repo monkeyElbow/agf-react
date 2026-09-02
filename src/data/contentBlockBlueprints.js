@@ -32,6 +32,7 @@ import {
 import {
   getAllowedSiteFeatureEditableFieldIds,
   getDefaultSiteFeatureCatalogEntry,
+  getSiteFeatureCatalogEntry,
 } from './siteFeatureCatalog';
 import {
   defaultInvestmentsCtaSettings,
@@ -230,6 +231,8 @@ function seedBlueprintServicesGridCardFields(cardNumber, {
 
 function seedBlueprintCardGridCardFields(cardNumber, {
   title = '',
+  titleHref = '',
+  titlePageRef = inferInternalPageRefFromHref(titleHref),
   titleClassName = '',
   titleHighlightsJson = '',
   cardClassName = '',
@@ -260,6 +263,12 @@ function seedBlueprintCardGridCardFields(cardNumber, {
 } = {}) {
   return {
     [`card${cardNumber}Title`]: title,
+    ...seedBlueprintLinkFields({
+      hrefField: `card${cardNumber}TitleUrl`,
+      pageRefField: `card${cardNumber}TitlePageRef`,
+      href: titleHref,
+      pageRef: titlePageRef,
+    }),
     [`card${cardNumber}TitleClassName`]: titleClassName,
     [`card${cardNumber}TitleHighlightsJson`]: titleHighlightsJson,
     [`card${cardNumber}ClassName`]: cardClassName,
@@ -311,6 +320,40 @@ function createDynamicCardGridBlueprint({ id, name, presetId = 'default', templa
     settings: buildCardGridPresetSettings(presetId, settings),
     editableFields: sharedDynamicGridEditableFields,
   };
+}
+
+function buildServicesDirectorySettings() {
+  const feature = getSiteFeatureCatalogEntry('services_breakdown');
+  const runtime = feature?.buildRuntime?.({ settings: {} }) || {};
+  const rows = Array.isArray(runtime.rows) ? runtime.rows : [];
+  return buildCardGridPresetSettings('services-directory', {
+    title: String(runtime.title || 'What would you like to explore?').trim(),
+    titleClassName: '',
+    titleHighlightsJson: '',
+    body: '',
+    bodyHtml: '',
+    cardCount: rows.length || 5,
+    ...rows.reduce((settings, row, index) => {
+      const slot = index + 1;
+      const linksJson = JSON.stringify((Array.isArray(row.links) ? row.links : []).map((link) => ({
+        label: String(link?.label || '').trim(),
+        link: {
+          kind: 'internal',
+          to: String(link?.path || link?.to || '').trim(),
+          openInNewWindow: false,
+        },
+      })));
+      return {
+        ...settings,
+        ...seedBlueprintCardGridCardFields(slot, {
+          title: row.title,
+          titleHref: row.path,
+          body: row.description,
+          linksJson,
+        }),
+      };
+    }, {}),
+  });
 }
 
 function createConsultantPageHeaderBlueprint(title) {
@@ -4873,13 +4916,14 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
     {
       id: 'services_cards',
       name: 'Service Cards',
-      kind: 'site_feature',
+      kind: 'card_grid',
       mode: 'dynamic',
+      presetId: 'services-directory',
       settings: {
-        featureId: 'services_breakdown',
+        ...buildServicesDirectorySettings(),
         sectionClassName: 'services-native-grid-wrap services-breakdown-section',
       },
-      editableFields: siteFeatureEditableFields,
+      editableFields: sharedDynamicGridEditableFields,
     },
     {
       id: 'matters_band',

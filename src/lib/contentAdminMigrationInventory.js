@@ -119,6 +119,14 @@ export const CONTENT_ADMIN_MIGRATION_ADAPTERS = Object.freeze([
     retireWhen: 'Retired after repeatable collection fields exist in active, base, revision, backup, and seed snapshots, and each feature can add/remove/reorder items without code edits.',
   },
   {
+    id: 'services-breakdown-card-grid',
+    category: 'content-migration',
+    paths: Object.freeze(['/services']),
+    helpers: Object.freeze(['migrateServicesDirectoryState']),
+    affectedLayers: AFFECTED_LAYERS,
+    retireWhen: 'Retired after the Services directory uses the editable card-grid preset in active, base, revision, backup, and seed snapshots.',
+  },
+  {
     id: 'support-library-block-kind',
     category: 'schema-migration',
     paths: Object.freeze(['/services/insurance/ministers-group-life-plan']),

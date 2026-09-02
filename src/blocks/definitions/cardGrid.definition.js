@@ -1,6 +1,6 @@
 import gridHudIcon from '../../assets/admin-block-icons/grid.svg';
 import { createBlockDefinition } from '../foundation/models';
-import { defineEditorField, defineTransitionalActionFields } from '../foundation/editorDescriptors';
+import { defineEditorField, defineTransitionalActionFields, defineTransitionalLinkFields } from '../foundation/editorDescriptors';
 import { buildDynamicGridFromBlock } from '../../lib/dynamicPageBlocks';
 import { getTokenSwatch, SEMANTIC_TEXT_COLOR_OPTIONS_WITH_DEFAULT } from '../../lib/colorSystem';
 import { getCardGridPresetDefinitions } from '../../lib/cardGridPresets';
@@ -280,6 +280,12 @@ const sections = [
     fields: [
       ...[1, 2, 3, 4, 5, 6, 7, 8].flatMap((slot) => ([
         defineEditorField({ id: `card${slot}Title`, label: `Card ${slot} title`, type: 'text' }),
+        ...defineTransitionalLinkFields({
+          hrefId: `card${slot}TitleUrl`,
+          hrefLabel: `Card ${slot} title destination`,
+          toId: `card${slot}TitlePageRef`,
+          toLabel: `Card ${slot} title internal page path`,
+        }),
         defineEditorField({
           id: `card${slot}TitleClassName`,
           label: `Card ${slot} title color`,
@@ -361,28 +367,26 @@ const sections = [
 
 function validateCardGridLinks(block) {
   const settings = block?.settings || {};
-  return validateLinkFieldGroups(
-    settings,
-    [{
-      hrefKeys: ['buttonUrl'],
-      toKeys: ['buttonPageRef'],
-      openInNewWindowKeys: ['buttonOpenInNewWindow'],
-    }].concat(Array.from({ length: 8 }, (_, index) => {
-      const slot = index + 1;
-      return {
-        hrefKeys: [`card${slot}ButtonUrl`],
-        toKeys: [`card${slot}ButtonPageRef`],
-      };
-    })).concat(
-      Array.from({ length: 8 }, (_, index) => {
-        const slot = index + 1;
-        return {
-          hrefKeys: [`card${slot}Button2Url`],
-          toKeys: [`card${slot}Button2PageRef`],
-        };
-      }),
-    ),
-  );
+  const groups = [{
+    hrefKeys: ['buttonUrl'],
+    toKeys: ['buttonPageRef'],
+    openInNewWindowKeys: ['buttonOpenInNewWindow'],
+  }];
+  Array.from({ length: 8 }, (_, index) => index + 1).forEach((slot) => {
+    groups.push({
+      hrefKeys: [`card${slot}ButtonUrl`],
+      toKeys: [`card${slot}ButtonPageRef`],
+    });
+    groups.push({
+      hrefKeys: [`card${slot}Button2Url`],
+      toKeys: [`card${slot}Button2PageRef`],
+    });
+    groups.push({
+      hrefKeys: [`card${slot}TitleUrl`],
+      toKeys: [`card${slot}TitlePageRef`],
+    });
+  });
+  return validateLinkFieldGroups(settings, groups);
 }
 
 export const cardGridBlockDefinition = createBlockDefinition({

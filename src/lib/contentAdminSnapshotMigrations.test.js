@@ -17,6 +17,8 @@ import {
   GENEROSITY_FUND_SNAPSHOT_MIGRATION_VERSION,
   SERVICES_MATTERS_PATH,
   SERVICES_MATTERS_BILLBOARD_MIGRATION_VERSION,
+  SERVICES_DIRECTORY_PATH,
+  SERVICES_DIRECTORY_MIGRATION_VERSION,
   SUPPORT_LIBRARY_PATH,
   SUPPORT_LIBRARY_BLOCK_MIGRATION_VERSION,
   migrateQcdCenteredCardGridBlock,
@@ -34,6 +36,8 @@ import {
   migrateSiteFeatureCollectionsState,
   migrateServicesMattersBillboardBlock,
   migrateServicesMattersBillboardState,
+  migrateServicesDirectoryBlock,
+  migrateServicesDirectoryState,
   migrateGenerosityFundSnapshot,
   migrateSupportLibraryBlock,
   migrateSupportLibraryState,
@@ -62,6 +66,46 @@ const legacyState = {
 };
 
 describe('content-admin snapshot migrations', () => {
+  it('converts the Services breakdown into an editable services directory card grid', () => {
+    const legacyBlock = {
+      id: 'services_cards',
+      name: 'Service Cards',
+      kind: 'site_feature',
+      mode: 'dynamic',
+      settings: {
+        featureId: 'services_breakdown',
+        sectionClassName: 'services-native-grid-wrap services-breakdown-section',
+      },
+    };
+
+    const migratedBlock = migrateServicesDirectoryBlock(SERVICES_DIRECTORY_PATH, legacyBlock);
+    expect(migratedBlock).toMatchObject({
+      id: 'services_cards',
+      name: 'Services Directory',
+      templateId: 'card_grid',
+      presetId: 'services-directory',
+      kind: 'card_grid',
+      settings: {
+        title: 'What would you like to explore?',
+        cardCount: 5,
+        card1Title: 'Loans',
+        card1TitleLinkJson: JSON.stringify({ kind: 'internal', to: '/services/loans', openInNewWindow: false }),
+        card5Title: 'Insurance',
+      },
+    });
+    expect(JSON.parse(migratedBlock.settings.card2LinksJson)[0]).toMatchObject({
+      label: 'Rates',
+      link: { kind: 'internal', to: '/services/investments#rates' },
+    });
+
+    const migratedState = migrateServicesDirectoryState({
+      blocksByPath: { [SERVICES_DIRECTORY_PATH]: [legacyBlock] },
+    });
+    expect(migratedState.changed).toBe(true);
+    expect(migrateServicesDirectoryState(migratedState.state).changed).toBe(false);
+    expect(SERVICES_DIRECTORY_MIGRATION_VERSION).toBe(1);
+  });
+
   it('moves insurance Risk Management and Mission Assure into shared columns presets without losing authored content', () => {
     const risk = {
       id: 'risk_management',

@@ -14,6 +14,7 @@ describe('card grid preset definitions', () => {
       'investment-options',
       'eligibility-cards',
       'step-cards',
+      'services-directory',
     ]);
     expect(getCardGridPresetDefinition('default')?.templateIds).toEqual([
       'card_grid',

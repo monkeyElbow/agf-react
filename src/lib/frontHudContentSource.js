@@ -23,7 +23,12 @@ function isRenderablePrimaryBlock(block, blockId) {
 }
 
 function restoreMissingPrimaryBlocks(authoringBlocks, fallbackBlocks) {
-  if (!Array.isArray(authoringBlocks) || authoringBlocks.length === 0 || !Array.isArray(fallbackBlocks)) {
+  // An explicitly present but temporarily empty authoring route is still an
+  // incomplete snapshot while the shared store is loading. Block-only pages
+  // must retain their primary content during that handoff; otherwise turning
+  // HUD on can blank the page until the next sync. A genuinely empty route
+  // with no fallback remains empty.
+  if (!Array.isArray(authoringBlocks) || !Array.isArray(fallbackBlocks)) {
     return authoringBlocks;
   }
 

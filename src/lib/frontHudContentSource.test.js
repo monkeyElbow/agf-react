@@ -18,17 +18,29 @@ describe('front HUD content source selection', () => {
     expect(result.hasAuthoringBlocksForPath).toBe(false);
   });
 
-  it('uses an explicit authoring route even when its block list is empty', () => {
-    const authoringBlocks = { '/test': [] };
-    const publishedBlocks = { '/test': [{ id: 'hero' }] };
+  it('restores the primary block while an explicit authoring route is temporarily empty', () => {
+    const authoringBlocks = { '/about-us': [] };
+    const publishedBlocks = {
+      '/about-us': [
+        {
+          id: 'intro',
+          kind: 'intro',
+          mode: 'dynamic',
+          settings: {
+            bodyHtml: '<p>Our culture is delivering the best financial products and experiences that align with biblical values.</p>',
+            extraLine: 'Our mission is your financial health and ministry growth.',
+          },
+        },
+      ],
+    };
     const result = selectFrontHudContentSource({
       enabled: true,
-      pathname: '/test',
+      pathname: '/about-us',
       authoringBlocksByPath: authoringBlocks,
       blocksByPath: publishedBlocks,
     });
 
-    expect(result.blocksByPath).toBe(authoringBlocks);
+    expect(result.blocksByPath['/about-us']).toEqual(publishedBlocks['/about-us']);
     expect(result.hasAuthoringBlocksForPath).toBe(true);
   });
 

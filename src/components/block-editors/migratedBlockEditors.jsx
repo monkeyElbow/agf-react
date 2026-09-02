@@ -1267,18 +1267,29 @@ function CardGridCardEditor({
   routeOptions,
   documentOptions,
   isCgaAssetsGrid,
+  showActions = true,
+  showBullets = true,
+  showTitleDestination = false,
+  slotNoun = 'Card',
 }) {
   const [openSection, setOpenSection] = useState(null);
   const slot = Number(slotData?.slot);
   const prefix = `card${slot}`;
   const titleField = fieldById.get(`${prefix}Title`);
+  const titleDestinationField = getPromotedRouteLinkField(
+    fieldById,
+    `${prefix}TitleUrl`,
+    `${prefix}TitlePageRef`,
+  );
   const titleColorField = fieldById.get(`${prefix}TitleClassName`);
   const fineprintField = fieldById.get(`${prefix}Fineprint`);
   const fineprintJustifyField = fieldById.get(`${prefix}FineprintJustify`);
   const fineprintSpaceBeforeField = fieldById.get(`${prefix}FineprintSpaceBeforeRem`);
   const fineprintLineHeightField = fieldById.get(`${prefix}FineprintLineHeight`);
   const fineprintSpaceAfterField = fieldById.get(`${prefix}FineprintSpaceAfterRem`);
-  const contentFields = [titleField].filter(Boolean);
+  const contentFields = [titleField, showTitleDestination ? titleDestinationField : null].filter(Boolean).map((field) => (
+    field === titleDestinationField ? { ...field, label: 'Destination' } : field
+  ));
   const bodyValue = isCgaAssetsGrid
     ? resolveCgaCardBodyEditorValue(settings, slot)
     : settings[`${prefix}Body`] || settings[`${prefix}BodyHtml`];
@@ -1326,7 +1337,7 @@ function CardGridCardEditor({
             draftFieldIds={GRID_LOCAL_DRAFT_FIELD_IDS}
           />
           <CardGridRichBodyEditor
-            label={`Card ${slot} body`}
+            label={`${slotNoun} ${slot} body`}
             value={bodyValue}
             onChange={handleBodyChange}
           />
@@ -1346,6 +1357,7 @@ function CardGridCardEditor({
           />
         </CardGridEditorDisclosure>
 
+        {showActions ? (
         <CardGridEditorDisclosure
           label="Buttons"
           summary={primaryLabel || secondaryLabel ? `${[primaryLabel, secondaryLabel].filter(Boolean).length} configured` : 'None added'}
@@ -1370,6 +1382,7 @@ function CardGridCardEditor({
             />
           </div>
         </CardGridEditorDisclosure>
+        ) : null}
 
         <CardGridEditorDisclosure
           label="Title color override"
@@ -1387,7 +1400,7 @@ function CardGridCardEditor({
           />
         </CardGridEditorDisclosure>
 
-        {!isCgaAssetsGrid ? (
+        {!isCgaAssetsGrid && showBullets ? (
           <CardGridEditorDisclosure
             label="Bullets"
             summary={bullets.length ? `${bullets.length} added` : 'None added'}
@@ -1396,7 +1409,7 @@ function CardGridCardEditor({
             onToggle={toggleSection}
           >
             <CardGridBulletListEditor
-              label={`Card ${slot} bullets`}
+              label={`${slotNoun} ${slot} bullets`}
               value={settings[`${prefix}ListJson`]}
               onChange={(nextValue) => onSettingChange(`${prefix}ListJson`, nextValue)}
             />
@@ -6815,10 +6828,18 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
     ...settings,
     ...(!hasExplicitCardCount ? { cardCount: String(inferredCardCount) } : {}),
     ...(!Object.prototype.hasOwnProperty.call(settings, 'cardOutline')
-      ? { cardOutline: !['none', 'borderless-shadow'].includes(normalizeGridCardStyleToken(settings.cardStyle)) }
+      ? {
+          cardOutline: typeof presetDefinition?.defaults?.cardOutline === 'boolean'
+            ? presetDefinition.defaults.cardOutline
+            : !['none', 'borderless-shadow'].includes(normalizeGridCardStyleToken(settings.cardStyle)),
+        }
       : {}),
     ...(!Object.prototype.hasOwnProperty.call(settings, 'cardShadow')
-      ? { cardShadow: ['card1', 'card3', 'card4', 'borderless-shadow'].includes(normalizeGridCardStyleToken(settings.cardStyle)) }
+      ? {
+          cardShadow: typeof presetDefinition?.defaults?.cardShadow === 'boolean'
+            ? presetDefinition.defaults.cardShadow
+            : ['card1', 'card3', 'card4', 'borderless-shadow'].includes(normalizeGridCardStyleToken(settings.cardStyle)),
+        }
       : {}),
     ...(
       isInsuranceCoverageGrid
@@ -6969,9 +6990,9 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
         const showAccordions = presetCardFeatures.accordions !== false || accordionCount > 0;
         return {
           slot,
-          kicker: `Card ${slot}`,
+          kicker: presetId === 'services-directory' ? `Service ${slot}` : `Card ${slot}`,
           title,
-          fallbackTitle: title || `New card ${slot}`,
+          fallbackTitle: title || `${presetId === 'services-directory' ? 'New service' : 'New card'} ${slot}`,
           summary: summarizeProgressiveSlot([
             body ? 'Body' : '',
             fineprint ? 'Fineprint' : '',
@@ -6998,9 +7019,11 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
           ].filter(Boolean),
           showDirectLinks,
           showAccordions,
+          showActions: showPrimaryActionFields || showSecondaryActionFields,
+          showBullets: presetCardFeatures.bullets !== false || bulletList.length > 0,
         };
       })
-  ), [fieldById, settings]);
+  ), [fieldById, presetCardFeatures, presetId, settings]);
   const requestedCardCount = hasExplicitCardCount
     ? Math.max(1, Math.min(8, Math.round(Number(settings.cardCount))))
     : null;
@@ -7046,7 +7069,7 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
 
   const cardList = (
     <ProgressiveCardEditorList
-      heading="Cards"
+      heading={presetId === 'services-directory' ? 'Services' : 'Cards'}
       className="admin-progressive-slot-list--grid-cards"
       workspace
       slots={cardSlots.filter((item) => visibleCardSlots.includes(item.slot))}
@@ -7069,6 +7092,10 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
           routeOptions={normalizedRouteOptions}
           documentOptions={documentOptions}
           isCgaAssetsGrid={isCgaAssetsGrid}
+          showActions={slotData.showActions}
+          showBullets={slotData.showBullets}
+          showTitleDestination={presetId === 'services-directory'}
+          slotNoun={presetId === 'services-directory' ? 'Service' : 'Card'}
         />
       )}
     />

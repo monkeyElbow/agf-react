@@ -100,10 +100,11 @@ function BackgroundLightPositionControl({ lights, onChange }) {
 
   return (
     <div className="admin-background-light-position-control">
-      <div className="admin-background-light-position-label">
-        <span>Light position</span>
-        {!activeLights.length ? <strong>Turn on a light to place it</strong> : null}
-      </div>
+      {!activeLights.length ? (
+        <div className="admin-background-light-position-label">
+          <strong>Turn on a light to place it</strong>
+        </div>
+      ) : null}
       <div
         ref={trackRef}
         className={`admin-background-light-position-map${draggingIndex != null ? ' is-dragging' : ''}`}

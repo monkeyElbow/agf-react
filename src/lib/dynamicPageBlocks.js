@@ -2600,8 +2600,12 @@ export function buildDynamicGridFromBlock(block) {
       }
     : null;
   const cardStyle = getGridSafeCardStyleForBg(settings.cardStyle, bgTone);
-  const cardOutline = typeof settings.cardOutline === 'boolean' ? settings.cardOutline : null;
-  const cardShadow = typeof settings.cardShadow === 'boolean' ? settings.cardShadow : null;
+  const cardOutline = typeof settings.cardOutline === 'boolean'
+    ? settings.cardOutline
+    : (presetId === 'services-directory' ? true : null);
+  const cardShadow = typeof settings.cardShadow === 'boolean'
+    ? settings.cardShadow
+    : (presetId === 'services-directory' ? true : null);
   // Background and card-title color are separate authored controls. Cards
   // have their own surface, so changing the section background must not
   // silently replace the admin's title color with white.
@@ -2681,6 +2685,16 @@ export function buildDynamicGridFromBlock(block) {
   const cards = Array.from({ length: 8 }, (_, index) => index + 1)
     .map((slot) => {
       const cardTitle = String(settings[`card${slot}Title`] || '').trim();
+      const cardTitleLinkValue = coerceLinkValueFromFields(settings, {
+        linkJsonKeys: [`card${slot}TitleLinkJson`],
+        hrefKeys: [`card${slot}TitleUrl`],
+        toKeys: [`card${slot}TitlePageRef`],
+        documentIdKeys: [],
+        openInNewWindowKeys: [],
+      });
+      const cardTitleLink = cardTitleLinkValue
+        ? { link: cardTitleLinkValue, ...linkValueToLinkProps(cardTitleLinkValue) }
+        : null;
       const cardTitleClassName = normalizeHighlightClassName(settings[`card${slot}TitleClassName`] || '');
       const cardTitleHighlights = parseTextHighlights(settings[`card${slot}TitleHighlightsJson`]);
       const cardBodySource = String(settings[`card${slot}Body`] || '').trim();
@@ -2752,13 +2766,14 @@ export function buildDynamicGridFromBlock(block) {
       const cardLinks = parseCardGridLinkItemsJson(settings[`card${slot}LinksJson`]);
       const cardAccordions = parseCardGridAccordionsJson(settings[`card${slot}AccordionsJson`]);
       const cardActions = [cardPrimaryAction, cardSecondaryAction].filter(Boolean);
-      if (!cardTitle && !cardBody && !cardBodyHtml && !cardList.length && !cardFineprint.length && !cardActions.length && !cardLinks.length && !cardAccordions.length) {
+      if (!cardTitle && !cardTitleLink && !cardBody && !cardBodyHtml && !cardList.length && !cardFineprint.length && !cardActions.length && !cardLinks.length && !cardAccordions.length) {
         return null;
       }
 
       return {
         slot,
         title: cardTitle,
+        titleLink: cardTitleLink,
         titleClassName: cardTitleClassName,
         titleHighlights: cardTitleHighlights,
         body: cardBody,

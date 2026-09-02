@@ -17,6 +17,18 @@ function readCssBetween(source, startPattern, endPattern) {
 }
 
 describe('native page content renderer guardrail', () => {
+  it('keeps About Intro surface and text tones owned by the shared dynamic classes', () => {
+    const cssSource = readSource('../styles/service-native.css');
+    const aboutIntroStyles = readCssBetween(
+      cssSource,
+      '.native-info-page--about .service-native-intro.about-native-top-intro {',
+      '.about-native-building-shot,',
+    );
+
+    expect(aboutIntroStyles).toBeTruthy();
+    expect(aboutIntroStyles).not.toMatch(/\b(?:background|color)\s*:/);
+  });
+
   it('keeps the shared dynamic page content builder in the native page path', () => {
     const source = readSource('./NativeContentPage.jsx');
     const compositionSource = readSource('../lib/managedPageComposition.js');
@@ -74,7 +86,9 @@ describe('native page content renderer guardrail', () => {
 
     expect(source).toContain('buildDynamicSiteFeatureFromBlock,');
     expect(source).toContain('const runtime = buildDynamicSiteFeatureFromBlock(block);');
-    expect(source).toContain("className: `${pathname === '/test' ? 'test-dynamic-site-feature' : 'native-dynamic-site-feature'}${runtime.sectionClassName ? ` ${runtime.sectionClassName}` : ''}`");
+    expect(source).toContain('className: [');
+    expect(source).toContain("pathname === '/test' ? 'test-dynamic-site-feature' : 'native-dynamic-site-feature'");
+    expect(source).toContain('runtime.sectionClassName');
     expect(source).toContain("if (renderBlock.kind === 'site_feature') {");
     expect(source).toContain('buildDynamicSiteFeatureSection(renderBlock, pathname);');
     expect(compositionSource).toContain('const managedEntries = renderedBlocks');

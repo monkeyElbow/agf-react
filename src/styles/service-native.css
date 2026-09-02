@@ -12876,7 +12876,7 @@ p.impact-proof-story-proof-body {
 }
 
 .native-info-page--about .service-native-intro.about-native-top-intro {
-  background: #ffffff;
+  /* Layout only: surface tone is owned by the shared dynamic is-bg-* class. */
   padding-top: clamp(4rem, 9vw, 6.75rem);
   padding-bottom: clamp(4rem, 9vw, 6.75rem);
 }
@@ -12904,7 +12904,6 @@ p.impact-proof-story-proof-body {
 
 .native-info-page--about .service-native-intro.about-native-top-intro h2 {
   margin: 0 0 clamp(2rem, 3.8vw, 2.8rem);
-  color: var(--ag-color-atlantean);
   max-width: 12ch;
   font-family: var(--ag-font-body);
   font-size: clamp(3.7rem, 8.6vw, 6.7rem);
@@ -12914,15 +12913,9 @@ p.impact-proof-story-proof-body {
   text-wrap: balance;
 }
 
-.native-info-page--about .service-native-intro.about-native-top-intro.dynamic-intro .service-native-intro-copy > h2,
-.native-info-page--about .service-native-intro.about-native-top-intro.dynamic-intro .service-native-intro-copy > h2.is-atlantean {
-  color: var(--ag-color-atlantean);
-}
-
 .native-info-page--about .service-native-intro.about-native-top-intro p {
   margin: 0;
   max-width: 45rem;
-  color: rgba(65, 64, 66, 0.9);
   font-size: var(--service-native-intro-body-size);
   line-height: 1.48;
   text-wrap: pretty;
@@ -12931,7 +12924,6 @@ p.impact-proof-story-proof-body {
 .native-info-page--about .service-native-intro.about-native-top-intro .native-info-intro-emphasis {
   margin: 1rem auto 0;
   max-width: 42rem;
-  color: var(--ag-color-super-grey);
   font-family: var(--ag-font-body);
   font-size: var(--service-native-intro-emphasis-size);
   font-weight: 700;

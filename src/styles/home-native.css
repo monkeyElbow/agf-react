@@ -3681,7 +3681,7 @@ p.home-services-feature-panel-body {
   display: grid;
   justify-items: center;
   margin: 0;
-  padding: clamp(0.85rem, 1.8vw, 1.2rem) 0 clamp(1.15rem, 2.4vw, 1.65rem);
+  padding: clamp(0.85rem, 1.8vw, 1.2rem) 0 var(--services-breakdown-header-cards-space, clamp(1.15rem, 2.4vw, 1.65rem));
   text-align: center;
 }
 
@@ -3690,7 +3690,8 @@ p.home-services-feature-panel-body {
   max-width: 24ch;
   color: var(--ag-color-super-grey);
   font-family: var(--ag-font-heading);
-  font-size: clamp(1.95rem, 3.15vw, 2.55rem);
+  width: min(var(--services-breakdown-header-width, 100%), 100%);
+  font-size: var(--services-breakdown-header-size, clamp(1.95rem, 3.15vw, 2.55rem));
   line-height: 0.98;
   letter-spacing: clamp(-0.82px, -0.08vw, -0.16px);
   text-wrap: balance;
@@ -3708,13 +3709,11 @@ p.home-services-feature-panel-body {
   row-gap: clamp(0.5rem, 0.95vw, 0.72rem);
   align-items: center;
   justify-items: start;
-  padding: clamp(1.06rem, 1.85vw, 1.38rem) clamp(1rem, 1.95vw, 1.35rem);
-  border: 1px solid rgba(65, 64, 66, 0.09);
+  padding: var(--services-breakdown-card-padding, clamp(1.06rem, 1.85vw, 1.38rem)) clamp(1rem, 1.95vw, 1.35rem);
+  border: var(--services-breakdown-card-border);
   border-radius: 20px;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.99) 0%, rgba(251, 251, 251, 0.99) 100%);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.92),
-    0 8px 20px rgba(31, 33, 34, 0.03);
+  box-shadow: var(--services-breakdown-card-shadow);
   text-align: left;
 }
 
@@ -3726,8 +3725,8 @@ p.home-services-feature-panel-body {
   max-width: 8ch;
   color: var(--ag-color-super-grey);
   font-family: var(--ag-font-heading);
-  font-size: clamp(1.82rem, 2.2vw, 2.22rem);
-  line-height: 0.98;
+  font-size: var(--services-breakdown-card-title-size, clamp(1.82rem, 2.2vw, 2.22rem));
+  line-height: var(--services-breakdown-card-title-line-height, 0.98);
   letter-spacing: clamp(-0.62px, -0.06vw, -0.12px);
   text-wrap: balance;
 }
@@ -3750,9 +3749,45 @@ p.home-services-feature-panel-body {
   margin: 0;
   color: var(--ag-color-super-grey);
   max-width: 34ch;
-  font-size: clamp(1.02rem, 1.08vw, 1.08rem);
-  line-height: 1.62;
+  font-size: var(--services-breakdown-card-body-size, clamp(1.02rem, 1.08vw, 1.08rem));
+  line-height: var(--services-breakdown-card-body-line-height, 1.62);
   text-wrap: pretty;
+}
+
+.services-breakdown-section .services-breakdown-header h2.is-atlantean,
+.services-breakdown-section .services-breakdown-panel h3.is-atlantean,
+.services-breakdown-section .services-breakdown-description.is-atlantean {
+  color: var(--ag-color-atlantean);
+}
+
+.services-breakdown-section .services-breakdown-header h2.is-mango,
+.services-breakdown-section .services-breakdown-panel h3.is-mango,
+.services-breakdown-section .services-breakdown-description.is-mango {
+  color: var(--ag-color-mango);
+}
+
+.services-breakdown-section .services-breakdown-header h2.is-melon,
+.services-breakdown-section .services-breakdown-panel h3.is-melon,
+.services-breakdown-section .services-breakdown-description.is-melon {
+  color: var(--ag-color-melon);
+}
+
+.services-breakdown-section .services-breakdown-header h2.is-sandstone,
+.services-breakdown-section .services-breakdown-panel h3.is-sandstone,
+.services-breakdown-section .services-breakdown-description.is-sandstone {
+  color: var(--ag-color-sandstone);
+}
+
+.services-breakdown-section .services-breakdown-header h2.is-super-grey,
+.services-breakdown-section .services-breakdown-panel h3.is-super-grey,
+.services-breakdown-section .services-breakdown-description.is-super-grey {
+  color: var(--ag-color-super-grey);
+}
+
+.services-breakdown-section .services-breakdown-header h2.is-white,
+.services-breakdown-section .services-breakdown-panel h3.is-white,
+.services-breakdown-section .services-breakdown-description.is-white {
+  color: var(--ag-color-white);
 }
 
 .services-breakdown-links {

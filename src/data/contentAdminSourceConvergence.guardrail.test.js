@@ -37,7 +37,7 @@ const ROOT_PRODUCT_PAGE_CUSTOM_RENDERER_REQUIREMENTS = Object.freeze({
   '/services': [
     ['hero_pie', 'hero_pie'],
     ['intro', 'billboard'],
-    ['services_cards', 'site_feature'],
+    ['services_cards', 'card_grid'],
     ['matters_band', 'billboard'],
     ['cta_form', 'cta_form'],
     ['testimonials', 'testimonials'],

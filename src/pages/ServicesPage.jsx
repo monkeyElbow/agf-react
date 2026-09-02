@@ -28,6 +28,7 @@ import {
   buildDynamicBillboardFromBlock,
   buildDynamicHeroPieFromBlock,
   buildDynamicIntroFromBlock,
+  buildDynamicGridFromBlock,
   buildDynamicSiteFeatureFromBlock,
   DEFAULT_SERVICE_HERO_PIE_SLICES,
   isExternalLinkHref,
@@ -67,6 +68,25 @@ const SERVICES_HUD_SECTION_KEY_BY_BLOCK_ID = {
   cta_form: 'cta',
   testimonials: 'testimonials',
 };
+
+function buildServicesBreakdownRuntime(block) {
+  const gridRuntime = buildDynamicGridFromBlock(block);
+  if (gridRuntime) {
+    return {
+      ...gridRuntime,
+      rows: (Array.isArray(gridRuntime.cards) ? gridRuntime.cards : []).map((card) => ({
+        ...card,
+        path: card.titleLink?.to || card.titleLink?.href || '',
+        description: card.body || card.bodyHtml || '',
+        links: (Array.isArray(card.links) ? card.links : []).map((item) => ({
+          ...item,
+          path: item.to || item.href || '',
+        })),
+      })),
+    };
+  }
+  return buildDynamicSiteFeatureFromBlock(block);
+}
 
 function clampFrontHudOpacity(value) {
   const numeric = Number(value);
@@ -232,7 +252,7 @@ export default function ServicesPage() {
   const servicesBreakdownBlock = useMemo(() => (
     managedBlocks.find((block) => (
       block?.id === 'services_cards'
-      && block?.kind === 'site_feature'
+      && ['card_grid', 'site_feature'].includes(block?.kind)
       && block?.mode === 'dynamic'
       && block?.hidden !== true
       && block?.hidden !== 'true'
@@ -248,7 +268,7 @@ export default function ServicesPage() {
     )) || null
   ), [managedBlocks]);
   const servicesBreakdownRuntime = useMemo(
-    () => buildDynamicSiteFeatureFromBlock(servicesBreakdownBlock),
+    () => buildServicesBreakdownRuntime(servicesBreakdownBlock),
     [servicesBreakdownBlock],
   );
   const servicesMattersRuntime = useMemo(
@@ -883,13 +903,47 @@ export default function ServicesPage() {
         ref={servicesBreakdownSectionRef}
         className={`${servicesBreakdownRuntime.sectionClassName || 'services-native-grid-wrap services-breakdown-section'}${getOwnershipVisualForBlockId('services_cards').className || ''}`}
         data-block-id="services_cards"
-        style={managedBlockOrderStyle('services_cards')}
+        style={{
+          ...managedBlockOrderStyle('services_cards'),
+          ...(Number.isFinite(Number(servicesBreakdownRuntime.headerSizeRem))
+            ? { '--services-breakdown-header-size': `${servicesBreakdownRuntime.headerSizeRem}rem` }
+            : {}),
+          ...(Number.isFinite(Number(servicesBreakdownRuntime.headerWidthPercent))
+            ? { '--services-breakdown-header-width': `${servicesBreakdownRuntime.headerWidthPercent}%` }
+            : {}),
+          ...(Number.isFinite(Number(servicesBreakdownRuntime.cardTitleSizeRem))
+            ? { '--services-breakdown-card-title-size': `${servicesBreakdownRuntime.cardTitleSizeRem}rem` }
+            : {}),
+          ...(Number.isFinite(Number(servicesBreakdownRuntime.cardTitleLineHeight))
+            ? { '--services-breakdown-card-title-line-height': servicesBreakdownRuntime.cardTitleLineHeight }
+            : {}),
+          ...(Number.isFinite(Number(servicesBreakdownRuntime.cardBodySizeRem))
+            ? { '--services-breakdown-card-body-size': `${servicesBreakdownRuntime.cardBodySizeRem}rem` }
+            : {}),
+          ...(Number.isFinite(Number(servicesBreakdownRuntime.cardBodyLineHeight))
+            ? { '--services-breakdown-card-body-line-height': servicesBreakdownRuntime.cardBodyLineHeight }
+            : {}),
+          ...(Number.isFinite(Number(servicesBreakdownRuntime.headerCardsSpaceRem))
+            ? { '--services-breakdown-header-cards-space': `${servicesBreakdownRuntime.headerCardsSpaceRem}rem` }
+            : {}),
+          ...(Number.isFinite(Number(servicesBreakdownRuntime.cardPaddingRem))
+            ? { '--services-breakdown-card-padding': `${servicesBreakdownRuntime.cardPaddingRem}rem` }
+            : {}),
+          '--services-breakdown-card-border': servicesBreakdownRuntime.cardOutline === false
+            ? 'none'
+            : '1px solid rgba(65, 64, 66, 0.09)',
+          '--services-breakdown-card-shadow': servicesBreakdownRuntime.cardShadow === false
+            ? 'none'
+            : 'inset 0 1px 0 rgba(255, 255, 255, 0.92), 0 8px 20px rgba(31, 33, 34, 0.03)',
+        }}
       >
         <BlockSurfaceLayers ownership={getOwnershipVisualForBlockId('services_cards')} hudAnchor={renderHudAnchor('services_cards')} />
         <div className="services-native-grid-bleed">
           <div className="services-breakdown-shell">
             <header className="services-breakdown-header fade-up">
-              <h2>{servicesBreakdownRuntime.title || 'What would you like to explore?'}</h2>
+              <h2 className={servicesBreakdownRuntime.titleClassName || `is-${servicesBreakdownRuntime.titleTone || 'super-grey'}`}>
+                {servicesBreakdownRuntime.title || 'What would you like to explore?'}
+              </h2>
             </header>
 
             <div className="services-breakdown-list">
@@ -899,7 +953,7 @@ export default function ServicesPage() {
                 className="services-breakdown-panel fade-up fade-up-force-observe"
                 data-service-breakdown-row={service.title}
               >
-                <h3>
+                <h3 className={service.titleClassName || `is-${servicesBreakdownRuntime.titleTone || 'super-grey'}`}>
                   {isExternalLinkHref(service.path) ? (
                     <a href={service.path} target="_blank" rel="noreferrer noopener">{service.title}</a>
                   ) : (
@@ -907,10 +961,12 @@ export default function ServicesPage() {
                   )}
                 </h3>
 
-                <p className="services-breakdown-description">{service.description}</p>
+                <p className={`services-breakdown-description ${service.bodyTone || `is-${servicesBreakdownRuntime.bodyTone || 'super-grey'}`}`}>
+                  {service.description}
+                </p>
 
                 <nav className="services-breakdown-links" aria-label={`${service.title} links`}>
-                  {service.links.map((item) => (
+                  {(Array.isArray(service.links) ? service.links : []).map((item) => (
                     isExternalLinkHref(item.path) ? (
                       <a key={item.label} href={item.path} target="_blank" rel="noreferrer noopener">{item.label}</a>
                     ) : (
