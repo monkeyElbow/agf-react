@@ -17,6 +17,8 @@ import {
   GENEROSITY_FUND_SNAPSHOT_MIGRATION_VERSION,
   SERVICES_MATTERS_PATH,
   SERVICES_MATTERS_BILLBOARD_MIGRATION_VERSION,
+  ABOUT_STRATEGY_PATH,
+  ABOUT_STRATEGY_BILLBOARD_MIGRATION_VERSION,
   SERVICES_DIRECTORY_PATH,
   SERVICES_DIRECTORY_MIGRATION_VERSION,
   SUPPORT_LIBRARY_PATH,
@@ -36,6 +38,8 @@ import {
   migrateSiteFeatureCollectionsState,
   migrateServicesMattersBillboardBlock,
   migrateServicesMattersBillboardState,
+  migrateAboutStrategyBillboardBlock,
+  migrateAboutStrategyBillboardState,
   migrateServicesDirectoryBlock,
   migrateServicesDirectoryState,
   migrateGenerosityFundSnapshot,
@@ -575,6 +579,79 @@ describe('content-admin snapshot migrations', () => {
     expect(migratedState.changed).toBe(true);
     expect(migratedState.state.blocksByPath[SERVICES_MATTERS_PATH][0].kind).toBe('billboard');
     expect(SERVICES_MATTERS_BILLBOARD_MIGRATION_VERSION).toBe(1);
+  });
+
+  it('converts the About strategy page content into a visually equivalent billboard', () => {
+    const legacyBlock = {
+      id: 'strategy',
+      name: 'Strategy',
+      kind: 'content',
+      mode: 'dynamic',
+      settings: {
+        title: 'Create a robust financial strategy for your ministry and your family.',
+        titleHighlightsJson: '[{"text":"your ministry","className":"is-atlantean"}]',
+        html: '<p>Supporting copy with <a href="/services">services</a>.</p>',
+        bodyFontSizeRem: 1.25,
+        bgTone: 'white',
+        textTone: 'dark',
+        contentMaxWidthPx: 980,
+        paddingTopRem: 2.4,
+        paddingBottomRem: 2.4,
+        sectionClassName: 'about-native-strategy',
+        buttonLabel: 'Explore all services',
+        buttonPageRef: '/services',
+      },
+    };
+
+    const migrated = migrateAboutStrategyBillboardBlock(ABOUT_STRATEGY_PATH, legacyBlock);
+
+    expect(migrated).toMatchObject({
+      id: 'strategy',
+      name: 'Strategy Billboard',
+      kind: 'billboard',
+      templateId: 'billboard',
+      presetId: 'default',
+      settings: {
+        title: legacyBlock.settings.title,
+        bodyHtml: legacyBlock.settings.html,
+        body: '',
+        bgTone: 'white',
+        textTone: 'dark',
+        justify: 'center',
+        bodyJustify: 'left',
+        titleFontFamily: 'helv',
+        titleSizeRem: 4.6,
+        bodyMaxWidthPx: 864,
+        leadCopySizeRem: 1.25,
+        sectionClassName: 'about-native-strategy',
+        buttonLabel: 'Explore all services',
+        buttonPageRef: '/services',
+      },
+    });
+    expect(migrated.settings.html).toBeUndefined();
+    expect(migrated.settings.bodyFontSizeRem).toBeUndefined();
+
+    const migratedState = migrateAboutStrategyBillboardState({
+      blocksByPath: { [ABOUT_STRATEGY_PATH]: [legacyBlock] },
+    });
+    expect(migratedState.changed).toBe(true);
+    expect(migratedState.state.blocksByPath[ABOUT_STRATEGY_PATH][0].kind).toBe('billboard');
+    expect(ABOUT_STRATEGY_BILLBOARD_MIGRATION_VERSION).toBe(2);
+
+    const alreadyConvertedWithoutLabel = {
+      ...migrated,
+      settings: {
+        ...migrated.settings,
+        buttonLabel: '',
+        buttonLinkJson: JSON.stringify({ kind: 'internal', to: '/services', openInNewWindow: false }),
+      },
+    };
+    const repaired = migrateAboutStrategyBillboardBlock(
+      ABOUT_STRATEGY_PATH,
+      alreadyConvertedWithoutLabel,
+    );
+    expect(repaired.settings.buttonLabel).toBe('Explore all services');
+    expect(repaired.settings.buttonPageRef).toBe('/services');
   });
 
   it('exposes repeatable site-feature copy without overwriting existing admin fields', () => {

@@ -47,6 +47,8 @@ import {
   SITE_FEATURE_COLLECTIONS_MIGRATION_VERSION,
   SERVICES_MATTERS_BILLBOARD_MIGRATION_ID,
   SERVICES_MATTERS_BILLBOARD_MIGRATION_VERSION,
+  ABOUT_STRATEGY_BILLBOARD_MIGRATION_ID,
+  ABOUT_STRATEGY_BILLBOARD_MIGRATION_VERSION,
   SERVICES_DIRECTORY_MIGRATION_ID,
   SERVICES_DIRECTORY_MIGRATION_VERSION,
   SUPPORT_LIBRARY_BLOCK_MIGRATION_ID,
@@ -69,6 +71,7 @@ import {
   migrateNumberedStepCardsState,
   migrateSiteFeatureCollectionsState,
   migrateServicesMattersBillboardState,
+  migrateAboutStrategyBillboardState,
   migrateServicesDirectoryState,
   migrateSupportLibraryState,
   migrateEndowmentsPresentationState,
@@ -3930,7 +3933,7 @@ export function createJsonContentStore({
       };
     },
 
-    migrateServicesMattersBillboardSnapshot({ actor, reason = '' } = {}) {
+  migrateServicesMattersBillboardSnapshot({ actor, reason = '' } = {}) {
       const normalizedActor = normalizeActor(actor);
       const normalizedReason = String(reason || '').trim();
       if (!normalizedActor || !normalizedReason) {
@@ -4006,6 +4009,88 @@ export function createJsonContentStore({
         migration: {
           id: SERVICES_MATTERS_BILLBOARD_MIGRATION_ID,
           version: SERVICES_MATTERS_BILLBOARD_MIGRATION_VERSION,
+          didMigrate: changed,
+          alreadyApplied: false,
+        },
+      };
+    },
+
+    migrateAboutStrategyBillboardSnapshot({ actor, reason = '' } = {}) {
+      const normalizedActor = normalizeActor(actor);
+      const normalizedReason = String(reason || '').trim();
+      if (!normalizedActor || !normalizedReason) {
+        return { ok: false, error: 'migration-actor-and-reason-required', ...publishSnapshot() };
+      }
+
+      const currentVersion = Number(
+        record.snapshotMigrations?.[ABOUT_STRATEGY_BILLBOARD_MIGRATION_ID] || 0,
+      );
+      if (currentVersion >= ABOUT_STRATEGY_BILLBOARD_MIGRATION_VERSION) {
+        return {
+          ok: true,
+          ...publishSnapshot(),
+          migration: {
+            id: ABOUT_STRATEGY_BILLBOARD_MIGRATION_ID,
+            version: ABOUT_STRATEGY_BILLBOARD_MIGRATION_VERSION,
+            didMigrate: false,
+            alreadyApplied: true,
+          },
+        };
+      }
+
+      const stateMigration = migrateAboutStrategyBillboardState(record.state);
+      const baseMigration = migrateAboutStrategyBillboardState(record.baseSnapshot);
+      const changed = Boolean(stateMigration.changed || baseMigration.changed);
+      let backup = null;
+      if (changed) {
+        try {
+          backup = createSharedContentBackup('before-about-strategy-billboard-migration', {
+            action: 'about-strategy-billboard-migration',
+            migrationId: ABOUT_STRATEGY_BILLBOARD_MIGRATION_ID,
+            migrationVersion: ABOUT_STRATEGY_BILLBOARD_MIGRATION_VERSION,
+            actor: normalizedActor,
+            operationReason: normalizedReason,
+          });
+        } catch (error) {
+          return {
+            ok: false,
+            error: 'backup-failed',
+            details: error instanceof Error ? error.message : 'backup-failed',
+            ...publishSnapshot(),
+          };
+        }
+      }
+
+      const timestamp = now();
+      const previousState = record.state;
+      record = {
+        ...record,
+        initialized: true,
+        updatedAt: timestamp,
+        state: normalizeSharedState(stateMigration.state),
+        baseSnapshot: normalizeSharedState(baseMigration.state),
+        snapshotMigrations: {
+          ...(record.snapshotMigrations || {}),
+          [ABOUT_STRATEGY_BILLBOARD_MIGRATION_ID]: ABOUT_STRATEGY_BILLBOARD_MIGRATION_VERSION,
+        },
+      };
+      if (changed) {
+        addRevisionsForChangedPaths(previousState, record.state, {
+          actor: normalizedActor,
+          reason: normalizedReason,
+          summary: 'About strategy page content to billboard migration',
+        });
+      }
+      persistRecord();
+      return {
+        ok: true,
+        actor: normalizedActor,
+        reason: normalizedReason,
+        backup,
+        ...publishSnapshot(),
+        migration: {
+          id: ABOUT_STRATEGY_BILLBOARD_MIGRATION_ID,
+          version: ABOUT_STRATEGY_BILLBOARD_MIGRATION_VERSION,
           didMigrate: changed,
           alreadyApplied: false,
         },

@@ -13043,58 +13043,7 @@ p.impact-proof-story-proof-body {
 }
 
 .native-info-page--about .about-native-strategy {
-  --about-strategy-rhythm: clamp(2rem, 3.8vw, 2.8rem);
-  background: #ffffff;
-  padding-top: clamp(2.25rem, 4.6vw, 3.65rem);
-  padding-bottom: clamp(2.8rem, 4.6vw, 4rem);
-}
-
-.native-info-page--about .about-native-strategy > .ag-panel-rail {
-  width: min(var(--ag-panel-content-max), calc(100% - (var(--ag-panel-effective-gutter, var(--ag-panel-gutter)) * 2)));
-}
-
-.native-info-page--about .about-native-strategy .native-info-section-copy {
-  width: 100%;
-  display: grid;
-  justify-items: center;
-  margin: 0 auto;
   text-align: center;
-}
-
-.native-info-page--about .about-native-strategy .native-info-section-copy > h2 {
-  margin: 0 0 var(--about-strategy-rhythm);
-  font-family: var(--ag-font-helv);
-  font-size: clamp(2.6rem, 5.8vw, 4.6rem);
-  font-weight: 700;
-  line-height: 0.99;
-  letter-spacing: -0.045em;
-  text-align: center;
-}
-
-.native-info-page--about .about-native-strategy .native-info-section-copy > h2 mark.is-atlantean {
-  color: var(--ag-color-atlantean);
-}
-
-.native-info-page--about .about-native-strategy .native-info-section-copy > h2 mark.is-mango {
-  color: var(--ag-color-mango);
-}
-
-.native-info-page--about .about-native-strategy .native-info-rich-html {
-  width: min(100%, 54rem);
-  max-width: 54rem;
-  justify-self: center;
-  margin: 0 auto;
-  text-align: left;
-}
-
-.native-info-page--about .about-native-strategy .native-info-rich-html p {
-  width: 100%;
-  margin: 0;
-  text-align: left;
-  color: var(--ag-color-super-grey);
-  font-size: clamp(1.06rem, 1.8vw, 1.46rem);
-  line-height: 1.58;
-  text-wrap: pretty;
 }
 
 .native-info-page--about .about-native-strategy .native-info-rich-html a {

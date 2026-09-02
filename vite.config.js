@@ -512,6 +512,15 @@ function contentAdminDevPlugin() {
             return;
           }
 
+          if (url.pathname === '/migrate-about-strategy-billboard') {
+            const result = contentStore.migrateAboutStrategyBillboardSnapshot({
+              actor: body.actor,
+              reason: body.reason,
+            });
+            sendJson(res, result.ok ? 200 : 409, result);
+            return;
+          }
+
           if (url.pathname === '/migrate-services-directory') {
             const result = contentStore.migrateServicesDirectorySnapshot({
               actor: body.actor,

@@ -359,6 +359,21 @@ export default function FrontHudPageWorkflow({
           : pathPublishResult?.updatedAt
             ? 'Live publish complete'
             : 'Live site has not been updated by Make live';
+  const shouldShowPublishFeedback = Boolean(
+    publishError
+    || [
+      PUBLISH_STATUS.SAVING_DRAFT,
+      PUBLISH_STATUS.PUBLISHING,
+      PUBLISH_STATUS.VERIFYING,
+      PUBLISH_STATUS.STATUS_UNKNOWN,
+      PUBLISH_STATUS.LIVE_CONFIRMED,
+      PUBLISH_STATUS.PUBLISH_FAILED,
+    ].includes(sharedPublishStatus)
+    || ['published', 'partially-published', 'blocked', 'failed', 'already-live'].includes(pathPublishResult?.status)
+  );
+  const compactWorkflowFeedbackLabel = shouldShowPublishFeedback
+    ? publishFeedbackLabel
+    : saveFeedbackLabel;
   const saveActivityLabel = hasUnpublishedChanges && pathSaveResult?.updatedAt
     ? `Last draft save ${formatRelativeTime(pathSaveResult.updatedAt)}`
     : '';
@@ -851,7 +866,7 @@ export default function FrontHudPageWorkflow({
           {isBlockHidden ? (
             <span className="admin-front-hud-page-workflow-hidden-state" role="status">Hidden from visitors</span>
           ) : null}
-          <span className={`admin-front-hud-page-workflow-save-state${saveError || sharedSyncFailureLabel ? ' is-error' : ''}`} role="status" aria-live="polite">{saveFeedbackLabel}</span>
+          <span className={`admin-front-hud-page-workflow-save-state${saveError || publishError || sharedSyncFailureLabel ? ' is-error' : ''}`} role="status" aria-live="polite">{compactWorkflowFeedbackLabel}</span>
           {showDraftActions ? (
             <button type="button" className="admin-front-hud-page-workflow-action" onClick={handleSaveDraft} disabled={!canSaveDraft} title={saveFeedbackLabel}>
               {isSaving ? 'Saving…' : saveDraftActionLabel}

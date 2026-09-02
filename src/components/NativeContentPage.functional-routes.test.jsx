@@ -1025,6 +1025,8 @@ describe('NativeContentPage functional routes', () => {
 
     const strategySection = document.querySelector('.about-native-strategy');
     expect(strategySection).toBeTruthy();
+    expect(strategySection?.className).toContain('dynamic-billboard');
+    expect(strategySection?.getAttribute('data-block-id')).toBe('strategy');
     expect(within(strategySection).getByText(/Create a robust financial strategy for/i)).toBeTruthy();
     expect(within(strategySection).getByRole('link', { name: 'loans' }).getAttribute('href')).toBe('/services/loans');
     expect(within(strategySection).getByRole('link', { name: 'investments' }).getAttribute('href')).toBe('/services/investments');

@@ -613,7 +613,7 @@ describe('implementation-ownership.service-native style ownership', () => {
       'height: clamp(430px, 53vw, 760px);',
       'transform: translate3d(0, var(--about-building-parallax-y), 0) scale(1.14);',
       '.native-info-page--about .about-native-strategy {',
-      'padding-top: clamp(2.25rem, 4.6vw, 3.65rem);',
+      'text-align: center;',
       '.native-info-page--about .about-native-values {',
       '--investments-growth-display-size: clamp(3.8rem, 8.2vw, 6.35rem);',
       '.native-info-page--about .about-native-values .investments-native-growth-grid {',
@@ -627,5 +627,7 @@ describe('implementation-ownership.service-native style ownership', () => {
     ].forEach((expectedSelector) => {
       expect(source).toContain(expectedSelector);
     });
+    expect(source).not.toContain('font-size: clamp(2.6rem, 5.8vw, 4.6rem);');
+    expect(source).not.toContain('font-size: clamp(1.06rem, 1.8vw, 1.46rem);');
   });
 });

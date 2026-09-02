@@ -810,6 +810,51 @@ describe('FrontHudPageWorkflow', () => {
     });
   });
 
+  it('shows live publish confirmation in the compact command bar after Make live succeeds', () => {
+    mockDirty = false;
+    mockChangeSummary = {
+      changedBlockCount: 0,
+      hasOrderChanges: false,
+      hasPageMetaChanges: false,
+      hasUnsavedChanges: false,
+    };
+    mockPublishSummary = {
+      changedBlockCount: 0,
+      changedBlockIds: [],
+      hasOrderChanges: false,
+      hasPageMetaChanges: false,
+      hasUnsavedChanges: false,
+    };
+    mockSharedSyncStatus = {
+      isPending: false,
+      pendingMutationCount: 0,
+      hasQueuedDraftSync: false,
+      lastQueuedAt: 0,
+      lastSettledAt: Date.now(),
+      lastAppliedAt: Date.now(),
+    };
+    mockLastSharedPublishResult = {
+      status: 'published',
+      didPublish: true,
+      changedPaths: ['/services/loans'],
+      publishedPaths: ['/services/loans'],
+      publishedBlockIdsByPath: { '/services/loans': ['hero'] },
+      blockedBlocks: [],
+      updatedAt: Date.now(),
+    };
+
+    render(
+      <FrontHudPageWorkflow
+        pathname="/services/loans"
+        reviewHref="/admin/content?page=%2Fservices%2Floans"
+        placement="dock-inline"
+      />,
+    );
+
+    expect(screen.getByRole('status').textContent).toContain('Live publish complete');
+    expect(screen.queryByText('Draft saved to shared content; confirming status...')).toBeNull();
+  });
+
   it('toggles Billboard live preview without closing the editor', () => {
     const handleToggleLivePreview = vi.fn();
 

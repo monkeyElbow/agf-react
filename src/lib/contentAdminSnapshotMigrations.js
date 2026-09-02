@@ -55,6 +55,10 @@ export const SERVICES_MATTERS_BILLBOARD_MIGRATION_ID = 'services-matters-billboa
 export const SERVICES_MATTERS_BILLBOARD_MIGRATION_VERSION = 1;
 export const SERVICES_MATTERS_PATH = '/services';
 
+export const ABOUT_STRATEGY_BILLBOARD_MIGRATION_ID = 'about-strategy-billboard-block';
+export const ABOUT_STRATEGY_BILLBOARD_MIGRATION_VERSION = 2;
+export const ABOUT_STRATEGY_PATH = '/about-us';
+
 export const SERVICES_DIRECTORY_MIGRATION_ID = 'services-breakdown-card-grid';
 export const SERVICES_DIRECTORY_MIGRATION_VERSION = 1;
 export const SERVICES_DIRECTORY_PATH = '/services';
@@ -519,6 +523,88 @@ export function migrateServicesMattersBillboardState(rawState) {
     Object.entries(source.blocksByPath || {}).map(([pathname, blocks]) => {
       const migratedBlocks = (Array.isArray(blocks) ? blocks : [])
         .map((block) => migrateServicesMattersBillboardBlock(pathname, block));
+      if (JSON.stringify(migratedBlocks) !== JSON.stringify(blocks)) {
+        changed = true;
+      }
+      return [pathname, migratedBlocks];
+    }),
+  );
+  return {
+    state: changed ? { ...source, blocksByPath } : source,
+    changed,
+  };
+}
+
+export function migrateAboutStrategyBillboardBlock(pathname, block) {
+  const source = cloneJson(block);
+  const settings = source?.settings && typeof source.settings === 'object'
+    ? source.settings
+    : {};
+  if (
+    String(pathname || '').trim() !== ABOUT_STRATEGY_PATH
+    || String(source?.id || '').trim() !== 'strategy'
+    || !['content', 'billboard'].includes(String(source?.kind || '').trim())
+    || String(source?.mode || '').trim() !== 'dynamic'
+    || (
+      String(source?.kind || '').trim() === 'billboard'
+      && String(settings.buttonLabel || '').trim()
+      && String(settings.buttonLinkJson || '').trim()
+    )
+  ) {
+    return source;
+  }
+
+  const hasBodyFontSize = settings.bodyFontSizeRem !== null
+    && settings.bodyFontSizeRem !== ''
+    && Number.isFinite(Number(settings.bodyFontSizeRem));
+  const legacyButtonLink = migrateServicesMattersButtonLink(settings);
+  const nextSettings = {
+    title: String(settings.title || '').trim(),
+    titleClassName: String(settings.titleClassName || '').trim(),
+    titleHighlightsJson: String(settings.titleHighlightsJson || '').trim(),
+    subtitle: String(settings.subtitle || '').trim(),
+    bodyHtml: String(settings.html || settings.bodyHtml || '').trim(),
+    body: '',
+    bodyColorClassName: String(settings.bodyColorClassName || '').trim(),
+    bgTone: String(settings.bgTone || '').trim() || 'white',
+    textTone: String(settings.textTone || '').trim() || 'dark',
+    justify: 'center',
+    bodyJustify: 'left',
+    titleFontFamily: 'helv',
+    titleFontWeight: 700,
+    titleSizeRem: 4.6,
+    titleLetterSpacingEm: -0.045,
+    lineSpacing: 0.99,
+    headerGapRem: 2.4,
+    bodyMaxWidthPx: 864,
+    contentMaxWidthPx: Number.isFinite(Number(settings.contentMaxWidthPx))
+      ? Number(settings.contentMaxWidthPx)
+      : 980,
+    paddingTopRem: 3.65,
+    paddingBottomRem: 4,
+    sectionClassName: String(settings.sectionClassName || '').trim() || 'about-native-strategy',
+    leadCopySizeRem: hasBodyFontSize ? Number(settings.bodyFontSizeRem) : 1.46,
+    buttonLabel: String(settings.buttonLabel || '').trim() || 'Explore all services',
+    ...legacyButtonLink,
+  };
+
+  return {
+    ...source,
+    name: 'Strategy Billboard',
+    kind: 'billboard',
+    templateId: 'billboard',
+    presetId: String(source.presetId || '').trim() || 'default',
+    settings: nextSettings,
+  };
+}
+
+export function migrateAboutStrategyBillboardState(rawState) {
+  const source = cloneJson(rawState) || {};
+  let changed = false;
+  const blocksByPath = Object.fromEntries(
+    Object.entries(source.blocksByPath || {}).map(([pathname, blocks]) => {
+      const migratedBlocks = (Array.isArray(blocks) ? blocks : [])
+        .map((block) => migrateAboutStrategyBillboardBlock(pathname, block));
       if (JSON.stringify(migratedBlocks) !== JSON.stringify(blocks)) {
         changed = true;
       }

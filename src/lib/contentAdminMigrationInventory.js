@@ -127,6 +127,14 @@ export const CONTENT_ADMIN_MIGRATION_ADAPTERS = Object.freeze([
     retireWhen: 'Retired after the Services directory uses the editable card-grid preset in active, base, revision, backup, and seed snapshots.',
   },
   {
+    id: 'about-strategy-billboard-block',
+    category: 'content-migration',
+    paths: Object.freeze(['/about-us']),
+    helpers: Object.freeze(['migrateAboutStrategyBillboardState']),
+    affectedLayers: AFFECTED_LAYERS,
+    retireWhen: 'Retired after the About strategy section uses the shared Billboard contract in active, base, revision, backup, and seed snapshots.',
+  },
+  {
     id: 'support-library-block-kind',
     category: 'schema-migration',
     paths: Object.freeze(['/services/insurance/ministers-group-life-plan']),

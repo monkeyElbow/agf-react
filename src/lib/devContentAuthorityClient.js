@@ -541,6 +541,16 @@ export async function migrateServicesMattersBillboardSnapshot(actor = null, reas
   });
 }
 
+export async function migrateAboutStrategyBillboardSnapshot(actor = null, reason = '') {
+  return sendJson('/migrate-about-strategy-billboard', {
+    method: 'POST',
+    body: JSON.stringify({
+      actor: cloneJson(actor),
+      reason: String(reason || '').trim(),
+    }),
+  });
+}
+
 export async function migrateServicesDirectorySnapshot(actor = null, reason = '') {
   return sendJson('/migrate-services-directory', {
     method: 'POST',
