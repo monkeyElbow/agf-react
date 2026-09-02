@@ -51,6 +51,10 @@ export const NUMBERED_STEP_CARDS_MIGRATION_VERSION = 1;
 export const SITE_FEATURE_COLLECTIONS_MIGRATION_ID = 'site-feature-repeatable-content-fields';
 export const SITE_FEATURE_COLLECTIONS_MIGRATION_VERSION = 1;
 
+export const SERVICES_MATTERS_BILLBOARD_MIGRATION_ID = 'services-matters-billboard-block';
+export const SERVICES_MATTERS_BILLBOARD_MIGRATION_VERSION = 1;
+export const SERVICES_MATTERS_PATH = '/services';
+
 export const SUPPORT_LIBRARY_BLOCK_MIGRATION_ID = 'support-library-block-kind';
 export const SUPPORT_LIBRARY_BLOCK_MIGRATION_VERSION = 1;
 export const SUPPORT_LIBRARY_PATH = '/services/insurance/ministers-group-life-plan';
@@ -421,6 +425,107 @@ const SITE_FEATURE_COLLECTION_FIELD_BY_ID = Object.freeze({
   retirement_plan_feature: 'panelsJson',
   investments_growth_feature: 'panelsJson',
 });
+
+function migrateServicesMattersButtonLink(settings) {
+  const rawLink = String(settings?.buttonLinkJson || '').trim();
+  if (rawLink) {
+    try {
+      const link = JSON.parse(rawLink);
+      if (link && typeof link === 'object') {
+        if (String(link.kind || '').trim().toLowerCase() === 'internal') {
+          return {
+            buttonUrl: '',
+            buttonPageRef: String(link.to || '').trim(),
+            buttonOpenInNewWindow: Boolean(link.openInNewWindow),
+          };
+        }
+        if (String(link.kind || '').trim().toLowerCase() === 'external') {
+          return {
+            buttonUrl: String(link.href || '').trim(),
+            buttonPageRef: '',
+            buttonOpenInNewWindow: Boolean(link.openInNewWindow),
+          };
+        }
+      }
+    } catch {
+      // Fall through to the legacy field values below.
+    }
+  }
+  return {
+    buttonUrl: String(settings?.buttonUrl || '').trim(),
+    buttonPageRef: String(settings?.buttonPageRef || '').trim(),
+    buttonOpenInNewWindow: Boolean(settings?.buttonOpenInNewWindow),
+  };
+}
+
+export function migrateServicesMattersBillboardBlock(pathname, block) {
+  const source = cloneJson(block);
+  const settings = source?.settings && typeof source.settings === 'object'
+    ? source.settings
+    : {};
+  if (
+    String(pathname || '').trim() !== SERVICES_MATTERS_PATH
+    || String(source?.id || '').trim() !== 'matters_band'
+    || String(source?.kind || '').trim() !== 'site_feature'
+    || String(source?.mode || '').trim() !== 'dynamic'
+    || String(settings.featureId || '').trim() !== 'services_matters_band'
+  ) {
+    return source;
+  }
+
+  const body = String(settings.body || '').trim();
+  const legacyLink = migrateServicesMattersButtonLink(settings);
+  const nextSettings = {
+    title: String(settings.title || '').trim() || 'What you do matters.',
+    titleClassName: String(settings.titleClassName || '').trim(),
+    titleHighlightsJson: String(settings.titleHighlightsJson || '').trim()
+      || JSON.stringify([{ text: 'matters', className: 'is-white' }]),
+    subtitle: String(settings.subtitle || '').trim(),
+    bodyHtml: String(settings.bodyHtml || '').trim() || (body ? `<p>${escapeHtml(body)}</p>` : ''),
+    body: '',
+    bgTone: String(settings.bgTone || '').trim() || 'blue',
+    textTone: String(settings.textTone || '').trim() || 'white',
+    justify: String(settings.justify || '').trim() || 'center',
+    bodyJustify: String(settings.bodyJustify || '').trim() || 'center',
+    lineSpacing: Number.isFinite(Number(settings.lineSpacing)) ? Number(settings.lineSpacing) : 1,
+    headerGapRem: String(settings.headerGapRem || '').trim(),
+    titleFontFamily: String(settings.titleFontFamily || '').trim() || 'helv',
+    titleFontWeight: Number.isFinite(Number(settings.titleFontWeight)) ? Number(settings.titleFontWeight) : 700,
+    titleSizeRem: Number.isFinite(Number(settings.titleSizeRem)) ? Number(settings.titleSizeRem) : 4.3,
+    titleLetterSpacingEm: Number.isFinite(Number(settings.titleLetterSpacingEm)) ? Number(settings.titleLetterSpacingEm) : -0.038,
+    buttonLabel: String(settings.buttonLabel || '').trim(),
+    ...legacyLink,
+    sectionClassName: String(settings.sectionClassName || '').trim() || 'services-native-matters',
+  };
+
+  return {
+    ...source,
+    name: 'What You Do Matters Billboard',
+    kind: 'billboard',
+    templateId: 'billboard',
+    presetId: String(source.presetId || '').trim() || 'default',
+    settings: nextSettings,
+  };
+}
+
+export function migrateServicesMattersBillboardState(rawState) {
+  const source = cloneJson(rawState) || {};
+  let changed = false;
+  const blocksByPath = Object.fromEntries(
+    Object.entries(source.blocksByPath || {}).map(([pathname, blocks]) => {
+      const migratedBlocks = (Array.isArray(blocks) ? blocks : [])
+        .map((block) => migrateServicesMattersBillboardBlock(pathname, block));
+      if (JSON.stringify(migratedBlocks) !== JSON.stringify(blocks)) {
+        changed = true;
+      }
+      return [pathname, migratedBlocks];
+    }),
+  );
+  return {
+    state: changed ? { ...source, blocksByPath } : source,
+    changed,
+  };
+}
 
 function editableActionPath(action) {
   return String(action?.to || action?.href || '').trim();

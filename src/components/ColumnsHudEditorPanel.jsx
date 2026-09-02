@@ -875,17 +875,6 @@ function GenericColumnsHudEditorPanel({
           <div className="admin-front-hud-card-head">
             <strong>Style</strong>
           </div>
-          <div className="admin-front-hud-row">
-            <span>Background</span>
-            <ColorPalette
-              variant="hud"
-              className="is-compact is-icon-only"
-              ariaLabel="Columns background"
-              options={bgOptions}
-              value={String(settings.bgTone || 'sand').trim().toLowerCase() || 'sand'}
-              onChange={(nextValue) => onSettingChange('bgTone', nextValue)}
-            />
-          </div>
           <SegmentField
             label="Justify"
             value={String(settings.justify || 'center').trim().toLowerCase() || 'center'}

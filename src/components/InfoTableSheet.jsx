@@ -36,7 +36,7 @@ function renderCellContent(cell, renderList = false) {
 
   return (
     <ul className="info-table-sheet__cell-list">
-      {lines.map((line) => <li key={line}>{line}</li>)}
+      {lines.map((line, lineIndex) => <li key={`${line}-${lineIndex + 1}`}>{line}</li>)}
     </ul>
   );
 }

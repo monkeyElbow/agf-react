@@ -767,6 +767,14 @@ describe('AdminContentPage shared save workflow', () => {
       </MemoryRouter>,
     );
 
+    const saveButton = screen.getByRole('button', { name: 'Save all page drafts' });
+    expect(saveButton.disabled).toBe(false);
+    fireEvent.click(saveButton);
+
+    await waitFor(() => {
+      expect(mockSaveSharedDraftNow).toHaveBeenCalledWith('');
+    });
+
     const makeLiveButton = screen.getByRole('button', { name: 'Make live' });
     expect(makeLiveButton.disabled).toBe(false);
 

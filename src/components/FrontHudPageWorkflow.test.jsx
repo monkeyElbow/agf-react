@@ -286,6 +286,43 @@ describe('FrontHudPageWorkflow', () => {
     });
   });
 
+  it('does not let an unrelated page draft hide the active block save action', () => {
+    mockDirty = false;
+    mockChangeSummary = {
+      changedBlockCount: 1,
+      hasOrderChanges: false,
+      hasPageMetaChanges: false,
+      hasUnsavedChanges: true,
+    };
+    mockPublishSummary = {
+      changedBlockCount: 1,
+      changedBlockIds: ['hero'],
+      hasOrderChanges: false,
+      hasPageMetaChanges: false,
+      hasUnsavedChanges: true,
+    };
+    mockSharedSyncStatus = {
+      ...mockSharedSyncStatus,
+      isPending: false,
+      hasQueuedDraftSync: false,
+    };
+    mockWorkflowActivity = {
+      hasCurrentActorDraft: false,
+      hasOtherActorDraft: true,
+      otherActorBlocks: [{ blockId: 'other-block', state: 'drafted-other' }],
+    };
+
+    render(
+      <FrontHudPageWorkflow
+        pathname="/about-us"
+        blockId="hero"
+        placement="dock-inline"
+      />,
+    );
+
+    expect(screen.getByRole('button', { name: 'Save block draft' }).disabled).toBe(false);
+  });
+
   it('hides the active block through the shared draft path from the HUD command bar', () => {
     mockDirty = false;
     mockChangeSummary = {
@@ -867,6 +904,27 @@ describe('FrontHudPageWorkflow', () => {
     await waitFor(() => {
       expect(screen.getByRole('button', { name: 'Take over draft' }).disabled).toBe(false);
     });
+  });
+
+  it('hides block draft save while another admin owns the block and exposes takeover', () => {
+    mockWorkflowActivity = {
+      hasCurrentActorDraft: false,
+      hasOtherActorDraft: true,
+      otherActorBlocks: [{ blockId: 'hero' }],
+    };
+
+    render(
+      <FrontHudPageWorkflow
+        pathname="/test"
+        blockId="hero"
+        placement="dock-inline"
+        ownership={{ state: 'drafted-other', isOwnedByOther: true }}
+        onOwnershipAction={vi.fn()}
+      />,
+    );
+
+    expect(screen.queryByRole('button', { name: 'Save block draft' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Take over draft' })).toBeTruthy();
   });
 
   it('publishes the page when a selected block carries the page order change', async () => {

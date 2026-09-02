@@ -16,6 +16,7 @@ vi.mock('../lib/devContentAuthorityClient', () => ({
   fetchSharedContentSnapshot: mockFetchSharedContentSnapshot,
   fetchSharedPageRevisionHistory: vi.fn(),
   initializeSharedContentFromSeed: mockInitializeSharedContentFromSeed,
+  isDevContentAuthorityCircuitOpen: () => false,
   isDevContentAuthorityEnabled: () => true,
   publishSharedPage: vi.fn(),
   promoteSharedContentToSeed: mockPromoteSharedContentToSeed,

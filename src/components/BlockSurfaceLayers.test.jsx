@@ -61,11 +61,11 @@ describe('BlockSurfaceLayers', () => {
 
   it('is the shared layer entry point for canonical and native block renderers', () => {
     expect(pageBlocksRendererSource).toContain("import BlockSurfaceLayers from '../BlockSurfaceLayers';");
-    expect(pageBlocksRendererSource).toContain('<BlockSurfaceLayers\n          ownership={ownership}\n          hudAnchor={hudAnchor}\n          backgroundEffects={shouldAnimateColumnsItems ? (');
+    expect(pageBlocksRendererSource).toContain('<BlockSurfaceLayers\n          ownership={ownership}\n          hudAnchor={hudAnchor}\n          backgroundEffects={(');
     expect(pageBlocksRendererSource).not.toContain('<BlockOwnershipOverlay ownership={ownership} />');
     expect(nativeContentPageSource).toContain("import BlockSurfaceLayers from './BlockSurfaceLayers';");
-    expect(nativeContentPageSource).toContain('<BlockSurfaceLayers ownership={getOwnershipVisualForBlockId(dynamicHeroBlock?.id)} />');
-    expect(nativeContentPageSource).toContain('<BlockSurfaceLayers ownership={sectionOwnership} />');
+    expect(nativeContentPageSource).toContain('backgroundEffects={<BlockBackgroundEffects effects={resolveBlockBackgroundEffects(dynamicHeroBlock, renderedHero?.backgroundEffects)} />}');
+    expect(nativeContentPageSource).toContain('backgroundEffects={<BlockBackgroundEffects effects={resolveBlockBackgroundEffects(dynamicSectionBlock, sectionHero?.backgroundEffects)} />}');
     expect(nativeContentPageSource).not.toContain('<BlockOwnershipOverlay ownership={sectionOwnership} />');
     specialRouteSurfaceSources.forEach((source) => {
       expect(source).toContain('BlockSurfaceLayers');

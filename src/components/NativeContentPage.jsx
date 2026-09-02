@@ -77,6 +77,7 @@ import {
 import { CALCULATOR_INTRO_KIND, CALCULATOR_WIDGET_KIND } from '../lib/calculatorWidgetIdentity';
 import { normalizeBlockForRender } from '../lib/blockPresentationContracts';
 import { resolveNumberedStepCardsClassName } from '../lib/numberedStepCardsContract';
+import { normalizeBackgroundEffects } from '../lib/backgroundEffects';
 import {
   DEFAULT_DYNAMIC_GRID_CARD_BULLET_LINE_HEIGHT,
   DEFAULT_DYNAMIC_GRID_CARD_BULLET_SIZE_REM,
@@ -218,6 +219,16 @@ const US_STATE_LABELS = {
   WI: 'Wisconsin',
   WY: 'Wyoming',
 };
+
+function resolveBlockBackgroundEffects(block, runtimeEffects = null) {
+  const runtime = normalizeBackgroundEffects(runtimeEffects);
+  if (runtime.enabled) {
+    return runtime;
+  }
+  return normalizeBackgroundEffects(
+    block?.settings?.backgroundEffectsJson ?? block?.backgroundEffectsJson ?? '',
+  );
+}
 
 const MOBILE_FRONT_HUD_MEDIA_QUERY = '(max-width: 760px)';
 
@@ -1791,12 +1802,32 @@ function buildDynamicSiteFeatureSection(block, pathname) {
     return null;
   }
   const blockId = String(block?.id || '').trim() || undefined;
+  const isHistoryGallery = runtime.runtimeKey === 'about_history_feature';
   const baseSection = {
     id: `${pathname}-dynamic-site-feature-${String(block.id || 'site-feature').trim() || 'site-feature'}`,
     blockId,
-    className: `${pathname === '/test' ? 'test-dynamic-site-feature' : 'native-dynamic-site-feature'}${runtime.sectionClassName ? ` ${runtime.sectionClassName}` : ''}`,
+    className: [
+      pathname === '/test' ? 'test-dynamic-site-feature' : 'native-dynamic-site-feature',
+      runtime.sectionClassName,
+      isHistoryGallery ? `is-title-${runtime.titleTone || 'super-grey'}` : '',
+      isHistoryGallery ? `is-body-${runtime.bodyTone || 'super-grey'}` : '',
+    ].filter(Boolean).join(' '),
     siteFeatureRuntime: runtime,
     featureIntro: runtime.featureIntro || undefined,
+    sectionStyle: isHistoryGallery ? {
+      ...(Number.isFinite(Number(runtime.cardTitleSizeRem))
+        ? { '--dynamic-grid-card-title-size': `${runtime.cardTitleSizeRem}rem` }
+        : {}),
+      ...(Number.isFinite(Number(runtime.cardTitleLineHeight))
+        ? { '--dynamic-grid-card-title-line-height': String(runtime.cardTitleLineHeight) }
+        : {}),
+      ...(Number.isFinite(Number(runtime.cardBodySizeRem))
+        ? { '--dynamic-grid-card-body-size': `${runtime.cardBodySizeRem}rem` }
+        : {}),
+      ...(Number.isFinite(Number(runtime.cardBodyLineHeight))
+        ? { '--dynamic-grid-card-body-line-height': String(runtime.cardBodyLineHeight) }
+        : {}),
+    } : undefined,
   };
 
   if (runtime.runtimeKey === 'about_history_feature') {
@@ -6132,7 +6163,10 @@ export default function NativeContentPage({ page }) {
           data-mobile-front-hud-selected={isMobileHudPanelSelected(heroHudPanelId) ? 'true' : undefined}
           data-mobile-front-hud-label={showHeroHud && isMobileFrontHud ? (heroHudPanel?.label || 'Hero') : undefined}
         >
-          <BlockSurfaceLayers ownership={getOwnershipVisualForBlockId(dynamicHeroBlock?.id)} />
+          <BlockSurfaceLayers
+            ownership={getOwnershipVisualForBlockId(dynamicHeroBlock?.id)}
+            backgroundEffects={<BlockBackgroundEffects effects={resolveBlockBackgroundEffects(dynamicHeroBlock, renderedHero?.backgroundEffects)} />}
+          />
           <div className="ag-panel-rail" style={heroRailStyle}>
             <HeroTitle hero={renderedHero || { title: page.title }} />
             {showHeroInlineHudEditor ? (
@@ -6249,7 +6283,7 @@ export default function NativeContentPage({ page }) {
         >
           <BlockSurfaceLayers
             ownership={getOwnershipVisualForBlockId(dynamicIntroBlock?.id)}
-            backgroundEffects={<BlockBackgroundEffects effects={introConfig?.backgroundEffects} />}
+            backgroundEffects={<BlockBackgroundEffects effects={resolveBlockBackgroundEffects(dynamicIntroBlock, introConfig?.backgroundEffects)} />}
           />
           <div className="ag-panel-rail">
             <div className={`service-native-intro-shell${introSplit ? ' has-media' : ''}`}>
@@ -6448,6 +6482,9 @@ export default function NativeContentPage({ page }) {
           return null;
         }
         const dynamicSectionPanel = dynamicSectionBlockId ? (renderHudPanelByBlockId[dynamicSectionBlockId] || null) : null;
+        const dynamicSectionBlock = dynamicSectionPanel?.block
+          || renderEditablePageBlocks.find((block) => String(block?.id || '').trim() === dynamicSectionBlockId)
+          || null;
         const dynamicSectionHudPanelId = dynamicSectionPanel?.id || '';
         const firstDynamicSectionIndex = dynamicSectionBlockId
           ? (firstDynamicSectionIndexByBlockId[dynamicSectionBlockId] ?? -1)
@@ -6514,7 +6551,10 @@ export default function NativeContentPage({ page }) {
               data-mobile-front-hud-selected={isMobileHudPanelSelected(dynamicSectionHudPanelId) ? 'true' : undefined}
               data-mobile-front-hud-label={showSectionHud && isMobileFrontHud ? (dynamicSectionPanel?.label || 'Hero') : undefined}
             >
-              <BlockSurfaceLayers ownership={sectionOwnership} />
+              <BlockSurfaceLayers
+                ownership={sectionOwnership}
+                backgroundEffects={<BlockBackgroundEffects effects={resolveBlockBackgroundEffects(dynamicSectionBlock, sectionHero?.backgroundEffects)} />}
+              />
               <div className="ag-panel-rail" style={sectionHeroRailStyle}>
                 <HeroTitle hero={sectionHero || { title: page.title }} />
                 {showBlockHeroInlineHudEditor ? (
@@ -6600,7 +6640,7 @@ export default function NativeContentPage({ page }) {
             >
               <BlockSurfaceLayers
                 ownership={sectionOwnership}
-                backgroundEffects={<BlockBackgroundEffects effects={sectionIntro.backgroundEffects} />}
+                backgroundEffects={<BlockBackgroundEffects effects={resolveBlockBackgroundEffects(dynamicSectionBlock, sectionIntro.backgroundEffects)} />}
               />
               <div className="ag-panel-rail">
                 <div className={`service-native-intro-shell${sectionIntroSplit ? ' has-media' : ''}`}>
@@ -6713,7 +6753,10 @@ export default function NativeContentPage({ page }) {
               data-mobile-front-hud-label={showSectionHud && isMobileFrontHud ? (dynamicSectionPanel?.label || 'Section') : undefined}
               style={section.sectionStyle || undefined}
             >
-              <BlockSurfaceLayers ownership={sectionOwnership} />
+              <BlockSurfaceLayers
+                ownership={sectionOwnership}
+                backgroundEffects={<BlockBackgroundEffects effects={resolveBlockBackgroundEffects(dynamicSectionBlock, section.backgroundEffects)} />}
+              />
               <LegacyGivingStewardshipStoryFeature
                 headline={runtime.title}
                 beats={runtime.beats}
@@ -6755,7 +6798,10 @@ export default function NativeContentPage({ page }) {
               data-mobile-front-hud-label={showSectionHud && isMobileFrontHud ? (dynamicSectionPanel?.label || 'Section') : undefined}
               style={section.sectionStyle || undefined}
             >
-              <BlockSurfaceLayers ownership={sectionOwnership} />
+              <BlockSurfaceLayers
+                ownership={sectionOwnership}
+                backgroundEffects={<BlockBackgroundEffects effects={resolveBlockBackgroundEffects(dynamicSectionBlock, section.backgroundEffects)} />}
+              />
               <ImpactProofStoryFeature
                 intro={section.featureIntro}
                 headline={runtime.title}
@@ -6804,7 +6850,10 @@ export default function NativeContentPage({ page }) {
               data-mobile-front-hud-label={showSectionHud && isMobileFrontHud ? (dynamicSectionPanel?.label || 'Section') : undefined}
               style={section.sectionStyle || undefined}
             >
-              <BlockSurfaceLayers ownership={sectionOwnership} />
+              <BlockSurfaceLayers
+                ownership={sectionOwnership}
+                backgroundEffects={<BlockBackgroundEffects effects={resolveBlockBackgroundEffects(dynamicSectionBlock, section.backgroundEffects)} />}
+              />
               <div className={section.fullBleed ? 'ag-panel-rail-wide native-info-full-bleed' : (section.wide ? 'ag-panel-rail-wide' : 'ag-panel-rail')}>
                 <div className="service-native-dark-feature">
                   <div className="service-native-dark-feature-inner">
@@ -6903,7 +6952,7 @@ export default function NativeContentPage({ page }) {
           >
             <BlockSurfaceLayers
               ownership={sectionOwnership}
-              backgroundEffects={<BlockBackgroundEffects effects={section.backgroundEffects} />}
+              backgroundEffects={<BlockBackgroundEffects effects={resolveBlockBackgroundEffects(dynamicSectionBlock, section.backgroundEffects)} />}
             />
             {shouldShowValueCardsSurface ? (
               <div className="investments-native-growth-surface native-columns-growth-surface" aria-hidden="true">

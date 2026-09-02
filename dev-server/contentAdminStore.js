@@ -45,6 +45,8 @@ import {
   NUMBERED_STEP_CARDS_MIGRATION_VERSION,
   SITE_FEATURE_COLLECTIONS_MIGRATION_ID,
   SITE_FEATURE_COLLECTIONS_MIGRATION_VERSION,
+  SERVICES_MATTERS_BILLBOARD_MIGRATION_ID,
+  SERVICES_MATTERS_BILLBOARD_MIGRATION_VERSION,
   SUPPORT_LIBRARY_BLOCK_MIGRATION_ID,
   SUPPORT_LIBRARY_BLOCK_MIGRATION_VERSION,
   QCD_CENTERED_CARD_GRID_MIGRATION_ID,
@@ -64,6 +66,7 @@ import {
   migrateOnlineContributionsStepsState,
   migrateNumberedStepCardsState,
   migrateSiteFeatureCollectionsState,
+  migrateServicesMattersBillboardState,
   migrateSupportLibraryState,
   migrateEndowmentsPresentationState,
   migrateMifRequestHeadlineColorState,
@@ -3918,6 +3921,88 @@ export function createJsonContentStore({
         migration: {
           id: SITE_FEATURE_COLLECTIONS_MIGRATION_ID,
           version: SITE_FEATURE_COLLECTIONS_MIGRATION_VERSION,
+          didMigrate: changed,
+          alreadyApplied: false,
+        },
+      };
+    },
+
+    migrateServicesMattersBillboardSnapshot({ actor, reason = '' } = {}) {
+      const normalizedActor = normalizeActor(actor);
+      const normalizedReason = String(reason || '').trim();
+      if (!normalizedActor || !normalizedReason) {
+        return { ok: false, error: 'migration-actor-and-reason-required', ...publishSnapshot() };
+      }
+
+      const currentVersion = Number(
+        record.snapshotMigrations?.[SERVICES_MATTERS_BILLBOARD_MIGRATION_ID] || 0,
+      );
+      if (currentVersion >= SERVICES_MATTERS_BILLBOARD_MIGRATION_VERSION) {
+        return {
+          ok: true,
+          ...publishSnapshot(),
+          migration: {
+            id: SERVICES_MATTERS_BILLBOARD_MIGRATION_ID,
+            version: SERVICES_MATTERS_BILLBOARD_MIGRATION_VERSION,
+            didMigrate: false,
+            alreadyApplied: true,
+          },
+        };
+      }
+
+      const stateMigration = migrateServicesMattersBillboardState(record.state);
+      const baseMigration = migrateServicesMattersBillboardState(record.baseSnapshot);
+      const changed = Boolean(stateMigration.changed || baseMigration.changed);
+      let backup = null;
+      if (changed) {
+        try {
+          backup = createSharedContentBackup('before-services-matters-billboard-migration', {
+            action: 'services-matters-billboard-migration',
+            migrationId: SERVICES_MATTERS_BILLBOARD_MIGRATION_ID,
+            migrationVersion: SERVICES_MATTERS_BILLBOARD_MIGRATION_VERSION,
+            actor: normalizedActor,
+            operationReason: normalizedReason,
+          });
+        } catch (error) {
+          return {
+            ok: false,
+            error: 'backup-failed',
+            details: error instanceof Error ? error.message : 'backup-failed',
+            ...publishSnapshot(),
+          };
+        }
+      }
+
+      const timestamp = now();
+      const previousState = record.state;
+      record = {
+        ...record,
+        initialized: true,
+        updatedAt: timestamp,
+        state: normalizeSharedState(stateMigration.state),
+        baseSnapshot: normalizeSharedState(baseMigration.state),
+        snapshotMigrations: {
+          ...(record.snapshotMigrations || {}),
+          [SERVICES_MATTERS_BILLBOARD_MIGRATION_ID]: SERVICES_MATTERS_BILLBOARD_MIGRATION_VERSION,
+        },
+      };
+      if (changed) {
+        addRevisionsForChangedPaths(previousState, record.state, {
+          actor: normalizedActor,
+          reason: normalizedReason,
+          summary: 'Services matters feature to billboard migration',
+        });
+      }
+      persistRecord();
+      return {
+        ok: true,
+        actor: normalizedActor,
+        reason: normalizedReason,
+        backup,
+        ...publishSnapshot(),
+        migration: {
+          id: SERVICES_MATTERS_BILLBOARD_MIGRATION_ID,
+          version: SERVICES_MATTERS_BILLBOARD_MIGRATION_VERSION,
           didMigrate: changed,
           alreadyApplied: false,
         },

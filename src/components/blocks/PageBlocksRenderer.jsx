@@ -112,6 +112,10 @@ function normalizePanelTextTone(value, fallback = 'dark') {
   return normalizeSharedPanelTextTone(value, fallback);
 }
 
+function getBlockBackgroundEffects(block) {
+  return block?.settings?.backgroundEffectsJson ?? block?.backgroundEffectsJson ?? '';
+}
+
 function isObject(value) {
   return Boolean(value && typeof value === 'object' && !Array.isArray(value));
 }
@@ -382,7 +386,7 @@ function TopStripBlock({ block, resolveTo, ownership, hudAnchor }) {
       data-block-id={block?.id || undefined}
       style={{ '--strip-font-size': `${runtime.sectionFontSizeRem}rem`, '--strip-item-gap': `${runtime.itemGapRem}rem` }}
     >
-      <BlockSurfaceLayers ownership={ownership} hudAnchor={hudAnchor} />
+      <BlockSurfaceLayers ownership={ownership} hudAnchor={hudAnchor} backgroundEffects={<BlockBackgroundEffects effects={getBlockBackgroundEffects(block)} />} />
       <div className="home-native-strip-fluid">
         {runtime.showLogin ? (
           <a
@@ -530,7 +534,7 @@ function HeroBlock({ block, resolveTo, heroHud, ownership, hudAnchor }) {
       className={`${heroClassName}${ownership?.className || ''}`}
       data-block-id={block?.id || undefined}
     >
-      <BlockSurfaceLayers ownership={ownership} hudAnchor={hudAnchor} />
+      <BlockSurfaceLayers ownership={ownership} hudAnchor={hudAnchor} backgroundEffects={<BlockBackgroundEffects effects={getBlockBackgroundEffects(block)} />} />
       <div className="ag-panel-rail">
         {heroHud?.isEditing ? (
           <HeroInlineLiveEditor
@@ -630,7 +634,7 @@ function ServicesGridBlock({ block, resolveTo, ownership, hudAnchor }) {
         '--home-services-card-padding-y': `${runtime.cardPaddingRem}rem`,
       }}
     >
-      <BlockSurfaceLayers ownership={ownership} hudAnchor={hudAnchor} />
+      <BlockSurfaceLayers ownership={ownership} hudAnchor={hudAnchor} backgroundEffects={<BlockBackgroundEffects effects={getBlockBackgroundEffects(block)} />} />
       <div className="ag-panel-rail">
         <h2>{runtime.heading}</h2>
         <div className="home-native-services-grid">
@@ -692,7 +696,7 @@ function ImpactStatBlock({ block, resolveTo, ownership, hudAnchor }) {
 
   return (
     <section className={`home-native-impact${ownership?.className || ''}`} data-block-id={block.id || 'impact_stat'}>
-      <BlockSurfaceLayers ownership={ownership} hudAnchor={hudAnchor} />
+      <BlockSurfaceLayers ownership={ownership} hudAnchor={hudAnchor} backgroundEffects={<BlockBackgroundEffects effects={getBlockBackgroundEffects(block)} />} />
       <HomeImpactStoryFeature
         headline={`${runtime.titlePrefix} ${runtime.highlight}.`}
         highlightedWord={runtime.highlight}
@@ -1371,7 +1375,7 @@ function CtaFormBlock({ block, ownership, hudAnchor }) {
       data-cta-display-mode={runtime?.displayMode || 'default'}
       data-cta-trigger-mode={runtime?.triggerMode || 'default'}
     >
-      <BlockSurfaceLayers ownership={ownership} hudAnchor={hudAnchor} />
+      <BlockSurfaceLayers ownership={ownership} hudAnchor={hudAnchor} backgroundEffects={<BlockBackgroundEffects effects={getBlockBackgroundEffects(block)} />} />
       <div className="ag-panel-rail">
         {resolvedTitle ? (
           <div className="native-info-section-copy">
@@ -1545,7 +1549,7 @@ function NewsletterBlock({ block, ownership, hudAnchor }) {
 
   return (
     <section className={`home-native-newsletter is-bg-${bgTone} is-text-${textTone}${ownership?.className || ''}`} data-block-id={block?.id || undefined}>
-      <BlockSurfaceLayers ownership={ownership} hudAnchor={hudAnchor} />
+      <BlockSurfaceLayers ownership={ownership} hudAnchor={hudAnchor} backgroundEffects={<BlockBackgroundEffects effects={getBlockBackgroundEffects(block)} />} />
       <div className="ag-panel-rail">
         <h2 className={titleClassName || undefined}>
           {titleHighlights.length ? renderHighlightedText(title, titleHighlights) : title}
@@ -1591,7 +1595,7 @@ function SiteFeatureBlock({ block, resolveTo, ownership, hudAnchor }) {
   if (runtime.runtimeKey === 'home_impact_story') {
     return (
       <section className={`home-native-impact home-impact-story${ownership?.className || ''}`} data-block-id={block?.id || undefined}>
-        <BlockSurfaceLayers ownership={ownership} hudAnchor={hudAnchor} />
+        <BlockSurfaceLayers ownership={ownership} hudAnchor={hudAnchor} backgroundEffects={<BlockBackgroundEffects effects={getBlockBackgroundEffects(block)} />} />
         <HomeImpactStoryFeature
           headline={runtime.title}
           body={runtime.body}
@@ -1606,7 +1610,7 @@ function SiteFeatureBlock({ block, resolveTo, ownership, hudAnchor }) {
   if (runtime.runtimeKey === 'home_services_feature_animation') {
     return (
       <section className={`home-services-feature${ownership?.className || ''}`} data-block-id={block?.id || undefined}>
-        <BlockSurfaceLayers ownership={ownership} hudAnchor={hudAnchor} />
+        <BlockSurfaceLayers ownership={ownership} hudAnchor={hudAnchor} backgroundEffects={<BlockBackgroundEffects effects={getBlockBackgroundEffects(block)} />} />
         <HomeServicesFeatureAnimation
           headline={runtime.title}
           subhead={runtime.subhead}
@@ -1620,7 +1624,7 @@ function SiteFeatureBlock({ block, resolveTo, ownership, hudAnchor }) {
   if (runtime.runtimeKey === 'legacy_giving_stewardship_story') {
     return (
       <section className={`service-native-section legacy-giving-stewardship legacy-stewardship-story${ownership?.className || ''}`} data-block-id={block?.id || undefined}>
-        <BlockSurfaceLayers ownership={ownership} hudAnchor={hudAnchor} />
+        <BlockSurfaceLayers ownership={ownership} hudAnchor={hudAnchor} backgroundEffects={<BlockBackgroundEffects effects={getBlockBackgroundEffects(block)} />} />
         <LegacyGivingStewardshipStoryFeature
           headline={runtime.title}
           beats={runtime.beats}
@@ -1634,7 +1638,7 @@ function SiteFeatureBlock({ block, resolveTo, ownership, hudAnchor }) {
   if (runtime.runtimeKey === 'impact_proof_story') {
     return (
       <section className={`service-native-section impact-native-stats impact-proof-story${ownership?.className || ''}`} data-block-id={block?.id || undefined}>
-        <BlockSurfaceLayers ownership={ownership} hudAnchor={hudAnchor} />
+        <BlockSurfaceLayers ownership={ownership} hudAnchor={hudAnchor} backgroundEffects={<BlockBackgroundEffects effects={getBlockBackgroundEffects(block)} />} />
         <ImpactProofStoryFeature
           intro={runtime.featureIntro || undefined}
           headline={runtime.title}
@@ -1661,7 +1665,7 @@ function SiteFeatureBlock({ block, resolveTo, ownership, hudAnchor }) {
 
   return (
     <section className={`service-native-section service-native-article-teaser is-article-feature native-dynamic-site-feature${runtime.sectionClassName ? ` ${runtime.sectionClassName}` : ''}${ownership?.className || ''}`} data-block-id={block?.id || undefined}>
-      <BlockSurfaceLayers ownership={ownership} hudAnchor={hudAnchor} />
+      <BlockSurfaceLayers ownership={ownership} hudAnchor={hudAnchor} backgroundEffects={<BlockBackgroundEffects effects={getBlockBackgroundEffects(block)} />} />
       <div className="ag-panel-rail-wide">
         <div className="service-native-dark-feature">
           <div className="service-native-dark-feature-inner">
@@ -1717,7 +1721,7 @@ function FeaturePanelBlock({ block, resolveTo, ownership, hudAnchor }) {
 
   return (
     <section className={`service-native-section service-native-feature-panel native-dynamic-feature-panel${runtime.sectionClassName ? ` ${runtime.sectionClassName}` : ''}${ownership?.className || ''}`} data-block-id={block?.id || undefined}>
-      <BlockSurfaceLayers ownership={ownership} hudAnchor={hudAnchor} />
+      <BlockSurfaceLayers ownership={ownership} hudAnchor={hudAnchor} backgroundEffects={<BlockBackgroundEffects effects={getBlockBackgroundEffects(block)} />} />
       <div className="ag-panel-rail-wide">
         <div className="service-native-dark-feature">
           <div className="service-native-dark-feature-inner">
@@ -1935,14 +1939,19 @@ export function ColumnsBlock({
         <BlockSurfaceLayers
           ownership={ownership}
           hudAnchor={hudAnchor}
-          backgroundEffects={shouldAnimateColumnsItems ? (
-            <div className="investments-native-growth-surface native-columns-growth-surface" aria-hidden="true">
-              <div className="investments-native-growth-surface-layer is-blue" />
-              <div className="investments-native-growth-surface-layer is-mango" />
-              <div className="investments-native-growth-surface-layer is-sand" />
-              <div className="investments-native-growth-surface-layer is-white" />
-            </div>
-          ) : null}
+          backgroundEffects={(
+            <>
+              <BlockBackgroundEffects effects={getBlockBackgroundEffects(dynamicBlock)} />
+              {shouldAnimateColumnsItems ? (
+                <div className="investments-native-growth-surface native-columns-growth-surface" aria-hidden="true">
+                  <div className="investments-native-growth-surface-layer is-blue" />
+                  <div className="investments-native-growth-surface-layer is-mango" />
+                  <div className="investments-native-growth-surface-layer is-sand" />
+                  <div className="investments-native-growth-surface-layer is-white" />
+                </div>
+              ) : null}
+            </>
+          )}
         />
         <div className={contentWidth === 'browser' ? 'ag-panel-rail-wide' : 'ag-panel-rail'}>
           {hasIntroCopy ? (
@@ -2114,7 +2123,7 @@ export function ColumnsBlock({
 
   return (
     <section className={`home-native-feature${bgClass}${ownership?.className || ''}`} data-block-id={block?.id || undefined}>
-      <BlockSurfaceLayers ownership={ownership} hudAnchor={hudAnchor} />
+      <BlockSurfaceLayers ownership={ownership} hudAnchor={hudAnchor} backgroundEffects={<BlockBackgroundEffects effects={getBlockBackgroundEffects(block)} />} />
       <div className={`ag-panel-rail home-native-feature-grid${imageOnLeft ? ' is-image-left' : ' is-image-right'}`}>
         <div className="home-native-feature-media">
           {photoCol?.imageUrl ? (
@@ -2154,7 +2163,7 @@ function RequestFormBlock({ block, ownership, hudAnchor }) {
       style={runtime.sectionStyle}
       data-block-id={block?.id || undefined}
     >
-      <BlockSurfaceLayers ownership={ownership} hudAnchor={hudAnchor} />
+      <BlockSurfaceLayers ownership={ownership} hudAnchor={hudAnchor} backgroundEffects={<BlockBackgroundEffects effects={getBlockBackgroundEffects(block)} />} />
       <div className="ag-panel-rail">
         <DynamicRequestFormSection
           config={{

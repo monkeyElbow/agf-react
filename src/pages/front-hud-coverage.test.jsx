@@ -96,6 +96,14 @@ describe('custom page front HUD coverage audit', () => {
     expect(homeSource).toContain('<FrontHudPageWorkflow pathname="/" reviewHref="/admin/content?page=%2F" placement="bar" isVisible={showFrontHud} />');
   });
 
+  it('keeps Retirement billboard workflow actions scoped to the active block ownership', () => {
+    const retirementSource = readPageSource('./RetirementPage.jsx');
+
+    expect(retirementSource).toContain('blockId={activeHudPanel.block.id}');
+    expect(retirementSource).toContain('ownership={getOwnershipVisualForBlockId(activeHudPanel.block.id)}');
+    expect(retirementSource).toContain("return setActiveBlockLock('/services/retirement', activeHudPanel.block.id, { force: true });");
+  });
+
   it('keeps Home hero selection capture on a no-op guard so repeated key interactions do not churn page state', () => {
     const homeSource = readPageSource('./HomePage.jsx');
 

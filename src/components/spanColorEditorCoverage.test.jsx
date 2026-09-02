@@ -1,5 +1,5 @@
 import { createElement } from 'react';
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import {
   BillboardBlockEditor,
@@ -46,6 +46,10 @@ const ASSERT_PREVIEW_BY_KIND = {
   },
   billboard: () => {
     expect(screen.getByRole('radiogroup', { name: /Billboard title color/i })).toBeTruthy();
+    const backgroundButton = screen.queryByRole('button', { name: 'Background' });
+    if (backgroundButton) {
+      fireEvent.click(backgroundButton);
+    }
     expect(screen.getByRole('radiogroup', { name: /Billboard background/i })).toBeTruthy();
   },
   cta_form: () => {

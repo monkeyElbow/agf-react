@@ -1,3 +1,5 @@
+import { createBlockDefinition } from './models';
+
 const SHARED_FORM_SUBMISSION_FIELD_IDS = Object.freeze([
   'salesforceUrl',
   'submitLabel',
@@ -548,7 +550,7 @@ export function createFormBlockDefinitionScaffold({
     throw new Error(`Unknown canonical form block kind "${String(kind || '').trim() || '<empty>'}".`);
   }
 
-  return {
+  return createBlockDefinition({
     kind: boundary.kind,
     label: String(label || '').trim(),
     icon,
@@ -570,5 +572,5 @@ export function createFormBlockDefinitionScaffold({
     validators,
     styleScope,
     formBoundary: boundary,
-  };
+  });
 }

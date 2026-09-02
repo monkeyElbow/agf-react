@@ -411,6 +411,14 @@ export default function FrontHudPageWorkflow({
       : 'is-green';
 
   const hasWorkflowOwnershipSignal = typeof workflowActivity?.hasCurrentActorDraft === 'boolean';
+  const hasForeignBlockOwnership = Boolean(
+    normalizedBlockId
+    && (
+      ownership?.isOwnedByOther
+      || ['editing-other', 'drafted-other'].includes(String(ownership?.state || '').trim())
+      || workflowActivity?.otherActorBlocks?.some((entry) => entry?.blockId === normalizedBlockId)
+    ),
+  );
   const hasBlockDraft = normalizedBlockId
     ? Boolean(
       publishSummary?.changedBlockIds?.includes(normalizedBlockId)
@@ -419,9 +427,14 @@ export default function FrontHudPageWorkflow({
       || hasPendingExternalDraftOnBlock,
     )
     : false;
-  const canShowDraftActionsForCurrentActor = hasWorkflowOwnershipSignal
-    ? !workflowActivity?.hasOtherActorDraft
-    : true;
+  // A block workflow owns only its selected block. An unrelated draft on the
+  // same page must not hide the active block's save action; page-level
+  // workflow still remains gated by any other-admin page draft.
+  const canShowDraftActionsForCurrentActor = normalizedBlockId
+    ? !hasForeignBlockOwnership
+    : hasWorkflowOwnershipSignal
+      ? !workflowActivity?.hasOtherActorDraft
+      : true;
   const canToggleBlockVisibility = Boolean(
     normalizedBlockId
     && typeof updateBlock === 'function'
@@ -432,7 +445,7 @@ export default function FrontHudPageWorkflow({
     && !isSharedWorkflowBusy,
   );
   const showDraftActions = normalizedBlockId
-    ? hasBlockDraft || canShowDraftActionsForCurrentActor
+    ? !hasForeignBlockOwnership && (hasBlockDraft || canShowDraftActionsForCurrentActor)
     : placement === 'bar'
     ? true
     : hasWorkflowOwnershipSignal
@@ -498,6 +511,7 @@ export default function FrontHudPageWorkflow({
     && !isSaving
     && !isPublishing
     && !isSharedWorkflowBusy
+    && !hasForeignBlockOwnership
     && hasBlockSaveChanges;
   const canDiscardDraft = showDraftActions
     && !isSaving

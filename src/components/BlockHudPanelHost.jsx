@@ -2,6 +2,7 @@ import { createContext, useContext, useRef, useState } from 'react';
 import * as ContentAdminContextModule from '../context/ContentAdminContext';
 import { isForeignOwnedBlockOwnership } from './BlockOwnershipOverlay';
 import HudBlockOptions from './HudBlockOptions';
+import BackgroundEditorPage from './BackgroundEditorPage';
 import {
   HudEditorBlockOptionsPage,
   HudEditorModelLayout,
@@ -15,6 +16,7 @@ import CtaHudEditorPanel from './CtaHudEditorPanel';
 import { normalizeCtaHudSubmitStyle, normalizeCtaHudSubmitTone } from '../lib/ctaHudSettings';
 import { getBlockHudDefinition } from '../lib/blockHudRegistry';
 import { getBlockEditorSections } from '../blocks/registry';
+import { SURFACE_BG_TONE_OPTIONS } from '../lib/colorSystem';
 import {
   extractHeroLineColorToken,
   removeSelectionRange,
@@ -64,11 +66,46 @@ const HUD_EDITORS_WITH_SECTION_RAIL = new Set([
   'testimonials',
   'billboard',
   'card_chart',
+  'columns',
   'request_form',
   'support_library',
 ]);
 
-function HudEditorCompatibilityShell({ blockKind, blockLabel, children, blockOptions = null }) {
+const HUD_BLOCKS_WITH_INLINE_BACKGROUND = new Set([
+  'hero',
+  'intro',
+  'billboard',
+  'request_form',
+  'card_grid',
+  'card_chart',
+  'cta_form',
+  'top_strip',
+]);
+
+function HudBlockBackgroundPage({ block, onSettingChange }) {
+  const settings = block?.settings || {};
+  const fields = Array.isArray(block?.editableFields) ? block.editableFields : [];
+  const backgroundToneField = fields.find((field) => field?.id === 'bgTone');
+  const backgroundToneOptions = Array.isArray(backgroundToneField?.options) && backgroundToneField.options.length
+    ? backgroundToneField.options
+    : SURFACE_BG_TONE_OPTIONS;
+
+  return (
+    <section className="admin-hud-shared-background-page" aria-label="Background">
+      <BackgroundEditorPage
+        backgroundTone={settings.bgTone || backgroundToneField?.defaultValue || 'white'}
+        backgroundToneOptions={backgroundToneOptions}
+        backgroundToneLabel={backgroundToneField?.label || 'Background color'}
+        onBackgroundToneChange={(nextValue) => onSettingChange?.('bgTone', nextValue)}
+        backgroundEffectsJson={settings.backgroundEffectsJson}
+        onBackgroundEffectsChange={(nextValue) => onSettingChange?.('backgroundEffectsJson', nextValue)}
+        paletteVariant="hud"
+      />
+    </section>
+  );
+}
+
+function HudEditorCompatibilityShell({ block, blockKind, blockLabel, children, blockOptions = null, onSettingChange }) {
   const label = String(blockLabel || 'Block').trim() || 'Block';
   const definitionSections = getBlockEditorSections(blockKind, 'hud');
   const cardGridSections = blockKind === 'card_grid'
@@ -87,6 +124,23 @@ function HudEditorCompatibilityShell({ blockKind, blockLabel, children, blockOpt
     : [{ id: 'controls', label: 'Controls', icon: 'C' }]);
   const sections = appendHudBlockOptionsSection(modelSections, blockOptions);
   const [activeSection, setActiveSection] = useState(sections[0]?.id || 'controls');
+  const settings = block?.settings || {};
+  const backgroundToneField = (Array.isArray(block?.editableFields) ? block.editableFields : [])
+    .find((field) => field?.id === 'bgTone');
+  const backgroundToneOptions = Array.isArray(backgroundToneField?.options) && backgroundToneField.options.length
+    ? backgroundToneField.options
+    : SURFACE_BG_TONE_OPTIONS;
+  const backgroundPage = activeSection === 'background' ? (
+    <BackgroundEditorPage
+      backgroundTone={settings.bgTone || backgroundToneField?.defaultValue || 'white'}
+      backgroundToneOptions={backgroundToneOptions}
+      backgroundToneLabel={backgroundToneField?.label || 'Background color'}
+      onBackgroundToneChange={(nextValue) => onSettingChange?.('bgTone', nextValue)}
+      backgroundEffectsJson={settings.backgroundEffectsJson}
+      onBackgroundEffectsChange={(nextValue) => onSettingChange?.('backgroundEffectsJson', nextValue)}
+      paletteVariant="hud"
+    />
+  ) : null;
 
   return (
     <HudEditorModelLayout
@@ -98,7 +152,7 @@ function HudEditorCompatibilityShell({ blockKind, blockLabel, children, blockOpt
       hideRailLabels
     >
       <div className="admin-hud-editor-compatibility-content" data-hud-editor-kind={blockKind || undefined}>
-        {children}
+        {backgroundPage || children}
       </div>
       <HudEditorBlockOptionsPage>{blockOptions}</HudEditorBlockOptionsPage>
     </HudEditorModelLayout>
@@ -232,6 +286,17 @@ export default function BlockHudPanelHost({
       onBlockDeleted={onBlockDeleted}
     />
   );
+  const isDynamicMigratedHudEditor = Boolean(
+    MigratedHudEditor && String(block.mode || '').trim() === 'dynamic',
+  );
+  const usesInlineBackgroundPage = isDynamicMigratedHudEditor
+    && HUD_BLOCKS_WITH_INLINE_BACKGROUND.has(String(block.kind || '').trim())
+    || (!MigratedHudEditor && String(definition.editorType || '').trim() === 'cta_form');
+  const usesCompatibilityBackgroundPage = isDynamicMigratedHudEditor
+    && !HUD_EDITORS_WITH_SECTION_RAIL.has(String(block.kind || '').trim());
+  const sharedBackgroundPage = usesInlineBackgroundPage || usesCompatibilityBackgroundPage
+    ? null
+    : <HudBlockBackgroundPage block={block} onSettingChange={blockedOnSettingChange} />;
 
   const renderMigratedHudEditor = () => {
     const editor = (
@@ -256,7 +321,7 @@ export default function BlockHudPanelHost({
     }
 
     return (
-      <HudEditorCompatibilityShell blockKind={block.kind} blockLabel={definition.label || block.kind} blockOptions={blockOptionsMarkup}>
+      <HudEditorCompatibilityShell block={block} blockKind={block.kind} blockLabel={definition.label || block.kind} blockOptions={blockOptionsMarkup} onSettingChange={blockedOnSettingChange}>
         {editor}
       </HudEditorCompatibilityShell>
     );
@@ -282,7 +347,10 @@ export default function BlockHudPanelHost({
       <>
         {ownershipNoticeMarkup}
         {renderReadOnlyShell(
-          renderMigratedHudEditor(),
+          <>
+            {renderMigratedHudEditor()}
+            {sharedBackgroundPage}
+          </>,
         )}
       </>
     );
@@ -294,7 +362,8 @@ export default function BlockHudPanelHost({
       <>
         {ownershipNoticeMarkup}
         {renderReadOnlyShell(
-            <CtaHudEditorPanel
+            <>
+              <CtaHudEditorPanel
               sourceRevision={contentAdmin?.sharedSnapshotUpdatedAt || 0}
               settings={settings}
               bgTone={String(settings.bgTone || 'white')}
@@ -333,6 +402,8 @@ export default function BlockHudPanelHost({
               onSubmitStyleChange={(nextValue) => blockedOnSettingChange('submitStyle', nextValue)}
               onSubmitToneChange={(nextValue) => blockedOnSettingChange('submitTone', nextValue)}
               onBgToneChange={(nextValue) => blockedOnSettingChange('bgTone', nextValue)}
+              backgroundEffectsJson={settings.backgroundEffectsJson}
+              onBackgroundEffectsChange={(nextValue) => blockedOnSettingChange('backgroundEffectsJson', nextValue)}
               onApplySelectionColor={(colorValue, selectedTitle = ctaTitleSelection) => {
                 const sourceText = String(settings.title || '');
                 const result = applyTextColorSelection({
@@ -369,8 +440,10 @@ export default function BlockHudPanelHost({
                 blockedOnSettingChange('titleHighlightsJson', '');
                 setCtaTitleSelection({ start: 0, end: 0, text: '' });
               }}
-              blockOptions={blockOptionsMarkup}
-            />,
+                blockOptions={blockOptionsMarkup}
+              />
+              {sharedBackgroundPage}
+            </>,
           )}
         </>
       );
@@ -388,9 +461,9 @@ export default function BlockHudPanelHost({
         <>
           {ownershipNoticeMarkup}
           {renderReadOnlyShell(
-            <HudEditorCompatibilityShell blockKind={block.kind} blockLabel={definition.label || block.kind} blockOptions={blockOptionsMarkup}>
+            <HudEditorCompatibilityShell block={block} blockKind={block.kind} blockLabel={definition.label || block.kind} blockOptions={blockOptionsMarkup} onSettingChange={blockedOnSettingChange}>
               <FieldControlGrid
-                fields={editableFields}
+                fields={editableFields.filter((field) => !['bgTone', 'backgroundEffectsJson'].includes(String(field?.id || '').trim()))}
                 settings={block.settings}
                 onSettingChange={blockedOnSettingChange}
                 routeOptions={routeOptions}

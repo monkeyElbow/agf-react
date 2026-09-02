@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import AdminHtmlEditor from './AdminHtmlEditor';
-import BackgroundLightsEditor from './BackgroundLightsEditor';
+import BackgroundEditorPage from './BackgroundEditorPage';
 import ColorPalette from './ColorPalette';
 import RouteLinkField from './RouteLinkField';
 import {
@@ -402,16 +402,6 @@ export default function BillboardHudEditorPanel({
               title="Heading"
               description="Title, subtitle, and typography"
               className="is-heading-panel"
-              headerContent={(
-                <div className="admin-billboard-hud-heading-bar-colors">
-                  <BillboardColors
-                    ariaLabel="Billboard background color"
-                    options={bgToneOptions}
-                    value={bgTone}
-                    onChange={onBgToneChange}
-                  />
-                </div>
-              )}
             >
             <div className="admin-billboard-hud-heading-copy-box">
               <div className="admin-billboard-hud-heading-row">
@@ -667,9 +657,13 @@ export default function BillboardHudEditorPanel({
 
         {activeSection === 'background' ? (
           <BillboardPanel id="05" title="Background">
-            <BackgroundLightsEditor
-              value={backgroundEffectsJson}
-              onChange={onBackgroundEffectsChange}
+            <BackgroundEditorPage
+              backgroundTone={bgTone}
+              backgroundToneOptions={bgToneOptions}
+              backgroundToneLabel="Billboard background"
+              onBackgroundToneChange={onBgToneChange}
+              backgroundEffectsJson={backgroundEffectsJson}
+              onBackgroundEffectsChange={onBackgroundEffectsChange}
               paletteVariant="hud"
             />
           </BillboardPanel>

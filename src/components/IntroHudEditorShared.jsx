@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import AdminHtmlEditor from './AdminHtmlEditor';
-import BackgroundLightsEditor from './BackgroundLightsEditor';
+import BackgroundEditorPage from './BackgroundEditorPage';
 import ColorPalette from './ColorPalette';
 import {
   HudEditorBlockOptionsPage,
@@ -200,17 +200,6 @@ export default function IntroHudEditorPanel({
             <HudEditorSection className="admin-front-hud-card admin-intro-hud-card admin-intro-hud-card--layout" label="Layout settings">
               <div className="admin-intro-hud-layout-control-grid is-stacked">
                 <div className="admin-front-hud-row">
-                  <span>Background Color</span>
-                  <ColorPalette
-                    variant="hud"
-                    className="is-compact is-icon-only"
-                    ariaLabel="Intro background"
-                    options={backgroundOptions}
-                    value={bgTone}
-                    onChange={(nextValue) => onBgToneChange?.(nextValue)}
-                  />
-                </div>
-                <div className="admin-front-hud-row">
                   <span>Justify</span>
                   <div className="admin-front-hud-segment">
                     {INTRO_JUSTIFY_OPTIONS.map((option) => (
@@ -363,24 +352,15 @@ export default function IntroHudEditorPanel({
 
       <div className="admin-intro-hud-background-page">
         <HudEditorSection className="admin-front-hud-card admin-intro-hud-card" label="Background settings">
-          <div className="admin-intro-hud-layout-control-grid is-stacked">
-            <div className="admin-front-hud-row">
-              <span>Background Color</span>
-              <ColorPalette
-                variant="hud"
-                className="is-compact is-icon-only"
-                ariaLabel="Intro background"
-                options={backgroundOptions}
-                value={bgTone}
-                onChange={(nextValue) => onBgToneChange?.(nextValue)}
-              />
-            </div>
-            <BackgroundLightsEditor
-              value={backgroundEffectsJson}
-              onChange={onBackgroundEffectsChange}
-              paletteVariant="hud"
-            />
-          </div>
+          <BackgroundEditorPage
+            backgroundTone={bgTone}
+            backgroundToneOptions={backgroundOptions}
+            backgroundToneLabel="Intro background"
+            onBackgroundToneChange={onBgToneChange}
+            backgroundEffectsJson={backgroundEffectsJson}
+            onBackgroundEffectsChange={onBackgroundEffectsChange}
+            paletteVariant="hud"
+          />
         </HudEditorSection>
       </div>
 

@@ -79,7 +79,10 @@ const REQUEST_FORM_PRESET_PRESENTATION_CONTRACTS = Object.freeze({
 const BILLBOARD_PRESENTATION_CONTRACTS = Object.freeze([
   Object.freeze({
     id: 'planned-giving-joy-billboard',
-    matches: (settings) => hasClassName(settings, 'legacy-giving-joy'),
+    matches: (settings, presetId) => (
+      normalizePresetToken(presetId) === 'planned-giving-joy'
+      || hasClassName(settings, 'legacy-giving-joy')
+    ),
     settings: Object.freeze({
       titleFontFamily: 'helv',
     }),
@@ -163,14 +166,14 @@ export function normalizeRequestFormPresetSettings(settings, presetId) {
   return nextSettings;
 }
 
-export function getBillboardPresentationContract(settings) {
+export function getBillboardPresentationContract(settings, presetId = '') {
   const source = settings && typeof settings === 'object' ? settings : {};
-  return BILLBOARD_PRESENTATION_CONTRACTS.find((contract) => contract.matches(source)) || null;
+  return BILLBOARD_PRESENTATION_CONTRACTS.find((contract) => contract.matches(source, presetId)) || null;
 }
 
-export function normalizeBillboardPresentationSettings(settings) {
+export function normalizeBillboardPresentationSettings(settings, presetId = '') {
   const source = settings && typeof settings === 'object' ? settings : {};
-  const contract = getBillboardPresentationContract(source);
+  const contract = getBillboardPresentationContract(source, presetId);
   return contract ? { ...source, ...contract.settings } : source;
 }
 
@@ -185,7 +188,7 @@ export function getBlockPresentationLockedFieldIds(block) {
   }
 
   if (kind === 'billboard') {
-    const contract = getBillboardPresentationContract(settings);
+    const contract = getBillboardPresentationContract(settings, source.presetId);
     return normalizeLockedFieldIds(contract?.lockedFieldIds);
   }
 
@@ -204,7 +207,7 @@ export function normalizeBlockPresentation(block) {
   if (kind === 'request_form') {
     nextSettings = normalizeRequestFormPresetSettings(currentSettings);
   } else if (kind === 'billboard') {
-    nextSettings = normalizeBillboardPresentationSettings(currentSettings);
+    nextSettings = normalizeBillboardPresentationSettings(currentSettings, block.presetId);
   }
 
   const lockedFieldIds = getBlockPresentationLockedFieldIds({ ...block, settings: nextSettings });

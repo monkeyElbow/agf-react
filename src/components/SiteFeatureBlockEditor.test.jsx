@@ -163,6 +163,29 @@ describe('SiteFeatureBlockEditor', () => {
     expect(screen.getByLabelText('Open CTA in new window')).toBeTruthy();
   });
 
+  it('exposes History Gallery presentation controls beside its cards', () => {
+    render(
+      createElement(SiteFeatureBlockEditor, {
+        block: createBlock({
+          settings: {
+            featureId: 'about_history_feature',
+          },
+        }),
+        onSettingChange: vi.fn(),
+        routeOptions: [],
+      }),
+    );
+
+    expect(screen.getByText('History Gallery presentation')).toBeTruthy();
+    expect(screen.getByLabelText('Card title size (rem)')).toBeTruthy();
+    expect(screen.getByLabelText('Card title line height')).toBeTruthy();
+    expect(screen.getByLabelText('Card body size (rem)')).toBeTruthy();
+    expect(screen.getByLabelText('Card body line height')).toBeTruthy();
+    expect(screen.getByRole('radiogroup', { name: 'Card title color' })).toBeTruthy();
+    expect(screen.getByRole('radiogroup', { name: 'Card body color' })).toBeTruthy();
+    expect(screen.getByText('History Gallery cards')).toBeTruthy();
+  });
+
   it('keeps retirement panels on the panels page and exposes CTA target behavior', () => {
     const onSettingChange = vi.fn();
     render(

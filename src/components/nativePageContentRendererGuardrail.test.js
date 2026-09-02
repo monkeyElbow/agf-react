@@ -194,7 +194,8 @@ describe('native page content renderer guardrail', () => {
     expect(rendererSource).toContain('is-bg-${bgTone} is-text-${textTone}');
     expect(definitionSource).toContain("id: 'bgTone'");
     expect(definitionSource).toContain("id: 'textTone'");
-    expect(adminEditorSource).toContain("['bgTone', 'textTone'].includes(field.id)");
+    expect(adminEditorSource).toContain("fields.filter((field) => field.id === 'textTone')");
+    expect(adminEditorSource).toContain('<BackgroundEditorPage');
     expect(hudEditorSource).toContain('PageContentSurfaceToneControls');
     expect(cssSource).toContain('.retirement-403b-native-loans.is-bg-grey');
     expect(cssSource).toContain('.retirement-403b-native-loans.is-bg-sand');

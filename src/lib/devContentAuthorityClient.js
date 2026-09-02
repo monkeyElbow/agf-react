@@ -11,6 +11,7 @@ const SHARED_DRAFT_SYNC_TIMEOUT_MS = 3000;
 const SHARED_PUBLISH_TIMEOUT_MS = 10_000;
 const SHARED_PUBLISH_STATUS_TIMEOUT_MS = 5000;
 let contentAdminAuthPromise = null;
+let contentAdminAuthorityLost = false;
 
 function cloneJson(value) {
   return value == null ? value : JSON.parse(JSON.stringify(value));
@@ -24,12 +25,36 @@ async function parseJsonResponse(response, requestUrl) {
   const data = await response.json().catch(() => null);
   if (!response.ok) {
     const error = new Error(data?.error || `Request failed with ${response.status}`);
+    error.code = data?.error || 'content-admin-request-failed';
     error.status = response.status;
     error.payload = data;
     error.endpoint = requestUrl;
     throw error;
   }
   return data;
+}
+
+function isAuthorityLossError(error) {
+  const payloadError = String(error?.payload?.error || '').trim().toLowerCase();
+  const message = String(error?.payload?.details || error?.message || '').trim().toLowerCase();
+  return error?.code === 'CONTENT_ADMIN_AUTHORITY_UNAVAILABLE'
+    || payloadError === 'content-admin-authority-lost'
+    || message.includes('authority ownership was lost');
+}
+
+function createAuthorityLostError(requestUrl) {
+  const error = new Error('Content-admin authority ownership was lost. Restart the Vite dev server, then refresh this page.');
+  error.code = 'content-admin-authority-lost';
+  error.endpoint = requestUrl;
+  return error;
+}
+
+export function resetDevContentAuthorityCircuit() {
+  contentAdminAuthorityLost = false;
+}
+
+export function isDevContentAuthorityCircuitOpen() {
+  return contentAdminAuthorityLost;
 }
 
 function readRequestActor(requestOptions = {}) {
@@ -79,13 +104,16 @@ async function sendJson(pathname, options = {}) {
     timeoutMessage = 'Content authority request timed out',
     ...requestOptions
   } = options;
+  const requestUrl = `${DEV_CONTENT_AUTHORITY_BASE}${pathname}`;
+  if (contentAdminAuthorityLost) {
+    throw createAuthorityLostError(requestUrl);
+  }
   const controller = timeoutMs > 0 && typeof AbortController === 'function'
     ? new AbortController()
     : null;
   const timeoutId = controller
     ? setTimeout(() => controller.abort(), timeoutMs)
     : null;
-  const requestUrl = `${DEV_CONTENT_AUTHORITY_BASE}${pathname}`;
   try {
     for (let attempt = 0; attempt < 2; attempt += 1) {
       const response = await fetch(requestUrl, {
@@ -105,10 +133,16 @@ async function sendJson(pathname, options = {}) {
         await authenticateDevContentAuthority(readRequestActor(requestOptions));
         continue;
       }
-      return parseJsonResponse(response, requestUrl);
+      return await parseJsonResponse(response, requestUrl);
     }
     throw new Error('Content authority authentication retry failed.');
   } catch (error) {
+    if (isAuthorityLossError(error)) {
+      contentAdminAuthorityLost = true;
+      if (error.code !== 'content-admin-authority-lost') {
+        error.code = 'content-admin-authority-lost';
+      }
+    }
     if (controller?.signal.aborted) {
       const timeoutError = new Error(timeoutMessage);
       timeoutError.code = 'content-admin-request-timeout';
@@ -489,6 +523,16 @@ export async function migrateNumberedStepCardsSnapshot(actor = null, reason = ''
 
 export async function migrateSiteFeatureCollectionsSnapshot(actor = null, reason = '') {
   return sendJson('/migrate-site-feature-collections', {
+    method: 'POST',
+    body: JSON.stringify({
+      actor: cloneJson(actor),
+      reason: String(reason || '').trim(),
+    }),
+  });
+}
+
+export async function migrateServicesMattersBillboardSnapshot(actor = null, reason = '') {
+  return sendJson('/migrate-services-matters-billboard', {
     method: 'POST',
     body: JSON.stringify({
       actor: cloneJson(actor),

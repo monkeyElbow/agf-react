@@ -172,8 +172,9 @@ function contentAdminDevPlugin() {
       // Vite can re-run configureServer during a config restart before the
       // previous HTTP server emits close. Release this process's lease first
       // so a normal restart cannot look like a second content authority.
-      authorityLease?.release();
-      authorityLease = createContentAdminAuthorityLease({
+      const previousAuthorityLease = authorityLease;
+      previousAuthorityLease?.release();
+      const nextAuthorityLease = createContentAdminAuthorityLease({
         lockFile: authorityLockFile,
         host: server.config.server.host === true
           ? '0.0.0.0'
@@ -183,7 +184,12 @@ function contentAdminDevPlugin() {
         authorityInstanceId: serverInstanceId,
         allowSameProcessRestart: true,
       });
-      authorityLease.acquire();
+      nextAuthorityLease.acquire();
+      authorityLease = nextAuthorityLease;
+      // A store retains the lease object it was created with. Rebuild it on
+      // an in-process Vite restart so writes use the replacement lease.
+      store = null;
+      disclosuresStore = null;
       server.middlewares.use('/__dev/content-admin', async (req, res) => {
         const requestStartedAt = performance.now();
         diagnostics.requestCount += 1;
@@ -497,6 +503,15 @@ function contentAdminDevPlugin() {
             return;
           }
 
+          if (url.pathname === '/migrate-services-matters-billboard') {
+            const result = contentStore.migrateServicesMattersBillboardSnapshot({
+              actor: body.actor,
+              reason: body.reason,
+            });
+            sendJson(res, result.ok ? 200 : 409, result);
+            return;
+          }
+
           if (url.pathname === '/migrate-support-library') {
             const result = contentStore.migrateSupportLibrarySnapshot({
               actor: body.actor,
@@ -656,6 +671,17 @@ function contentAdminDevPlugin() {
             });
             return;
           }
+          if (error?.code === 'CONTENT_ADMIN_AUTHORITY_UNAVAILABLE') {
+            // This is an expected safety rejection after a restart or lease
+            // replacement. Return a machine-readable circuit-breaker signal;
+            // do not print one stack-less error for every queued editor sync.
+            sendJson(res, 503, {
+              error: 'content-admin-authority-lost',
+              details: error.message,
+              authority: getSafeDiagnostics(diagnostics, authorityLease, server).authority,
+            });
+            return;
+          }
           const errorDetails = error instanceof Error
             ? error.message
             : String(error || 'Unknown content-admin server error');
@@ -755,10 +781,10 @@ function contentAdminDevPlugin() {
         });
       });
       server.httpServer?.once('close', () => {
-        authorityLease?.release();
+        nextAuthorityLease.release();
       });
       server.httpServer?.once('error', () => {
-        authorityLease?.release();
+        nextAuthorityLease.release();
       });
     },
   };

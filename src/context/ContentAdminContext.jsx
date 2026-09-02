@@ -149,6 +149,7 @@ import {
   fetchSharedPublishStatus,
   fetchSharedPageRevisionHistory,
   initializeSharedContentFromSeed,
+  isDevContentAuthorityCircuitOpen,
   isDevContentAuthorityEnabled,
   publishSharedBlock,
   publishSharedPage,
@@ -181,6 +182,11 @@ function describeAuthorityFailure(error, fallbackError) {
     owner: error?.payload?.owner || null,
     state: error?.payload?.state || '',
   };
+}
+
+function isSharedAuthorityCircuitOpen() {
+  return typeof isDevContentAuthorityCircuitOpen === 'function'
+    && isDevContentAuthorityCircuitOpen();
 }
 
 const STORAGE_KEY = 'agf-content-admin-v1';
@@ -2569,6 +2575,26 @@ export function ContentAdminProvider({ children, initialState = null }) {
     );
   };
 
+  const stopPendingBlockDraftSyncsAfterAuthorityLoss = () => {
+    const pendingEntries = pendingBlockDraftSyncEntriesRef.current;
+    pendingEntries.forEach((entry, syncKey) => {
+      if (typeof window !== 'undefined' && entry?.timeoutId) {
+        window.clearTimeout(entry.timeoutId);
+      }
+      entry.timeoutId = null;
+      entry.queued = false;
+      if (entry.inFlight) {
+        // Let the active request settle, but never let its finally handler
+        // queue another write after the authority circuit opens.
+        entry.discardAfterFailure = true;
+        pendingEntries.set(syncKey, entry);
+      } else {
+        pendingEntries.delete(syncKey);
+      }
+    });
+    refreshSharedSyncState({ lastSettledAt: Date.now() });
+  };
+
   const awaitPendingBlockDraftSyncs = async () => {
     const pendingPromises = [...pendingBlockDraftSyncEntriesRef.current.values()]
       .map((entry) => entry?.inFlightPromise)
@@ -3339,6 +3365,9 @@ export function ContentAdminProvider({ children, initialState = null }) {
       if (!sharedAuthorityEnabled) {
         return Promise.resolve(null);
       }
+      if (isSharedAuthorityCircuitOpen()) {
+        return Promise.resolve(null);
+      }
       const mutationId = latestSharedMutationIdRef.current + 1;
       latestSharedMutationIdRef.current = mutationId;
       bumpPendingSharedMutationCount(1, { lastQueuedAt: Date.now() });
@@ -3359,6 +3388,10 @@ export function ContentAdminProvider({ children, initialState = null }) {
         })
         .catch(async (operationError) => {
           reportSyncError(operationError);
+          if (operationError?.code === 'content-admin-authority-lost') {
+            stopPendingBlockDraftSyncsAfterAuthorityLoss();
+            return null;
+          }
           try {
             let snapshot;
             try {
@@ -3452,6 +3485,11 @@ export function ContentAdminProvider({ children, initialState = null }) {
           }
         })
         .catch(async (error) => {
+          if (error?.code === 'content-admin-authority-lost') {
+            pendingEntry.discardAfterFailure = true;
+            stopPendingBlockDraftSyncsAfterAuthorityLoss();
+            return;
+          }
           const stalePublishedRevision = error?.payload?.error === 'block-draft-sync-stale-published-revision';
           if (stalePublishedRevision) {
             pendingEntry.discardAfterFailure = true;
@@ -3520,7 +3558,7 @@ export function ContentAdminProvider({ children, initialState = null }) {
     const scheduleSharedBlockDraftSync = (pathname, blockId, options = {}) => {
       const normalizedPath = String(pathname || '').trim();
       const normalizedBlockId = String(blockId || '').trim();
-      if (!sharedAuthorityEnabled || !currentActor || !normalizedPath || !normalizedBlockId || typeof window === 'undefined') {
+      if (!sharedAuthorityEnabled || isSharedAuthorityCircuitOpen() || !currentActor || !normalizedPath || !normalizedBlockId || typeof window === 'undefined') {
         return;
       }
 

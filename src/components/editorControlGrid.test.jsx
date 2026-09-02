@@ -47,6 +47,11 @@ function triggerField(field, fieldRoot, settings) {
     fireEvent.click(fieldRoot.querySelector('button'));
     return;
   }
+  if (field.type === 'background_lights') {
+    fireEvent.click(Array.from(fieldRoot.querySelectorAll('button'))
+      .find((button) => button.textContent.trim() === 'On'));
+    return;
+  }
   if (field.type === 'route_link') {
     const control = fieldRoot.querySelector('.admin-route-link-override input');
     expect(control, `${field.id} URL/path override control`).toBeTruthy();
@@ -55,6 +60,8 @@ function triggerField(field, fieldRoot, settings) {
   }
   const control = field.type === 'html'
     ? fieldRoot.querySelector('[contenteditable="true"], textarea.admin-html-editor-source')
+    : field.type === 'range'
+      ? fieldRoot.querySelector('input[role="spinbutton"]')
     : fieldRoot.querySelector('select, textarea, input, [contenteditable="true"]');
   if (!control) {
     const button = fieldRoot.querySelector('button');
@@ -66,7 +73,11 @@ function triggerField(field, fieldRoot, settings) {
     control.innerHTML = `<p>${nextValue}</p>`;
     fireEvent.input(control, { target: { textContent: nextValue } });
   } else {
-    fireEvent.change(control, { target: { value: String(nextValue) } });
+    if (field.type === 'range') {
+      fireEvent.keyDown(control, { key: 'ArrowUp' });
+    } else {
+      fireEvent.change(control, { target: { value: String(nextValue) } });
+    }
   }
 }
 

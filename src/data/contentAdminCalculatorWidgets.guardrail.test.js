@@ -123,7 +123,7 @@ function expectCalculatorIntroShape(entries) {
       'titleHighlightsJson',
     ]);
     if (source === 'blueprint' || source === 'normalizer') {
-      expect((block?.editableFields || []).map((field) => field.id), `${pathname} ${source} editable fields`).toEqual([
+      const expectedFields = [
         'title',
         'titleClassName',
         'titleHighlightsJson',
@@ -137,7 +137,9 @@ function expectCalculatorIntroShape(entries) {
         'copyWrap',
         'anchorId',
         'sectionClassName',
-      ]);
+        ...(source === 'blueprint' ? ['bgTone', 'backgroundEffectsJson'] : []),
+      ];
+      expect((block?.editableFields || []).map((field) => field.id), `${pathname} ${source} editable fields`).toEqual(expectedFields);
     }
     expect((block?.editableFields || []).some((field) => field.label === 'Page Content HTML'), `${pathname} ${source} page content label`).toBe(false);
     expect(RETIRED_INTRO_PAGE_CONTENT_SETTING_KEYS.filter((key) => Object.prototype.hasOwnProperty.call(block?.settings || {}, key)), `${pathname} ${source} retired settings`).toEqual([]);
@@ -161,7 +163,7 @@ function expectCalculatorWidgetShape(entries) {
       'widget',
     ]);
     if (source === 'blueprint' || source === 'normalizer') {
-      expect((block?.editableFields || []).map((field) => field.id), `${pathname} ${source} editable fields`).toEqual([
+      const expectedFields = [
         'widget',
         'fullBleed',
         'spaceBeforeRem',
@@ -171,7 +173,9 @@ function expectCalculatorWidgetShape(entries) {
         'contentMaxWidthPx',
         'anchorId',
         'sectionClassName',
-      ]);
+        ...(source === 'blueprint' ? ['bgTone', 'backgroundEffectsJson'] : []),
+      ];
+      expect((block?.editableFields || []).map((field) => field.id), `${pathname} ${source} editable fields`).toEqual(expectedFields);
     }
     expect((block?.editableFields || []).some((field) => field.label === 'Page Content HTML'), `${pathname} ${source} page content label`).toBe(false);
     expect(RETIRED_PAGE_CONTENT_SETTING_KEYS.filter((key) => Object.prototype.hasOwnProperty.call(block?.settings || {}, key)), `${pathname} ${source} retired settings`).toEqual([]);

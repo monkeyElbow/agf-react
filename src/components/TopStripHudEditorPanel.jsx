@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import ColorPalette from './ColorPalette';
+import BackgroundEditorPage from './BackgroundEditorPage';
 import useBufferedFieldDrafts from '../hooks/useBufferedFieldDrafts';
 import {
   HudEditorBlockOptionsPage,
@@ -66,11 +67,14 @@ export default function TopStripHudEditorPanel({
   settings = {},
   onSettingChange,
   sourceRevision = 0,
-  bgOptions = [],
   textOptions = [],
   loginToneOptions = [],
   ratesToneOptions = [],
   blockOptions = null,
+  bgOptions = [],
+  showBackgroundPage = false,
+  backgroundEffectsJson = '',
+  onBackgroundEffectsChange,
 }) {
   const showLogin = toBool(settings.showLogin, true);
   const showPhone = toBool(settings.showPhone, true);
@@ -111,17 +115,6 @@ export default function TopStripHudEditorPanel({
           <p>Global appearance</p>
         </div>
         <div className="admin-front-hud-row">
-          <span>Background Color</span>
-          <ColorPalette
-            variant="hud"
-            className="is-compact is-icon-only"
-            ariaLabel="Top strip background color"
-            options={bgOptions}
-            value={String(settings.bgTone || 'grey')}
-            onChange={(nextValue) => onSettingChange?.('bgTone', nextValue)}
-          />
-        </div>
-        <div className="admin-front-hud-row">
           <span>Base Text Color</span>
           <ColorPalette
             variant="hud"
@@ -158,6 +151,20 @@ export default function TopStripHudEditorPanel({
           </label>
         </div>
       </section>
+
+      {showBackgroundPage ? (
+        <section className="admin-top-strip-hud-card admin-top-strip-hud-card--background">
+          <BackgroundEditorPage
+            backgroundTone={settings.bgTone}
+            backgroundToneOptions={bgOptions}
+            backgroundToneLabel="Top strip background color"
+            onBackgroundToneChange={(nextValue) => onSettingChange?.('bgTone', nextValue)}
+            backgroundEffectsJson={backgroundEffectsJson}
+            onBackgroundEffectsChange={onBackgroundEffectsChange}
+            paletteVariant="hud"
+          />
+        </section>
+      ) : null}
 
       <section className="admin-top-strip-hud-card admin-top-strip-hud-card--login">
         <div className="admin-top-strip-hud-card-head">

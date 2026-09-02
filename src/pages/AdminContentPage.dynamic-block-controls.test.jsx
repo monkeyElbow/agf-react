@@ -485,11 +485,15 @@ describe('dynamic block control wiring', () => {
 
     render(<HeroBlockEditor block={block} onSettingChange={onSettingChange} />);
 
-    expect(screen.getByRole('radio', { name: 'White' })).toBeTruthy();
-    expect(screen.getByRole('radio', { name: 'Sand Gradient' })).toBeTruthy();
-    expect(screen.getByRole('radio', { name: 'Blue Gradient' })).toBeTruthy();
-    expect(screen.getByRole('radio', { name: 'Super Grey Gradient' })).toBeTruthy();
-    expect(screen.getByRole('radio', { name: 'White' }).style.getPropertyValue('--admin-bg-swatch')).toContain('linear-gradient');
+    fireEvent.click(screen.getByRole('button', { name: 'Background' }));
+    const backgroundPage = screen.getAllByRole('region', { name: 'Background' })
+      .find((region) => region.querySelector('[aria-label="Hero background"]'));
+
+    expect(within(backgroundPage).getByRole('radio', { name: 'White' })).toBeTruthy();
+    expect(within(backgroundPage).getByRole('radio', { name: 'Sand' })).toBeTruthy();
+    expect(within(backgroundPage).getByRole('radio', { name: 'Blue' })).toBeTruthy();
+    expect(within(backgroundPage).getByRole('radio', { name: 'Grey' })).toBeTruthy();
+    expect(within(backgroundPage).getByRole('radio', { name: 'White' }).style.getPropertyValue('--admin-bg-swatch')).toContain('linear-gradient');
   });
 
   it('keeps hero line 3 hidden until the editor explicitly adds it', () => {

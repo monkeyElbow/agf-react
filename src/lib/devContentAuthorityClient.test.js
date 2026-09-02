@@ -15,6 +15,7 @@ import {
   restoreSharedBlockRevision,
   restoreSharedContentBackup,
   restoreSharedPageRevision,
+  resetDevContentAuthorityCircuit,
   saveSharedAnnouncement,
   saveSharedBlockDraft,
   saveSharedPageDraft,
@@ -26,6 +27,7 @@ import {
 describe('devContentAuthorityClient', () => {
   afterEach(() => {
     vi.restoreAllMocks();
+    resetDevContentAuthorityCircuit();
   });
 
   it('includes readable dev identity metadata on shared draft saves', async () => {
@@ -118,6 +120,25 @@ describe('devContentAuthorityClient', () => {
     expect(payload.blockId).toBe('hero');
     expect(payload.block.settings.line1Text).toBe('HUD synced title');
     expect(payload.actor.displayName).toBe('Taylor QA');
+  });
+
+  it('opens a circuit after authority ownership is lost instead of retrying every queued write', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 503,
+      json: async () => ({
+        error: 'content-admin-authority-lost',
+        details: 'Content-admin write rejected because authority ownership was lost.',
+      }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(syncSharedBlockDraft('/services/loans', 'hero', { id: 'hero' }, { userId: 'dev-taylor' }))
+      .rejects.toMatchObject({ code: 'content-admin-authority-lost' });
+    await expect(acquireSharedBlockLock('/services/loans', 'hero', { userId: 'dev-taylor' }))
+      .rejects.toMatchObject({ code: 'content-admin-authority-lost' });
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it('sends the published revision fence with block draft syncs', async () => {

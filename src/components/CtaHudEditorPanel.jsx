@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import AdminHtmlEditor from './AdminHtmlEditor';
 import ColorPalette from './ColorPalette';
+import BackgroundEditorPage from './BackgroundEditorPage';
 import {
   HudEditorBlockOptionsPage,
   HudEditorModelLayout,
@@ -82,6 +83,8 @@ export default function CtaHudEditorPanel({
   onSubmitStyleChange,
   onSubmitToneChange,
   onBgToneChange,
+  backgroundEffectsJson = '',
+  onBackgroundEffectsChange,
   onApplySelectionColor,
   onTitleColorChange,
   onRemoveTitleSpan,
@@ -333,17 +336,16 @@ export default function CtaHudEditorPanel({
                 </div>
               </div>
             ) : null}
-            <div className="admin-front-hud-field-group admin-cta-hud-heading-control admin-cta-hud-heading-control--bg">
-              <span className="admin-front-hud-control-label">Background Color</span>
-              <ColorPalette
-                variant="hud"
-                className="is-compact is-icon-only"
-                ariaLabel="CTA background"
-                options={SURFACE_BG_TONE_OPTIONS}
-                value={resolvedBgTone}
-                onChange={handleBgToneChange}
-              />
-            </div>
+            <BackgroundEditorPage
+              backgroundTone={resolvedBgTone}
+              backgroundToneOptions={SURFACE_BG_TONE_OPTIONS}
+              backgroundToneLabel="CTA background"
+              onBackgroundToneChange={handleBgToneChange}
+              backgroundEffectsJson={backgroundEffectsJson}
+              onBackgroundEffectsChange={onBackgroundEffectsChange}
+              paletteVariant="hud"
+              className="admin-cta-hud-background-page"
+            />
           </div>
           <p className="admin-front-hud-note admin-cta-hud-heading-note">
             Highlight heading text first for span color. With no selection, color applies to the full heading.

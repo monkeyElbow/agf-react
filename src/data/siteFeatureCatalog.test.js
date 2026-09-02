@@ -47,7 +47,7 @@ describe('site feature catalog', () => {
       { value: 'retirement_plan_feature', label: 'Retirement plan feature' },
       { value: 'legacy_giving_stewardship_story', label: 'Planned Giving stewardship story' },
       { value: 'impact_proof_story', label: 'Impact proof story' },
-      { value: 'about_history_feature', label: 'About history feature' },
+      { value: 'about_history_feature', label: 'History Gallery' },
       { value: 'investments_growth_feature', label: 'Investments growth feature' },
     ]);
     expect(getAllowedSiteFeatureEditableFieldIds('editorial_spotlight')).toEqual(entry?.allowedEditableFieldIds);
@@ -141,6 +141,12 @@ describe('site feature catalog', () => {
     expect(aboutHistoryEntry?.allowedEditableFieldIds).toEqual([
       'featureId',
       'cardsJson',
+      'cardTitleSizeRem',
+      'cardTitleLineHeight',
+      'cardBodySizeRem',
+      'cardBodyLineHeight',
+      'titleTone',
+      'bodyTone',
       'buttonLabel',
       'buttonPageRef',
     ]);

@@ -61,9 +61,7 @@ describe('planned giving stewardship story layout guardrail', () => {
     expect(cssSource).toContain('font-size: clamp(2.3rem, 11vw, 3.1rem);');
     expect(componentSource).toContain('function StoryScrollCue');
     expect(cssSource).not.toContain('.legacy-stewardship-story .legacy-stewardship-story-cta.service-native-btn.is-outline {');
-    expect(cssSource).toContain('.native-info-page--legacy-giving .legacy-giving-wills {');
-    expect(cssSource).toContain('padding-bottom: clamp(3.1rem, 6.2vw, 5.4rem);');
-    expect(cssSource).toContain('.native-info-page--legacy-giving .legacy-giving-joy > .ag-panel-rail > h2,');
-    expect(cssSource).toContain('letter-spacing: -0.048em;');
+    expect(cssSource).toContain('.dynamic-billboard.is-billboard-preset-planned-giving-joy {');
+    expect(cssSource).toContain('.dynamic-billboard.is-billboard-preset-planned-giving-joy > .ag-panel-rail > h2,');
   });
 });

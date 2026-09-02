@@ -59,6 +59,19 @@ const BILLBOARD_PRESET_DEFINITIONS = Object.freeze([
       actionFieldIds: Object.freeze(['buttonLabel', 'buttonLinkJson']),
     }),
   }),
+  Object.freeze({
+    id: 'planned-giving-joy',
+    label: 'Planned Giving · More joy',
+    description: 'Centered planned-giving billboard presentation.',
+    templateIds: Object.freeze([]),
+    defaults: Object.freeze({
+      titleFontFamily: 'helv',
+    }),
+    editor: Object.freeze({
+      contentFieldIds: Object.freeze(['title', 'subtitle', 'body', 'bgTone', 'textTone']),
+      actionFieldIds: Object.freeze(['buttonLabel', 'buttonPageRef', 'buttonOpenInNewWindow']),
+    }),
+  }),
 ]);
 
 function clonePresetForDefinition(preset) {
@@ -88,12 +101,21 @@ export function getBillboardPresetDefinition(presetId) {
 
 export function resolveBillboardPresetId(block) {
   const explicitPresetId = String(block?.presetId || '').trim().toLowerCase();
+  const hasLegacyGivingJoyClass = String(block?.settings?.sectionClassName || '')
+    .split(/\s+/)
+    .includes('legacy-giving-joy');
+  if (explicitPresetId === 'default' && hasLegacyGivingJoyClass) {
+    return 'planned-giving-joy';
+  }
   if (BILLBOARD_PRESET_DEFINITIONS.some((preset) => preset.id === explicitPresetId)) {
     return explicitPresetId;
   }
 
   const templateId = String(block?.templateId || '').trim().toLowerCase();
   const matchedPreset = BILLBOARD_PRESET_DEFINITIONS.find((preset) => preset.templateIds.includes(templateId));
+  if (hasLegacyGivingJoyClass) {
+    return 'planned-giving-joy';
+  }
   return matchedPreset?.id || 'default';
 }
 

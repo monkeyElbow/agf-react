@@ -1280,10 +1280,11 @@ describe('source-default content block blueprint coverage', () => {
       && block?.kind === 'billboard'
       && block?.mode === 'dynamic'
     ))).toMatchObject({
+      presetId: 'planned-giving-joy',
       settings: {
         title: 'More joy in giving.',
         subtitle: 'It’s easier than you think.',
-        sectionClassName: 'legacy-giving-joy fade-out',
+        sectionClassName: 'fade-out',
         copyClassName: 'fade-up',
       },
     });
@@ -2411,10 +2412,11 @@ describe('source-default content block blueprint coverage', () => {
       },
     });
     expect(servicesBlocks.find((block) => block?.id === 'matters_band')).toMatchObject({
-      kind: 'site_feature',
+      kind: 'billboard',
       mode: 'dynamic',
       settings: {
-        featureId: 'services_matters_band',
+        title: 'What you do matters.',
+        bodyHtml: '<p>As an AGFinancial customer, your financial decisions fund real ministry work, transforming lives, including yours.</p>',
         buttonLabel: "See what we're doing together",
         sectionClassName: 'services-native-matters',
       },
@@ -2488,7 +2490,7 @@ describe('source-default content block blueprint coverage', () => {
     expect(servicesBlocks.find((block) => block?.id === 'matters_band')).toMatchObject({
       id: 'matters_band',
       mode: 'dynamic',
-      kind: 'site_feature',
+      kind: 'billboard',
     });
     expect(loansBlocks.find((block) => block?.id === 'loan_options')).toMatchObject({
       id: 'loan_options',

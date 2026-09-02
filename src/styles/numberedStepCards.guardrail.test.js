@@ -33,4 +33,19 @@ describe('numbered step-card vertical alignment guardrail', () => {
     );
     expect(source).toContain('color: #ffffff !important;');
   });
+
+  it('stacks the dynamic step-card preset through the shared mobile contract', () => {
+    const source = readFileSync(path.resolve(__dirname, './service-native-numbered-cards.css'), 'utf8');
+
+    expect(source).toContain(
+      '.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-numbered-step-cards .service-native-card:not(.investments-native-cert-card):not(.retirement-account-card--certificate) {\n    grid-template-columns: minmax(0, 1fr);',
+    );
+    expect(source).toContain(
+      '.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-numbered-step-cards .service-native-card:not(.investments-native-cert-card):not(.retirement-account-card--certificate) :is(h3, p, .service-native-action-row, .service-native-card-rich-body, .service-native-card-bullet-list, .service-native-card-link-list, .service-native-card-accordions) {\n    grid-column: 1;\n    grid-row: auto;',
+    );
+    expect(source).toContain('grid-template-columns: minmax(var(--numbered-step-card-column), 18%) minmax(0, 1fr);');
+
+    const mobileContract = source.slice(source.lastIndexOf('@media (max-width: 720px)'));
+    expect(mobileContract).not.toMatch(/\n\s+(?:min-)?height\s*:/);
+  });
 });

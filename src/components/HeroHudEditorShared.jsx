@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import ColorPalette from './ColorPalette';
+import BackgroundEditorPage from './BackgroundEditorPage';
 import TextHighlightColorControls from './TextHighlightColorControls';
 import { BillboardSlider } from './BillboardHudEditorPanel';
 import {
@@ -567,6 +568,8 @@ export function HeroHudEditorPanel({
   onRemoveSpan,
   onClearLineSpans,
   onBgToneChange,
+  backgroundEffectsJson,
+  onBackgroundEffectsChange,
   onJustifyChange,
   onTitleSizeChange,
   onTitleLetterSpacingChange,
@@ -593,6 +596,7 @@ export function HeroHudEditorPanel({
   const [activeEditorSection, setActiveEditorSection] = useState('content');
   const editorSections = appendHudBlockOptionsSection([
     { id: 'content', label: 'Content', icon: 'Aa' },
+    { id: 'background', label: 'Background', icon: '◌' },
     ...(hasExtraControls ? [{ id: 'actions', label: 'Actions', icon: '↗' }] : []),
     ], blockOptions);
   const hasSelectionRange = (candidate, lineKey = candidate?.line) => (
@@ -914,17 +918,6 @@ export function HeroHudEditorPanel({
             </div>
           </div>
           <div className="admin-front-hud-card admin-hero-hud-card admin-hero-hud-card--type">
-            <div className="admin-front-hud-row">
-              <span>Background</span>
-              <ColorPalette
-                variant="hud"
-                className="is-compact is-icon-only"
-                ariaLabel="Hero background"
-                options={bgToneOptions}
-                value={bgTone}
-                onChange={onBgToneChange}
-              />
-            </div>
             <BillboardSlider
               label="Headline Size"
               ariaLabel="Hero headline size"
@@ -977,6 +970,19 @@ export function HeroHudEditorPanel({
             />
           </div>
         </div>
+        {activeEditorSection === 'background' ? (
+          <div className="admin-hero-hud-background-page admin-hero-hud-card admin-hero-hud-card--background">
+            <BackgroundEditorPage
+              backgroundTone={bgTone}
+              backgroundToneOptions={bgToneOptions}
+              backgroundToneLabel="Hero background"
+              onBackgroundToneChange={onBgToneChange}
+              backgroundEffectsJson={backgroundEffectsJson}
+              onBackgroundEffectsChange={onBackgroundEffectsChange}
+              paletteVariant="hud"
+            />
+          </div>
+        ) : null}
         {hasExtraControls ? (
           <div className="admin-front-hud-card admin-hero-hud-card admin-hero-hud-card--actions">
             <div className="admin-hero-hud-button-fields">

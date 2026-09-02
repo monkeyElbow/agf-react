@@ -5,6 +5,7 @@ import AdminHtmlEditor from '../components/AdminHtmlEditor';
 import BillboardHudEditorPanel from '../components/BillboardHudEditorPanel';
 import AdminNumberInput from '../components/AdminNumberInput';
 import SharedRouteLinkField from '../components/RouteLinkField';
+import BackgroundEditorPage from '../components/BackgroundEditorPage';
 import { getBlockOwnershipVisual } from '../components/BlockOwnershipOverlay';
 import ColorPalette from '../components/ColorPalette';
 import { HeroDriftNotice } from '../components/HeroHudEditorShared';
@@ -68,6 +69,47 @@ export {
   MigratedPageContentBlockEditor as PageContentBlockEditor,
   MigratedRequestFormBlockEditor as RequestFormBlockEditor,
 };
+
+// These editors already own a Background page inside their specialized layout.
+// Every other dynamic block receives the same shared page below the specialized
+// editor, so background and lights never become a new per-block implementation.
+const ADMIN_BLOCKS_WITH_INLINE_BACKGROUND = new Set([
+  'hero',
+  'intro',
+  'billboard',
+  'cta_form',
+  'request_form',
+  'card_grid',
+  'card_chart',
+  'newsletter',
+  'content',
+  'columns',
+  'top_strip',
+]);
+
+function AdminBlockBackgroundPage({ block, onSettingChange }) {
+  const settings = block?.settings || {};
+  const fields = Array.isArray(block?.editableFields) ? block.editableFields : [];
+  const backgroundToneField = fields.find((field) => field?.id === 'bgTone');
+  const backgroundToneOptions = Array.isArray(backgroundToneField?.options) && backgroundToneField.options.length
+    ? backgroundToneField.options
+    : SURFACE_BG_TONE_OPTIONS;
+
+  return (
+    <section className="admin-dynamic-background-section" aria-label="Background">
+      <h3>Background</h3>
+      <BackgroundEditorPage
+        backgroundTone={settings.bgTone || backgroundToneField?.defaultValue || 'white'}
+        backgroundToneOptions={backgroundToneOptions}
+        backgroundToneLabel={backgroundToneField?.label || 'Background color'}
+        onBackgroundToneChange={(nextValue) => onSettingChange('bgTone', nextValue)}
+        backgroundEffectsJson={settings.backgroundEffectsJson}
+        onBackgroundEffectsChange={(nextValue) => onSettingChange('backgroundEffectsJson', nextValue)}
+        paletteVariant="admin"
+      />
+    </section>
+  );
+}
 
 function normalizeRouteOption(page) {
   if (!page || typeof page !== 'object') {
@@ -2776,7 +2818,7 @@ export default function AdminContentPage() {
                   type="button"
                   className={`action-btn${draftSaveConfirmation ? ' admin-page-save-confirmed' : ''}`}
                   onClick={handleSaveDraft}
-                  disabled={!selectedPathDirty || draftSaveConfirmation || draftSaveBusy || pagePublishBusy || sharedPublishBusy}
+                  disabled={(!selectedPathDirty && !selectedPathHasPendingLocalDraft) || draftSaveConfirmation || draftSaveBusy || pagePublishBusy || sharedPublishBusy}
                 >
                   {draftSaveBusy ? 'Saving…' : draftSaveConfirmation ? 'Draft saved' : 'Save all page drafts'}
                 </button>
@@ -3399,8 +3441,15 @@ export default function AdminContentPage() {
                       onSettingChange={(settingKey, nextValue) => {
                         stageLocalBlockSetting(selectedBlock.id, settingKey, nextValue);
                       }}
-                    />
+                      />
                   )}
+                  {selectedBlock.mode === 'dynamic'
+                    && !ADMIN_BLOCKS_WITH_INLINE_BACKGROUND.has(String(selectedBlock.kind || '').trim()) ? (
+                    <AdminBlockBackgroundPage
+                      block={selectedBlock}
+                      onSettingChange={(settingKey, nextValue) => stageLocalBlockSetting(selectedBlock.id, settingKey, nextValue)}
+                    />
+                  ) : null}
                 </div>
               ) : canEditSelectedBlock ? (
                 <div className="admin-selected-block-inspect-card">

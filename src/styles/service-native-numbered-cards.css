@@ -222,6 +222,24 @@
 }
 
 @media (max-width: 720px) {
+  /* Dynamic card-grid presets also carry the shared numbered-step hook. The
+   * compound selector intentionally matches the existing preset rule's
+   * exclusion shape so this shared mobile contract wins its desktop placement
+   * declarations without introducing a route-specific exception. */
+  .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-numbered-step-cards .service-native-card:not(.investments-native-cert-card):not(.retirement-account-card--certificate) {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 0.95rem;
+  }
+
+  .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-numbered-step-cards .service-native-card:not(.investments-native-cert-card):not(.retirement-account-card--certificate) :is(h3, p, .service-native-action-row, .service-native-card-rich-body, .service-native-card-bullet-list, .service-native-card-link-list, .service-native-card-accordions) {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-numbered-step-cards .service-native-card:not(.investments-native-cert-card):not(.retirement-account-card--certificate) h3 {
+    justify-self: flex-start;
+  }
+
   .is-numbered-step-cards .service-native-card {
     grid-template-columns: minmax(0, 1fr);
     row-gap: 0.95rem;

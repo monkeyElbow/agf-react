@@ -3164,87 +3164,268 @@
   border-color: rgba(var(--ag-admin-hud-accent-rgb), 0.24);
 }
 
-/* Shared Background editor: the same persisted light model is used by every
-   supported block, so the controls stay compact and consistent in HUD/admin. */
-.admin-background-lights-editor {
-  display: grid;
-  gap: 0.65rem;
+/* Shared Background editor: the same persisted surface/light model is used by
+   every block, so the controls stay compact and consistent in HUD/admin. */
+.admin-background-editor-page {
+  display: block;
   width: 100%;
 }
 
-.admin-background-lights-heading,
-.admin-background-lights-options,
-.admin-background-light-card-topline,
-.admin-background-lights-clip {
+.admin-background-editor-page__layout {
+  display: grid;
+  grid-template-columns: minmax(13rem, 0.78fr) minmax(0, 1.72fr);
+  gap: clamp(0.9rem, 2vw, 1.5rem);
+  align-items: start;
+}
+
+.admin-background-editor-page__left,
+.admin-background-editor-page__right {
+  display: grid;
+  gap: 0.8rem;
+  min-width: 0;
+}
+
+.admin-background-editor-page__surface {
+  display: grid;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.admin-background-editor-page__surface > strong,
+.admin-background-editor-page__setting > strong {
+  color: var(--ag-color-super-grey);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.admin-background-editor-page__setting {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.55rem;
+  gap: 0.6rem;
 }
 
-.admin-background-lights-heading > div:first-child {
+.admin-background-editor-page__controls {
   display: grid;
-  gap: 0.08rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+  align-items: start;
 }
 
-.admin-background-lights-heading strong {
-  color: var(--ag-color-super-grey);
-  font-size: 0.84rem;
-}
-
-.admin-background-lights-heading span,
-.admin-background-lights-clip > span {
-  color: #627688;
-  font-size: 0.7rem;
-  line-height: 1.25;
-}
-
-.admin-background-lights-add,
-.admin-background-lights-remove {
-  border: 1px solid rgba(var(--ag-admin-hud-accent-rgb), 0.38);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.82);
-  color: var(--ag-color-atlantean-dark);
-  font: inherit;
-  font-size: 0.72rem;
-  font-weight: 700;
-  padding: 0.32rem 0.58rem;
-}
-
-.admin-background-lights-add:disabled {
-  cursor: not-allowed;
-  opacity: 0.42;
-}
-
-.admin-background-lights-list {
+.admin-background-editor-page__controls .admin-background-editor-page__setting {
   display: grid;
-  gap: 0.55rem;
+  align-content: start;
+  justify-items: start;
+  gap: 0.28rem;
+}
+
+.admin-background-editor-page__swatches,
+.admin-background-light-color-palette {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.35rem;
+  width: fit-content;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.admin-background-editor-page__swatches :is(.admin-swatch-option, .admin-front-hud-swatch),
+.admin-background-light-color-palette :is(.admin-swatch-option, .admin-front-hud-swatch) {
+  flex: 0 0 24px;
+  width: 24px;
+  min-width: 24px;
+  height: 24px;
+  min-height: 24px;
+  padding: 1px;
+  border-radius: 50%;
+}
+
+.admin-background-editor-page__swatches .admin-swatch-option > span:last-child,
+.admin-background-light-color-palette .admin-swatch-option > span:last-child {
+  display: none;
+}
+
+.admin-background-editor-page__right {
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
 }
 
 .admin-background-light-card {
   min-inline-size: 0;
   margin: 0;
-  padding: 0.58rem 0.62rem 0.66rem;
+  padding: 0.62rem 0.7rem 0.72rem;
   border: 1px solid rgba(var(--ag-admin-hud-accent-rgb), 0.25);
   border-radius: 12px;
+  background: rgba(255, 255, 255, 0.16);
+  transition: opacity 180ms ease, border-color 180ms ease, background 180ms ease;
+}
+
+.admin-background-light-card.is-disabled {
+  opacity: 0.56;
+  border-color: rgba(var(--ag-admin-hud-accent-rgb), 0.14);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .admin-background-light-card legend {
   padding: 0 0.22rem;
   color: var(--ag-color-super-grey);
   font-size: 0.72rem;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .admin-background-light-card-topline {
-  justify-content: flex-start;
-  margin-bottom: 0.5rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 0.55rem;
+  margin-bottom: 0.62rem;
 }
 
-.admin-background-lights-remove {
-  margin-left: auto;
-  min-width: 1.8rem;
-  padding-inline: 0.3rem;
+.admin-background-light-card-toggle {
+  display: inline-flex;
+  align-items: center;
+}
+
+.admin-background-light-card .admin-boolean-pill-option {
+  min-height: 24px;
+  padding: 0.24rem 0.5rem;
+  font-size: 0.65rem;
+}
+
+.admin-background-light-card .admin-background-light-color-palette {
+  flex-wrap: nowrap;
+  min-width: max-content;
+}
+
+.admin-background-light-motion-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
+.admin-background-light-motion-toggle select {
+  width: clamp(7rem, 9vw, 9rem);
+  min-width: 0;
+  min-height: 26px;
+  padding: 0.18rem 0.4rem;
+  border: 1px solid rgba(var(--ag-admin-hud-accent-rgb), 0.34);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.88);
+  color: var(--ag-color-super-grey);
+  font: inherit;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.admin-background-light-position-control {
+  display: grid;
+  gap: 0.28rem;
+  margin-top: 0.15rem;
+}
+
+.admin-background-light-position-label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  color: #627688;
+  font-size: 0.67rem;
+}
+
+.admin-background-light-position-label strong {
+  color: var(--ag-color-super-grey);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.admin-background-light-position-map {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  overflow: visible;
+  border: 1px solid rgba(var(--ag-admin-hud-accent-rgb), 0.34);
+  border-radius: 10px;
+  background:
+    linear-gradient(rgba(var(--ag-admin-hud-accent-rgb), 0.09) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(var(--ag-admin-hud-accent-rgb), 0.09) 1px, transparent 1px),
+    rgba(255, 255, 255, 0.72);
+  background-size: 25% 25%;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.admin-background-light-position-map.is-dragging {
+  cursor: grabbing;
+}
+
+.admin-background-light-position-guide {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+.admin-background-light-position-guide.is-horizontal {
+  inset: 50% 0 auto;
+  border-top: 1px dashed rgba(var(--ag-admin-hud-accent-rgb), 0.3);
+}
+
+.admin-background-light-position-guide.is-vertical {
+  inset: 0 auto 0 50%;
+  border-left: 1px dashed rgba(var(--ag-admin-hud-accent-rgb), 0.3);
+}
+
+.admin-background-light-position-bounds {
+  position: absolute;
+  inset: 25%;
+  border: 1px dashed rgba(var(--ag-admin-hud-accent-rgb), 0.5);
+  border-radius: 5px;
+  pointer-events: none;
+}
+
+.admin-background-light-position-knob {
+  position: absolute;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 1.45rem;
+  height: 1.45rem;
+  padding: 0;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  background: var(--admin-background-light-knob-color, var(--ag-admin-hud-slider-thumb));
+  box-shadow: 0 2px 7px rgba(var(--ag-admin-hud-accent-rgb), 0.38);
+  transform: translate(-50%, -50%);
+  color: #ffffff;
+  font: inherit;
+  font-size: 0.62rem;
+  font-weight: 800;
+  line-height: 1;
+  cursor: grab;
+  touch-action: none;
+}
+
+.admin-background-light-position-knob:focus-visible {
+  outline: 2px solid var(--ag-admin-hud-accent);
+  outline-offset: 2px;
+}
+
+.admin-background-light-position-knob:active {
+  cursor: grabbing;
+}
+
+.admin-background-light-position-knob.is-selected {
+  box-shadow:
+    0 0 0 2px rgba(255, 255, 255, 0.9),
+    0 2px 8px rgba(var(--ag-admin-hud-accent-rgb), 0.42);
+}
+
+.admin-background-light-position-control > small {
+  color: #627688;
+  font-size: 0.6rem;
+  line-height: 1.25;
 }
 
 .admin-background-light-slider-grid {
@@ -3276,15 +3457,50 @@
   width: 100%;
 }
 
+.admin-background-light-control-grid {
+  margin-top: 0.1rem;
+}
+
+.admin-background-light-control-grid.is-motion-directional {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.admin-background-light-control-grid.is-motion-drift {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.admin-background-light-control-grid:not(.is-motion-directional):not(.is-motion-drift) {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 @media (max-width: 640px) {
-  .admin-background-lights-heading,
-  .admin-background-lights-options,
-  .admin-background-lights-clip {
-    align-items: flex-start;
-    flex-direction: column;
+  .admin-background-light-control-grid.is-motion-directional,
+  .admin-background-light-control-grid.is-motion-drift,
+  .admin-background-light-control-grid:not(.is-motion-directional):not(.is-motion-drift) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 980px) {
+  .admin-background-editor-page__layout {
+    grid-template-columns: minmax(12rem, 0.72fr) minmax(0, 1.28fr);
+  }
+
+}
+
+@media (max-width: 640px) {
+  .admin-background-editor-page__layout {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .admin-background-light-slider-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+}
+
+@media (max-width: 420px) {
+  .admin-background-editor-page__controls {
     grid-template-columns: minmax(0, 1fr);
   }
 }
@@ -8664,6 +8880,19 @@
 .admin-hud-editor-shared-surface .admin-hero-hud-editor.is-section-actions
   > .admin-hud-editor-panel-stack
   > .admin-hero-hud-card--actions {
+  display: grid;
+}
+
+.admin-hud-editor-shared-surface .admin-hero-hud-editor.is-section-background
+  > .admin-hud-editor-panel-stack
+  > .admin-hero-hud-content-grid,
+.admin-hud-editor-shared-surface .admin-hero-hud-editor.is-section-background
+  > .admin-hud-editor-panel-stack
+  > .admin-hero-hud-card--actions {
+  display: none;
+}
+
+.admin-hero-hud-background-page {
   display: grid;
 }
 

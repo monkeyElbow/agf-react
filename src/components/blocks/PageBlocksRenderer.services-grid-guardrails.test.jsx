@@ -84,7 +84,7 @@ describe('home services grid renderer guardrail', () => {
     expect(source).not.toContain("kind: 'services_grid',");
     expect(source).toContain('function ServicesGridBlock({ block, resolveTo, ownership, hudAnchor }) {');
     expect(source).toContain("className={`home-native-services${ownership?.className || ''}`}");
-    expect(source).toContain('<BlockOwnershipOverlay ownership={ownership} />');
+    expect(source).toContain('<BlockSurfaceLayers ownership={ownership}');
     expect(source).toContain("const Renderer = blockRenderers[blockKind];");
   });
 

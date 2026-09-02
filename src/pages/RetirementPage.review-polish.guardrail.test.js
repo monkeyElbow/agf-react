@@ -33,7 +33,7 @@ describe('retirement 403(b) review polish guardrail', () => {
     expect(catalogSource).toContain('metrics:');
     expect(source).toContain('blockId="retirement_plan_feature"');
     expect(source).toContain("sectionHudClassName={getHudBlockStateClassName('retirement_plan_feature').trim()}");
-    expect(readSource('../components/InvestmentsGrowthFeature.jsx')).toContain('if (isValidElement(hudAnchor))');
+    expect(readSource('../components/InvestmentsGrowthFeature.jsx')).toContain('<BlockSurfaceLayers');
   });
 
   it('keeps the retirement hero wired to shared dynamic headline size and tracking controls', () => {

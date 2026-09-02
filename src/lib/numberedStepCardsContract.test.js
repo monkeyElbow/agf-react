@@ -24,4 +24,19 @@ describe('numbered step-card renderer contract', () => {
       sectionClassName: 'ordinary-card-grid',
     })).toBe('');
   });
+
+  it('routes every numbered variant through the shared renderer hook', () => {
+    const numberedVariants = [
+      { presetId: 'step-cards' },
+      { sectionClassName: 'ministers-group-life-native-enroll' },
+      { sectionClassName: 'online-contrib-native-steps' },
+      { sectionClassName: 'retirement-403b-group-enrollment-steps' },
+      { sectionClassName: 'retirement-403b-native-loan-apply' },
+      { sectionClassName: 'retirement-individual-enrollment-steps' },
+    ];
+
+    numberedVariants.forEach((variant) => {
+      expect(resolveNumberedStepCardsClassName(variant)).toBe(NUMBERED_STEP_CARDS_CLASS_NAME);
+    });
+  });
 });

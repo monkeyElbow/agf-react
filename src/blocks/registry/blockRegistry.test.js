@@ -77,10 +77,14 @@ describe('canonical block registry', () => {
     expect(getBlockPresetDefinitions('billboard').map((preset) => preset.id)).toEqual([
       'default',
       'dashboard-login',
+      'planned-giving-joy',
     ]);
     expect(getBlockDefinition('billboard')?.editorType).toBe('billboard');
     expect(getBlockDefinition('billboard')?.styleScope.cssNamespace).toBe('billboard');
     expect(getBlockPresetDefinition('billboard', 'dashboard-login')?.templateIds).toEqual(['dashboard_login_cta']);
+    expect(getBlockPresetDefinition('billboard', 'planned-giving-joy')?.defaults).toMatchObject({
+      titleFontFamily: 'helv',
+    });
     expect(getBlockPresetDefinition('calculator_cta', 'default')).toBeNull();
     expect(getBlockPresetDefinition('feature_panel', 'default')).toBeNull();
     expect(getBlockPresetDefinition('cta_form', 'default')).toBeNull();
@@ -117,6 +121,13 @@ describe('canonical block registry', () => {
 
       expect(hudSections.length).toBeGreaterThan(0);
       expect(adminSections.length).toBeGreaterThan(0);
+      ['hud', 'admin'].forEach((surface) => {
+        const sections = surface === 'hud' ? hudSections : adminSections;
+        const backgroundSections = sections.filter((section) => section.id === 'background');
+        expect(backgroundSections, `${kind} ${surface} background sections`).toHaveLength(1);
+        expect(backgroundSections[0].fields.map((field) => field.id), `${kind} ${surface} background fields`)
+          .toEqual(['bgTone', 'backgroundEffectsJson']);
+      });
       expect(kind === 'rates' ? editableFields.length >= 0 : editableFields.length > 0).toBe(true);
       expect(new Set(editableFields.map((field) => field.id)).size).toBe(editableFields.length);
       expect(adminSections.flatMap((section) => section.fields).map((field) => field.id))
@@ -240,8 +251,16 @@ describe('canonical block registry', () => {
       'metricsJson',
       'cardsJson',
       'beatsJson',
+      'cardTitleSizeRem',
+      'cardTitleLineHeight',
+      'cardBodySizeRem',
+      'cardBodyLineHeight',
+      'titleTone',
+      'bodyTone',
       'buttonLabel',
       'buttonLinkJson',
+      'bgTone',
+      'backgroundEffectsJson',
     ]);
     expect(buttonLinkField).toEqual(expect.objectContaining({
       type: 'route_link',

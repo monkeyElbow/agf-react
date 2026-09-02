@@ -32,6 +32,53 @@ describe('front HUD content source selection', () => {
     expect(result.hasAuthoringBlocksForPath).toBe(true);
   });
 
+  it('keeps a published pinned intro visible when an authoring route is missing that primary block', () => {
+    const publishedBlocks = {
+      '/about-us': [
+        { id: 'intro', kind: 'intro', mode: 'dynamic', settings: { bodyHtml: '<p>Published intro</p>' } },
+        { id: 'values', kind: 'card_grid', mode: 'dynamic' },
+      ],
+    };
+    const authoringBlocks = {
+      '/about-us': [
+        { id: 'values', kind: 'card_grid', mode: 'dynamic' },
+      ],
+    };
+
+    const result = selectFrontHudContentSource({
+      enabled: true,
+      pathname: '/about-us',
+      authoringBlocksByPath: authoringBlocks,
+      blocksByPath: publishedBlocks,
+    });
+
+    expect(result.blocksByPath['/about-us'].map((block) => block.id)).toEqual(['intro', 'values']);
+    expect(result.blocksByPath['/about-us'].find((block) => block.id === 'intro')?.settings.bodyHtml)
+      .toBe('<p>Published intro</p>');
+  });
+
+  it('replaces an invalid pinned intro mode instead of letting block-only rendering drop it', () => {
+    const publishedBlocks = {
+      '/about-us': [
+        { id: 'intro', kind: 'intro', mode: 'dynamic', settings: { bodyHtml: '<p>Published intro</p>' } },
+      ],
+    };
+    const authoringBlocks = {
+      '/about-us': [
+        { id: 'intro', kind: 'content', mode: 'static', settings: {} },
+      ],
+    };
+
+    const result = selectFrontHudContentSource({
+      enabled: true,
+      pathname: '/about-us',
+      authoringBlocksByPath: authoringBlocks,
+      blocksByPath: publishedBlocks,
+    });
+
+    expect(result.blocksByPath['/about-us'][0]).toBe(publishedBlocks['/about-us'][0]);
+  });
+
   it('recognizes a template path when the active path is an alias', () => {
     expect(hasAuthoringContentForPaths(
       { '/services/loans': [{ id: 'hero' }] },

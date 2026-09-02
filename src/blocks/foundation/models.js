@@ -1,5 +1,11 @@
-import { defineEditorSections, getEditorSectionsForSurface } from './editorDescriptors';
+import {
+  defineEditorField,
+  defineEditorSection,
+  defineEditorSections,
+  getEditorSectionsForSurface,
+} from './editorDescriptors';
 import { normalizeSplitLinkFieldSettings } from '../../lib/linkValue';
+import { SURFACE_BG_TONE_OPTIONS } from '../../lib/colorSystem';
 
 export const BLOCK_KIND_VALUES = Object.freeze([
   'billboard',
@@ -63,10 +69,69 @@ function normalizeStringList(values) {
 }
 
 function normalizeBlockDefaultSettings(settings) {
-  return normalizeSplitLinkFieldSettings(
+  const normalized = normalizeSplitLinkFieldSettings(
     settings && typeof settings === 'object' ? settings : {},
     { stripSplitFields: true },
   );
+  return {
+    ...normalized,
+    backgroundEffectsJson: normalized.backgroundEffectsJson ?? '',
+  };
+}
+
+const BACKGROUND_SECTION_ID = 'background';
+
+function buildUnifiedBackgroundEditor(sections) {
+  const fieldsById = new Map();
+
+  sections.forEach((section) => {
+    (Array.isArray(section?.fields) ? section.fields : []).forEach((field) => {
+      const fieldId = String(field?.id || '').trim();
+      if (!['bgTone', 'backgroundEffectsJson'].includes(fieldId) || fieldsById.has(fieldId)) {
+        return;
+      }
+      fieldsById.set(fieldId, field);
+    });
+  });
+
+  const backgroundFields = [
+    fieldsById.get('bgTone') || defineEditorField({
+      id: 'bgTone',
+      label: 'Background color',
+      type: 'swatch',
+      options: SURFACE_BG_TONE_OPTIONS,
+    }),
+    fieldsById.get('backgroundEffectsJson') || defineEditorField({
+      id: 'backgroundEffectsJson',
+      label: 'Background lights',
+      type: 'background_lights',
+    }),
+  ];
+  const backgroundFieldIds = new Set(backgroundFields.map((field) => field.id));
+  const contentSections = sections
+    .filter((section) => String(section?.id || '').trim() !== BACKGROUND_SECTION_ID)
+    .map((section) => ({
+      ...section,
+      fields: (Array.isArray(section?.fields) ? section.fields : [])
+        .filter((field) => !backgroundFieldIds.has(String(field?.id || '').trim())),
+    }));
+
+  return [
+    ...contentSections,
+    defineEditorSection({
+      id: BACKGROUND_SECTION_ID,
+      title: 'Background',
+      surfaces: ['hud', 'admin'],
+      fields: backgroundFields,
+    }),
+  ];
+}
+
+function appendUniqueSectionId(sectionIds, sectionId) {
+  return Array.from(new Set([
+    ...(Array.isArray(sectionIds) ? sectionIds : []),
+    sectionId,
+  ]));
 }
 
 /**
@@ -114,12 +179,26 @@ export function createBlockDefinition(definition) {
       ? nextDefinition.supportedModes
       : ['dynamic'],
   );
-  const sections = defineEditorSections(nextDefinition?.editor?.sections || []);
-  const hudSectionIds = normalizeStringList(nextDefinition?.editor?.hudSectionIds || []);
-  const adminSectionIds = normalizeStringList(nextDefinition?.editor?.adminSectionIds || []);
-  const schemaFields = Array.isArray(nextDefinition?.schema?.fields)
+  const sections = buildUnifiedBackgroundEditor(
+    defineEditorSections(nextDefinition?.editor?.sections || []),
+  );
+  const hudSectionIds = normalizeStringList(
+    appendUniqueSectionId(nextDefinition?.editor?.hudSectionIds || [], BACKGROUND_SECTION_ID),
+  );
+  const adminSectionIds = normalizeStringList(
+    appendUniqueSectionId(nextDefinition?.editor?.adminSectionIds || [], BACKGROUND_SECTION_ID),
+  );
+  const declaredSchemaFields = Array.isArray(nextDefinition?.schema?.fields)
     ? nextDefinition.schema.fields
-    : sections.flatMap((section) => section.fields);
+    : [];
+  const declaredSchemaFieldIds = new Set(
+    declaredSchemaFields.map((field) => String(field?.id || '').trim()).filter(Boolean),
+  );
+  const unifiedBackgroundFields = sections.find((section) => section.id === BACKGROUND_SECTION_ID)?.fields || [];
+  const schemaFields = [
+    ...declaredSchemaFields,
+    ...unifiedBackgroundFields.filter((field) => !declaredSchemaFieldIds.has(String(field?.id || '').trim())),
+  ];
   const validators = Object.freeze(
     (Array.isArray(nextDefinition.validators) ? nextDefinition.validators : [])
       .filter((validator) => typeof validator === 'function'),
@@ -206,6 +285,7 @@ export function createBlockDefinition(definition) {
     }),
     validators,
     styleScope,
+    ...(nextDefinition.formBoundary ? { formBoundary: nextDefinition.formBoundary } : {}),
   });
 }
 

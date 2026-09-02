@@ -48,7 +48,8 @@ describe('block ownership overlay guardrail', () => {
     expect(nativePageSource).toContain('getOwnershipVisualForBlockId');
     expect(homeRendererSource).toContain('getBlockOwnershipVisual');
     expect(homeRendererSource).toContain('is-admin-hidden-block');
-    expect(homeRendererSource).toContain('<BlockOwnershipOverlay ownership={ownership} />');
+    expect(homeRendererSource).toContain("import BlockSurfaceLayers from '../BlockSurfaceLayers';");
+    expect(homeRendererSource).toContain('<BlockSurfaceLayers ownership={ownership}');
     expect(loansSource).toContain("ownership={getOwnershipVisualForBlockId('cta_form')}");
     expect(servicesSource).toContain("ownership={getOwnershipVisualForBlockId('cta_form')}");
     expect(investmentsSource).toContain("data-block-id=\"hero\"");

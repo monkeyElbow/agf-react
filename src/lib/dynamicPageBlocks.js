@@ -494,6 +494,14 @@ function applySiteFeatureCollectionOverrides(featureId, settings, featureRuntime
   return runtime;
 }
 
+function normalizeSiteFeatureGalleryNumber(value, fallback, min, max) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return fallback;
+  }
+  return Math.max(min, Math.min(max, Number(numeric.toFixed(2))));
+}
+
 function normalizeOptionalHtmlContent(value) {
   const html = String(value || '').trim();
   return (!html || html === '<p></p>' || html === '<p><br></p>') ? '' : html;
@@ -1255,10 +1263,12 @@ export function buildDynamicBillboardFromBlock(block) {
     // narrow column.
     copyStyle: contentMaxWidthPx || bodyMaxWidthPx
       || headerGapRem !== null
+      || leadCopySizeRem !== null
       ? {
           ...(contentMaxWidthPx ? { '--dynamic-billboard-copy-max-width': `${contentMaxWidthPx}px` } : {}),
           ...(bodyMaxWidthPx ? { '--dynamic-billboard-body-max-width': `${bodyMaxWidthPx}px` } : {}),
           ...(headerGapRem !== null ? { '--dynamic-billboard-header-gap': `${headerGapRem}rem` } : {}),
+          ...(leadCopySizeRem !== null ? buildBillboardLeadCopyStyle(leadCopySizeRem) : {}),
         }
       : undefined,
     copyClassName: sanitizeClassName(settings.copyClassName || '')
@@ -1520,7 +1530,27 @@ export function buildDynamicSiteFeatureFromBlock(block) {
       .filter(Boolean)
     : [];
 
-  if (!headline && !body && !action && !metrics.length && !beats.length) {
+  const galleryPresentation = featureId === 'about_history_feature'
+    ? {
+        ...(Object.prototype.hasOwnProperty.call(settings, 'cardTitleSizeRem')
+          ? { cardTitleSizeRem: normalizeSiteFeatureGalleryNumber(settings.cardTitleSizeRem, 5.4, 3, 6) }
+          : {}),
+        ...(Object.prototype.hasOwnProperty.call(settings, 'cardTitleLineHeight')
+          ? { cardTitleLineHeight: normalizeSiteFeatureGalleryNumber(settings.cardTitleLineHeight, 0.95, 0.8, 1.5) }
+          : {}),
+        ...(Object.prototype.hasOwnProperty.call(settings, 'cardBodySizeRem')
+          ? { cardBodySizeRem: normalizeSiteFeatureGalleryNumber(settings.cardBodySizeRem, 1.14, 0.9, 2) }
+          : {}),
+        ...(Object.prototype.hasOwnProperty.call(settings, 'cardBodyLineHeight')
+          ? { cardBodyLineHeight: normalizeSiteFeatureGalleryNumber(settings.cardBodyLineHeight, 1.72, 1.1, 2.1) }
+          : {}),
+        titleTone: normalizeGridToneToken(settings.titleTone || 'super-grey'),
+        bodyTone: normalizeGridToneToken(settings.bodyTone || 'super-grey'),
+      }
+    : {};
+
+  if (!headline && !body && !action && !metrics.length && !beats.length
+    && !Array.isArray(featureRuntime.cards)) {
     return null;
   }
 
@@ -1549,6 +1579,7 @@ export function buildDynamicSiteFeatureFromBlock(block) {
     action,
     metrics,
     beats,
+    ...galleryPresentation,
   };
 }
 

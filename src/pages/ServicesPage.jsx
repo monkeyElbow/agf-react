@@ -241,7 +241,7 @@ export default function ServicesPage() {
   const servicesMattersBlock = useMemo(() => (
     managedBlocks.find((block) => (
       block?.id === 'matters_band'
-      && block?.kind === 'site_feature'
+      && ['billboard', 'site_feature'].includes(block?.kind)
       && block?.mode === 'dynamic'
       && block?.hidden !== true
       && block?.hidden !== 'true'
@@ -252,7 +252,8 @@ export default function ServicesPage() {
     [servicesBreakdownBlock],
   );
   const servicesMattersRuntime = useMemo(
-    () => buildDynamicSiteFeatureFromBlock(servicesMattersBlock),
+    () => buildDynamicBillboardFromBlock(servicesMattersBlock)
+      || buildDynamicSiteFeatureFromBlock(servicesMattersBlock),
     [servicesMattersBlock],
   );
   const testimonialsData = useMemo(
@@ -934,17 +935,23 @@ export default function ServicesPage() {
       >
         <BlockSurfaceLayers ownership={getOwnershipVisualForBlockId('matters_band')} hudAnchor={renderHudAnchor('matters_band')} />
         <div className="ag-panel-rail">
-          {servicesMattersRuntime.title === 'What you do matters.' ? (
-            <h2>
-              What you do
-              {' '}
-              <mark>matters</mark>
-              .
-            </h2>
-          ) : (
-            <h2>{servicesMattersRuntime.title}</h2>
-          )}
-          {servicesMattersRuntime.body ? <p>{servicesMattersRuntime.body}</p> : null}
+          <h2 style={servicesMattersRuntime.titleStyle}>
+            <span
+              dangerouslySetInnerHTML={{
+                __html: renderTextWithHighlights(
+                  servicesMattersRuntime.title,
+                  servicesMattersRuntime.titleHighlights?.length
+                    ? servicesMattersRuntime.titleHighlights
+                    : servicesMattersRuntime.title === 'What you do matters.'
+                      ? [{ text: 'matters', className: 'is-white' }]
+                      : [],
+                ),
+              }}
+            />
+          </h2>
+          {servicesMattersRuntime.bodyHtml ? (
+            <SafeRichText as="div" className="native-info-rich-html" html={servicesMattersRuntime.bodyHtml} />
+          ) : servicesMattersRuntime.body ? <p>{servicesMattersRuntime.body}</p> : null}
           {servicesMattersRuntime.action ? (
             <div className="service-native-action-row is-centered">
               {isExternalLinkHref(servicesMattersRuntime.action.href || servicesMattersRuntime.action.to) ? (

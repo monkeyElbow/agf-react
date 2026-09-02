@@ -1119,7 +1119,7 @@ describe('BlockHudPanelHost', () => {
       onSettingChange: vi.fn(),
     }));
 
-    expect(screen.getByRole('radiogroup', { name: 'Top strip background color' })).toBeTruthy();
+    expect(screen.getByRole('radiogroup', { name: 'Background color' })).toBeTruthy();
     expect(screen.getByLabelText('Login Label')).toBeTruthy();
     expect(screen.getByLabelText('Rates URL / Path')).toBeTruthy();
   });

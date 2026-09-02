@@ -24,7 +24,9 @@ describe('card-grid editor wiring', () => {
     expect(headerSource).toContain("onBaseColorChange={(nextValue) => onSettingChange('subtitleClassName', nextValue)}");
     expect(headerSource).toContain('previewWrapClassName={`is-bg-${gridBgTone}`}');
     expect(headerSource).toContain("className={`is-bg-${gridBgTone}${subheadSizeRem !== null ? ' is-subhead-sized' : ''}`}");
-    expect(gridSource).toContain('const appearanceFields = [titleToneField, bodyToneField, bgToneField]');
+    expect(gridSource).toContain('const appearanceFields = [titleToneField, bodyToneField]');
+    expect(gridSource).toContain('<BackgroundEditorPage');
+    expect(gridSource).toContain('backgroundEffectsJson={settings.backgroundEffectsJson}');
     expect(gridSource).toContain('const headerControlFields = [headerSizeField, headerWidthField, subheadSizeField, ...spacingFields].filter(Boolean);');
     expect(gridSource).not.toContain('admin-card-grid-hud-group--spacing');
     expect(readFileSync(path.resolve(__dirname, '../styles/admin.css'), 'utf8')).toContain(

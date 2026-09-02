@@ -19,10 +19,20 @@ const CANONICAL_TEMPLATE_ID_BY_KIND = Object.freeze({
 
 function findPresetDefinition(block, definitions) {
   const explicitPresetId = String(block?.presetId || '').trim().toLowerCase();
+  const hasLegacyGivingJoyClass = String(block?.settings?.sectionClassName || '')
+    .split(/\s+/)
+    .includes('legacy-giving-joy');
   if (explicitPresetId) {
     const byExplicitPresetId = definitions.find((preset) => String(preset?.id || '').trim().toLowerCase() === explicitPresetId) || null;
-    if (byExplicitPresetId) {
+    if (byExplicitPresetId && !(explicitPresetId === 'default' && hasLegacyGivingJoyClass)) {
       return byExplicitPresetId;
+    }
+  }
+
+  if (hasLegacyGivingJoyClass) {
+    const plannedGivingJoyPreset = definitions.find((preset) => String(preset?.id || '').trim().toLowerCase() === 'planned-giving-joy');
+    if (plannedGivingJoyPreset) {
+      return plannedGivingJoyPreset;
     }
   }
 

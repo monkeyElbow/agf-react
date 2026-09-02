@@ -23,7 +23,9 @@ describe('native intro and billboard renderer guardrail', () => {
     expect(source).toContain("function buildActionRowStyle(justify, fallback = 'left') {");
     expect(source).toContain('function buildNativeIntroConfig(block, { includeTestClassName = false } = {}) {');
     expect(source).toContain('const runtime = buildDynamicIntroFromBlock(block);');
-    expect(source).toContain("className: `dynamic-intro${runtime.sectionClassName ? ` ${runtime.sectionClassName}` : ''} is-bg-${normalizeSurfaceBgTone(runtime.bgTone, 'sand')} is-text-${normalizePanelTextTone(runtime.textTone, 'dark')}${includeTestClassName ? ' test-dynamic-intro' : ''}`");
+    expect(source).toContain('className: `dynamic-intro${runtime.sectionClassName');
+    expect(source).toContain("is-bg-${normalizeSurfaceBgTone(runtime.bgTone, 'sand')}");
+    expect(source).toContain('backgroundEffects: runtime.backgroundEffects');
     expect(source).toContain('function buildNativeBillboardSection(block, { includeTestClassName = false } = {}) {');
     expect(source).toContain('const runtime = buildDynamicBillboardFromBlock(block);');
     expect(source).not.toContain("targetSectionKey: runtime.targetSectionKey || '',");

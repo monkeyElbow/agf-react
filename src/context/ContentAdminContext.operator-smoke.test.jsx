@@ -28,6 +28,7 @@ const authorityMocks = vi.hoisted(() => ({
 
 vi.mock('../lib/devContentAuthorityClient', () => ({
   ...authorityMocks,
+  isDevContentAuthorityCircuitOpen: () => false,
   isDevContentAuthorityEnabled: () => true,
 }));
 

@@ -6,7 +6,7 @@ import {
   HudEditorModelLayout,
   appendHudBlockOptionsSection,
 } from './HudEditorShell';
-import { BUTTON_TONE_OPTIONS, INTRO_ACCENT_TONE_OPTIONS, SURFACE_BG_TONE_OPTIONS } from '../lib/colorSystem';
+import { BUTTON_TONE_OPTIONS, INTRO_ACCENT_TONE_OPTIONS } from '../lib/colorSystem';
 import { coerceLinkValueFromFields, serializeLinkValue, resolveEditableHrefFromLinkFields } from '../lib/linkValue';
 import useBufferedFieldDrafts from '../hooks/useBufferedFieldDrafts';
 
@@ -333,17 +333,6 @@ export default function PlannedGivingStepsHudEditorPanel({
           onChange={(nextValue) => updateDraftValue('title', nextValue)}
           onBlur={() => commitDraftValue('title')}
         />
-        <div className="admin-front-hud-row">
-          <span>Background</span>
-          <ColorPalette
-            variant="hud"
-            className="is-compact is-icon-only is-circular"
-            ariaLabel="Planned giving steps background"
-            options={SURFACE_BG_TONE_OPTIONS}
-            value={String(settings.bgTone || 'white')}
-            onChange={(nextValue) => onSettingChange('bgTone', nextValue)}
-          />
-        </div>
       </section>
       <section className="admin-front-hud-card admin-front-hud-planned-steps-list-card">
         <div className="admin-front-hud-card-head">

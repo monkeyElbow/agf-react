@@ -1059,8 +1059,53 @@ describe('NativeContentPage functional routes', () => {
     expect(historySection?.querySelector('.investments-native-growth-grid')).toBeTruthy();
     expect(historySection?.querySelectorAll('.investments-native-growth-card')).toHaveLength(6);
     expect(historySection?.querySelector('.service-native-action-row')).toBeTruthy();
+    expect(historySection?.className).toContain('is-title-super-grey');
+    expect(historySection?.className).toContain('is-body-super-grey');
+    expect(historySection?.style.getPropertyValue('--dynamic-grid-card-title-size')).toBe('5.4rem');
+    expect(historySection?.style.getPropertyValue('--dynamic-grid-card-body-size')).toBe('1.14rem');
+    expect(historySection?.style.getPropertyValue('--dynamic-grid-card-body-line-height')).toBe('1.72');
 
     expect(document.querySelector('.about-native-cta-form')).toBeTruthy();
+  });
+
+  it('keeps the About intro body when HUD switches to an incomplete authoring snapshot', () => {
+    const publishedBlocks = (contentBlockBlueprintsByPath['/about-us'] || []).map((block) => ({
+      ...block,
+      settings: { ...(block?.settings || {}) },
+      editableFields: Array.isArray(block?.editableFields) ? [...block.editableFields] : [],
+    }));
+    mockBlocksByPath = { '/about-us': publishedBlocks };
+    mockAuthoringBlocksByPath = {
+      '/about-us': publishedBlocks.filter((block) => block.id !== 'intro'),
+    };
+
+    const view = render(
+      <MemoryRouter>
+        <NativeContentPage
+          page={{
+            path: '/about-us',
+            title: 'About Us',
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByText('Our culture is delivering the best financial products and experiences that align with biblical values.')).toBeTruthy();
+
+    mockFrontHudEnabled = true;
+    view.rerender(
+      <MemoryRouter>
+        <NativeContentPage
+          page={{
+            path: '/about-us',
+            title: 'About Us',
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByText('Our culture is delivering the best financial products and experiences that align with biblical values.')).toBeTruthy();
+    expect(document.querySelector('.service-native-intro.about-native-top-intro')).toBeTruthy();
   });
 
   it('renders a normalized stale About building columns draft through the page-content photo presentation', () => {
@@ -1430,11 +1475,46 @@ describe('NativeContentPage functional routes', () => {
     const joyHeading = joySection?.querySelector('h2');
 
     expect(joySection?.getAttribute('data-block-id')).toBe('joy_billboard');
-    expect(joySection?.className).toContain('legacy-giving-joy');
+    expect(joySection?.className).toContain('is-billboard-preset-planned-giving-joy');
     expect(joySection?.className).toContain('dynamic-billboard');
     expect(joySection?.className).toContain('fade-out');
     expect(joyHeading?.style.fontFamily).toBe('var(--ag-font-helv)');
     expect(joySection?.querySelector('.native-info-section-copy.fade-up')).toBeTruthy();
+  });
+
+  it('applies the planned giving joy billboard lead-copy size to its plain body paragraph', () => {
+    mockBlocksByPath = {
+      '/services/planned-giving': (contentBlockBlueprintsByPath['/services/planned-giving'] || [])
+        .filter((block) => block?.mode === 'dynamic')
+        .map((block) => block?.id === 'joy_billboard'
+          ? {
+              ...block,
+              settings: {
+                ...block.settings,
+                leadCopySizeRem: 2.35,
+              },
+            }
+          : block),
+    };
+
+    render(
+      <MemoryRouter>
+        <NativeContentPage
+          page={{
+            path: '/services/planned-giving',
+            title: 'Planned Giving',
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+    const joyCopy = document.querySelector('[data-block-id="joy_billboard"] .native-info-section-copy');
+    const joyBody = joyCopy?.querySelector('.billboard-body-copy');
+
+    expect(joyCopy?.style.getPropertyValue('--dynamic-billboard-lead-copy-size')).toBe(
+      'clamp(calc(2.35rem * 0.68), 2.1vw, 2.35rem)',
+    );
+    expect(joyBody?.className).toContain('is-dynamic-billboard-lead-copy-sized');
   });
 
   it('renders the planned giving hero and intro through explicit managed blocks without changing the current copy', () => {

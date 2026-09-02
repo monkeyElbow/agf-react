@@ -2,11 +2,13 @@ import gridHudIcon from '../../assets/admin-block-icons/grid.svg';
 import { createBlockDefinition } from '../foundation/models';
 import { defineEditorField, defineTransitionalActionFields } from '../foundation/editorDescriptors';
 import { buildDynamicGridFromBlock } from '../../lib/dynamicPageBlocks';
-import {
-  getTokenSwatch,
-  SEMANTIC_TEXT_COLOR_OPTIONS_WITH_DEFAULT,
-} from '../../lib/colorSystem';
+import { getTokenSwatch, SEMANTIC_TEXT_COLOR_OPTIONS_WITH_DEFAULT } from '../../lib/colorSystem';
 import { getCardGridPresetDefinitions } from '../../lib/cardGridPresets';
+import {
+  DYNAMIC_GRID_BODY_TONE_OPTIONS,
+  DYNAMIC_GRID_TEXT_TONE_OPTIONS,
+  DYNAMIC_GRID_TITLE_TONE_OPTIONS,
+} from '../../lib/dynamicGridPresentation';
 import { validateLinkFieldGroups } from '../../lib/linkValue';
 import {
   DEFAULT_DYNAMIC_GRID_CARD_BULLET_LINE_HEIGHT,
@@ -38,23 +40,9 @@ const GRID_CARD_STYLE_OPTIONS = [
   { value: 'planned-giving-centered', label: 'Centered bullet panel (like CGA)' },
 ];
 
-const GRID_TEXT_TONE_OPTIONS = [
-  { value: 'super-grey', label: 'Super Grey', swatch: '#414042' },
-  { value: 'atlantean', label: 'Blue', swatch: '#00adbb' },
-  { value: 'mango', label: 'Mango', swatch: '#f6b146' },
-  { value: 'melon', label: 'Melon', swatch: '#f48f7a' },
-  { value: 'white', label: 'White', swatch: '#ffffff' },
-];
-
-const GRID_CARD_BODY_TONE_OPTIONS = [
-  ...GRID_TEXT_TONE_OPTIONS,
-  { value: 'alternating', label: 'Alternating brand colors', swatch: 'linear-gradient(90deg, #00adbb 0 33%, #f6b146 33% 66%, #f48f7a 66%)' },
-];
-
-const GRID_CARD_TITLE_TONE_OPTIONS = [
-  ...GRID_TEXT_TONE_OPTIONS,
-  { value: 'alternating', label: 'Alternating brand colors', swatch: 'linear-gradient(90deg, #00adbb 0 33%, #f6b146 33% 66%, #f48f7a 66%)' },
-];
+const GRID_TEXT_TONE_OPTIONS = DYNAMIC_GRID_TEXT_TONE_OPTIONS;
+const GRID_CARD_BODY_TONE_OPTIONS = DYNAMIC_GRID_BODY_TONE_OPTIONS;
+const GRID_CARD_TITLE_TONE_OPTIONS = DYNAMIC_GRID_TITLE_TONE_OPTIONS;
 
 const GRID_FINEPRINT_JUSTIFY_OPTIONS = [
   { value: 'left', label: 'Left' },

@@ -1769,6 +1769,13 @@ export default function RetirementPage() {
             blockId={activeHudPanel.block.id}
             block={activeHudPanel.block}
             blockLabel={activeHudPanel.label}
+            ownership={getOwnershipVisualForBlockId(activeHudPanel.block.id)}
+            onOwnershipAction={() => {
+              if (!activeHudPanel?.block?.id) {
+                return;
+              }
+              return setActiveBlockLock('/services/retirement', activeHudPanel.block.id, { force: true });
+            }}
             onDoneEditing={closeHudDock}
           />
           <BlockHudPanelHost

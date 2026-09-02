@@ -29,7 +29,7 @@ describe('Card Chart editor contracts', () => {
     expect(source).toContain('color: var(--ag-color-melon);');
   });
 
-  it('keeps Card Chart background swatches on the Page 1 right-side controls', () => {
+  it('keeps Card Chart background and lights on the shared Background page', () => {
     const definition = readSource('../blocks/definitions/cardChart.definition.js');
     const editor = readSource('./block-editors/migratedBlockEditors.jsx');
     const renderer = readSource('./NativeContentPage.jsx');
@@ -37,7 +37,9 @@ describe('Card Chart editor contracts', () => {
     expect(definition).toContain("id: 'bgTone'");
     expect(definition).toContain('options: SURFACE_BG_TONE_OPTIONS');
     expect(editor).toContain('admin-card-chart-header-editor-controls');
-    expect(editor).toContain('admin-card-chart-background-control');
+    expect(editor).toContain('admin-card-chart-editor-section--background');
+    expect(editor).toContain('<BackgroundEditorPage');
+    expect(editor).toContain('backgroundEffectsJson={settings.backgroundEffectsJson}');
     expect(editor).toContain("onSettingChange('bgTone', normalizePanelBgTone(nextValue))");
     expect(renderer).toContain('is-bg-${runtime.bgTone}');
   });

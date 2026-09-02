@@ -12,13 +12,9 @@ function readSource(relativePath) {
 }
 
 describe('planned giving review polish guardrail', () => {
-  it('keeps the route-specific wills spacing and mobile opportunity collapse scoped to planned giving', () => {
+  it('keeps the route-specific mobile opportunity collapse scoped to planned giving', () => {
     const cssSource = readSource('../styles/service-native.css');
 
-    expect(cssSource).toContain('.native-info-page--legacy-giving .legacy-giving-wills {');
-    expect(cssSource).toContain('padding-top: clamp(3.1rem, 6.2vw, 5.4rem);');
-    expect(cssSource).toContain('padding-bottom: clamp(3.1rem, 6.2vw, 5.4rem);');
-    expect(cssSource).toContain('padding-top: clamp(2.8rem, 7.8vw, 3.5rem);');
     expect(cssSource).toContain('.native-info-page--legacy-giving .legacy-giving-types .service-native-card.fade-up[data-fade-state="pending"] {');
     expect(cssSource).toContain('opacity: 0.24;');
     expect(cssSource).toContain('translate: 0 16px;');
@@ -36,11 +32,10 @@ describe('planned giving review polish guardrail', () => {
     expect(cssSource).toContain('.native-info-page--legacy-giving .legacy-giving-opportunity .service-native-dark-feature-copy {');
     expect(cssSource).toContain('width: 100%;');
     expect(cssSource).toContain('min-width: 0;');
-    expect(cssSource).toContain('.native-info-page--legacy-giving .legacy-giving-joy {');
+    expect(cssSource).toContain('.dynamic-billboard.is-billboard-preset-planned-giving-joy {');
     expect(cssSource).toContain('padding-top: clamp(3.1rem, 6.2vw, 5.2rem);');
     expect(cssSource).toContain('padding-bottom: clamp(3.1rem, 6.2vw, 5.2rem);');
-    expect(cssSource).toContain('.native-info-page--legacy-giving .legacy-giving-joy > .ag-panel-rail > h2,');
-    expect(cssSource).toContain('letter-spacing: -0.048em;');
+    expect(cssSource).toContain('.dynamic-billboard.is-billboard-preset-planned-giving-joy > .ag-panel-rail > h2,');
     expect(cssSource).toContain('.native-info-page--legacy-giving .legacy-giving-cta {');
     expect(cssSource).toContain('padding-top: clamp(2.2rem, 5vw, 3.4rem);');
     expect(cssSource).toContain('.native-info-page--legacy-giving .legacy-giving-cta .native-info-inline-form {');

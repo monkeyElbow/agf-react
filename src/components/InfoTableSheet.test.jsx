@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import InfoTableSheet from './InfoTableSheet';
 
 const HEADERS = ['Contribution Limit', '2025', '2024'];
@@ -63,6 +63,24 @@ describe('InfoTableSheet', () => {
     // The shared source renders both desktop and mobile presentations; each
     // presentation keeps the single comparison point as a bullet.
     expect(container.querySelectorAll('.info-table-sheet__cell-list li')).toHaveLength(4);
+  });
+
+  it('keeps repeated comparison points keyed uniquely', () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      const { container } = render(
+        <InfoTableSheet
+          headers={['Option A', 'Option B']}
+          rows={[["Same point\nSame point", "Other point"]]}
+          firstColumnHeader={false}
+        />
+      );
+
+      expect(container.querySelectorAll('.info-table-sheet__cell-list li')).toHaveLength(6);
+      expect(consoleError.mock.calls.some(([message]) => String(message).includes('same key'))).toBe(false);
+    } finally {
+      consoleError.mockRestore();
+    }
   });
 
   it('keeps each card tone on the matching desktop and mobile column', () => {

@@ -15,6 +15,8 @@ import {
   INSURANCE_PATH,
   GENEROSITY_FUND_PATH,
   GENEROSITY_FUND_SNAPSHOT_MIGRATION_VERSION,
+  SERVICES_MATTERS_PATH,
+  SERVICES_MATTERS_BILLBOARD_MIGRATION_VERSION,
   SUPPORT_LIBRARY_PATH,
   SUPPORT_LIBRARY_BLOCK_MIGRATION_VERSION,
   migrateQcdCenteredCardGridBlock,
@@ -30,6 +32,8 @@ import {
   migrateNumberedStepCardsState,
   migrateSiteFeatureCollectionsBlock,
   migrateSiteFeatureCollectionsState,
+  migrateServicesMattersBillboardBlock,
+  migrateServicesMattersBillboardState,
   migrateGenerosityFundSnapshot,
   migrateSupportLibraryBlock,
   migrateSupportLibraryState,
@@ -487,6 +491,46 @@ describe('content-admin snapshot migrations', () => {
       ...block,
       settings: { ...block.settings, sectionClassName: 'unrelated-section' },
     });
+  });
+
+  it('converts the Services matters feature into a shared billboard block', () => {
+    const legacyBlock = {
+      id: 'matters_band',
+      name: 'What You Do Matters',
+      kind: 'site_feature',
+      mode: 'dynamic',
+      settings: {
+        featureId: 'services_matters_band',
+        body: 'As an AGFinancial customer, your financial decisions fund real ministry work, transforming lives, including yours.',
+        buttonLabel: "See what we're doing together",
+        buttonLinkJson: JSON.stringify({ kind: 'internal', to: '/about-us/impact', openInNewWindow: false }),
+        sectionClassName: 'services-native-matters',
+      },
+    };
+
+    const migratedBlock = migrateServicesMattersBillboardBlock(SERVICES_MATTERS_PATH, legacyBlock);
+    expect(migratedBlock).toMatchObject({
+      name: 'What You Do Matters Billboard',
+      kind: 'billboard',
+      templateId: 'billboard',
+      presetId: 'default',
+      settings: {
+        title: 'What you do matters.',
+        bodyHtml: '<p>As an AGFinancial customer, your financial decisions fund real ministry work, transforming lives, including yours.</p>',
+        body: '',
+        buttonPageRef: '/about-us/impact',
+        sectionClassName: 'services-native-matters',
+      },
+    });
+    expect(migratedBlock.settings.featureId).toBeUndefined();
+    expect(migratedBlock.settings.buttonLinkJson).toBeUndefined();
+
+    const migratedState = migrateServicesMattersBillboardState({
+      blocksByPath: { [SERVICES_MATTERS_PATH]: [legacyBlock] },
+    });
+    expect(migratedState.changed).toBe(true);
+    expect(migratedState.state.blocksByPath[SERVICES_MATTERS_PATH][0].kind).toBe('billboard');
+    expect(SERVICES_MATTERS_BILLBOARD_MIGRATION_VERSION).toBe(1);
   });
 
   it('exposes repeatable site-feature copy without overwriting existing admin fields', () => {

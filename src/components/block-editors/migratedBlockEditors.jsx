@@ -1,7 +1,7 @@
 import { useContext, useEffect, useId, useMemo, useRef, useState } from 'react';
 import AdminNumberInput from '../AdminNumberInput';
 import AdminHtmlEditor from '../AdminHtmlEditor';
-import BackgroundLightsEditor from '../BackgroundLightsEditor';
+import BackgroundEditorPage from '../BackgroundEditorPage';
 import PageContentEditorPreview from '../PageContentEditorPreview';
 import SharedRouteLinkField from '../RouteLinkField';
 import BillboardHudEditorPanel, {
@@ -1684,27 +1684,13 @@ export function CardChartBlockEditor({
           sourceRevision={sourceRevision}
           className="admin-content-field-list--inline admin-card-chart-header-fields"
         />
-        <div className="admin-card-chart-background-control">
-          <span>{bgToneField.label || 'Chart background'}</span>
-          <ColorPalette
-            variant={hudMode ? 'hud' : 'admin'}
-            className="is-compact is-icon-only admin-card-chart-background-swatches"
-            ariaLabel={bgToneField.label || 'Chart background'}
-            options={Array.isArray(bgToneField.options) && bgToneField.options.length
-              ? bgToneField.options
-              : SURFACE_BG_TONE_OPTIONS}
-            value={cardChartBgTone}
-            preventMouseDown
-            onChange={(nextValue) => onSettingChange('bgTone', normalizePanelBgTone(nextValue))}
-            getOptionClassName={(option, state) => `admin-bg-swatch-option${state.active ? ' is-active' : ''}`}
-          />
-        </div>
       </div>
     </div>
   );
 
   const editorSections = appendHudBlockOptionsSection([
     { id: 'header', label: 'Header', icon: 'H' },
+    { id: 'background', label: 'Background', icon: '◌' },
     { id: 'spacing', label: 'Spacing', icon: '↕' },
     { id: 'cards', label: 'Cards', icon: '▦' },
     { id: 'fineprint', label: 'Fineprint', icon: '※' },
@@ -1724,6 +1710,17 @@ export function CardChartBlockEditor({
       >
         <section className="admin-card-chart-hud-page admin-card-chart-hud-page--header">
           {headerEditorMarkup}
+        </section>
+        <section className="admin-card-chart-hud-page admin-card-chart-hud-page--background">
+          <BackgroundEditorPage
+            backgroundTone={cardChartBgTone}
+            backgroundToneOptions={Array.isArray(bgToneField.options) && bgToneField.options.length ? bgToneField.options : SURFACE_BG_TONE_OPTIONS}
+            backgroundToneLabel={bgToneField.label || 'Chart background'}
+            onBackgroundToneChange={(nextValue) => onSettingChange('bgTone', normalizePanelBgTone(nextValue))}
+            backgroundEffectsJson={settings.backgroundEffectsJson}
+            onBackgroundEffectsChange={(nextValue) => onSettingChange('backgroundEffectsJson', nextValue)}
+            paletteVariant="hud"
+          />
         </section>
         <section className="admin-card-chart-hud-page admin-card-chart-hud-page--spacing">
           {spacingControls}
@@ -1754,6 +1751,18 @@ export function CardChartBlockEditor({
       <section className="admin-card-chart-editor-section admin-card-chart-editor-section--header">
         <h3>Header</h3>
         {headerEditorMarkup}
+      </section>
+      <section className="admin-card-chart-editor-section admin-card-chart-editor-section--background">
+        <h3>Background</h3>
+        <BackgroundEditorPage
+          backgroundTone={cardChartBgTone}
+          backgroundToneOptions={Array.isArray(bgToneField.options) && bgToneField.options.length ? bgToneField.options : SURFACE_BG_TONE_OPTIONS}
+          backgroundToneLabel={bgToneField.label || 'Chart background'}
+          onBackgroundToneChange={(nextValue) => onSettingChange('bgTone', normalizePanelBgTone(nextValue))}
+          backgroundEffectsJson={settings.backgroundEffectsJson}
+          onBackgroundEffectsChange={(nextValue) => onSettingChange('backgroundEffectsJson', nextValue)}
+          paletteVariant="admin"
+        />
       </section>
       <section className="admin-card-chart-editor-section admin-card-chart-editor-section--spacing">
         <h3>Spacing</h3>
@@ -2549,6 +2558,19 @@ function renderFieldControl(field, value, onChange, settings, onSettingChange, r
     );
   }
 
+  if (field.type === 'background_lights') {
+    return (
+      <BackgroundEditorPage
+        backgroundTone={settings?.bgTone}
+        backgroundToneOptions={Array.isArray(settings?.bgToneOptions) ? settings.bgToneOptions : undefined}
+        backgroundEffectsJson={value}
+        onBackgroundToneChange={(nextValue) => onSettingChange('bgTone', nextValue)}
+        onBackgroundEffectsChange={onChange}
+        paletteVariant={paletteVariant}
+      />
+    );
+  }
+
   if (field.type === 'highlight_list') {
     const options = Array.isArray(field.options) ? field.options : [];
     const selectedItems = parseHighlightListValue(value);
@@ -2944,25 +2966,15 @@ export function CtaFormBlockEditor({ block, onSettingChange, routeOptions = [], 
         </div>
 
         <div className="admin-intro-appearance-stack">
-          {bgToneField ? (
-            <section className="admin-panel-appearance admin-panel-appearance--intro-text admin-panel-appearance--intro-bg">
-              <div className="admin-content-field-list admin-content-field-list--inline admin-panel-appearance-grid">
-                <label>
-                  <span>{bgToneField.label || 'Background color'}</span>
-                  <ColorPalette
-                    variant="admin"
-                    className="is-compact admin-hero-inline-swatch-list is-icon-only admin-intro-bg-palette-swatch-list"
-                    ariaLabel={bgToneField.label || 'CTA background'}
-                    options={Array.isArray(bgToneField.options) ? bgToneField.options : []}
-                    value={String(settings.bgTone || '')}
-                    preventMouseDown
-                    onChange={(nextValue) => onSettingChange('bgTone', nextValue)}
-                    getOptionClassName={(option, state) => ` admin-bg-swatch-option${state.active ? ' is-active' : ''}`}
-                  />
-                </label>
-              </div>
-            </section>
-          ) : null}
+          <BackgroundEditorPage
+            backgroundTone={settings.bgTone}
+            backgroundToneOptions={Array.isArray(bgToneField?.options) ? bgToneField.options : []}
+            backgroundToneLabel={bgToneField?.label || 'CTA background'}
+            onBackgroundToneChange={(nextValue) => onSettingChange('bgTone', nextValue)}
+            backgroundEffectsJson={settings.backgroundEffectsJson}
+            onBackgroundEffectsChange={(nextValue) => onSettingChange('backgroundEffectsJson', nextValue)}
+            paletteVariant="admin"
+          />
         </div>
       </div>
 
@@ -3743,20 +3755,15 @@ export function RequestFormBlockEditor({
   const appearanceContent = (
     <div className="admin-request-form-appearance-content">
       <div className="admin-request-form-swatch-groups">
-        {bgToneField ? (
-          <label className="admin-request-form-swatch-group">
-            <span>{bgToneField.label || 'Background color'}</span>
-            <ColorPalette
-              variant="hud"
-              className="is-compact is-icon-only is-circular admin-request-form-hud-swatch-palette admin-request-form-swatch-palette"
-              ariaLabel={bgToneField.label || 'Request form background'}
-              options={Array.isArray(bgToneField.options) ? bgToneField.options : []}
-              value={String(settings.bgTone || '')}
-              preventMouseDown
-              onChange={(nextValue) => onSettingChange('bgTone', nextValue)}
-            />
-          </label>
-        ) : null}
+        <BackgroundEditorPage
+          backgroundTone={settings.bgTone}
+          backgroundToneOptions={Array.isArray(bgToneField?.options) ? bgToneField.options : []}
+          backgroundToneLabel={bgToneField?.label || 'Request form background'}
+          onBackgroundToneChange={(nextValue) => onSettingChange('bgTone', nextValue)}
+          backgroundEffectsJson={settings.backgroundEffectsJson}
+          onBackgroundEffectsChange={(nextValue) => onSettingChange('backgroundEffectsJson', nextValue)}
+          paletteVariant="hud"
+        />
 
       </div>
 
@@ -4480,6 +4487,7 @@ export function HeroBlockEditor({ block, pathname = '', onSettingChange, routeOp
       paddingTopRem={heroPaddingTopRem}
       paddingBottomRem={heroPaddingBottomRem}
       lineColorOptions={HERO_SWATCH_OPTIONS}
+      bgToneOptions={HERO_BG_SWATCH_OPTIONS}
       onLineTextChange={(lineKey, nextValue) => {
         const previousText = String(settings?.[`${lineKey}Text`] ?? '');
         const nextText = String(nextValue ?? '');
@@ -4544,6 +4552,8 @@ export function HeroBlockEditor({ block, pathname = '', onSettingChange, routeOp
         onSelectionClear?.();
       }}
       onBgToneChange={(nextValue) => onSettingChange('bgTone', nextValue)}
+      backgroundEffectsJson={settings.backgroundEffectsJson}
+      onBackgroundEffectsChange={(nextValue) => onSettingChange('backgroundEffectsJson', nextValue)}
       onJustifyChange={(nextValue) => onSettingChange('justify', nextValue)}
       onTitleSizeChange={(nextValue) => onSettingChange('titleSizeRem', nextValue)}
       onTitleLetterSpacingChange={(nextValue) => onSettingChange('titleLetterSpacingEm', nextValue)}
@@ -4908,29 +4918,13 @@ export function IntroBlockEditor({ block, onSettingChange, routeOptions = [], so
             className="admin-panel-appearance--intro-text"
           />
 
-          {bgToneField ? (
-            <section className="admin-panel-appearance admin-panel-appearance--intro-text admin-panel-appearance--intro-bg">
-              <div className="admin-content-field-list admin-content-field-list--inline admin-panel-appearance-grid">
-                <label>
-                  <span>{bgToneField.label || 'Background color'}</span>
-                  <ColorPalette
-                    variant="admin"
-                    className="is-compact admin-hero-inline-swatch-list is-icon-only admin-intro-bg-palette-swatch-list"
-                    ariaLabel={bgToneField.label || 'Intro background'}
-                    options={Array.isArray(bgToneField.options) ? bgToneField.options : []}
-                    value={String(settings.bgTone || '')}
-                    preventMouseDown
-                    onChange={(nextValue) => onSettingChange('bgTone', nextValue)}
-                    getOptionClassName={(option, state) => ` admin-bg-swatch-option${state.active ? ' is-active' : ''}`}
-                  />
-                </label>
-              </div>
-            </section>
-          ) : null}
-
-          <BackgroundLightsEditor
-            value={settings.backgroundEffectsJson}
-            onChange={(nextValue) => onSettingChange('backgroundEffectsJson', nextValue)}
+          <BackgroundEditorPage
+            backgroundTone={settings.bgTone}
+            backgroundToneOptions={Array.isArray(bgToneField?.options) ? bgToneField.options : []}
+            backgroundToneLabel={bgToneField?.label || 'Intro background'}
+            onBackgroundToneChange={(nextValue) => onSettingChange('bgTone', nextValue)}
+            backgroundEffectsJson={settings.backgroundEffectsJson}
+            onBackgroundEffectsChange={(nextValue) => onSettingChange('backgroundEffectsJson', nextValue)}
             paletteVariant="admin"
           />
         </div>
@@ -6167,6 +6161,14 @@ export function SiteFeatureBlockEditor({ block, onSettingChange, routeOptions = 
   const buttonLabelField = fieldById.get('buttonLabel');
   const buttonUrlField = getPromotedRouteLinkField(fieldById, 'buttonUrl', 'buttonPageRef');
   const allowsActionOverrides = SITE_FEATURE_ACTION_FIELD_IDS.some((fieldId) => allowedFieldIds.has(fieldId));
+  const historyGalleryFields = [
+    fieldById.get('cardTitleSizeRem'),
+    fieldById.get('cardTitleLineHeight'),
+    fieldById.get('cardBodySizeRem'),
+    fieldById.get('cardBodyLineHeight'),
+    fieldById.get('titleTone'),
+    fieldById.get('bodyTone'),
+  ].filter((field) => field && allowedFieldIds.has(field.id));
   const [draftValues, setDraftValues] = useState(() => readEditorLocalDrafts(settings, SITE_FEATURE_LOCAL_DRAFT_FIELD_IDS));
   const [dirtyFieldIds, setDirtyFieldIds] = useState([]);
   const commitTimersRef = useRef(new Map());
@@ -6346,6 +6348,18 @@ export function SiteFeatureBlockEditor({ block, onSettingChange, routeOptions = 
           ) : null}
         </div>
       </section>
+      {settings.featureId === 'about_history_feature' && historyGalleryFields.length ? (
+        <section className="admin-cta-field-slot-card admin-site-feature-editor-page admin-site-feature-editor-page--gallery">
+          <h4>History Gallery presentation</h4>
+          <FieldControlGrid
+            fields={historyGalleryFields}
+            settings={settings}
+            onSettingChange={onSettingChange}
+            className="admin-content-field-list--inline"
+            routeOptions={routeOptions}
+          />
+        </section>
+      ) : null}
       {collectionField && allowedFieldIds.has(collectionFieldId) ? (
         <SiteFeatureCollectionEditor
           featureId={settings.featureId}
@@ -6834,7 +6848,7 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
   const presetMaxCards = Number.isInteger(presetEditor.maxCards)
     ? Math.max(1, Math.min(8, presetEditor.maxCards))
     : 8;
-  const appearanceFields = [titleToneField, bodyToneField, bgToneField]
+  const appearanceFields = [titleToneField, bodyToneField]
     .filter(Boolean)
     .map((field) => ({
       ...field,
@@ -7094,6 +7108,15 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
                 paletteVariant="hud"
                 className="admin-panel-appearance--intro-text"
               />
+              <BackgroundEditorPage
+                backgroundTone={gridBgTone}
+                backgroundToneOptions={Array.isArray(bgToneField?.options) ? bgToneField.options : []}
+                backgroundToneLabel="Grid background"
+                onBackgroundToneChange={handleGridBackgroundChange}
+                backgroundEffectsJson={settings.backgroundEffectsJson}
+                onBackgroundEffectsChange={(nextValue) => onSettingChange('backgroundEffectsJson', nextValue)}
+                paletteVariant="hud"
+              />
             </section>
 
             <section className="admin-billboard-hud-reference-panel admin-card-grid-hud-group admin-card-grid-hud-group--layout" aria-label="Card Grid layout settings">
@@ -7169,6 +7192,15 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
             }}
             compactSwatches={false}
             className="admin-panel-appearance--intro-text"
+          />
+          <BackgroundEditorPage
+            backgroundTone={gridBgTone}
+            backgroundToneOptions={Array.isArray(bgToneField?.options) ? bgToneField.options : []}
+            backgroundToneLabel="Grid background"
+            onBackgroundToneChange={handleGridBackgroundChange}
+            backgroundEffectsJson={settings.backgroundEffectsJson}
+            onBackgroundEffectsChange={(nextValue) => onSettingChange('backgroundEffectsJson', nextValue)}
+            paletteVariant="admin"
           />
         </div>
       </div>
@@ -7269,25 +7301,15 @@ export function NewsletterBlockEditor({ block, onSettingChange }) {
             className="admin-panel-appearance--intro-text"
           />
 
-          {bgToneField ? (
-            <section className="admin-panel-appearance admin-panel-appearance--intro-text admin-panel-appearance--intro-bg">
-              <div className="admin-content-field-list admin-content-field-list--inline admin-panel-appearance-grid">
-                <label>
-                  <span>{bgToneField.label || 'Background color'}</span>
-                  <ColorPalette
-                    variant="admin"
-                    className="is-compact admin-hero-inline-swatch-list is-icon-only admin-intro-bg-palette-swatch-list"
-                    ariaLabel={bgToneField.label || 'Newsletter background'}
-                    options={Array.isArray(bgToneField.options) ? bgToneField.options : []}
-                    value={String(settings.bgTone || '')}
-                    preventMouseDown
-                    onChange={(nextValue) => onSettingChange('bgTone', nextValue)}
-                    getOptionClassName={(option, state) => ` admin-bg-swatch-option${state.active ? ' is-active' : ''}`}
-                  />
-                </label>
-              </div>
-            </section>
-          ) : null}
+          <BackgroundEditorPage
+            backgroundTone={newsletterBgTone}
+            backgroundToneOptions={Array.isArray(bgToneField?.options) ? bgToneField.options : []}
+            backgroundToneLabel={bgToneField?.label || 'Newsletter background'}
+            onBackgroundToneChange={(nextValue) => onSettingChange('bgTone', nextValue)}
+            backgroundEffectsJson={settings.backgroundEffectsJson}
+            onBackgroundEffectsChange={(nextValue) => onSettingChange('backgroundEffectsJson', nextValue)}
+            paletteVariant="admin"
+          />
         </div>
       </div>
 
@@ -7304,7 +7326,8 @@ export function NewsletterBlockEditor({ block, onSettingChange }) {
 export function PageContentBlockEditor({ block, onSettingChange }) {
   const settings = block.settings || {};
   const fields = resolveEditorFields(block.kind, 'admin', block.editableFields);
-  const appearanceFields = fields.filter((field) => ['bgTone', 'textTone'].includes(field.id));
+  const appearanceFields = fields.filter((field) => field.id === 'textTone');
+  const backgroundToneField = fields.find((field) => field.id === 'bgTone') || null;
   const editorField = getPageContentEditorField(settings);
   const usesLegacySource = hasLegacyPageContentSource(settings);
 
@@ -7340,6 +7363,16 @@ export function PageContentBlockEditor({ block, onSettingChange }) {
           className="admin-content-field-list--inline admin-page-content-appearance-fields"
         />
       ) : null}
+
+      <BackgroundEditorPage
+        backgroundTone={settings.bgTone}
+        backgroundToneOptions={Array.isArray(backgroundToneField?.options) ? backgroundToneField.options : []}
+        backgroundToneLabel={backgroundToneField?.label || 'Page content background'}
+        onBackgroundToneChange={(nextValue) => onSettingChange('bgTone', nextValue)}
+        backgroundEffectsJson={settings.backgroundEffectsJson}
+        onBackgroundEffectsChange={(nextValue) => onSettingChange('backgroundEffectsJson', nextValue)}
+        paletteVariant="admin"
+      />
 
       <PageContentLayoutControls
         settings={settings}
@@ -7450,6 +7483,9 @@ export function TopStripBlockEditor({ block, onSettingChange }) {
       textOptions={Array.isArray(fieldById.get('textTone')?.options) ? fieldById.get('textTone').options : []}
       loginToneOptions={Array.isArray(fieldById.get('loginButtonTone')?.options) ? fieldById.get('loginButtonTone').options : []}
       ratesToneOptions={Array.isArray(fieldById.get('ratesButtonTone')?.options) ? fieldById.get('ratesButtonTone').options : []}
+      showBackgroundPage
+      backgroundEffectsJson={settings.backgroundEffectsJson}
+      onBackgroundEffectsChange={(nextValue) => onSettingChange('backgroundEffectsJson', nextValue)}
     />
   );
 }
@@ -7469,6 +7505,9 @@ export function TopStripHudBlockEditor({ block, onSettingChange, blockOptions = 
       ratesToneOptions={Array.isArray(fieldById.get('ratesButtonTone')?.options) ? fieldById.get('ratesButtonTone').options : []}
       blockOptions={blockOptions}
       sourceRevision={sourceRevision}
+      showBackgroundPage
+      backgroundEffectsJson={settings.backgroundEffectsJson}
+      onBackgroundEffectsChange={(nextValue) => onSettingChange('backgroundEffectsJson', nextValue)}
     />
   );
 }
@@ -7922,7 +7961,7 @@ export function ColumnsBlockEditor({ block, onSettingChange, routeOptions = [] }
   const fixedColumns = Boolean(presetEditor.fixedColumns);
   const showBackgroundToneControl = presetDefinition
     ? presetEditor.allowBackgroundTone !== false
-    : columnsStyle !== 'legacy-highlight';
+    : true;
   const allowPhotoColumnsByPreset = presetDefinition ? presetEditor.allowPhotoColumns !== false : true;
   const allowTextColumnImagesByPreset = presetDefinition ? presetEditor.allowTextColumnImages !== false : true;
   const allowColumnActionsByPreset = presetDefinition ? presetEditor.allowColumnActions !== false : true;
@@ -7986,24 +8025,16 @@ export function ColumnsBlockEditor({ block, onSettingChange, routeOptions = [] }
         useResetForClear
       />
 
-      {bgToneField && showBackgroundToneControl ? (
-        <section className="admin-panel-appearance admin-panel-appearance--intro-text admin-panel-appearance--intro-bg admin-columns-background-editor">
-          <div className="admin-content-field-list admin-content-field-list--inline admin-panel-appearance-grid">
-            <label>
-              <span>{bgToneField.label || 'Background color'}</span>
-              <ColorPalette
-                variant="admin"
-                className="is-compact admin-hero-inline-swatch-list is-icon-only admin-intro-bg-palette-swatch-list"
-                ariaLabel={bgToneField.label || 'Columns background'}
-                options={Array.isArray(bgToneField.options) ? bgToneField.options : []}
-                value={String(settings.bgTone || '')}
-                preventMouseDown
-                onChange={(nextValue) => onSettingChange('bgTone', nextValue)}
-                getOptionClassName={(option, state) => ` admin-bg-swatch-option${state.active ? ' is-active' : ''}`}
-              />
-            </label>
-          </div>
-        </section>
+      {showBackgroundToneControl ? (
+        <BackgroundEditorPage
+          backgroundTone={columnsBgTone}
+          backgroundToneOptions={Array.isArray(bgToneField?.options) ? bgToneField.options : []}
+          backgroundToneLabel={bgToneField?.label || 'Columns background'}
+          onBackgroundToneChange={(nextValue) => onSettingChange('bgTone', nextValue)}
+          backgroundEffectsJson={settings.backgroundEffectsJson}
+          onBackgroundEffectsChange={(nextValue) => onSettingChange('backgroundEffectsJson', nextValue)}
+          paletteVariant="admin"
+        />
       ) : null}
 
       <AdminHtmlEditor

@@ -304,6 +304,8 @@ describe('content-admin normalization parity', () => {
       }),
       block('preset', {
         kind: 'billboard',
+        presetId: 'default',
+        templateId: 'billboard',
         settings: {
           sectionClassName: 'legacy-giving-joy',
           titleFontFamily: 'avenir',
@@ -315,6 +317,7 @@ describe('content-admin normalization parity', () => {
     expect(normalized.blocksByPath['/test'][0].editableFields).toEqual([
       expect.objectContaining({ id: 'buttonLinkJson' }),
     ]);
+    expect(normalized.blocksByPath['/test'][1].presetId).toBe('planned-giving-joy');
     expect(normalized.blocksByPath['/test'][1].settings.titleFontFamily).toBe('helv');
   });
 

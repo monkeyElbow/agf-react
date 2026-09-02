@@ -67,7 +67,7 @@ const COLLECTION_MODELS = Object.freeze({
   },
   about_history_feature: {
     fieldId: 'cardsJson',
-    title: 'History cards',
+    title: 'History Gallery cards',
     itemLabel: 'History card',
     fields: [
       { id: 'title', label: 'Card title', type: 'text' },

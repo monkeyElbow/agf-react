@@ -4,6 +4,10 @@ import {
   getSiteFeatureOptions,
 } from '../../data/siteFeatureCatalog';
 import { buildDynamicSiteFeatureFromBlock } from '../../lib/dynamicPageBlocks';
+import {
+  DYNAMIC_GRID_BODY_TONE_OPTIONS,
+  DYNAMIC_GRID_TITLE_TONE_OPTIONS,
+} from '../../lib/dynamicGridPresentation';
 import { validateActionFieldGroup } from '../../lib/linkValue';
 import { createBlockDefinition } from '../foundation/models';
 import { defineEditorField, defineTransitionalActionFields } from '../foundation/editorDescriptors';
@@ -62,6 +66,61 @@ const sections = [
     ],
   },
   {
+    id: 'gallery',
+    title: 'Gallery presentation',
+    surfaces: ['hud', 'admin'],
+    fields: [
+      defineEditorField({
+        id: 'cardTitleSizeRem',
+        label: 'Card title size (rem)',
+        type: 'range',
+        min: 3,
+        max: 6,
+        step: 0.05,
+        defaultValue: 5.4,
+      }),
+      defineEditorField({
+        id: 'cardTitleLineHeight',
+        label: 'Card title line height',
+        type: 'range',
+        min: 0.8,
+        max: 1.5,
+        step: 0.05,
+        defaultValue: 0.95,
+      }),
+      defineEditorField({
+        id: 'cardBodySizeRem',
+        label: 'Card body size (rem)',
+        type: 'range',
+        min: 0.9,
+        max: 2,
+        step: 0.05,
+        defaultValue: 1.14,
+      }),
+      defineEditorField({
+        id: 'cardBodyLineHeight',
+        label: 'Card body line height',
+        type: 'range',
+        min: 1.1,
+        max: 2.1,
+        step: 0.05,
+        defaultValue: 1.72,
+      }),
+      defineEditorField({
+        id: 'titleTone',
+        label: 'Card title color',
+        type: 'swatch',
+        options: DYNAMIC_GRID_TITLE_TONE_OPTIONS,
+      }),
+      defineEditorField({
+        id: 'bodyTone',
+        label: 'Card body color',
+        type: 'swatch',
+        options: DYNAMIC_GRID_BODY_TONE_OPTIONS,
+      }),
+    ],
+  },
+  {
     id: 'action',
     title: 'Action',
     surfaces: ['hud', 'admin'],
@@ -96,6 +155,12 @@ export const siteFeatureBlockDefinition = createBlockDefinition({
     buttonPageRef: '',
     buttonOpenInNewWindow: false,
     sectionClassName: '',
+    cardTitleSizeRem: 5.4,
+    cardTitleLineHeight: 0.95,
+    cardBodySizeRem: 1.14,
+    cardBodyLineHeight: 1.72,
+    titleTone: 'super-grey',
+    bodyTone: 'super-grey',
   },
   schema: {
     fields: sections.flatMap((section) => section.fields),
@@ -105,8 +170,8 @@ export const siteFeatureBlockDefinition = createBlockDefinition({
   },
   editor: {
     sections,
-    hudSectionIds: ['feature', 'panels', 'action'],
-    adminSectionIds: ['feature', 'panels', 'action'],
+    hudSectionIds: ['feature', 'panels', 'gallery', 'action'],
+    adminSectionIds: ['feature', 'panels', 'gallery', 'action'],
   },
   validators: [
     (block) => Boolean(buildDynamicSiteFeatureFromBlock(block)),

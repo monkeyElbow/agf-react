@@ -63,9 +63,10 @@ describe('Vite development performance boundaries', () => {
     const authoritySource = readRepoFile('dev-server/contentAdminAuthority.js');
 
     expect(source).toContain('createContentAdminAuthorityLease');
-    expect(source).toContain('authorityLease.acquire()');
+    expect(source).toContain('nextAuthorityLease.acquire()');
     expect(source).toContain('authorityLease.assertOwned()');
     expect(source).toContain("server.httpServer?.once('close'");
+    expect(source).toContain('nextAuthorityLease.release()');
     expect(authoritySource).toContain("fs.openSync(lockFile, 'wx')");
     expect(authoritySource).toContain('reclaimStale');
   });

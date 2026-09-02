@@ -699,7 +699,7 @@ describe('buildDynamicIntroFromBlock', () => {
       backgroundEffects: {
         enabled: true,
         clip: true,
-        lights: [expect.objectContaining({ tone: 'mango', strength: 55, x: -24, y: 18, size: 88, motion: true })],
+        lights: [expect.objectContaining({ tone: 'mango', strength: 55, x: 26, y: 68, size: 88, motion: true, positionModel: 'edge-v1' })],
       },
       actions: [
         expect.objectContaining({
@@ -775,7 +775,7 @@ describe('buildDynamicBillboardFromBlock', () => {
       backgroundEffects: {
         enabled: true,
         clip: false,
-        lights: [expect.objectContaining({ tone: 'blue', strength: 42, x: -30, y: -20, size: 82 })],
+        lights: [expect.objectContaining({ tone: 'blue', strength: 42, x: 20, y: 30, size: 82, positionModel: 'edge-v1' })],
       },
       copyClassName: '',
       copyFadeRootMargin: '',
@@ -999,6 +999,9 @@ describe('buildDynamicBillboardFromBlock', () => {
 
     expect(runtime?.leadCopySizeRem).toBe(1.85);
     expect(runtime?.bodyHtmlStyle).toEqual({
+      '--dynamic-billboard-lead-copy-size': 'clamp(calc(1.85rem * 0.68), 2.1vw, 1.85rem)',
+    });
+    expect(runtime?.copyStyle).toEqual({
       '--dynamic-billboard-lead-copy-size': 'clamp(calc(1.85rem * 0.68), 2.1vw, 1.85rem)',
     });
   });
@@ -1459,6 +1462,33 @@ describe('buildDynamicFeaturePanelFromBlock', () => {
 });
 
 describe('buildDynamicSiteFeatureFromBlock', () => {
+  it('carries History Gallery typography and color settings into the shared runtime', () => {
+    const runtime = buildDynamicSiteFeatureFromBlock({
+      id: 'history',
+      kind: 'site_feature',
+      mode: 'dynamic',
+      settings: {
+        featureId: 'about_history_feature',
+        cardTitleSizeRem: 4.2,
+        cardTitleLineHeight: 1.1,
+        cardBodySizeRem: 1.3,
+        cardBodyLineHeight: 1.9,
+        titleTone: 'mango',
+        bodyTone: 'atlantean',
+      },
+    });
+
+    expect(runtime).toMatchObject({
+      catalogLabel: 'History Gallery',
+      cardTitleSizeRem: 4.2,
+      cardTitleLineHeight: 1.1,
+      cardBodySizeRem: 1.3,
+      cardBodyLineHeight: 1.9,
+      titleTone: 'mango',
+      bodyTone: 'atlantean',
+    });
+  });
+
   it('normalizes site features into a code-owned runtime with limited overrides', () => {
     const runtime = buildDynamicSiteFeatureFromBlock({
       id: 'story_shell',
