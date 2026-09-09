@@ -55,6 +55,24 @@
   display: contents;
 }
 
+/* Keep the body, actions, lists, and fineprint together as one content
+ * column. Without this wrapper, CSS Grid centers each paragraph in a
+ * separate implicit row, so a body with a button appears high in the card. */
+.service-native-card > div:first-child > .service-native-card-flow {
+  display: contents;
+}
+
+.is-numbered-step-cards .service-native-card > div:first-child > .service-native-card-step-content {
+  display: flex;
+  flex-wrap: wrap;
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  align-items: center;
+  gap: var(--numbered-step-card-row-gap);
+  min-width: 0;
+}
+
 .is-numbered-step-cards .service-native-card h3 {
   grid-column: 1;
   grid-row: 1 / span 2;
@@ -70,6 +88,8 @@
   font-weight: 800;
   line-height: var(--dynamic-grid-card-title-line-height, 1) !important;
   letter-spacing: -0.04em;
+  position: relative;
+  left: var(--numbered-step-card-number-offset, 0%);
 }
 
 .is-numbered-step-cards .service-native-card h3::after {
@@ -87,9 +107,19 @@
   line-height: var(--step-card-body-line-height, 1.42);
 }
 
+.is-numbered-step-cards .service-native-card-step-content > p {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
 .is-numbered-step-cards .service-native-card :is(.service-native-card-rich-body, .service-native-card-bullet-list, .service-native-card-link-list, .service-native-card-accordions) {
   grid-column: 2;
   align-self: center;
+  min-width: 0;
+}
+
+.is-numbered-step-cards .service-native-card-step-content > :is(.service-native-card-rich-body, .service-native-card-bullet-list, .service-native-card-link-list, .service-native-card-accordions) {
+  flex: 1 1 12rem;
   min-width: 0;
 }
 
@@ -110,6 +140,24 @@
   margin-top: 0.1rem;
   padding-top: 0;
   justify-content: flex-start;
+}
+
+.is-numbered-step-cards .service-native-card-step-content > .service-native-action-row {
+  flex: 0 0 auto;
+  margin: 0;
+  padding-top: 0;
+}
+
+/* The legacy service stylesheet still carries a more-specific preset rule
+ * for dynamic 403(b) cards. Match that preset authority here so its old
+ * column-2 declarations cannot create an implicit second column inside the
+ * new content wrapper. */
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-preset-step-cards
+  .service-native-card:not(.investments-native-cert-card):not(.retirement-account-card--certificate)
+  .service-native-card-step-content
+  > :is(p, .service-native-card-rich-body, .service-native-card-bullet-list, .service-native-card-link-list, .service-native-card-accordions, .service-native-action-row) {
+  grid-column: 1;
+  grid-row: auto;
 }
 
 .is-numbered-step-cards .service-native-card:nth-child(3n + 1) {
@@ -243,6 +291,20 @@
   .is-numbered-step-cards .service-native-card {
     grid-template-columns: minmax(0, 1fr);
     row-gap: 0.95rem;
+  }
+
+  .is-numbered-step-cards .service-native-card > div:first-child > .service-native-card-step-content {
+    grid-column: 1;
+    grid-row: auto;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-preset-step-cards
+    .service-native-card:not(.investments-native-cert-card):not(.retirement-account-card--certificate)
+    .service-native-card-step-content {
+    grid-column: 1;
+    grid-row: auto;
   }
 
   .is-numbered-step-cards .service-native-card :is(h3, p, .service-native-action-row, .service-native-card-rich-body, .service-native-card-bullet-list, .service-native-card-link-list, .service-native-card-accordions) {

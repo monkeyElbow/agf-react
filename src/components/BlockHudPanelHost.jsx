@@ -65,6 +65,7 @@ const HUD_EDITORS_WITH_SECTION_RAIL = new Set([
   'top_strip',
   'testimonials',
   'billboard',
+  'card_grid',
   'card_chart',
   'columns',
   'request_form',
@@ -108,20 +109,13 @@ function HudBlockBackgroundPage({ block, onSettingChange }) {
 function HudEditorCompatibilityShell({ block, blockKind, blockLabel, children, blockOptions = null, onSettingChange }) {
   const label = String(blockLabel || 'Block').trim() || 'Block';
   const definitionSections = getBlockEditorSections(blockKind, 'hud');
-  const cardGridSections = blockKind === 'card_grid'
-    ? [
-      { id: 'header', label: 'Header', icon: 'H' },
-      { id: 'appearance', label: 'Appearance', icon: '◉' },
-      { id: 'cards', label: 'Cards', icon: '▦' },
-    ]
-    : null;
-  const modelSections = cardGridSections || (definitionSections.length
+  const modelSections = definitionSections.length
     ? definitionSections.map((section, index) => ({
       id: String(section.id || `section-${index + 1}`),
       label: String(section.title || section.label || `Section ${index + 1}`),
       icon: getCompatibilitySectionIcon(section, index),
     }))
-    : [{ id: 'controls', label: 'Controls', icon: 'C' }]);
+    : [{ id: 'controls', label: 'Controls', icon: 'C' }];
   const sections = appendHudBlockOptionsSection(modelSections, blockOptions);
   const [activeSection, setActiveSection] = useState(sections[0]?.id || 'controls');
   const settings = block?.settings || {};

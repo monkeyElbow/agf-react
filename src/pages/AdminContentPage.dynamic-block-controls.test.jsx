@@ -1979,6 +1979,21 @@ describe('dynamic block control wiring', () => {
     expect(onSettingChange).not.toHaveBeenCalledWith('bodyTone', 'white');
   });
 
+  it('activates an explicit outline when the admin adjusts border width from Default', () => {
+    const block = getDynamicBlock('card_grid');
+    delete block.settings.cardOutline;
+    const onSettingChange = vi.fn();
+
+    render(<GridBlockEditor block={block} onSettingChange={onSettingChange} />);
+
+    fireEvent.change(screen.getByRole('slider', { name: 'Border width' }), {
+      target: { value: '2.5' },
+    });
+
+    expect(onSettingChange).toHaveBeenNthCalledWith(1, 'cardOutline', true);
+    expect(onSettingChange).toHaveBeenNthCalledWith(2, 'cardOutlineWidth', 2.5);
+  });
+
   it('shows only existing grid cards until the next one is explicitly added', () => {
     vi.useFakeTimers();
     const block = getDynamicBlock('card_grid');

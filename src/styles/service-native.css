@@ -6181,8 +6181,51 @@
   --dynamic-grid-card-outline-color: rgba(255, 255, 255, 0.58);
 }
 
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-outline.is-card-outline-super-grey {
+  --dynamic-grid-card-outline-color: var(--ag-color-super-grey);
+}
+
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-outline.is-card-outline-atlantean {
+  --dynamic-grid-card-outline-color: var(--ag-color-atlantean);
+}
+
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-outline.is-card-outline-mango {
+  --dynamic-grid-card-outline-color: var(--ag-color-mango);
+}
+
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-outline.is-card-outline-melon {
+  --dynamic-grid-card-outline-color: var(--ag-color-melon);
+}
+
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-outline.is-card-outline-sandstone {
+  --dynamic-grid-card-outline-color: var(--ag-color-sandstone);
+}
+
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-outline.is-card-outline-white {
+  --dynamic-grid-card-outline-color: var(--ag-color-white);
+}
+
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-outline.is-card-outline-alternating {
+  --dynamic-grid-card-outline-color: var(--ag-color-atlantean);
+  --dynamic-grid-card-outline-one: var(--ag-color-atlantean);
+  --dynamic-grid-card-outline-two: var(--ag-color-mango);
+  --dynamic-grid-card-outline-three: var(--ag-color-melon);
+}
+
 .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-outline .service-native-card:not(.investments-native-cert-card):not(.retirement-account-card--certificate) {
-  border: 1.5px solid var(--dynamic-grid-card-outline-color) !important;
+  border: var(--dynamic-grid-card-outline-width, 1.5px) solid var(--dynamic-grid-card-outline-color) !important;
+}
+
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-outline.is-card-outline-alternating .service-native-grid > .service-native-card:nth-child(3n + 1):not(.investments-native-cert-card):not(.retirement-account-card--certificate) {
+  border-color: var(--dynamic-grid-card-outline-one) !important;
+}
+
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-outline.is-card-outline-alternating .service-native-grid > .service-native-card:nth-child(3n + 2):not(.investments-native-cert-card):not(.retirement-account-card--certificate) {
+  border-color: var(--dynamic-grid-card-outline-two) !important;
+}
+
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-outline.is-card-outline-alternating .service-native-grid > .service-native-card:nth-child(3n):not(.investments-native-cert-card):not(.retirement-account-card--certificate) {
+  border-color: var(--dynamic-grid-card-outline-three) !important;
 }
 
 .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-outline-off .service-native-card:not(.investments-native-cert-card):not(.retirement-account-card--certificate) {
@@ -13046,6 +13089,7 @@ p.impact-proof-story-proof-body {
   text-align: center;
 }
 
+.native-info-page--about .service-native-section.dynamic-billboard.about-native-strategy.is-text-dark .native-info-rich-html a:not(.service-native-btn),
 .native-info-page--about .about-native-strategy .native-info-rich-html a {
   color: var(--ag-color-atlantean);
   font-weight: 700;
@@ -22334,6 +22378,23 @@ p.impact-proof-story-proof-body {
    !important typography, but a saved editor value must still win. */
 .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-title-line-height-controlled .service-native-card h3 {
   line-height: var(--dynamic-grid-card-title-line-height) !important;
+}
+
+/* Card Grid alignment is block-owned. Keep title and body justification out
+ * of individual card fields so one setting controls the complete grid. */
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid) .service-native-card h3 {
+  text-align: var(--dynamic-grid-card-title-justify, center) !important;
+  justify-content: var(--dynamic-grid-card-title-justify-content, center) !important;
+}
+
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid) .service-native-card-flow > :is(
+  p:not(.service-native-card-subtitle):not(.service-native-card-phone):not(.service-native-card-fineprint),
+  .service-native-card-rich-body,
+  .service-native-card-bullet-list,
+  .service-native-card-link-list,
+  .service-native-card-accordions
+) {
+  text-align: var(--dynamic-grid-card-body-justify, left) !important;
 }
 
 /* MIF's dated footnote is not one of its bullets. Preserve its fine-print

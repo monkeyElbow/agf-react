@@ -2227,6 +2227,30 @@ describe('buildDynamicGridFromBlock', () => {
     }));
   });
 
+  it('lets an authored grid title tone replace legacy per-span card title colors', () => {
+    const runtime = buildDynamicGridFromBlock({
+      id: 'legacy-colored-card-grid',
+      kind: 'card_grid',
+      mode: 'dynamic',
+      settings: {
+        titleTone: 'super-grey',
+        card1Title: 'MBA Income Fund',
+        card1TitleHighlightsJson: JSON.stringify([
+          { text: 'MBA Income Fund', className: 'is-atlantean' },
+        ]),
+        card2Title: 'Screened Investments',
+        card2TitleHighlightsJson: JSON.stringify([
+          { text: 'Screened Investments', className: 'is-mango' },
+        ]),
+      },
+    });
+
+    expect(runtime.cards).toEqual([
+      expect.objectContaining({ title: 'MBA Income Fund', titleHighlights: [] }),
+      expect.objectContaining({ title: 'Screened Investments', titleHighlights: [] }),
+    ]);
+  });
+
   it('keeps legacy cards visible when no explicit count was saved', () => {
     const runtime = buildDynamicGridFromBlock({
       id: 'legacy-grid',
@@ -2274,6 +2298,7 @@ describe('buildDynamicGridFromBlock', () => {
         card1ListJson: JSON.stringify(['First bullet']),
         card1Fineprint: 'Additional note',
         card1FineprintJustify: 'right',
+        fineprintSizeRem: 1.05,
         card1FineprintSpaceBeforeRem: 1.2,
         card1FineprintLineHeight: 1.7,
         card1FineprintSpaceAfterRem: 0.4,
@@ -2283,6 +2308,7 @@ describe('buildDynamicGridFromBlock', () => {
     expect(runtime.cards[0]).toEqual(expect.objectContaining({
       fineprint: ['Additional note'],
       fineprintJustify: 'right',
+      fineprintSizeRem: 1.05,
       fineprintSpaceBeforeRem: 1.2,
       fineprintLineHeight: 1.7,
       fineprintSpaceAfterRem: 0.4,
@@ -2413,11 +2439,13 @@ describe('buildDynamicGridFromBlock', () => {
         cardPaddingRem: 2.2,
         cardTitleSizeRem: 1.5,
         cardTitleLineHeight: 1.1,
+        cardTitleJustify: 'right',
         cardBodySizeRem: 1.2,
         cardBulletSize: 'large',
         cardBulletSizeRem: 1.72,
         cardBulletLineHeight: 1.7,
         cardBodyLineHeight: 1.8,
+        cardBodyJustify: 'center',
         card1Title: 'First option',
         card1Body: '<ul><li>Rich bullet</li></ul>',
         card1IconKey: 'daf-step-1',
@@ -2446,11 +2474,13 @@ describe('buildDynamicGridFromBlock', () => {
       cardPaddingRem: 2.2,
       cardTitleSizeRem: 1.5,
       cardTitleLineHeight: 1.1,
+      cardTitleJustify: 'right',
       cardBodySizeRem: 1.2,
       cardBulletSize: 'large',
       cardBulletSizeRem: 1.72,
       cardBulletLineHeight: 1.7,
       cardBodyLineHeight: 1.8,
+      cardBodyJustify: 'center',
     });
     expect(runtime.titleHighlights).toEqual([{ text: 'options', className: 'is-mango' }]);
     expect(runtime.cards).toEqual([
@@ -2603,6 +2633,49 @@ describe('buildDynamicGridFromBlock', () => {
     expect(runtime?.cardStyle).toBe('card2');
     expect(runtime?.cardOutline).toBe(true);
     expect(runtime?.cardShadow).toBe(false);
+  });
+
+  it('normalizes persisted string outline choices and restores the style default when unset', () => {
+    const stringOnRuntime = buildDynamicGridFromBlock({
+      id: 'grid-string-on',
+      kind: 'card_grid',
+      mode: 'dynamic',
+      settings: { cardStyle: 'card2', cardOutline: 'true', card1Title: 'Coverage' },
+    });
+    const stringOffRuntime = buildDynamicGridFromBlock({
+      id: 'grid-string-off',
+      kind: 'card_grid',
+      mode: 'dynamic',
+      settings: { cardStyle: 'card2', cardOutline: 'false', card1Title: 'Coverage' },
+    });
+    const defaultRuntime = buildDynamicGridFromBlock({
+      id: 'grid-default',
+      kind: 'card_grid',
+      mode: 'dynamic',
+      settings: { cardStyle: 'card2', card1Title: 'Coverage' },
+    });
+
+    expect(stringOnRuntime?.cardOutline).toBe(true);
+    expect(stringOffRuntime?.cardOutline).toBe(false);
+    expect(defaultRuntime?.cardOutline).toBe(null);
+  });
+
+  it('carries normalized outline tone and width into the grid runtime', () => {
+    const runtime = buildDynamicGridFromBlock({
+      id: 'grid-outline-controls',
+      kind: 'card_grid',
+      mode: 'dynamic',
+      settings: {
+        cardStyle: 'card2',
+        cardOutline: true,
+        cardOutlineTone: 'MANGO',
+        cardOutlineWidth: 2.24,
+        card1Title: 'Coverage',
+      },
+    });
+
+    expect(runtime?.cardOutlineTone).toBe('mango');
+    expect(runtime?.cardOutlineWidth).toBe(2);
   });
 
   it('keeps a grid card mounted when it still has an action during title edits', () => {

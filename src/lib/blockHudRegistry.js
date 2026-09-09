@@ -109,6 +109,7 @@ export function getBlockHudDefinition(block) {
     label,
     icon: override?.icon || kindDefinition?.icon || pageContentHudIcon,
     editorType: override?.editorType || kindDefinition?.editorType || 'fields',
+    hudShell: canonicalDefinition?.hudShell || null,
   };
 }
 
@@ -159,6 +160,7 @@ export function buildHudPanelsFromBlocks(
       label: definition.label,
       icon: definition.icon,
       editorType: definition.editorType,
+      hudShell: definition.hudShell,
       anchorSelector,
       isHidden: block?.hidden === true || String(block?.hidden || '').trim().toLowerCase() === 'true',
     });

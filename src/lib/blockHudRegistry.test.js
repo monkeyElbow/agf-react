@@ -112,7 +112,13 @@ describe('buildHudPanelsFromBlocks', () => {
       mode: 'dynamic',
       presetId: 'investment-options',
       templateId: 'card_grid',
-    }).label).toBe('Card Grid · Investment options');
+    })).toMatchObject({
+      label: 'Card Grid · Investment options',
+      hudShell: {
+        showTitle: true,
+        title: 'Card Grid',
+      },
+    });
   });
 
   it('keeps dashboard login on the Billboard family without creating a pseudo-kind', () => {

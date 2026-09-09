@@ -3080,6 +3080,15 @@ html.ag-browser-safari button.action-btn {
   text-decoration: none;
 }
 
+.search-page-result-item a.is-keyboard-active,
+.search-page-result-item a.is-keyboard-active:hover,
+.search-page-result-item a.is-keyboard-active:focus-visible {
+  color: var(--ag-color-atlantean);
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.16em;
+}
+
 .search-page-result-item span {
   display: block;
   margin-top: 0.18rem;

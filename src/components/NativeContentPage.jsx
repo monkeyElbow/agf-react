@@ -763,12 +763,16 @@ function buildNativeCardFineprintStyle(card) {
   };
   const spaceBefore = Number(card.fineprintSpaceBeforeRem);
   const lineHeight = Number(card.fineprintLineHeight);
+  const fontSize = Number(card.fineprintSizeRem);
   const spaceAfter = Number(card.fineprintSpaceAfterRem);
   if (Number.isFinite(spaceBefore)) {
     style.marginTop = `${spaceBefore}rem`;
   }
   if (Number.isFinite(lineHeight)) {
     style.lineHeight = lineHeight;
+  }
+  if (Number.isFinite(fontSize)) {
+    style.fontSize = `${fontSize}rem`;
   }
   if (Number.isFinite(spaceAfter)) {
     style.marginBottom = `${spaceAfter}rem`;
@@ -1330,6 +1334,8 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
     locationFilter,
     cardStyle,
     cardOutline,
+    cardOutlineTone,
+    cardOutlineWidth,
     cardShadow,
     titleTone,
     bodyTone,
@@ -1337,11 +1343,14 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
     cardPaddingRem,
     cardTitleSizeRem,
     cardTitleLineHeight,
+    cardTitleJustify,
+    numberPositionPercent,
     cardBodySizeRem,
     cardBulletSize,
     cardBulletSizeRem,
     cardBulletLineHeight,
     cardBodyLineHeight,
+    cardBodyJustify,
     paddingTopRem,
     paddingBottomRem,
     headerSubheadSpaceRem,
@@ -1406,6 +1415,7 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
       list: Array.isArray(card.list) ? card.list : undefined,
       fineprint: card.fineprint || undefined,
       fineprintJustify: card.fineprintJustify || 'left',
+      fineprintSizeRem: card.fineprintSizeRem,
       fineprintSpaceBeforeRem: card.fineprintSpaceBeforeRem,
       fineprintLineHeight: card.fineprintLineHeight,
       fineprintSpaceAfterRem: card.fineprintSpaceAfterRem,
@@ -1474,11 +1484,20 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
       ...(Number.isFinite(Number(paddingBottomRem)) ? { paddingBottom: `${paddingBottomRem}rem` } : {}),
       '--dynamic-grid-card-padding': `${cardPaddingRem}rem`,
       '--dynamic-grid-card-title-size': `${cardTitleSizeRem}rem`,
+      '--dynamic-grid-card-title-justify': cardTitleJustify,
+      '--dynamic-grid-card-title-justify-content': cardTitleJustify === 'left'
+        ? 'flex-start'
+        : cardTitleJustify === 'right'
+          ? 'flex-end'
+          : 'center',
       ...(Number.isFinite(Number(cardTitleLineHeight))
         ? { '--dynamic-grid-card-title-line-height': String(cardTitleLineHeight) }
         : {}),
+      '--numbered-step-card-number-offset': `${numberPositionPercent}%`,
+      '--dynamic-grid-card-outline-width': `${cardOutlineWidth}px`,
       '--dynamic-grid-card-body-size': `${cardBodySizeRem}rem`,
       '--dynamic-grid-card-body-line-height': String(cardBodyLineHeight),
+      '--dynamic-grid-card-body-justify': cardBodyJustify,
       ...(Number.isFinite(Number(headerSizeRem))
         ? { '--dynamic-grid-header-size': `${headerSizeRem}rem` }
         : {}),
@@ -1499,7 +1518,7 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
           }
         : {}),
     },
-    className: `${sectionClassBase}${sectionClassName ? ` ${sectionClassName}` : ''}${numberedStepCardsClassName ? ` ${numberedStepCardsClassName}` : ''}${isPlannedGivingBulletGrid ? ' is-planned-giving-bullet-grid' : ''}${hasControlledBulletTypography ? ' is-card-grid-bullet-controlled' : ''}${Number.isFinite(Number(cardTitleLineHeight)) ? ' is-card-title-line-height-controlled' : ''}${Number.isFinite(Number(subheadSizeRem)) ? ' is-subhead-sized' : ''}${cardHoverScale === true ? ' is-card-hover-scale' : ''}${cardHoverScale === false ? ' is-card-hover-scale-disabled' : ''}${cardOutline === true ? ' is-card-outline' : ''}${cardOutline === false ? ' is-card-outline-off' : ''}${cardShadow === true ? ' is-card-shadow' : ''}${cardShadow === false ? ' is-card-shadow-off' : ''} is-bg-${bgTone} is-width-${contentWidth} is-title-${titleTone} is-body-${bodyTone} is-subhead-${subheadTone} ${presetRuntimeClassName} is-card-grid-style-${cardStyle}${cardStyle === 'none' ? ' is-card-none' : ''}`,
+    className: `${sectionClassBase}${sectionClassName ? ` ${sectionClassName}` : ''}${numberedStepCardsClassName ? ` ${numberedStepCardsClassName}` : ''}${isPlannedGivingBulletGrid ? ' is-planned-giving-bullet-grid' : ''}${hasControlledBulletTypography ? ' is-card-grid-bullet-controlled' : ''}${Number.isFinite(Number(cardTitleLineHeight)) ? ' is-card-title-line-height-controlled' : ''}${Number.isFinite(Number(subheadSizeRem)) ? ' is-subhead-sized' : ''}${cardHoverScale === true ? ' is-card-hover-scale' : ''}${cardHoverScale === false ? ' is-card-hover-scale-disabled' : ''}${cardOutline === true ? ' is-card-outline' : ''}${cardOutline === false ? ' is-card-outline-off' : ''}${cardOutlineTone ? ` is-card-outline-${cardOutlineTone}` : ' is-card-outline-default'}${cardShadow === true ? ' is-card-shadow' : ''}${cardShadow === false ? ' is-card-shadow-off' : ''} is-bg-${bgTone} is-width-${contentWidth} is-title-${titleTone} is-body-${bodyTone} is-subhead-${subheadTone} ${presetRuntimeClassName} is-card-grid-style-${cardStyle}${cardStyle === 'none' ? ' is-card-none' : ''}`,
   };
 }
 
@@ -6472,6 +6491,7 @@ export default function NativeContentPage({ page }) {
         const isDynamicPageContentSection = sectionClassName.includes('dynamic-page-content');
         const isDynamicRequestSection = sectionClassName.includes('native-dynamic-request');
         const isCgaAssetsGrid = sectionClassName.includes('legacy-child-native-cga-assets');
+        const isNumberedStepCardsSection = sectionClassName.includes('is-numbered-step-cards');
         const dynamicSectionBlockId = String(section?.blockId || '').trim();
         const shouldAnimatePlannedGivingStepIcons = (
           sectionClassName.includes('legacy-child-native-flow-steps')
@@ -7420,6 +7440,7 @@ export default function NativeContentPage({ page }) {
                           {card.titleSuffix ? <span className="consultant-name-credentials">{card.titleSuffix}</span> : null}
                         </h3>
                       ) : null}
+                      <div className={isNumberedStepCardsSection ? 'service-native-card-flow service-native-card-step-content' : 'service-native-card-flow'}>
                       {card.subtitle ? <p className="service-native-card-subtitle">{renderTextWithStrong(card.subtitle)}</p> : null}
                       {card.phone ? (
                         <p className="service-native-card-phone">
@@ -7477,6 +7498,26 @@ export default function NativeContentPage({ page }) {
                             </p>
                           )
                       ) : null}
+                      {isNumberedStepCardsSection && !card.messagePanel && Array.isArray(card.actions) && card.actions.length ? (
+                        <div className="service-native-action-row">
+                          {card.actions.map((item) => (
+                            <Action key={`${item.label}-${item.to || item.href || item.documentId}`} item={item} />
+                          ))}
+                        </div>
+                      ) : null}
+                      {isNumberedStepCardsSection && !card.messagePanel && !Array.isArray(card.actions) && (card.to || card.href || card.documentId) ? (
+                        <div className="service-native-action-row">
+                          <Action
+                            item={{
+                              label: card.cta || 'Learn more',
+                              to: card.to,
+                              href: card.href,
+                              documentId: card.documentId,
+                            }}
+                          />
+                        </div>
+                      ) : null}
+                      </div>
                     </div>
                     {card.messagePanel ? (
                       <ConsultantMessagePanel
@@ -7491,14 +7532,14 @@ export default function NativeContentPage({ page }) {
                         }}
                       />
                     ) : null}
-                    {!card.messagePanel && Array.isArray(card.actions) && card.actions.length ? (
+                    {!isNumberedStepCardsSection && !card.messagePanel && Array.isArray(card.actions) && card.actions.length ? (
                       <div className="service-native-action-row">
                         {card.actions.map((item) => (
                           <Action key={`${item.label}-${item.to || item.href || item.documentId}`} item={item} />
                         ))}
                       </div>
                     ) : null}
-                    {!card.messagePanel && !Array.isArray(card.actions) && (card.to || card.href || card.documentId) ? (
+                    {!isNumberedStepCardsSection && !card.messagePanel && !Array.isArray(card.actions) && (card.to || card.href || card.documentId) ? (
                       <div className="service-native-action-row">
                         <Action
                           item={{
@@ -7674,7 +7715,8 @@ export default function NativeContentPage({ page }) {
 
       {hasOpenHudPanel && activeHudPanel?.block ? (
         <FrontHudPanelShell
-          title={activeHudPanel.label}
+          title={activeHudPanel.hudShell?.title || activeHudPanel.label}
+          showTitle={activeHudPanel.hudShell?.showTitle !== false}
           blockId={activeHudPanel.block.id}
           pathname={hudContentPath}
           ownership={getOwnershipVisualForBlockId(activeHudPanel.block.id)}

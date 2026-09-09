@@ -61,4 +61,26 @@ describe('FrontHudPanelShell block workflow controls', () => {
     expect(screen.queryByRole('button', { name: 'Make block live' })).toBeNull();
     expect(publishSharedBlockNow).not.toHaveBeenCalled();
   });
+
+  it('can hide the visual block eyebrow while retaining an accessible title', () => {
+    render(
+      <ContentAdminContext.Provider value={{}}>
+        <FrontHudContext.Provider value={{ enabled: true, setEnabled: vi.fn() }}>
+          <FrontHudPanelShell
+            title="Card Grid · Flexible cards"
+            showTitle={false}
+            blockId="card-grid"
+            pathname="/services/retirement/403b"
+            onClose={vi.fn()}
+          >
+            <p>Editor</p>
+          </FrontHudPanelShell>
+        </FrontHudContext.Provider>
+      </ContentAdminContext.Provider>,
+    );
+
+    const title = screen.getByText('Card Grid · Flexible cards');
+    expect(title.className).toContain('admin-sr-only');
+    expect(title.closest('.admin-front-hud-tool-head')).toBeTruthy();
+  });
 });

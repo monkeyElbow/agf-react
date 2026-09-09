@@ -18,13 +18,18 @@ const GRID_TEXT_TONE_BG_COMPATIBILITY = {
 };
 const GRID_COLUMNS_SET = new Set(['one', 'two', 'three', 'four']);
 const GRID_WIDTH_SET = new Set(['content', 'browser']);
+const GRID_JUSTIFY_SET = new Set(['left', 'center', 'right']);
 const GRID_BULLET_SIZE_SET = new Set(['daf', 'large']);
+const GRID_CARD_OUTLINE_TONE_SET = new Set(['', 'super-grey', 'atlantean', 'mango', 'melon', 'sandstone', 'white', 'alternating']);
 
 // Shared planned-giving bullet contract. Keep authoring defaults and renderer
 // fallbacks identical so missing legacy fields cannot silently shrink lists.
 export const DEFAULT_DYNAMIC_GRID_CARD_BULLET_SIZE_REM = 1.55;
 export const DEFAULT_DYNAMIC_GRID_CARD_BULLET_LINE_HEIGHT = 1.5;
 export const DEFAULT_DYNAMIC_GRID_CARD_TITLE_LINE_HEIGHT = 1.2;
+export const DEFAULT_DYNAMIC_GRID_FINEPRINT_SIZE_REM = 0.96;
+export const DEFAULT_DYNAMIC_GRID_NUMBER_POSITION_PERCENT = 0;
+export const DEFAULT_DYNAMIC_GRID_CARD_OUTLINE_WIDTH_PX = 1.5;
 // Keep the header gap in the shared runtime contract so a legacy block with
 // no saved spacing key has the same result as a newly-authored block.
 export const DEFAULT_DYNAMIC_GRID_HEADER_SUBHEAD_SPACE_REM = 0.7;
@@ -36,6 +41,20 @@ export const DEFAULT_DYNAMIC_GRID_HEADER_CARDS_SPACE_REM = 1.15;
 export const DEFAULT_DYNAMIC_GRID_SUBHEAD_SIZE_REM = 1.26;
 export const DEFAULT_DYNAMIC_GRID_HEADER_SIZE_REM = 2.9;
 export const DEFAULT_DYNAMIC_GRID_HEADER_WIDTH_PERCENT = 100;
+
+export function normalizeDynamicGridCardOutlineTone(value) {
+  const token = String(value ?? '').trim().toLowerCase();
+  return GRID_CARD_OUTLINE_TONE_SET.has(token) ? token : '';
+}
+
+export function normalizeDynamicGridCardOutlineWidthPx(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return DEFAULT_DYNAMIC_GRID_CARD_OUTLINE_WIDTH_PX;
+  }
+  const stepped = Math.round(numeric * 2) / 2;
+  return Math.max(0.5, Math.min(4, stepped));
+}
 
 export function normalizeGridBgTone(value) {
   const token = String(value || 'white').trim().toLowerCase();
@@ -171,6 +190,14 @@ export function normalizeDynamicGridHeaderWidthPercent(value) {
   return Math.max(40, Math.min(100, Math.round(parsed)));
 }
 
+export function normalizeDynamicGridNumberPositionPercent(value) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) {
+    return DEFAULT_DYNAMIC_GRID_NUMBER_POSITION_PERCENT;
+  }
+  return Math.max(-50, Math.min(50, Math.round(parsed)));
+}
+
 export function normalizeDynamicGridWidth(value) {
   const token = String(value || '').trim().toLowerCase();
   return GRID_WIDTH_SET.has(token) ? token : 'content';
@@ -200,6 +227,14 @@ export function normalizeDynamicGridCardTitleLineHeight(value) {
   return Math.max(0.8, Math.min(1.5, Number(numeric.toFixed(2))));
 }
 
+export function normalizeDynamicGridCardJustify(value, fallback = 'left') {
+  const token = String(value ?? '').trim().toLowerCase();
+  if (GRID_JUSTIFY_SET.has(token)) {
+    return token;
+  }
+  return GRID_JUSTIFY_SET.has(fallback) ? fallback : 'left';
+}
+
 export function normalizeDynamicGridCardBodySizeRem(value) {
   const numeric = Number(value);
   if (!Number.isFinite(numeric)) {
@@ -227,6 +262,14 @@ export function normalizeDynamicGridCardBodyLineHeight(value) {
     return 1.58;
   }
   return Math.max(1.1, Math.min(2.1, Number(numeric.toFixed(2))));
+}
+
+export function normalizeDynamicGridFineprintSizeRem(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return DEFAULT_DYNAMIC_GRID_FINEPRINT_SIZE_REM;
+  }
+  return Math.max(0.65, Math.min(1.3, Number(numeric.toFixed(2))));
 }
 
 export function normalizeDynamicGridCardBulletLineHeight(value) {

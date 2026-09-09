@@ -128,8 +128,10 @@ describe('BlockHudPanelHost', () => {
       onSettingChange,
     }));
 
-    expect(screen.getByRole('navigation', { name: 'Card Grid · Flexible cards editor sections' })).toBeTruthy();
+    expect(screen.getByRole('navigation', { name: 'Card Grid editor sections' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Header' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Layout & typography' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Background & lights' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Cards' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Block options' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Block options' }).className).toContain('is-block-options');
@@ -160,16 +162,36 @@ describe('BlockHudPanelHost', () => {
     expect(headerPage?.querySelectorAll('.admin-card-grid-header-editor-controls input[type="range"]')).toHaveLength(7);
     expect([...headerPage?.querySelectorAll('.admin-card-grid-header-editor-controls input[type="range"]') || []][0]?.getAttribute('aria-label')).toBe('Header size (rem)');
     expect(document.querySelector('.admin-card-grid-hud-page--appearance .admin-card-grid-hud-group--spacing')).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: 'Appearance' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Layout & typography' }));
     expect(document.querySelector('.admin-card-grid-hud-group--heading')).toBeNull();
-    expect(document.querySelector('.admin-card-grid-hud-group--appearance')).toBeTruthy();
-    expect(document.querySelector('.admin-card-grid-hud-group--layout')).toBeTruthy();
-    expect(document.querySelector('.admin-card-grid-hud-group--typography')).toBeTruthy();
+    expect(document.querySelector('.admin-card-grid-hud-page--layout .admin-card-grid-hud-group--layout')).toBeTruthy();
+    expect(document.querySelector('.admin-card-grid-hud-page--layout .admin-card-grid-hud-group--typography')).toBeTruthy();
+    const editorPanels = [...document.querySelectorAll(
+      '.admin-card-grid-hud-page--layout [data-editor-panel-column]',
+    )];
+    expect(editorPanels).toHaveLength(4);
+    expect(editorPanels.map((panel) => panel.getAttribute('data-editor-panel-column'))).toEqual(['1', '2', '3', '4']);
+    expect(document.querySelector('.admin-card-grid-hud-page--layout h3')).toBeNull();
+    expect(screen.getByRole('slider', { name: 'Fineprint size' })).toBeTruthy();
+    const typographyFieldsByColumn = [...document.querySelectorAll(
+      '.admin-card-grid-hud-page--layout .admin-card-grid-hud-group--typography .admin-card-grid-hud-fields',
+    )].map((list) => [...list.children].map((field) => field.getAttribute('data-editor-field-id')));
+    expect(typographyFieldsByColumn).toEqual([
+      ['titleTone', 'cardTitleSizeRem', 'cardBodySizeRem', 'cardTitleJustify', 'cardPaddingRem'],
+      ['bodyTone', 'cardTitleLineHeight', 'cardBodyLineHeight', 'cardBodyJustify', 'fineprintSizeRem'],
+    ]);
+    const titleSizeNumber = document.querySelector(
+      '.admin-card-grid-hud-group--typography label[data-editor-field-id="cardTitleSizeRem"] input[role="spinbutton"]',
+    );
+    expect(titleSizeNumber?.title).toBe('rem');
+    expect(titleSizeNumber?.parentElement?.querySelector('span')).toBeNull();
+    expect(document.querySelector('.admin-card-grid-hud-page--layout .admin-card-grid-hud-group--appearance')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Background & lights' }));
     expect(document.querySelector('.admin-card-grid-hud-page--appearance .admin-card-grid-hud-group--appearance')).toBeTruthy();
-    expect(document.querySelector('.admin-card-grid-hud-page--appearance .admin-card-grid-hud-group--layout')).toBeTruthy();
-    expect(document.querySelector('.admin-card-grid-hud-page--appearance .admin-card-grid-hud-group--typography')).toBeTruthy();
+    expect(document.querySelector('.admin-card-grid-hud-page--appearance .admin-card-grid-hud-group--layout')).toBeNull();
+    expect(document.querySelector('.admin-card-grid-hud-page--appearance .admin-card-grid-hud-group--typography')).toBeNull();
     expect(document.querySelector('.admin-card-grid-hud-reference .admin-front-hud-swatch-row')).toBeTruthy();
-    expect(screen.getByRole('radiogroup', { name: 'Grid background' })).toBeTruthy();
+    expect(screen.getByRole('radiogroup', { name: 'Background color' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Card 1: Starter card' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Card 6' })).toBeTruthy();
     expect(document.querySelector('.admin-card-grid-card-preview')).toBeNull();
@@ -209,7 +231,7 @@ describe('BlockHudPanelHost', () => {
       onSettingChange,
     }));
 
-    fireEvent.click(screen.getByRole('button', { name: 'Appearance' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Background & lights' }));
     const titlePalette = screen.getByRole('radiogroup', { name: 'Card title color' });
     const bodyPalette = screen.getByRole('radiogroup', { name: 'Card body color' });
     expect(within(titlePalette).getByRole('radio', { name: 'Melon' }).getAttribute('aria-checked')).toBe('true');
@@ -474,6 +496,11 @@ describe('BlockHudPanelHost', () => {
       fireEvent.click(contentButton);
     }
 
+    const bodyFineprintColumns = document.querySelector('.admin-card-grid-body-fineprint-columns');
+    expect(bodyFineprintColumns).toBeTruthy();
+    expect(bodyFineprintColumns.children).toHaveLength(2);
+    expect(bodyFineprintColumns.querySelector('.admin-card-grid-body-editor .admin-card-grid-rich-body-editor')).toBeTruthy();
+    expect(bodyFineprintColumns.querySelector('.admin-card-grid-fineprint-controls .admin-card-grid-fineprint-editor')).toBeTruthy();
     expect(screen.getByRole('radiogroup', { name: 'Card 1 fineprint justify' })).toBeTruthy();
     expect(screen.getByRole('radio', { name: 'Left' }).getAttribute('aria-checked')).toBe('true');
     expect(screen.getByRole('slider', { name: 'Card 1 fineprint space above' })).toBeTruthy();

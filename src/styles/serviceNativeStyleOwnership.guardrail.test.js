@@ -146,6 +146,15 @@ describe('implementation-ownership.service-native style ownership', () => {
     );
   });
 
+  it('keeps the About strategy billboard body links on the Atlantean brand color', () => {
+    const source = readSource('./service-native.css');
+
+    expect(source).toContain(
+      '.native-info-page--about .service-native-section.dynamic-billboard.about-native-strategy.is-text-dark .native-info-rich-html a:not(.service-native-btn),',
+    );
+    expect(source).toContain('color: var(--ag-color-atlantean);');
+  });
+
   it('balances planned-giving product parade card content vertically', () => {
     const source = readSource('./service-native.css');
 

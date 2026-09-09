@@ -103,6 +103,7 @@ import {
   normalizeGridCardStyleToken,
   normalizeGridToneToken,
 } from '../../lib/dynamicGrid';
+import { isNumberedStepCardsSection } from '../../lib/numberedStepCardsContract';
 import { buildCardGridIntroHtml } from '../../lib/cardGridIntro';
 import {
   BUTTON_TONE_OPTIONS as SHARED_BUTTON_TONE_OPTIONS,
@@ -1336,25 +1337,31 @@ function CardGridCardEditor({
             routeOptions={routeOptions}
             draftFieldIds={GRID_LOCAL_DRAFT_FIELD_IDS}
           />
-          <CardGridRichBodyEditor
-            label={`${slotNoun} ${slot} body`}
-            value={bodyValue}
-            onChange={handleBodyChange}
-          />
-          <DraftBackedFieldControlGrid
-            fields={[
-              fineprintField,
-              fineprintJustifyField,
-              fineprintSpaceBeforeField,
-              fineprintLineHeightField,
-              fineprintSpaceAfterField,
-            ].filter(Boolean)}
-            settings={settings}
-            onSettingChange={onSettingChange}
-            className="admin-content-field-list--inline admin-card-grid-fineprint-editor"
-            routeOptions={routeOptions}
-            draftFieldIds={GRID_LOCAL_DRAFT_FIELD_IDS}
-          />
+          <div className="admin-card-grid-body-fineprint-columns">
+            <div className="admin-card-grid-body-editor">
+              <CardGridRichBodyEditor
+                label={`${slotNoun} ${slot} body`}
+                value={bodyValue}
+                onChange={handleBodyChange}
+              />
+            </div>
+            <div className="admin-card-grid-fineprint-controls">
+              <DraftBackedFieldControlGrid
+                fields={[
+                  fineprintField,
+                  fineprintJustifyField,
+                  fineprintSpaceBeforeField,
+                  fineprintLineHeightField,
+                  fineprintSpaceAfterField,
+                ].filter(Boolean)}
+                settings={settings}
+                onSettingChange={onSettingChange}
+                className="admin-content-field-list--inline admin-card-grid-fineprint-editor"
+                routeOptions={routeOptions}
+                draftFieldIds={GRID_LOCAL_DRAFT_FIELD_IDS}
+              />
+            </div>
+          </div>
         </CardGridEditorDisclosure>
 
         {showActions ? (
@@ -2451,6 +2458,38 @@ function SupportLibraryGroupsEditor({ value, onChange, routeOptions = [] }) {
 }
 
 function renderFieldControl(field, value, onChange, settings, onSettingChange, routeOptions = [], paletteVariant = 'admin') {
+  const isDisabled = field.disabled === true;
+  const fieldUnit = field.unit !== undefined
+    ? String(field.unit || '')
+    : (field.suffix === '' ? '' : (field.suffix || 'rem'));
+
+  if (field.type === 'outline_mode') {
+    const normalizedValue = String(value ?? '').trim().toLowerCase();
+    const mode = value === true || normalizedValue === 'true'
+      ? 'on'
+      : value === false || normalizedValue === 'false'
+        ? 'off'
+        : 'default';
+    return (
+      <div className="admin-boolean-pill admin-outline-mode-pill" role="group" aria-label={field.label || 'Card outline'}>
+        {[
+          ['default', 'Default', null],
+          ['on', 'On', true],
+          ['off', 'Off', false],
+        ].map(([optionMode, label, nextValue]) => (
+          <button
+            key={optionMode}
+            type="button"
+            className={`admin-boolean-pill-option${mode === optionMode ? ' is-active' : ''}`}
+            onClick={() => onChange(nextValue)}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+    );
+  }
+
   if (field.type === 'boolean') {
     const activeValue = toBoolean(value);
     return (
@@ -2459,6 +2498,7 @@ function renderFieldControl(field, value, onChange, settings, onSettingChange, r
           type="button"
           className={`admin-boolean-pill-option${activeValue ? ' is-active' : ''}`}
           onClick={() => onChange(true)}
+          disabled={isDisabled}
         >
           On
         </button>
@@ -2466,6 +2506,7 @@ function renderFieldControl(field, value, onChange, settings, onSettingChange, r
           type="button"
           className={`admin-boolean-pill-option${!activeValue ? ' is-active' : ''}`}
           onClick={() => onChange(false)}
+          disabled={isDisabled}
         >
           Off
         </button>
@@ -2484,6 +2525,8 @@ function renderFieldControl(field, value, onChange, settings, onSettingChange, r
         max={max}
         step={step}
         onChange={onChange}
+        title={fieldUnit || undefined}
+        disabled={isDisabled}
       />
     );
   }
@@ -2497,7 +2540,7 @@ function renderFieldControl(field, value, onChange, settings, onSettingChange, r
       ? Math.max(min, Math.min(max, numericValue))
       : min;
     return (
-      <div className="admin-range-number-control">
+      <div className={`admin-range-number-control${fieldUnit === 'rem' ? ' admin-range-number-control--unit-tooltip' : ''}`}>
         <input
           type="range"
           min={min}
@@ -2506,6 +2549,7 @@ function renderFieldControl(field, value, onChange, settings, onSettingChange, r
           value={activeValue}
           onChange={(event) => onChange(Number(event.target.value))}
           aria-label={field.label || 'Range'}
+          disabled={isDisabled}
         />
         <AdminNumberInput
           value={activeValue}
@@ -2514,8 +2558,10 @@ function renderFieldControl(field, value, onChange, settings, onSettingChange, r
           step={step}
           onChange={onChange}
           aria-label={`${field.label || 'Range'} value`}
+          title={fieldUnit || undefined}
+          disabled={isDisabled}
         />
-        <span>{field.suffix === '' ? '' : (field.suffix || 'rem')}</span>
+        {fieldUnit && fieldUnit !== 'rem' ? <span>{fieldUnit}</span> : null}
       </div>
     );
   }
@@ -2523,11 +2569,17 @@ function renderFieldControl(field, value, onChange, settings, onSettingChange, r
   if (field.type === 'select') {
     const options = Array.isArray(field.options) ? field.options : [];
     const isFineprintJustify = /(?:FineprintJustify|fineprintJustify)$/.test(String(field.id || ''));
-    if (field.id === 'justify' || isFineprintJustify) {
+    const isCardTitleJustify = field.id === 'cardTitleJustify';
+    const isCardBodyJustify = field.id === 'cardBodyJustify';
+    if (field.id === 'justify' || isFineprintJustify || isCardTitleJustify || isCardBodyJustify) {
       return (
-        <JustifyPillControl
+          <JustifyPillControl
           label={field.label}
-          value={value ?? (field.id === 'fineprintJustify' ? 'center' : (isFineprintJustify ? 'left' : 'center'))}
+          value={value ?? (
+            isCardBodyJustify || isFineprintJustify && field.id !== 'fineprintJustify'
+              ? 'left'
+              : 'center'
+          )}
           options={options}
           onChange={onChange}
         />
@@ -2535,7 +2587,7 @@ function renderFieldControl(field, value, onChange, settings, onSettingChange, r
     }
 
     return (
-      <select value={value ?? ''} onChange={(event) => onChange(event.target.value)}>
+      <select disabled={isDisabled} value={value ?? ''} onChange={(event) => onChange(event.target.value)}>
         {options.map((option) => (
           <option key={option.value} value={option.value}>{option.label}</option>
         ))}
@@ -2560,10 +2612,13 @@ function renderFieldControl(field, value, onChange, settings, onSettingChange, r
         options={options}
         value={selectedValue}
         onChange={(nextValue) => onChange(nextValue)}
+        isOptionDisabled={() => isDisabled}
         getOptionClassName={(option, state) => {
           const optionToken = String(option.value || '').trim().toLowerCase();
           const isWhiteTone = optionToken === 'white';
-          return `${usesBgPaletteStyle ? ' admin-bg-swatch-option' : ''}${state.active ? ' is-active' : ''}${isWhiteTone ? ' is-white-tone' : ''}${option.value === '' ? ' is-clear' : ''}`;
+          const isClearOption = option.value === ''
+            && (field.id !== 'cardOutlineTone' || option.hideSwatch === true);
+          return `${usesBgPaletteStyle ? ' admin-bg-swatch-option' : ''}${state.active ? ' is-active' : ''}${isWhiteTone ? ' is-white-tone' : ''}${isClearOption ? ' is-clear' : ''}`;
         }}
         getOptionShortLabel={(option) => (useCompactPalette ? (option.shortLabel || option.label) : option.label)}
         hideSwatchForOption={(option) => Boolean(option.hideSwatch)}
@@ -6767,7 +6822,7 @@ export function CalculatorCtaBlockEditor({ block, onSettingChange }) {
   );
 }
 
-export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hudMode = false }) {
+export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hudMode = false, blockOptions = null }) {
   const documentsContext = useContext(DocumentsContext);
   const documents = Array.isArray(documentsContext?.documents) ? documentsContext.documents : [];
   const settings = block.settings || {};
@@ -6788,8 +6843,13 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
   ));
   const showBulletTypography = isPlannedGivingBulletGrid || hasCardBulletContent;
   const presetDefinition = resolveBlockPresetDefinition(block);
+  const presetId = String(presetDefinition?.id || block?.presetId || '').trim().toLowerCase() || 'default';
   const presetEditor = presetDefinition?.editor || {};
   const presetCardFeatures = presetEditor?.cardFeatures || {};
+  const isNumberedStepCardsGrid = isNumberedStepCardsSection({
+    presetId,
+    sectionClassName: settings.sectionClassName,
+  });
   const allFields = resolveEditorFields(block.kind, 'admin', block.editableFields);
   const fieldById = new Map(allFields.map((field) => [field.id, field]));
   const bgToneField = fieldById.get('bgTone') || null;
@@ -6801,6 +6861,8 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
   const bodyToneFieldBase = fieldById.get('bodyTone') || null;
   const subheadSizeField = fieldById.get('subheadSizeRem') || null;
   const cardStyleFieldBase = fieldById.get('cardStyle') || null;
+  const cardOutlineToneFieldBase = fieldById.get('cardOutlineTone') || null;
+  const cardOutlineWidthFieldBase = fieldById.get('cardOutlineWidth') || null;
   const cardHoverScaleField = isInsuranceCoverageGrid
     ? (fieldById.get('cardHoverScale') || null)
     : null;
@@ -6819,6 +6881,14 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
       options: compatibleOptions.length ? compatibleOptions : (Array.isArray(cardStyleFieldBase.options) ? cardStyleFieldBase.options : []),
     };
   }, [cardStyleFieldBase, gridBgTone]);
+  const cardOutlineIsOff = settings.cardOutline === false
+    || String(settings.cardOutline || '').trim().toLowerCase() === 'false';
+  const cardOutlineToneField = cardOutlineToneFieldBase
+    ? { ...cardOutlineToneFieldBase, disabled: cardOutlineIsOff }
+    : null;
+  const cardOutlineWidthField = cardOutlineWidthFieldBase
+    ? { ...cardOutlineWidthFieldBase, disabled: cardOutlineIsOff }
+    : null;
   const hasExplicitCardCount = Number.isFinite(Number(settings.cardCount))
     && Number(settings.cardCount) >= 1;
   const inferredCardCount = Array.from({ length: 8 }, (_, index) => index + 1)
@@ -6827,14 +6897,7 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
   const layoutSettings = {
     ...settings,
     ...(!hasExplicitCardCount ? { cardCount: String(inferredCardCount) } : {}),
-    ...(!Object.prototype.hasOwnProperty.call(settings, 'cardOutline')
-      ? {
-          cardOutline: typeof presetDefinition?.defaults?.cardOutline === 'boolean'
-            ? presetDefinition.defaults.cardOutline
-            : !['none', 'borderless-shadow'].includes(normalizeGridCardStyleToken(settings.cardStyle)),
-        }
-      : {}),
-    ...(!Object.prototype.hasOwnProperty.call(settings, 'cardShadow')
+    ...(!['true', 'false'].includes(String(settings.cardShadow || '').trim().toLowerCase())
       ? {
           cardShadow: typeof presetDefinition?.defaults?.cardShadow === 'boolean'
             ? presetDefinition.defaults.cardShadow
@@ -6859,6 +6922,12 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
   if (fieldById.has('cardOutline')) {
     allowedLayoutFieldIds.add('cardOutline');
   }
+  if (fieldById.has('cardOutlineTone')) {
+    allowedLayoutFieldIds.add('cardOutlineTone');
+  }
+  if (fieldById.has('cardOutlineWidth')) {
+    allowedLayoutFieldIds.add('cardOutlineWidth');
+  }
   if (fieldById.has('cardShadow')) {
     allowedLayoutFieldIds.add('cardShadow');
   }
@@ -6869,7 +6938,7 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
   const presetMaxCards = Number.isInteger(presetEditor.maxCards)
     ? Math.max(1, Math.min(8, presetEditor.maxCards))
     : 8;
-  const appearanceFields = [titleToneField, bodyToneField]
+  const cardColorFields = [titleToneField, bodyToneField]
     .filter(Boolean)
     .map((field) => ({
       ...field,
@@ -6886,7 +6955,11 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
     fieldById.get('contentWidth'),
     fieldById.get('columns'),
     cardStyleField,
-    fieldById.get('cardOutline'),
+    fieldById.get('cardOutline')
+      ? { ...fieldById.get('cardOutline'), layout: 'half' }
+      : null,
+    cardOutlineToneField,
+    cardOutlineWidthField,
     fieldById.get('cardShadow'),
     cardHoverScaleField,
     fieldById.get('cardCount'),
@@ -6913,16 +6986,20 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
   ].filter(Boolean);
   const headerControlFields = [headerSizeField, headerWidthField, subheadSizeField, ...spacingFields].filter(Boolean);
   const cardTypographyFields = [
-    fieldById.get('cardPaddingRem'),
     fieldById.get('cardTitleSizeRem'),
     fieldById.get('cardTitleLineHeight'),
     fieldById.get('cardBodySizeRem')
       ? {
           ...fieldById.get('cardBodySizeRem'),
-          label: isPlannedGivingBulletGrid ? 'Card copy size (rem)' : fieldById.get('cardBodySizeRem').label,
+          label: isPlannedGivingBulletGrid ? 'Card copy size' : fieldById.get('cardBodySizeRem').label,
         }
       : null,
     fieldById.get('cardBodyLineHeight'),
+    fieldById.get('cardTitleJustify'),
+    fieldById.get('cardBodyJustify'),
+    fieldById.get('cardPaddingRem'),
+    fieldById.get('fineprintSizeRem'),
+    ...(isNumberedStepCardsGrid ? [fieldById.get('numberPositionPercent')] : []),
   ].filter(Boolean);
   const bulletTypographyFields = [
     fieldById.get('cardBulletSizeRem'),
@@ -6933,9 +7010,39 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
     ...(showBulletTypography ? bulletTypographyFields : []),
   ].map((field) => ({
     ...field,
-    type: 'range',
+    type: field.type === 'select' ? 'select' : 'range',
     suffix: ['cardTitleLineHeight', 'cardBodyLineHeight', 'cardBulletLineHeight'].includes(field.id) ? '' : field.suffix,
   }));
+  const cardGridTypographyFields = [
+    ...cardColorFields,
+    ...allCardTypographyFields,
+  ];
+  const buildFieldColumns = (fields, columnIds) => {
+    const assignedIds = new Set(columnIds.flat());
+    const columns = columnIds.map((ids) => ids
+      .map((id) => fields.find((field) => field.id === id))
+      .filter(Boolean));
+    const unassignedFields = fields.filter((field) => !assignedIds.has(field.id));
+    if (unassignedFields.length && columns.length) {
+      columns[columns.length - 1].push(...unassignedFields);
+    }
+    return columns;
+  };
+  const layoutFieldColumns = buildFieldColumns(layoutFields, [
+    ['contentWidth', 'cardStyle', 'cardOutline', 'cardShadow'],
+    ['columns', 'cardCount', 'cardOutlineTone', 'cardOutlineWidth', 'cardHoverScale'],
+  ]);
+  const typographyFieldColumns = buildFieldColumns(cardGridTypographyFields, [
+    ['titleTone', 'cardTitleSizeRem', 'cardBodySizeRem', 'cardTitleJustify', 'cardPaddingRem'],
+    ['bodyTone', 'cardTitleLineHeight', 'cardBodyLineHeight', 'cardBodyJustify', 'fineprintSizeRem'],
+  ]);
+  const editorSections = appendHudBlockOptionsSection([
+    { id: 'header', label: 'Header', icon: 'H' },
+    { id: 'layout', label: 'Layout & typography', icon: 'Aa' },
+    { id: 'appearance', label: 'Background & lights', icon: '◌' },
+    { id: 'cards', label: 'Cards', icon: '▦' },
+  ], blockOptions);
+  const [activeSection, setActiveSection] = useState(editorSections[0]?.id || 'header');
   const normalizedRouteOptions = useMemo(
     () => (Array.isArray(routeOptions) ? routeOptions.map(normalizeRouteOption).filter(Boolean) : []),
     [routeOptions],
@@ -6963,6 +7070,22 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
   const handleGridBackgroundChange = (nextBgToneRaw) => {
     const nextBgTone = normalizeGridBgTone(nextBgToneRaw);
     onSettingChange('bgTone', nextBgTone);
+  };
+
+  const handleGridLayoutChange = (fieldId, nextValue) => {
+    if (fieldId === 'cardStyle') {
+      const nextStyle = getGridSafeCardStyleForBg(nextValue, gridBgTone, cardStyleFieldBase?.options);
+      onSettingChange('cardStyle', nextStyle);
+      return;
+    }
+
+    // Default preserves the selected card skin's natural outline. Once an
+    // admin adjusts border width, make that intent explicit so the value is
+    // immediately visible instead of silently remaining in Default mode.
+    if (fieldId === 'cardOutlineWidth') {
+      onSettingChange('cardOutline', true);
+    }
+    onSettingChange(fieldId, nextValue);
   };
 
   const cardSlots = useMemo(() => (
@@ -7103,7 +7226,14 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
 
   if (hudMode) {
     return (
-      <div className="admin-card-grid-hud-reference">
+      <HudEditorModelLayout
+        className="admin-card-grid-hud-editor"
+        sections={editorSections}
+        activeSection={activeSection}
+        onSectionChange={setActiveSection}
+        label="Card Grid editor sections"
+        panelClassName="admin-card-grid-hud-panels admin-card-grid-hud-reference"
+      >
         <div className="admin-card-grid-hud-page admin-card-grid-hud-page--header">
           <CardGridHeaderEditor
             fieldById={fieldById}
@@ -7114,27 +7244,48 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
             paletteVariant="hud"
           />
         </div>
+        <div className="admin-card-grid-hud-page admin-card-grid-hud-page--layout">
+          <div className="admin-card-grid-hud-content-groups">
+            {layoutFieldColumns.map((fields, index) => (
+              <section
+                key={`card-grid-layout-column-${index + 1}`}
+                className={`admin-billboard-hud-reference-panel admin-card-grid-hud-group admin-card-grid-hud-group--layout admin-card-grid-hud-group--column-${index + 1}`}
+                aria-label={index === 0 ? 'Card Grid layout settings' : `Card Grid layout column ${index + 1}`}
+                data-editor-panel-column={index + 1}
+              >
+                <FieldControlGrid
+                  fields={fields}
+                  settings={layoutSettings}
+                  onSettingChange={handleGridLayoutChange}
+                  className="admin-content-field-list--inline admin-card-grid-hud-fields"
+                  paletteVariant="hud"
+                />
+              </section>
+            ))}
+            {showTypographyFields ? typographyFieldColumns.map((fields, index) => (
+              <section
+                key={`card-grid-typography-column-${index + 1}`}
+                className={`admin-billboard-hud-reference-panel admin-card-grid-hud-group admin-card-grid-hud-group--typography admin-card-grid-hud-group--column-${index + 3}`}
+                aria-label={index === 0 ? 'Card Grid typography settings' : `Card Grid typography column ${index + 2}`}
+                data-editor-panel-column={index + 3}
+              >
+                <FieldControlGrid
+                  fields={fields}
+                  settings={settings}
+                  onSettingChange={onSettingChange}
+                  className="admin-content-field-list--inline admin-card-grid-hud-fields"
+                  paletteVariant="hud"
+                />
+              </section>
+            )) : null}
+          </div>
+        </div>
         <div className="admin-card-grid-hud-page admin-card-grid-hud-page--appearance">
           <div className="admin-card-grid-hud-content-groups">
-            <section className="admin-billboard-hud-reference-panel admin-card-grid-hud-group admin-card-grid-hud-group--appearance" aria-label="Card Grid appearance settings">
+            <section className="admin-billboard-hud-reference-panel admin-card-grid-hud-group admin-card-grid-hud-group--appearance" aria-label="Card Grid background and lights settings">
               <div className="admin-billboard-hud-reference-head">
-                <div><h3>Appearance</h3></div>
-                <span className="admin-billboard-editor-panel-index">01</span>
+                <div><h3>Background &amp; lights</h3></div>
               </div>
-              <PanelAppearanceControls
-                fields={appearanceFields}
-                settings={settings}
-                onSettingChange={(fieldId, nextValue) => {
-                  if (fieldId === 'bgTone') {
-                    handleGridBackgroundChange(nextValue);
-                    return;
-                  }
-                  onSettingChange(fieldId, nextValue);
-                }}
-                compactSwatches={false}
-                paletteVariant="hud"
-                className="admin-panel-appearance--intro-text"
-              />
               <BackgroundEditorPage
                 backgroundTone={gridBgTone}
                 backgroundToneOptions={Array.isArray(bgToneField?.options) ? bgToneField.options : []}
@@ -7145,43 +7296,6 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
                 paletteVariant="hud"
               />
             </section>
-
-            <section className="admin-billboard-hud-reference-panel admin-card-grid-hud-group admin-card-grid-hud-group--layout" aria-label="Card Grid layout settings">
-              <div className="admin-billboard-hud-reference-head">
-                <div><h3>Layout</h3></div>
-                <span className="admin-billboard-editor-panel-index">02</span>
-              </div>
-              <FieldControlGrid
-                fields={layoutFields}
-                settings={layoutSettings}
-                onSettingChange={(fieldId, nextValue) => {
-                  if (fieldId === 'cardStyle') {
-                    const nextStyle = getGridSafeCardStyleForBg(nextValue, gridBgTone, cardStyleFieldBase?.options);
-                    onSettingChange('cardStyle', nextStyle);
-                    return;
-                  }
-                  onSettingChange(fieldId, nextValue);
-                }}
-                className="admin-content-field-list--inline admin-card-grid-hud-fields"
-                paletteVariant="hud"
-              />
-            </section>
-
-            {showTypographyFields ? (
-            <section className="admin-billboard-hud-reference-panel admin-card-grid-hud-group admin-card-grid-hud-group--typography" aria-label="Card Grid typography settings">
-              <div className="admin-billboard-hud-reference-head">
-                <div><h3>Card typography</h3></div>
-                <span className="admin-billboard-editor-panel-index">03</span>
-              </div>
-              <FieldControlGrid
-                fields={allCardTypographyFields}
-                settings={settings}
-                onSettingChange={onSettingChange}
-                className="admin-content-field-list--inline admin-card-grid-hud-fields"
-                paletteVariant="hud"
-              />
-            </section>
-            ) : null}
           </div>
         </div>
         <div className="admin-card-grid-hud-page admin-card-grid-hud-page--cards">
@@ -7189,7 +7303,8 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
           {cardList}
           </div>
         </div>
-      </div>
+        <HudEditorBlockOptionsPage>{blockOptions}</HudEditorBlockOptionsPage>
+      </HudEditorModelLayout>
     );
   }
 
@@ -7207,19 +7322,6 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
       </section>
       <div className="admin-card-grid-editor-settings">
         <div className="admin-intro-appearance-stack admin-grid-appearance-stack">
-          <PanelAppearanceControls
-            fields={appearanceFields}
-            settings={settings}
-            onSettingChange={(fieldId, nextValue) => {
-              if (fieldId === 'bgTone') {
-                handleGridBackgroundChange(nextValue);
-                return;
-              }
-              onSettingChange(fieldId, nextValue);
-            }}
-            compactSwatches={false}
-            className="admin-panel-appearance--intro-text"
-          />
           <BackgroundEditorPage
             backgroundTone={gridBgTone}
             backgroundToneOptions={Array.isArray(bgToneField?.options) ? bgToneField.options : []}
@@ -7237,14 +7339,7 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
         <FieldControlGrid
           fields={layoutFields}
           settings={layoutSettings}
-          onSettingChange={(fieldId, nextValue) => {
-            if (fieldId === 'cardStyle') {
-              const nextStyle = getGridSafeCardStyleForBg(nextValue, gridBgTone, cardStyleFieldBase?.options);
-              onSettingChange('cardStyle', nextStyle);
-              return;
-            }
-            onSettingChange(fieldId, nextValue);
-          }}
+          onSettingChange={handleGridLayoutChange}
           className="admin-content-field-list--inline admin-grid-layout-fields"
         />
       </section>
@@ -7252,7 +7347,7 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
         <section className="admin-card-grid-control-group">
           <h4>Card typography</h4>
           <FieldControlGrid
-            fields={allCardTypographyFields}
+            fields={cardGridTypographyFields}
             settings={settings}
             onSettingChange={onSettingChange}
             className="admin-content-field-list--inline admin-grid-layout-fields"

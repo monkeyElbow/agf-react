@@ -28,6 +28,7 @@ export default function FrontHudPanelShell({
   pathname = '',
   ownership = null,
   onOwnershipAction = null,
+  showTitle = true,
 }) {
   const shellRef = useRef(null);
   const [hasStoredOffset] = useState(() => {
@@ -94,6 +95,41 @@ export default function FrontHudPanelShell({
     window.addEventListener('resize', measureBounds);
     return () => window.removeEventListener('resize', measureBounds);
   }, [children, hasStoredOffset, offsetInitialized, title]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return undefined;
+    }
+
+    const shell = shellRef.current;
+    const pageRoot = shell?.closest('.is-front-hud-docked');
+    if (!shell || !pageRoot) {
+      return undefined;
+    }
+
+    let lastValue = '';
+    const syncEditorTop = () => {
+      const editorTop = Math.max(0, Math.round(shell.getBoundingClientRect().top));
+      lastValue = `${editorTop}px`;
+      pageRoot.style.setProperty('--ag-admin-front-hud-editor-top', lastValue);
+    };
+
+    syncEditorTop();
+    window.addEventListener('resize', syncEditorTop);
+    const ResizeObserverImpl = window.ResizeObserver;
+    const resizeObserver = typeof ResizeObserverImpl === 'function'
+      ? new ResizeObserverImpl(syncEditorTop)
+      : null;
+    resizeObserver?.observe(shell);
+
+    return () => {
+      window.removeEventListener('resize', syncEditorTop);
+      resizeObserver?.disconnect();
+      if (pageRoot.style.getPropertyValue('--ag-admin-front-hud-editor-top') === lastValue) {
+        pageRoot.style.removeProperty('--ag-admin-front-hud-editor-top');
+      }
+    };
+  }, [children, offsetY, title]);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -166,13 +202,19 @@ export default function FrontHudPanelShell({
   const resolvedCloseButtonText = closeButtonText ?? (isMobileSheet ? 'Close' : '×');
 
   return (
-    <div ref={shellRef} className={shellClassName} style={resolvedStyle}>
+    <div
+      ref={shellRef}
+      className={shellClassName}
+      style={resolvedStyle}
+      role="region"
+      aria-label={title || undefined}
+    >
       <div
         className={`admin-front-hud-tool-head is-draggable${isDragging ? ' is-dragging-panel' : ''}${isMobileSheet ? ' is-mobile-sheet-header' : ''}`}
         onPointerDown={draggable ? handleHeaderPointerDown : undefined}
         data-mobile-front-hud-sheet-header={isMobileSheet ? 'true' : undefined}
       >
-        <span>{title}</span>
+        {showTitle ? <span>{title}</span> : <span className="admin-sr-only">{title}</span>}
         <button
           type="button"
           className={`admin-front-hud-tool-close${isMobileSheet ? ' is-mobile-sheet-close' : ''}`}

@@ -17,9 +17,14 @@ import {
   normalizeDynamicGridCardBulletSize,
   normalizeDynamicGridCardBulletSizeRem,
   normalizeDynamicGridCardBodySizeRem,
+  normalizeDynamicGridFineprintSizeRem,
   normalizeDynamicGridCardPaddingRem,
   normalizeDynamicGridCardTitleLineHeight,
   normalizeDynamicGridCardTitleSizeRem,
+  normalizeDynamicGridCardJustify,
+  normalizeDynamicGridNumberPositionPercent,
+  normalizeDynamicGridCardOutlineTone,
+  normalizeDynamicGridCardOutlineWidthPx,
   normalizeDynamicGridHeaderSizeRem,
   normalizeDynamicGridSubheadSizeRem,
   normalizeDynamicGridColumns,
@@ -2600,11 +2605,17 @@ export function buildDynamicGridFromBlock(block) {
       }
     : null;
   const cardStyle = getGridSafeCardStyleForBg(settings.cardStyle, bgTone);
-  const cardOutline = typeof settings.cardOutline === 'boolean'
-    ? settings.cardOutline
+  const hasCardOutlineSetting = typeof settings.cardOutline === 'boolean'
+    || ['true', 'false'].includes(String(settings.cardOutline || '').trim().toLowerCase());
+  const cardOutline = hasCardOutlineSetting
+    ? toBoolean(settings.cardOutline)
     : (presetId === 'services-directory' ? true : null);
-  const cardShadow = typeof settings.cardShadow === 'boolean'
-    ? settings.cardShadow
+  const cardOutlineTone = normalizeDynamicGridCardOutlineTone(settings.cardOutlineTone);
+  const cardOutlineWidth = normalizeDynamicGridCardOutlineWidthPx(settings.cardOutlineWidth);
+  const hasCardShadowSetting = typeof settings.cardShadow === 'boolean'
+    || ['true', 'false'].includes(String(settings.cardShadow || '').trim().toLowerCase());
+  const cardShadow = hasCardShadowSetting
+    ? toBoolean(settings.cardShadow)
     : (presetId === 'services-directory' ? true : null);
   // Background and card-title color are separate authored controls. Cards
   // have their own surface, so changing the section background must not
@@ -2628,6 +2639,8 @@ export function buildDynamicGridFromBlock(block) {
   const cardTitleLineHeight = hasCardTitleLineHeight
     ? normalizeDynamicGridCardTitleLineHeight(settings.cardTitleLineHeight)
     : undefined;
+  const cardTitleJustify = normalizeDynamicGridCardJustify(settings.cardTitleJustify, 'center');
+  const numberPositionPercent = normalizeDynamicGridNumberPositionPercent(settings.numberPositionPercent);
   const cardBodySizeRem = normalizeDynamicGridCardBodySizeRem(settings.cardBodySizeRem);
   const cardBulletSize = normalizeDynamicGridCardBulletSize(settings.cardBulletSize);
   const cardBulletSizeRem = normalizeDynamicGridCardBulletSizeRem(
@@ -2635,6 +2648,8 @@ export function buildDynamicGridFromBlock(block) {
   );
   const cardBulletLineHeight = normalizeDynamicGridCardBulletLineHeight(settings.cardBulletLineHeight);
   const cardBodyLineHeight = normalizeDynamicGridCardBodyLineHeight(settings.cardBodyLineHeight);
+  const cardBodyJustify = normalizeDynamicGridCardJustify(settings.cardBodyJustify, 'left');
+  const fineprintSizeRem = normalizeDynamicGridFineprintSizeRem(settings.fineprintSizeRem);
   const hasPaddingTop = settings.paddingTopRem !== null && settings.paddingTopRem !== ''
     && Number.isFinite(Number(settings.paddingTopRem));
   const hasPaddingBottom = settings.paddingBottomRem !== null && settings.paddingBottomRem !== ''
@@ -2696,7 +2711,15 @@ export function buildDynamicGridFromBlock(block) {
         ? { link: cardTitleLinkValue, ...linkValueToLinkProps(cardTitleLinkValue) }
         : null;
       const cardTitleClassName = normalizeHighlightClassName(settings[`card${slot}TitleClassName`] || '');
-      const cardTitleHighlights = parseTextHighlights(settings[`card${slot}TitleHighlightsJson`]);
+      const hasAuthoredGridTitleTone = Object.prototype.hasOwnProperty.call(settings, 'titleTone')
+        && String(settings.titleTone ?? '').trim() !== '';
+      // Card Grid title color is a block-level control. Older card snapshots
+      // can still contain per-span highlight colors, which otherwise win over
+      // the grid tone for the whole title. Keep an explicit per-card class,
+      // but discard those legacy span colors once the grid tone is authored.
+      const cardTitleHighlights = hasAuthoredGridTitleTone && !cardTitleClassName
+        ? []
+        : parseTextHighlights(settings[`card${slot}TitleHighlightsJson`]);
       const cardBodySource = String(settings[`card${slot}Body`] || '').trim();
       const cardBodyHtmlSource = normalizeOptionalCardRichHtml(cardBodySource);
       const cardBodyHtml = /<[a-z][^>]*>/i.test(cardBodyHtmlSource)
@@ -2782,6 +2805,7 @@ export function buildDynamicGridFromBlock(block) {
         list: cardList,
         fineprint: cardFineprint.length ? cardFineprint : null,
         fineprintJustify: cardFineprintJustify,
+        fineprintSizeRem,
         fineprintSpaceBeforeRem: cardFineprintSpaceBeforeRem,
         fineprintLineHeight: cardFineprintLineHeight,
         fineprintSpaceAfterRem: cardFineprintSpaceAfterRem,
@@ -2825,6 +2849,8 @@ export function buildDynamicGridFromBlock(block) {
     locationFilter,
     cardStyle,
     cardOutline,
+    cardOutlineTone,
+    cardOutlineWidth,
     cardShadow,
     titleTone,
     bodyTone,
@@ -2832,11 +2858,15 @@ export function buildDynamicGridFromBlock(block) {
     cardPaddingRem,
     cardTitleSizeRem,
     cardTitleLineHeight,
+    cardTitleJustify,
+    numberPositionPercent,
     cardBodySizeRem,
     cardBulletSize,
     cardBulletSizeRem,
     cardBulletLineHeight,
     cardBodyLineHeight,
+    cardBodyJustify,
+    fineprintSizeRem,
     paddingTopRem,
     paddingBottomRem,
     headerSubheadSpaceRem,

@@ -9,7 +9,10 @@ import {
   normalizeGridBgTone,
   normalizeDynamicGridHeaderSizeRem,
   normalizeDynamicGridHeaderWidthPercent,
+  normalizeDynamicGridNumberPositionPercent,
   normalizeDynamicGridCardTitleLineHeight,
+  normalizeDynamicGridCardOutlineTone,
+  normalizeDynamicGridCardOutlineWidthPx,
 } from './dynamicGrid';
 
 const SHARED_TONE_OPTIONS = [
@@ -21,6 +24,17 @@ const SHARED_TONE_OPTIONS = [
 ];
 
 describe('dynamic grid contrast helpers', () => {
+  it('normalizes card outline controls to the shared contract', () => {
+    expect(normalizeDynamicGridCardOutlineTone(undefined)).toBe('');
+    expect(normalizeDynamicGridCardOutlineTone('MANGO')).toBe('mango');
+    expect(normalizeDynamicGridCardOutlineTone('alternating')).toBe('alternating');
+    expect(normalizeDynamicGridCardOutlineTone('unknown')).toBe('');
+    expect(normalizeDynamicGridCardOutlineWidthPx(undefined)).toBe(1.5);
+    expect(normalizeDynamicGridCardOutlineWidthPx(2.24)).toBe(2);
+    expect(normalizeDynamicGridCardOutlineWidthPx(8)).toBe(4);
+    expect(normalizeDynamicGridCardOutlineWidthPx(0)).toBe(0.5);
+  });
+
   it('allows borderless shadow cards and alternating title colors across section surfaces', () => {
     expect(isGridCardStyleAllowedForBg('borderless-shadow', 'white')).toBe(true);
     expect(isGridCardStyleAllowedForBg('borderless-shadow', 'blue')).toBe(true);
@@ -68,6 +82,13 @@ describe('dynamic grid contrast helpers', () => {
     expect(normalizeDynamicGridHeaderWidthPercent(20)).toBe(40);
     expect(normalizeDynamicGridHeaderWidthPercent(140)).toBe(100);
     expect(normalizeDynamicGridHeaderWidthPercent(undefined)).toBe(100);
+  });
+
+  it('normalizes the numbered-card number-position slider around centered zero', () => {
+    expect(normalizeDynamicGridNumberPositionPercent(-72)).toBe(-50);
+    expect(normalizeDynamicGridNumberPositionPercent(27.6)).toBe(28);
+    expect(normalizeDynamicGridNumberPositionPercent(68)).toBe(50);
+    expect(normalizeDynamicGridNumberPositionPercent(undefined)).toBe(0);
   });
 
   it('normalizes the optional Card Grid card-title line-height slider', () => {

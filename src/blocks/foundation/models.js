@@ -94,12 +94,18 @@ function buildUnifiedBackgroundEditor(sections) {
     });
   });
 
+  const sourceBgToneField = fieldsById.get('bgTone');
   const backgroundFields = [
-    fieldsById.get('bgTone') || defineEditorField({
+    defineEditorField({
       id: 'bgTone',
       label: 'Background color',
       type: 'swatch',
-      options: SURFACE_BG_TONE_OPTIONS,
+      options: Array.isArray(sourceBgToneField?.options) && sourceBgToneField.options.length
+        ? sourceBgToneField.options
+        : SURFACE_BG_TONE_OPTIONS,
+      ...(sourceBgToneField?.defaultValue !== undefined
+        ? { defaultValue: sourceBgToneField.defaultValue }
+        : {}),
     }),
     fieldsById.get('backgroundEffectsJson') || defineEditorField({
       id: 'backgroundEffectsJson',
@@ -151,6 +157,7 @@ function appendUniqueSectionId(sectionIds, sectionId) {
  *   label: string,
  *   icon?: string,
  *   editorType: string,
+ *   hudShell?: { showTitle?: boolean, title?: string },
  *   singleton?: boolean,
  *   presets?: Array<object>,
  *   allowedVariants: BlockVariant[],
@@ -227,6 +234,12 @@ export function createBlockDefinition(definition) {
     rootClassName: String(nextDefinition?.styleScope?.rootClassName || '').trim(),
     cssNamespace: String(nextDefinition?.styleScope?.cssNamespace || '').trim() || undefined,
   });
+  const hudShell = Object.freeze({
+    showTitle: nextDefinition?.hudShell?.showTitle !== false,
+    ...(String(nextDefinition?.hudShell?.title || '').trim()
+      ? { title: String(nextDefinition.hudShell.title).trim() }
+      : {}),
+  });
 
   if (!isBlockKind(kind)) {
     throw new Error(`Invalid block definition kind "${kind || '<empty>'}".`);
@@ -283,6 +296,7 @@ export function createBlockDefinition(definition) {
       hudSectionIds,
       adminSectionIds,
     }),
+    hudShell,
     validators,
     styleScope,
     ...(nextDefinition.formBoundary ? { formBoundary: nextDefinition.formBoundary } : {}),

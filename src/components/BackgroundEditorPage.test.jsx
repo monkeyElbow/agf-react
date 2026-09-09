@@ -21,4 +21,20 @@ describe('BackgroundEditorPage', () => {
     expect(container.querySelectorAll('.admin-background-editor-page__surface .admin-swatch-option')).toHaveLength(SURFACE_BG_TONE_OPTIONS.length);
     expect(container.querySelectorAll('.admin-background-light-card')).toHaveLength(3);
   });
+
+  it('keeps the universal background label when a block supplies a custom descriptor', () => {
+    const { container } = render(
+      <BackgroundEditorPage
+        backgroundTone="white"
+        backgroundToneOptions={[{ value: 'white', label: 'Grid background', swatch: '#fff' }]}
+        backgroundToneLabel="Grid background"
+        backgroundEffectsJson=""
+        onBackgroundToneChange={vi.fn()}
+        onBackgroundEffectsChange={vi.fn()}
+        paletteVariant="admin"
+      />,
+    );
+
+    expect(container.querySelector('.admin-background-editor-page__surface > .admin-swatch-list[aria-label="Background color"]')).not.toBeNull();
+  });
 });

@@ -168,7 +168,7 @@ export default function BackgroundLightsEditor({
   paletteVariant = 'hud',
   backgroundTone = 'white',
   backgroundToneOptions = [],
-  backgroundToneLabel = 'Background color',
+  backgroundToneLabel: _backgroundToneLabel = 'Background color',
   onBackgroundToneChange,
   className = '',
 }) {
@@ -196,12 +196,12 @@ export default function BackgroundLightsEditor({
       <div className="admin-background-editor-page__layout">
         <div className="admin-background-editor-page__left">
           <div className="admin-background-editor-page__surface">
-            <strong>Background color</strong>
+                <strong>Background color</strong>
             {toneOptions.length ? (
               <ColorPalette
                 variant={paletteVariant}
                 className="is-compact is-icon-only admin-background-editor-page__swatches"
-                ariaLabel={backgroundToneLabel}
+                ariaLabel="Background color"
                 options={toneOptions}
                 value={backgroundTone}
                 showLabels={false}

@@ -14,10 +14,13 @@ import {
   DEFAULT_DYNAMIC_GRID_CARD_BULLET_LINE_HEIGHT,
   DEFAULT_DYNAMIC_GRID_CARD_BULLET_SIZE_REM,
   DEFAULT_DYNAMIC_GRID_CARD_TITLE_LINE_HEIGHT,
+  DEFAULT_DYNAMIC_GRID_FINEPRINT_SIZE_REM,
   DEFAULT_DYNAMIC_GRID_HEADER_CARDS_SPACE_REM,
   DEFAULT_DYNAMIC_GRID_HEADER_WIDTH_PERCENT,
   DEFAULT_DYNAMIC_GRID_HEADER_SUBHEAD_SPACE_REM,
   DEFAULT_DYNAMIC_GRID_SUBHEAD_SIZE_REM,
+  DEFAULT_DYNAMIC_GRID_NUMBER_POSITION_PERCENT,
+  DEFAULT_DYNAMIC_GRID_CARD_OUTLINE_WIDTH_PX,
 } from '../../lib/dynamicGrid';
 
 const GRID_HEADING_TONE_OPTIONS = SEMANTIC_TEXT_COLOR_OPTIONS_WITH_DEFAULT;
@@ -43,12 +46,28 @@ const GRID_CARD_STYLE_OPTIONS = [
 const GRID_TEXT_TONE_OPTIONS = DYNAMIC_GRID_TEXT_TONE_OPTIONS;
 const GRID_CARD_BODY_TONE_OPTIONS = DYNAMIC_GRID_BODY_TONE_OPTIONS;
 const GRID_CARD_TITLE_TONE_OPTIONS = DYNAMIC_GRID_TITLE_TONE_OPTIONS;
+const GRID_CARD_OUTLINE_TONE_OPTIONS = [
+  { value: '', label: 'Default', swatch: getTokenSwatch('default'), hideSwatch: true },
+  { value: 'super-grey', label: 'Super Grey', swatch: getTokenSwatch('super-grey') },
+  { value: 'atlantean', label: 'Blue', swatch: getTokenSwatch('atlantean') },
+  { value: 'mango', label: 'Mango', swatch: getTokenSwatch('mango') },
+  { value: 'melon', label: 'Melon', swatch: getTokenSwatch('melon') },
+  { value: 'sandstone', label: 'Sandstone', swatch: getTokenSwatch('sandstone') },
+  { value: 'white', label: 'White', swatch: getTokenSwatch('white') },
+  {
+    value: 'alternating',
+    label: 'Alternating',
+    swatch: 'linear-gradient(90deg, var(--ag-color-atlantean) 0 33%, var(--ag-color-mango) 33% 66%, var(--ag-color-melon) 66% 100%)',
+  },
+];
 
 const GRID_FINEPRINT_JUSTIFY_OPTIONS = [
   { value: 'left', label: 'Left' },
   { value: 'center', label: 'Center' },
   { value: 'right', label: 'Right' },
 ];
+
+const GRID_CARD_JUSTIFY_OPTIONS = GRID_FINEPRINT_JUSTIFY_OPTIONS;
 
 const sections = [
   {
@@ -189,13 +208,36 @@ const sections = [
         type: 'select',
         options: GRID_CARD_STYLE_OPTIONS,
       }),
-      defineEditorField({ id: 'cardOutline', label: 'Card outline', type: 'boolean' }),
+      defineEditorField({ id: 'cardOutline', label: 'Card outline', type: 'outline_mode' }),
+      defineEditorField({
+        id: 'cardOutlineTone',
+        label: 'Border color',
+        type: 'swatch',
+        options: GRID_CARD_OUTLINE_TONE_OPTIONS,
+        layout: 'half',
+        compact: true,
+        iconOnly: true,
+        swatchClassName: 'admin-card-outline-swatch-list',
+      }),
+      defineEditorField({
+        id: 'cardOutlineWidth',
+        label: 'Border width',
+        type: 'range',
+        min: 0.5,
+        max: 4,
+        step: 0.5,
+        defaultValue: DEFAULT_DYNAMIC_GRID_CARD_OUTLINE_WIDTH_PX,
+        suffix: 'px',
+        layout: 'half',
+      }),
       defineEditorField({ id: 'cardShadow', label: 'Card shadow', type: 'boolean' }),
       defineEditorField({ id: 'cardHoverScale', label: 'Scale cards on hover', type: 'boolean' }),
-      defineEditorField({ id: 'cardPaddingRem', label: 'Card padding (rem)', type: 'number', min: 0.75, max: 3, step: 0.05 }),
-      defineEditorField({ id: 'cardTitleSizeRem', label: 'Card title size (rem)', type: 'number', min: 0.9, max: 3, step: 0.05 }),
+      defineEditorField({ id: 'cardPaddingRem', label: 'Card padding', type: 'number', min: 0.75, max: 3, step: 0.05, unit: 'rem' }),
+      defineEditorField({ id: 'cardTitleSizeRem', label: 'Card title size', type: 'number', min: 0.9, max: 3, step: 0.05, unit: 'rem' }),
       defineEditorField({ id: 'cardTitleLineHeight', label: 'Card title line height', type: 'range', min: 0.8, max: 1.5, step: 0.05, defaultValue: DEFAULT_DYNAMIC_GRID_CARD_TITLE_LINE_HEIGHT }),
-      defineEditorField({ id: 'cardBodySizeRem', label: 'Card body size (rem)', type: 'number', min: 0.8, max: 1.5, step: 0.05 }),
+      defineEditorField({ id: 'cardTitleJustify', label: 'Card title justify', type: 'select', options: GRID_CARD_JUSTIFY_OPTIONS }),
+      defineEditorField({ id: 'numberPositionPercent', label: 'Number position (− left / + right)', type: 'range', min: -50, max: 50, step: 1, defaultValue: DEFAULT_DYNAMIC_GRID_NUMBER_POSITION_PERCENT, suffix: '%' }),
+      defineEditorField({ id: 'cardBodySizeRem', label: 'Card body size', type: 'number', min: 0.8, max: 1.5, step: 0.05, unit: 'rem' }),
       defineEditorField({
         id: 'cardBulletSizeRem',
         label: 'Bullet size (rem)',
@@ -213,6 +255,8 @@ const sections = [
         step: 0.05,
       }),
       defineEditorField({ id: 'cardBodyLineHeight', label: 'Card body line height', type: 'number', min: 1.1, max: 2.1, step: 0.05 }),
+      defineEditorField({ id: 'cardBodyJustify', label: 'Card body justify', type: 'select', options: GRID_CARD_JUSTIFY_OPTIONS }),
+      defineEditorField({ id: 'fineprintSizeRem', label: 'Fineprint size', type: 'range', min: 0.65, max: 1.3, step: 0.05, defaultValue: DEFAULT_DYNAMIC_GRID_FINEPRINT_SIZE_REM, suffix: 'rem' }),
       defineEditorField({
         id: 'titleTone',
         label: 'Title color',
@@ -394,6 +438,10 @@ export const cardGridBlockDefinition = createBlockDefinition({
   label: 'Card Grid',
   icon: gridHudIcon,
   editorType: 'card_grid',
+  hudShell: {
+    showTitle: true,
+    title: 'Card Grid',
+  },
   presets: getCardGridPresetDefinitions(),
   allowedVariants: ['default'],
   supportedModes: ['dynamic'],
@@ -410,11 +458,17 @@ export const cardGridBlockDefinition = createBlockDefinition({
     cardPaddingRem: 1.35,
     cardTitleSizeRem: 1.14,
     cardTitleLineHeight: DEFAULT_DYNAMIC_GRID_CARD_TITLE_LINE_HEIGHT,
+    cardTitleJustify: 'center',
+    numberPositionPercent: DEFAULT_DYNAMIC_GRID_NUMBER_POSITION_PERCENT,
+    cardOutlineTone: '',
+    cardOutlineWidth: DEFAULT_DYNAMIC_GRID_CARD_OUTLINE_WIDTH_PX,
     cardBodySizeRem: 1,
     cardBulletSize: 'daf',
     cardBulletSizeRem: DEFAULT_DYNAMIC_GRID_CARD_BULLET_SIZE_REM,
     cardBulletLineHeight: DEFAULT_DYNAMIC_GRID_CARD_BULLET_LINE_HEIGHT,
     cardBodyLineHeight: 1.58,
+    cardBodyJustify: 'left',
+    fineprintSizeRem: DEFAULT_DYNAMIC_GRID_FINEPRINT_SIZE_REM,
     anchorId: '',
     buttonLabel: '',
     buttonUrl: '',

@@ -2,14 +2,17 @@ import BackgroundLightsEditor from './BackgroundLightsEditor';
 import { SURFACE_BG_TONE_OPTIONS, normalizeSurfaceBgTone } from '../lib/colorSystem';
 
 /**
- * Canonical background surface editor. Every block gets this page so the
- * surface color and optional light layers are edited together and persisted
- * through the block's normal settings patch.
+ * Canonical background surface editor. Every block gets this fixed page so
+ * the surface color and optional light layers are edited together and
+ * persisted through the block's normal settings patch. Block-specific
+ * controls belong in the caller's other editor pages; the optional palette
+ * data only describes valid surface tones for that block.
  */
 export default function BackgroundEditorPage({
   backgroundTone,
   backgroundToneOptions = SURFACE_BG_TONE_OPTIONS,
-  backgroundToneLabel = 'Background color',
+  // Kept for backwards-compatible callers. The universal page owns this label.
+  backgroundToneLabel: _backgroundToneLabel = 'Background color',
   onBackgroundToneChange,
   backgroundEffectsJson,
   onBackgroundEffectsChange,
@@ -30,7 +33,7 @@ export default function BackgroundEditorPage({
       paletteVariant={paletteVariant}
       backgroundTone={tone}
       backgroundToneOptions={options}
-      backgroundToneLabel={backgroundToneLabel}
+      backgroundToneLabel="Background color"
       onBackgroundToneChange={onBackgroundToneChange}
       className={className}
     />

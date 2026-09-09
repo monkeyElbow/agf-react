@@ -657,7 +657,8 @@
 }
 
 .home-return-assist-result-item a:hover,
-.home-return-assist-result-item a:focus-visible {
+.home-return-assist-result-item a:focus-visible,
+.home-return-assist-result-item a.is-keyboard-active {
   color: var(--ag-color-atlantean);
 }
 

@@ -73,8 +73,17 @@ describe('block ownership overlay guardrail', () => {
 
   it('keeps the HUD selector inside the viewport at tablet widths', () => {
     const cssSource = readSource('../styles/front-hud.css');
+    const panelSource = readSource('./FrontHudPanelShell.jsx');
 
     expect(cssSource).toMatch(/\.admin-front-hud-dock\s*\{[\s\S]*?width: min\(220px, calc\(100vw - 24px\)\);[\s\S]*?max-width: calc\(100vw - 24px\);/);
+    expect(cssSource).toMatch(/\.admin-front-hud-dock\s*\{[\s\S]*?grid-template-rows: auto minmax\(0, 1fr\);[\s\S]*?overflow: visible;/);
+    expect(cssSource).toMatch(/\.admin-front-hud-dock-tabs\s*\{[\s\S]*?overflow-x: hidden;[\s\S]*?overflow-y: auto;[\s\S]*?overscroll-behavior: contain;/);
+    expect(cssSource).toContain('scrollbar-gutter: stable;');
+    expect(cssSource).toContain('--ag-admin-front-hud-editor-top');
+    expect(cssSource).toMatch(/\.admin-front-hud-dock-tab:hover,\s*\.admin-front-hud-dock-tab:focus-visible \{\s*transform: none;/);
+    expect(cssSource).toMatch(/\.is-front-hud-docked \.admin-front-hud-tool\.is-docked \{[\s\S]*?right: 0;/);
+    expect(panelSource).toContain("pageRoot.style.setProperty('--ag-admin-front-hud-editor-top', lastValue);");
+    expect(cssSource).not.toContain('right: calc(clamp(72px, 7vw, 110px) + min(220px, calc(100vw - 24px)) + 16px) !important;');
     expect(cssSource).toMatch(/@media \(max-width: 1100px\) \{[\s\S]*?\.admin-front-hud-dock\s*\{[\s\S]*?overflow: visible;[\s\S]*?\}[\s\S]*?\.admin-front-hud-dock-tabs\s*\{[\s\S]*?overflow-x: hidden;/);
     expect(cssSource).toContain('/* The desktop hover lift can leave the scrollport at tablet widths. */');
     expect(cssSource).toMatch(/\.admin-front-hud-dock-tab:hover[\s\S]*?\.admin-front-hud-dock-tab\.is-drag-over\s*\{[\s\S]*?transform: none;/);
