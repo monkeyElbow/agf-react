@@ -419,7 +419,7 @@ describe('AdminContentPage shared save workflow', () => {
       </MemoryRouter>,
     );
 
-    fireEvent.click(screen.getAllByText('Hero')[0]);
+    fireEvent.click(screen.getByRole('row', { name: /Hero hero/ }));
 
     expect(mockSetActiveBlockLock).not.toHaveBeenCalled();
     expect(mockClearActiveBlockLock).not.toHaveBeenCalled();
@@ -476,7 +476,7 @@ describe('AdminContentPage shared save workflow', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Move Hero down' }));
     expect(mockMoveBlock).toHaveBeenCalledWith('/services/loans', 'hero', 'down');
 
-    fireEvent.click(screen.getAllByText('Hero')[0]);
+    fireEvent.click(screen.getByRole('row', { name: /Hero hero/ }));
     expect(screen.getByRole('button', { name: 'Delete block' })).toBeTruthy();
     expect(screen.queryByLabelText('Block mode')).toBeNull();
   });
@@ -517,7 +517,7 @@ describe('AdminContentPage shared save workflow', () => {
       </MemoryRouter>,
     );
 
-    fireEvent.click(screen.getAllByText('Hero')[0]);
+    fireEvent.click(screen.getByRole('row', { name: /Hero hero/ }));
 
     expect(screen.getByText('Unsaved changes')).toBeTruthy();
 
@@ -624,7 +624,7 @@ describe('AdminContentPage shared save workflow', () => {
       </MemoryRouter>,
     );
 
-    fireEvent.click(screen.getAllByText('Hero')[0]);
+    fireEvent.click(screen.getByRole('row', { name: /Hero hero/ }));
 
     expect(screen.queryByText(/Unpublished draft by Sarah MacBook/)).toBeNull();
     expect(view.container.querySelector('.admin-selected-block-lock-banner')).toBeNull();
@@ -655,7 +655,7 @@ describe('AdminContentPage shared save workflow', () => {
       </MemoryRouter>,
     );
 
-    fireEvent.click(screen.getAllByText('Hero')[0]);
+    fireEvent.click(screen.getByRole('row', { name: /Hero hero/ }));
 
     expect(screen.queryByText(/Last saved by Sarah MacBook/)).toBeNull();
     expect(screen.queryByText(/Unpublished draft by Sarah MacBook/)).toBeNull();
@@ -689,6 +689,9 @@ describe('AdminContentPage shared save workflow', () => {
     expect(screen.getByText('Order changed')).toBeTruthy();
     expect(screen.getByText('Draft save: 2 blocks, order')).toBeTruthy();
     expect(screen.getByText('Make live: 2 blocks, order')).toBeTruthy();
+    const publishScope = screen.getByText('Make live: 2 blocks, order').closest('.admin-block-list-tooltip');
+    expect(publishScope?.querySelector('[role="tooltip"]')?.textContent).toContain('Hero');
+    expect(publishScope?.querySelector('[role="tooltip"]')?.textContent).toContain('CTA Form');
     expect(screen.getByRole('button', { name: 'Make live' }).disabled).toBe(false);
 
     fireEvent.click(screen.getByRole('button', { name: 'Save all page drafts' }));
@@ -809,6 +812,10 @@ describe('AdminContentPage shared save workflow', () => {
     );
 
     expect(screen.getByText('Make live: 1 block')).toBeTruthy();
+    const publishScope = screen.getByText('Make live: 1 block').closest('.admin-block-list-tooltip');
+    const ownershipScope = screen.getByText('1 other-admin block').closest('.admin-block-list-tooltip');
+    expect(publishScope?.querySelector('[role="tooltip"]')?.textContent).toMatch(/intro/i);
+    expect(ownershipScope?.querySelector('[role="tooltip"]')?.textContent).toMatch(/hero/i);
     const makeLiveButton = screen.getByRole('button', { name: 'Make live' });
     expect(makeLiveButton.disabled).toBe(false);
 

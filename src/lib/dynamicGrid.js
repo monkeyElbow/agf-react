@@ -27,9 +27,11 @@ const GRID_CARD_OUTLINE_TONE_SET = new Set(['', 'super-grey', 'atlantean', 'mang
 export const DEFAULT_DYNAMIC_GRID_CARD_BULLET_SIZE_REM = 1.55;
 export const DEFAULT_DYNAMIC_GRID_CARD_BULLET_LINE_HEIGHT = 1.5;
 export const DEFAULT_DYNAMIC_GRID_CARD_TITLE_LINE_HEIGHT = 1.2;
+export const DEFAULT_DYNAMIC_GRID_CARD_TITLE_BODY_SPACE_REM = 1;
 export const DEFAULT_DYNAMIC_GRID_FINEPRINT_SIZE_REM = 0.96;
 export const DEFAULT_DYNAMIC_GRID_NUMBER_POSITION_PERCENT = 0;
 export const DEFAULT_DYNAMIC_GRID_CARD_OUTLINE_WIDTH_PX = 1.5;
+export const DEFAULT_DYNAMIC_GRID_CARD_SHADOW_OPACITY = 0.14;
 // Keep the header gap in the shared runtime contract so a legacy block with
 // no saved spacing key has the same result as a newly-authored block.
 export const DEFAULT_DYNAMIC_GRID_HEADER_SUBHEAD_SPACE_REM = 0.7;
@@ -53,7 +55,16 @@ export function normalizeDynamicGridCardOutlineWidthPx(value) {
     return DEFAULT_DYNAMIC_GRID_CARD_OUTLINE_WIDTH_PX;
   }
   const stepped = Math.round(numeric * 2) / 2;
-  return Math.max(0.5, Math.min(4, stepped));
+  return Math.max(0.5, Math.min(3, stepped));
+}
+
+export function normalizeDynamicGridCardShadowOpacity(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return DEFAULT_DYNAMIC_GRID_CARD_SHADOW_OPACITY;
+  }
+  // The editor stores this as a percentage for a clear authoring control.
+  return Math.max(0, Math.min(1, Number((numeric / 100).toFixed(3))));
 }
 
 export function normalizeGridBgTone(value) {
@@ -225,6 +236,17 @@ export function normalizeDynamicGridCardTitleLineHeight(value) {
     return DEFAULT_DYNAMIC_GRID_CARD_TITLE_LINE_HEIGHT;
   }
   return Math.max(0.8, Math.min(1.5, Number(numeric.toFixed(2))));
+}
+
+export function normalizeDynamicGridCardTitleBodySpaceRem(value) {
+  if (value === null || value === undefined || String(value).trim() === '') {
+    return DEFAULT_DYNAMIC_GRID_CARD_TITLE_BODY_SPACE_REM;
+  }
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return DEFAULT_DYNAMIC_GRID_CARD_TITLE_BODY_SPACE_REM;
+  }
+  return Math.max(0, Math.min(3, Number(numeric.toFixed(2))));
 }
 
 export function normalizeDynamicGridCardJustify(value, fallback = 'left') {

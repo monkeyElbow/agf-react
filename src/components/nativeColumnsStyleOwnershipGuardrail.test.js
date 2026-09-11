@@ -42,4 +42,40 @@ describe('native columns style ownership guardrail', () => {
     expect(source).not.toContain('.loans-native-more-card {');
     expect(source).not.toContain('.loans-native-more-card h3.is-atlantean mark {');
   });
+
+  it('keeps generic Columns backgrounds from rewriting copy or item borders', () => {
+    const source = readSource('../styles/service-native.css');
+    const homeSource = readSource('../styles/home-service-public.css');
+    const blueBackground = '.service-native-section.native-dynamic-columns.is-bg-blue,\n'
+      + '.service-native-section.test-dynamic-columns.is-bg-blue {\n'
+      + '  background: var(--ag-surface-blue-gradient);\n'
+      + '}';
+    const greyBackground = '.service-native-section.native-dynamic-columns.is-bg-grey,\n'
+      + '.service-native-section.test-dynamic-columns.is-bg-grey {\n'
+      + '  background: linear-gradient(145deg, var(--ag-color-super-grey) 0%, #636265 100%);\n'
+      + '}';
+
+    expect(source).toContain(blueBackground);
+    expect(source).toContain(greyBackground);
+    expect(source).not.toContain(
+      blueBackground.slice(0, -1)
+        + '  --dynamic-columns-title-color: #ffffff;\n'
+        + '  --dynamic-columns-body-color: rgba(255, 255, 255, 0.95);',
+    );
+    expect(source).not.toContain(
+      greyBackground.slice(0, -1)
+        + '  --dynamic-columns-title-color: #ffffff;\n'
+        + '  --dynamic-columns-body-color: rgba(255, 255, 255, 0.94);',
+    );
+    expect(homeSource).not.toContain(
+      blueBackground.slice(0, -1)
+        + '  --dynamic-columns-title-color: #ffffff;\n'
+        + '  --dynamic-columns-body-color: rgba(255, 255, 255, 0.95);',
+    );
+    expect(homeSource).not.toContain(
+      greyBackground.slice(0, -1)
+        + '  --dynamic-columns-title-color: #ffffff;\n'
+        + '  --dynamic-columns-body-color: rgba(255, 255, 255, 0.94);',
+    );
+  });
 });

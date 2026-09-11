@@ -487,13 +487,14 @@ describe('dynamic block control wiring', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Background' }));
     const backgroundPage = screen.getAllByRole('region', { name: 'Background' })
-      .find((region) => region.querySelector('[aria-label="Hero background"]'));
+      .find((region) => region.classList.contains('admin-background-editor-page'));
+    const backgroundSurface = backgroundPage.querySelector('.admin-background-editor-page__surface');
 
-    expect(within(backgroundPage).getByRole('radio', { name: 'White' })).toBeTruthy();
-    expect(within(backgroundPage).getByRole('radio', { name: 'Sand' })).toBeTruthy();
-    expect(within(backgroundPage).getByRole('radio', { name: 'Blue' })).toBeTruthy();
-    expect(within(backgroundPage).getByRole('radio', { name: 'Grey' })).toBeTruthy();
-    expect(within(backgroundPage).getByRole('radio', { name: 'White' }).style.getPropertyValue('--admin-bg-swatch')).toContain('linear-gradient');
+    expect(within(backgroundSurface).getByRole('radio', { name: 'White' })).toBeTruthy();
+    expect(within(backgroundSurface).getByRole('radio', { name: 'Sand' })).toBeTruthy();
+    expect(within(backgroundSurface).getByRole('radio', { name: 'Blue' })).toBeTruthy();
+    expect(within(backgroundSurface).getByRole('radio', { name: 'Grey' })).toBeTruthy();
+    expect(within(backgroundSurface).getByRole('radio', { name: 'White' }).style.getPropertyValue('--admin-bg-swatch')).toContain('linear-gradient');
   });
 
   it('keeps hero line 3 hidden until the editor explicitly adds it', () => {
@@ -796,7 +797,7 @@ describe('dynamic block control wiring', () => {
     render(<CardChartBlockEditor block={block} onSettingChange={onSettingChange} />);
 
     fireEvent.click(
-      within(screen.getByRole('radiogroup', { name: 'Chart background' }))
+      within(screen.getByRole('radiogroup', { name: 'Background color' }))
         .getByRole('radio', { name: 'Blue' }),
     );
 
@@ -842,7 +843,7 @@ describe('dynamic block control wiring', () => {
     );
 
     const toggle = screen.getByRole('group', { name: autoplayField.label });
-    fireEvent.click(within(toggle).getByRole('button', { name: 'Off' }));
+    fireEvent.click(within(toggle).getByText('Off'));
 
     expect(onSettingChange).toHaveBeenCalledWith('autoplay', false);
   });
@@ -1717,12 +1718,17 @@ describe('dynamic block control wiring', () => {
     render(<GridBlockEditor block={block} onSettingChange={onSettingChange} />);
     onSettingChange.mockClear();
 
+    fireEvent.change(screen.getByLabelText('Card base style'), {
+      target: { value: 'none' },
+    });
+    expect(onSettingChange).toHaveBeenCalledWith('cardStyle', 'none');
+
     fireEvent.change(screen.getByRole('slider', { name: 'Card title line height' }), {
       target: { value: '1.1' },
     });
     expect(onSettingChange).toHaveBeenCalledWith('cardTitleLineHeight', 1.1);
 
-    fireEvent.click(screen.getByText('Card 1').closest('button'));
+    fireEvent.click(screen.getByText('Card 1', { selector: '.admin-progressive-slot-kicker' }).closest('button'));
     fireEvent.click(screen.getByRole('button', { name: /^Title and body/ }));
     expect(screen.queryByRole('button', { name: 'Clear Card 1 line color override' })).toBeNull();
     expect(screen.getByLabelText('Card 1 title')).toBeTruthy();
@@ -1785,7 +1791,7 @@ describe('dynamic block control wiring', () => {
         target: { value: '2.3' },
       });
       expect(onSettingChange).toHaveBeenCalledWith('cardTitleSizeRem', 2.3);
-      fireEvent.click(screen.getByText('Card 1').closest('button'));
+      fireEvent.click(screen.getByText('Card 1', { selector: '.admin-progressive-slot-kicker' }).closest('button'));
       fireEvent.change(screen.getByLabelText('Card 1 title'), {
         target: { value: 'Church Loans' },
       });
@@ -2056,7 +2062,7 @@ describe('dynamic block control wiring', () => {
         />,
       );
 
-      fireEvent.click(screen.getByText('Card 1').closest('button'));
+      fireEvent.click(screen.getByText('Card 1', { selector: '.admin-progressive-slot-kicker' }).closest('button'));
       fireEvent.click(screen.getByRole('button', { name: /^Title and body/ }));
 
       const titleInput = screen.getByLabelText('Card 1 title');
@@ -2095,7 +2101,7 @@ describe('dynamic block control wiring', () => {
     try {
       render(<GridBlockEditor block={getDynamicBlock('card_grid')} onSettingChange={onSettingChange} routeOptions={[]} />);
 
-      fireEvent.click(screen.getByText('Card 1').closest('button'));
+      fireEvent.click(screen.getByText('Card 1', { selector: '.admin-progressive-slot-kicker' }).closest('button'));
       fireEvent.click(screen.getByRole('button', { name: /^Title and body/ }));
 
       const bodyInput = screen.getAllByLabelText('Card 1 body')[0];
@@ -2126,7 +2132,7 @@ describe('dynamic block control wiring', () => {
         />,
       );
 
-      fireEvent.click(screen.getByText('Card 1').closest('button'));
+      fireEvent.click(screen.getByText('Card 1', { selector: '.admin-progressive-slot-kicker' }).closest('button'));
       fireEvent.click(screen.getByRole('button', { name: /^Buttons/ }));
       fireEvent.change(getRouteLinkTextInput('Destination'), {
         target: { value: '/contact-us' },
@@ -2254,7 +2260,7 @@ describe('dynamic block control wiring', () => {
     expect(block?.settings?.sectionClassName).toBe('retirement-403b-native-strategy-options');
 
     expect(screen.queryByRole('button', { name: 'Add card 5' })).toBeNull();
-    fireEvent.click(screen.getByText('Card 1').closest('button'));
+    fireEvent.click(screen.getByText('Card 1', { selector: '.admin-progressive-slot-kicker' }).closest('button'));
     fireEvent.click(screen.getByRole('button', { name: /^Title and body/ }));
     expect(screen.getByLabelText('Card 1 body')).toBeTruthy();
   });
@@ -2270,7 +2276,7 @@ describe('dynamic block control wiring', () => {
 
     expect(screen.queryByRole('button', { name: 'Add card 4' })).toBeNull();
 
-    fireEvent.click(screen.getByText('Card 1').closest('button'));
+    fireEvent.click(screen.getByText('Card 1', { selector: '.admin-progressive-slot-kicker' }).closest('button'));
     fireEvent.click(screen.getByRole('button', { name: /^Title and body/ }));
 
     expect(screen.queryByLabelText('Card 1 button label')).toBeNull();
@@ -2289,7 +2295,7 @@ describe('dynamic block control wiring', () => {
 
     expect(screen.queryByRole('button', { name: 'Add card 4' })).toBeNull();
 
-    fireEvent.click(screen.getByText('Card 1').closest('button'));
+    fireEvent.click(screen.getByText('Card 1', { selector: '.admin-progressive-slot-kicker' }).closest('button'));
     fireEvent.click(screen.getByRole('button', { name: /^Buttons/ }));
 
     expect(screen.getAllByLabelText('Button label').length).toBeGreaterThan(0);
@@ -2801,6 +2807,34 @@ describe('dynamic block control wiring', () => {
     }
   });
 
+  it('keeps request form background/lights and spacing controls on their live setting paths', () => {
+    const onSettingChange = vi.fn();
+    const block = getDynamicBlock('request_form');
+
+    render(<RequestFormBlockEditor block={block} onSettingChange={onSettingChange} hudMode />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Background' }));
+    const backgroundPage = screen.getByRole('region', { name: 'Background' });
+    fireEvent.click(
+      within(within(backgroundPage).getByRole('radiogroup', { name: /Background/i }))
+        .getByRole('radio', { name: 'Blue' }),
+    );
+    expect(onSettingChange).toHaveBeenCalledWith('bgTone', 'blue');
+
+    fireEvent.click(
+      within(within(backgroundPage).getByRole('group', { name: 'Enable background lights' }))
+        .getByRole('button', { name: 'On' }),
+    );
+    expect(onSettingChange).toHaveBeenCalledWith(
+      'backgroundEffectsJson',
+      expect.stringContaining('"enabled":true'),
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Layout' }));
+    fireEvent.change(screen.getByLabelText('Space before (rem)'), { target: { value: '3' } });
+    expect(onSettingChange).toHaveBeenCalledWith('spaceBeforeRem', 3);
+  });
+
   it('keeps request form lead-copy drafts stable through stale shared rerenders', () => {
     vi.useFakeTimers();
     const onSettingChange = vi.fn();
@@ -2809,22 +2843,27 @@ describe('dynamic block control wiring', () => {
       const { rerender } = render(<RequestFormBlockEditor block={getDynamicBlock('request_form')} onSettingChange={onSettingChange} />);
 
       const leadCopyInput = screen.getByLabelText('Lead Copy');
-      fireEvent.change(leadCopyInput, {
-        target: { value: 'Draft request form lead copy' },
-      });
+      leadCopyInput.innerHTML = '<p>Draft request form <strong>lead copy</strong></p>';
+      fireEvent.input(leadCopyInput);
 
-      expect(leadCopyInput.value).toBe('Draft request form lead copy');
-      expect(onSettingChange).not.toHaveBeenCalledWith('subtitle', 'Draft request form lead copy');
+      expect(leadCopyInput.innerHTML).toBe('<p>Draft request form <strong>lead copy</strong></p>');
+      expect(onSettingChange).not.toHaveBeenCalledWith(
+        'bodyHtml',
+        '<p>Draft request form <strong>lead copy</strong></p>',
+      );
 
       rerender(<RequestFormBlockEditor block={getDynamicBlock('request_form')} onSettingChange={onSettingChange} />);
 
-      expect(screen.getByLabelText('Lead Copy').value).toBe('Draft request form lead copy');
+      expect(screen.getByLabelText('Lead Copy').innerHTML).toBe('<p>Draft request form <strong>lead copy</strong></p>');
 
       act(() => {
         vi.advanceTimersByTime(350);
       });
 
-      expect(onSettingChange).toHaveBeenCalledWith('subtitle', 'Draft request form lead copy');
+      expect(onSettingChange).toHaveBeenCalledWith(
+        'bodyHtml',
+        '<p>Draft request form <strong>lead copy</strong></p>',
+      );
     } finally {
       vi.runOnlyPendingTimers();
       vi.useRealTimers();

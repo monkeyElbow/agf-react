@@ -45,6 +45,7 @@ describe('home services grid renderer guardrail', () => {
                 kind: 'internal',
                 to: '/services',
               }),
+              cardPaddingRem: 1.2,
               card1Title: 'Loans',
               card1LinkJson: serializeLinkValue({
                 kind: 'internal',
@@ -72,18 +73,20 @@ describe('home services grid renderer guardrail', () => {
     expect(section).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Bold, smart steps.' })).toBeTruthy();
     expect(screen.getByRole('link', { name: 'Loans' }).getAttribute('href')).toBe('/services/loans');
+    expect(document.querySelector('.home-native-card')?.getAttribute('style')).toContain('--home-services-card-padding-y: 1.2rem');
     expect(screen.getByRole('link', { name: 'Browse all services' }).getAttribute('href')).toBe('/services');
   });
 
   it('keeps the shared dynamic services grid builder in the home page block renderer', () => {
     const source = readSource('./PageBlocksRenderer.jsx');
 
-    expect(source).toContain('buildDynamicServicesGridFromBlock,');
+    expect(source).toContain('buildCanonicalBlockRuntime');
     expect(source).toContain("from '../../lib/dynamicPageBlocks';");
-    expect(source).toContain('const runtime = buildDynamicServicesGridFromBlock(block);');
+    expect(source).toContain('const runtime = buildCanonicalBlockRuntime(block);');
     expect(source).not.toContain("kind: 'services_grid',");
     expect(source).toContain('function ServicesGridBlock({ block, resolveTo, ownership, hudAnchor }) {');
     expect(source).toContain("className={`home-native-services${ownership?.className || ''}`}");
+    expect(source).toContain("style={{ '--home-services-card-padding-y': `${runtime.cardPaddingRem}rem` }}");
     expect(source).toContain('<BlockSurfaceLayers ownership={ownership}');
     expect(source).toContain("const Renderer = blockRenderers[blockKind];");
   });

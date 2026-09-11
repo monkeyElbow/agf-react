@@ -4,11 +4,13 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { getAllBlockDefinitions, getBlockEditorSections } from '../blocks/registry';
 import { getEditorParityContract } from '../lib/editorParityContract';
+import { getCanonicalEditorModel } from '../lib/editorControlContract';
 import {
   BillboardBlockEditor,
   CalculatorCtaBlockEditor,
   CalculatorWidgetBlockEditor,
   CtaFormBlockEditor,
+  CtaFormHudBlockEditor,
   ColumnsBlockEditor,
   FeaturePanelBlockEditor,
   getMigratedBlockEditorComponent,
@@ -53,7 +55,7 @@ describe('migrated block editor ownership', () => {
     expect(getMigratedBlockEditorComponent('calculator_widget', 'admin')).toBe(CalculatorWidgetBlockEditor);
     expect(getMigratedBlockEditorComponent('calculator_widget', 'hud')).toBe(CalculatorWidgetBlockEditor);
     expect(getMigratedBlockEditorComponent('cta_form', 'admin')).toBe(CtaFormBlockEditor);
-    expect(getMigratedBlockEditorComponent('cta_form', 'hud')).toBeNull();
+    expect(getMigratedBlockEditorComponent('cta_form', 'hud')).toBe(CtaFormHudBlockEditor);
     expect(getMigratedBlockEditorComponent('request_form', 'admin')).toBe(RequestFormBlockEditor);
     expect(getMigratedBlockEditorComponent('request_form', 'hud')).toBe(RequestFormBlockEditor);
     expect(getMigratedBlockEditorComponent('impact_stat', 'admin')).toBe(ImpactStatBlockEditor);
@@ -107,14 +109,35 @@ describe('migrated block editor ownership', () => {
       expect(getEditorParityContract(definition.kind)?.label).toBe(definition.label);
 
       if (definition.kind === 'cta_form') {
-        expect(getMigratedBlockEditorComponent(definition.kind, 'hud')).toBeNull();
+        expect(getMigratedBlockEditorComponent(definition.kind, 'hud')).toBe(CtaFormHudBlockEditor);
         expect(getEditorParityContract(definition.kind)?.mode).toBe('dedicated-hud-adapter');
-        expect(source).toContain("case 'cta_form':");
-        expect(source).toContain('<CtaHudEditorPanel');
+        expect(source).not.toContain("case 'cta_form':");
+        expect(source).toContain("getMigratedBlockEditorComponent(block.kind, 'hud')");
         return;
       }
 
       expect(getMigratedBlockEditorComponent(definition.kind, 'hud')).toBeTruthy();
+    });
+  });
+
+  it('keeps the admin/HUD field contract and one background owner aligned for every kind', () => {
+    getAllBlockDefinitions().forEach((definition) => {
+      const admin = getCanonicalEditorModel(definition.kind, 'admin');
+      const hud = getCanonicalEditorModel(definition.kind, 'hud');
+
+      expect(admin.fieldIds, `${definition.kind} admin field IDs`).toEqual(hud.fieldIds);
+      expect(admin.sections.filter((section) => section.id === 'background')).toHaveLength(1);
+      expect(hud.sections.filter((section) => section.id === 'background')).toHaveLength(1);
+      expect(admin.sections.at(-2)?.id, `${definition.kind} admin background placement`).toBe('background');
+      expect(hud.sections.at(-2)?.id, `${definition.kind} hud background placement`).toBe('background');
+      expect(admin.backgroundSection?.fields.map((field) => field.id)).toEqual([
+        'bgTone',
+        'backgroundEffectsJson',
+      ]);
+      expect(hud.backgroundSection?.fields.map((field) => field.id)).toEqual([
+        'bgTone',
+        'backgroundEffectsJson',
+      ]);
     });
   });
 

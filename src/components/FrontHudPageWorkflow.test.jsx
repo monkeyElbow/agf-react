@@ -10,6 +10,8 @@ const __dirname = path.dirname(__filename);
 
 const mockSaveSharedDraftNow = vi.fn();
 const mockSaveSharedBlockDraftNow = vi.fn();
+const mockGetBlockCollaboration = vi.fn();
+const mockSetActiveBlockLock = vi.fn();
 const mockDiscardSharedPageDraft = vi.fn();
 const mockDiscardSharedBlockDraft = vi.fn();
 const mockResetBlockToSavedDraft = vi.fn();
@@ -76,6 +78,9 @@ vi.mock('../context/ContentAdminContextCore', () => ({
     resetBlockToSavedDraft: mockResetBlockToSavedDraft,
     publishSharedPageNow: mockPublishSharedPageNow,
     publishSharedBlockNow: mockPublishSharedBlockNow,
+    getBlockCollaboration: mockGetBlockCollaboration,
+    devIdentity: { userId: 'dev-current' },
+    setActiveBlockLock: mockSetActiveBlockLock,
   }),
 }));
 
@@ -135,6 +140,8 @@ describe('FrontHudPageWorkflow', () => {
     mockResetBlockToSavedDraft.mockReset();
     mockPublishSharedPageNow.mockReset();
     mockPublishSharedBlockNow.mockReset();
+    mockGetBlockCollaboration.mockReset();
+    mockSetActiveBlockLock.mockReset();
     mockUpdateBlock.mockReset();
     mockBlocksByPath = {
       '/services/loans': [{ id: 'hero', hidden: false }],
@@ -146,6 +153,8 @@ describe('FrontHudPageWorkflow', () => {
     mockResetBlockToSavedDraft.mockReturnValue({ ok: true, didReset: true });
     mockPublishSharedPageNow.mockResolvedValue({ ok: true });
     mockPublishSharedBlockNow.mockResolvedValue({ ok: true });
+    mockGetBlockCollaboration.mockReturnValue(null);
+    mockSetActiveBlockLock.mockReturnValue({ ok: true });
   });
 
   it('surfaces save draft, compact page status, review actions, and a working make-live control', async () => {
@@ -948,6 +957,27 @@ describe('FrontHudPageWorkflow', () => {
     settleTakeover({ ok: true });
     await waitFor(() => {
       expect(screen.getByRole('button', { name: 'Take over draft' }).disabled).toBe(false);
+    });
+  });
+
+  it('derives takeover ownership and action from the shared context for every HUD block', async () => {
+    mockGetBlockCollaboration.mockReturnValue({
+      draftedBy: { userId: 'dev-other', displayName: 'Other Admin' },
+      draftedAt: Date.now() - 1_000,
+    });
+
+    render(
+      <FrontHudPageWorkflow
+        pathname="/services/loans"
+        blockId="loan_options"
+        placement="dock-inline"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Take over draft' }));
+
+    await waitFor(() => {
+      expect(mockSetActiveBlockLock).toHaveBeenCalledWith('/services/loans', 'loan_options', { force: true });
     });
   });
 

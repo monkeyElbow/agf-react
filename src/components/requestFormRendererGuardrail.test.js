@@ -95,8 +95,7 @@ describe('request form renderer guardrail', () => {
     const source = readSource('./NativeContentPage.jsx');
 
     expect(source).toContain("import DynamicRequestFormSection from './DynamicRequestFormSection';");
-    expect(source).toContain('buildDynamicRequestFormFromBlock');
-    expect(source).toContain('const runtime = buildDynamicRequestFormFromBlock(block);');
+    expect(source).toContain('const runtime = buildCanonicalBlockRuntime(block);');
     expect(source).toContain("if (config.variant === 'dynamic-request') {");
     expect(source).toContain('return <DynamicRequestFormSection config={config} />;');
   });
@@ -105,9 +104,10 @@ describe('request form renderer guardrail', () => {
     const source = readSource('./blocks/PageBlocksRenderer.jsx');
 
     expect(source).toContain("import DynamicRequestFormSection from '../DynamicRequestFormSection';");
-    expect(source).toContain('buildDynamicRequestFormFromBlock');
+    expect(source).toContain('buildCanonicalBlockRuntime');
     expect(source).toContain('<DynamicRequestFormSection');
-    expect(source).toContain("className={`service-native-section ${runtime.sectionClassName}${ownership?.className || ''}`}");
+    expect(source).toContain('className={`service-native-section ${runtime.sectionClassName}');
+    expect(source).toContain("${ownership?.className || ''}`}");
     expect(source).toContain('style={runtime.sectionStyle}');
   });
 

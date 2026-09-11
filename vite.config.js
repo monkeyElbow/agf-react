@@ -95,10 +95,32 @@ function contentAdminDevPlugin() {
     ...process.env,
     ...loadEnv(process.env.NODE_ENV === 'production' ? 'production' : 'development', repoRoot, ''),
   };
-  const persistenceFile = path.resolve(repoRoot, 'dev-data/content-admin-shared.json');
-  const revisionDirectory = path.resolve(repoRoot, 'dev-data/content-admin-revisions');
-  const authorityLockFile = path.resolve(repoRoot, 'dev-data/content-admin-authority.lock');
-  const disclosuresFile = path.resolve(repoRoot, 'dev-data/disclosures-shared.json');
+  // Verification tools may point the authority at an isolated temporary
+  // store. Normal development keeps the repository-local defaults.
+  const persistenceFile = path.resolve(
+    repoRoot,
+    process.env.CONTENT_ADMIN_PERSISTENCE_FILE
+      || env.CONTENT_ADMIN_PERSISTENCE_FILE
+      || 'dev-data/content-admin-shared.json',
+  );
+  const revisionDirectory = path.resolve(
+    repoRoot,
+    process.env.CONTENT_ADMIN_REVISION_DIRECTORY
+      || env.CONTENT_ADMIN_REVISION_DIRECTORY
+      || 'dev-data/content-admin-revisions',
+  );
+  const authorityLockFile = path.resolve(
+    repoRoot,
+    process.env.CONTENT_ADMIN_AUTHORITY_LOCK_FILE
+      || env.CONTENT_ADMIN_AUTHORITY_LOCK_FILE
+      || 'dev-data/content-admin-authority.lock',
+  );
+  const disclosuresFile = path.resolve(
+    repoRoot,
+    process.env.CONTENT_ADMIN_DISCLOSURES_FILE
+      || env.CONTENT_ADMIN_DISCLOSURES_FILE
+      || 'dev-data/disclosures-shared.json',
+  );
   const perfDebugEnabled = process.env.VITE_PERF_DEBUG === '1';
   const pluginCreatedAt = Date.now();
   const pluginCreatedPerf = performance.now();

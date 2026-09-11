@@ -117,7 +117,8 @@ const sections = [
         step: 100,
       }),
       defineEditorField({ id: 'titleSizeRem', label: 'Billboard heading size (rem)', type: 'number', min: 2.4, max: 8, step: 0.05 }),
-      defineEditorField({ id: 'titleLetterSpacingEm', label: 'Billboard heading letter spacing (em)', type: 'number', min: -0.12, max: 0.04, step: 0.005 }),
+      defineEditorField({ id: 'titleTrackingEm', label: 'Billboard title tracking (em)', type: 'number', min: -0.12, max: 0.04, step: 0.005 }),
+      defineEditorField({ id: 'subtitleTrackingEm', label: 'Billboard subtitle tracking (em)', type: 'number', min: -0.12, max: 0.04, step: 0.005 }),
       defineEditorField({ id: 'bodyHtml', label: 'Billboard body HTML', type: 'html' }),
       defineEditorField({
         id: 'bodyJustify',
@@ -131,6 +132,7 @@ const sections = [
         defaultValue: 'center',
       }),
       defineEditorField({ id: 'leadCopySizeRem', label: 'Lead copy size (rem)', type: 'range', min: 1, max: 4, step: 0.05, defaultValue: 1.65, suffix: 'rem' }),
+      defineEditorField({ id: 'leadCopyLineHeight', label: 'Lead copy line height', type: 'range', min: 0.9, max: 2.2, step: 0.05, defaultValue: 1.55 }),
       defineEditorField({ id: 'bodyColorClassName', label: 'Body color', type: 'swatch', options: BILLBOARD_TITLE_TONE_OPTIONS }),
       defineEditorField({ id: 'body', label: 'Fallback body text', type: 'textarea', rows: 3 }),
       defineEditorField({ id: 'fineprint', label: 'Fineprint', type: 'textarea', rows: 4 }),
@@ -170,6 +172,7 @@ const sections = [
     title: 'Actions',
     surfaces: ['hud', 'admin'],
     fields: [
+      defineEditorField({ id: 'actionGapRem', label: 'Space above buttons (rem)', type: 'range', min: 0, max: 8, step: 0.05, suffix: 'rem' }),
       ...defineTransitionalActionFields({
         labelId: 'buttonLabel',
         labelLabel: 'Button 1 label',

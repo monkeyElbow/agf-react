@@ -506,20 +506,26 @@ describe('HeroHudEditorPanel', () => {
       onPaddingBottomRemChange,
     }));
 
-    const top = screen.getByLabelText('Hero top padding');
-    const bottom = screen.getByLabelText('Hero bottom padding');
+    const topSlider = screen.getByLabelText('Hero top padding');
+    const bottomSlider = screen.getByLabelText('Hero bottom padding');
+    const top = screen.getByRole('spinbutton', { name: 'Hero top padding value' });
+    const bottom = screen.getByRole('spinbutton', { name: 'Hero bottom padding value' });
+    expect(topSlider.value).toBe('2.5');
+    expect(bottomSlider.value).toBe('2.5');
     expect(top.value).toBe('2.5');
     expect(bottom.value).toBe('2.5');
-    expect(top.step).toBe('0.25');
-    expect(bottom.step).toBe('0.25');
-    expect(top.closest('label')?.textContent).toContain('2.50rem');
-    expect(bottom.closest('label')?.textContent).toContain('2.50rem');
+    expect(topSlider.step).toBe('0.25');
+    expect(bottomSlider.step).toBe('0.25');
+    expect(top.title).toBe('rem');
+    expect(bottom.title).toBe('rem');
+    expect(top.closest('.admin-range-number-control')?.classList.contains('admin-range-number-control--unit-tooltip')).toBe(true);
+    expect(bottom.closest('.admin-range-number-control')?.classList.contains('admin-range-number-control--unit-tooltip')).toBe(true);
 
-    fireEvent.change(top, { target: { value: '2.75' } });
+    fireEvent.change(topSlider, { target: { value: '2.75' } });
     expect(onPaddingTopRemChange).toHaveBeenCalledWith(2.75);
     expect(onPaddingBottomRemChange).not.toHaveBeenCalled();
 
-    fireEvent.change(bottom, { target: { value: '2.25' } });
+    fireEvent.change(bottomSlider, { target: { value: '2.25' } });
     expect(onPaddingBottomRemChange).toHaveBeenCalledWith(2.25);
     expect(onPaddingTopRemChange).toHaveBeenCalledTimes(1);
   });
@@ -924,8 +930,8 @@ describe('HeroHudEditorPanel', () => {
     }));
 
     expect(screen.getByText('Headline Tracking')).toBeTruthy();
-    expect(screen.getByText('0.040em')).toBeTruthy();
-    expect(document.querySelectorAll('.admin-billboard-editor-slider strong')).toHaveLength(5);
+    expect(screen.getByRole('spinbutton', { name: 'Hero headline tracking value' }).title).toBe('em');
+    expect(document.querySelectorAll('.admin-billboard-editor-slider strong')).toHaveLength(0);
     expect(document.querySelectorAll('.admin-front-hud-range-controls > input:not([type="range"])')).toHaveLength(0);
 
     const range = screen.getAllByRole('slider')[2];

@@ -1,4 +1,6 @@
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+
+const HUD_EDITOR_SINGLE_KEY_SHORTCUT_LIMIT = 9;
 
 export function HudEditorShell({ children, className = '' }) {
   return (
@@ -60,18 +62,20 @@ export function HudEditorRail({ children, label = 'Editor sections' }) {
   );
 }
 
-export function HudEditorRailButton({ id = '', icon, label, active = false, onClick, hideLabel = false }) {
+export function HudEditorRailButton({ id = '', icon, label, active = false, onClick, hideLabel = false, shortcut = '' }) {
   return (
     <button
       type="button"
       className={`admin-hud-editor-rail-button${active ? ' is-active' : ''}${id === 'block' ? ' is-block-options' : ''}`}
       aria-label={label}
+      aria-keyshortcuts={shortcut || undefined}
       aria-pressed={active}
-      title={label}
+      title={shortcut ? `${label} (${shortcut})` : label}
       onClick={onClick}
     >
       <span className="admin-hud-editor-rail-icon" aria-hidden="true">{icon}</span>
       {hideLabel ? null : <span className="admin-hud-editor-rail-label">{label}</span>}
+      {shortcut ? <span className="admin-hud-editor-rail-shortcut" aria-hidden="true">{shortcut}</span> : null}
     </button>
   );
 }
@@ -84,7 +88,20 @@ export const HUD_BLOCK_OPTIONS_SECTION = Object.freeze({
 
 export function appendHudBlockOptionsSection(sections = [], blockOptions = null) {
   const safeSections = Array.isArray(sections) ? sections : [];
-  return blockOptions ? [...safeSections, HUD_BLOCK_OPTIONS_SECTION] : safeSections;
+  const backgroundSections = safeSections.filter((section) => (
+    section?.id === 'background' || section?.id === 'appearance'
+  ));
+  const contentSections = safeSections.filter((section) => (
+    section?.id !== 'background'
+    && section?.id !== 'appearance'
+    && section?.id !== HUD_BLOCK_OPTIONS_SECTION.id
+  ));
+  const orderedSections = backgroundSections.length
+    ? [...contentSections, backgroundSections[0]]
+    : contentSections;
+  return blockOptions
+    ? [...orderedSections, HUD_BLOCK_OPTIONS_SECTION]
+    : orderedSections;
 }
 
 export function HudEditorBlockOptionsPage({ children }) {
@@ -107,6 +124,47 @@ export function HudEditorModelLayout({
   const safeSections = Array.isArray(sections) ? sections.filter((section) => section?.id) : [];
   const panelStackRef = useRef(null);
   const [panelStackHeight, setPanelStackHeight] = useState(null);
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (
+        event.defaultPrevented
+        || event.repeat
+        || event.metaKey
+        || event.ctrlKey
+        || event.altKey
+        || event.shiftKey
+        || !/^\d$/.test(event.key)
+      ) {
+        return;
+      }
+
+      const target = typeof Element !== 'undefined' && event.target instanceof Element
+        ? event.target
+        : null;
+      if (target?.closest('input, textarea, select, button, [contenteditable], [role="slider"]')) {
+        return;
+      }
+
+      const sectionIndex = Number(event.key) - 1;
+      if (
+        sectionIndex < 0
+        || sectionIndex >= HUD_EDITOR_SINGLE_KEY_SHORTCUT_LIMIT
+      ) {
+        return;
+      }
+      const nextSection = safeSections[sectionIndex];
+      if (!nextSection?.id || typeof onSectionChange !== 'function') {
+        return;
+      }
+
+      event.preventDefault();
+      onSectionChange(nextSection.id);
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [onSectionChange, safeSections]);
 
   useLayoutEffect(() => {
     const panelStack = panelStackRef.current;
@@ -197,12 +255,13 @@ export function HudEditorModelLayout({
   return (
     <div className={`admin-hud-editor-model-layout admin-hud-editor-rail-layout is-section-${activeSection}${className ? ` ${className}` : ''}`}>
       <HudEditorRail label={label}>
-        {safeSections.map((section) => (
+        {safeSections.map((section, index) => (
           <HudEditorRailButton
             id={section.id}
             key={section.id}
             icon={section.icon}
             label={section.label}
+            shortcut={index < HUD_EDITOR_SINGLE_KEY_SHORTCUT_LIMIT ? String(index + 1) : ''}
             active={activeSection === section.id}
             onClick={() => onSectionChange?.(section.id)}
             hideLabel={hideRailLabels}

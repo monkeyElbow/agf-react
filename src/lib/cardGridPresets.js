@@ -40,6 +40,44 @@ const CARD_GRID_PRESET_DEFINITIONS = Object.freeze([
     }),
   }),
   Object.freeze({
+    id: 'value-cards',
+    label: 'Value cards · stacked feature',
+    description: 'Editable value-card content with a fixed stacked presentation. Grid columns and card-surface controls do not apply to this feature layout.',
+    templateIds: Object.freeze([]),
+    defaults: Object.freeze({
+      bgTone: 'white',
+      contentWidth: 'browser',
+      columns: 'one',
+      cardStyle: 'none',
+      titleTone: 'super-grey',
+      bodyTone: 'super-grey',
+      cardPaddingRem: 1.35,
+      cardTitleSizeRem: 1.14,
+      cardTitleLineHeight: DEFAULT_DYNAMIC_GRID_CARD_TITLE_LINE_HEIGHT,
+      cardBodySizeRem: 1,
+      cardBulletSize: 'daf',
+      cardBulletSizeRem: DEFAULT_DYNAMIC_GRID_CARD_BULLET_SIZE_REM,
+      cardBulletLineHeight: DEFAULT_DYNAMIC_GRID_CARD_BULLET_LINE_HEIGHT,
+      cardBodyLineHeight: 1.58,
+    }),
+    editor: Object.freeze({
+      introFields: true,
+      // The visual presentation owns its stacked layout. Keep the content
+      // rail editable, but do not offer generic columns/card-surface controls
+      // that the value-card renderer intentionally ignores.
+      layoutFieldIds: Object.freeze(['contentWidth']),
+      cardAppearance: false,
+      typographyFields: false,
+      maxCards: 8,
+      cardFeatures: Object.freeze({
+        primaryAction: true,
+        secondaryAction: true,
+        directLinks: true,
+        accordions: true,
+      }),
+    }),
+  }),
+  Object.freeze({
     id: 'investment-options',
     label: 'Investment options',
     description: 'Stacked investment rows with title, body, and action columns paired with a separate billboard heading.',
@@ -205,7 +243,21 @@ export function getCardGridPresetDefinition(presetId) {
 }
 
 export function resolveCardGridPresetId(block) {
+  const settings = block?.settings && typeof block.settings === 'object' ? block.settings : {};
+  const sectionClasses = String(settings.sectionClassName || '').trim().split(/\s+/).filter(Boolean);
   const explicitPresetId = String(block?.presetId || '').trim().toLowerCase();
+  const settingsPresetId = String(settings.cardsPreset || '').trim().toLowerCase();
+
+  // About Values predates the canonical preset field and is still identified
+  // by its section class in saved page snapshots. Resolve the effective
+  // presentation here so the renderer, HUD label, and editor agree.
+  if (sectionClasses.includes('about-native-values')) {
+    return 'value-cards';
+  }
+  if (explicitPresetId === 'value-cards' || (!explicitPresetId && settingsPresetId === 'value-cards')) {
+    return 'value-cards';
+  }
+
   if (explicitPresetId) {
     const byExplicitPresetId = CARD_GRID_PRESET_DEFINITIONS.find((preset) => preset.id === explicitPresetId);
     if (byExplicitPresetId) {

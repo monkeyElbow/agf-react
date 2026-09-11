@@ -42,6 +42,83 @@ describe('BillboardHudEditorPanel reference layout', () => {
     expect(screen.getByText('No buttons added yet.')).toBeTruthy();
   });
 
+  it('removes the extra heading header and uses the requested two-column workbench', () => {
+    render(<BillboardHudEditorPanel title="A headline" subtitle="Supporting copy" />);
+
+    const heading = screen.getByRole('region', { name: 'Heading settings' });
+    expect(heading.querySelector('.admin-billboard-hud-reference-head')).toBeNull();
+    expect(heading.querySelector('.admin-billboard-hud-heading-workbench')).toBeTruthy();
+    expect(heading.querySelector('.admin-billboard-hud-heading-slider-panel')).toBeTruthy();
+    expect(heading.querySelector('.admin-billboard-hud-heading-type-panel')).toBeTruthy();
+  });
+
+  it('shows marked title spans and allows removing one or resetting all title colors', () => {
+    const onTitleHighlightsChange = vi.fn();
+    const onTitleColorChange = vi.fn();
+    const title = 'Give once, forever.';
+    const titleHighlightsJson = JSON.stringify([
+      { start: 0, end: 4, className: 'is-mango', text: 'Give' },
+    ]);
+
+    render(
+      <BillboardHudEditorPanel
+        title={title}
+        titleColor="is-atlantean"
+        titleHighlightsJson={titleHighlightsJson}
+        titleColorOptions={[
+          { value: 'is-atlantean', label: 'Atlantean', swatch: '#007f86' },
+          { value: 'is-mango', label: 'Mango', swatch: '#f4b41a' },
+        ]}
+        onTitleHighlightsChange={onTitleHighlightsChange}
+        onTitleColorChange={onTitleColorChange}
+      />,
+    );
+
+    expect(screen.getByText('1 marked span')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Remove marked span Give' }));
+    expect(onTitleHighlightsChange).toHaveBeenCalledWith('');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reset title colors' }));
+    expect(onTitleColorChange).toHaveBeenCalledWith('');
+    expect(onTitleHighlightsChange).toHaveBeenCalledWith('');
+  });
+
+  it('only shows the clear swatch for a selected title span', () => {
+    const title = 'Give once, forever.';
+    const titleSelection = { start: 0, end: 4, text: 'Give' };
+    const onTitleSelectionColorChange = vi.fn();
+    const titleColorOptions = [
+      { value: 'is-atlantean', label: 'Atlantean', swatch: '#007f86' },
+      { value: '', label: 'Clear', shortLabel: 'Clear', hideSwatch: true },
+    ];
+
+    const { rerender } = render(
+      <BillboardHudEditorPanel
+        title={title}
+        titleColorOptions={titleColorOptions}
+      />,
+    );
+
+    const titlePalette = screen.getByRole('radiogroup', { name: 'Billboard title color' });
+    expect(within(titlePalette).queryByRole('radio', { name: 'Clear' })).toBeNull();
+
+    rerender(
+      <BillboardHudEditorPanel
+        title={title}
+        titleSelection={titleSelection}
+        titleColorOptions={titleColorOptions}
+        onTitleSelectionColorChange={onTitleSelectionColorChange}
+      />,
+    );
+
+    const selectedTitlePalette = screen.getByRole('radiogroup', { name: 'Billboard title color' });
+    const clearSelectedSpan = within(selectedTitlePalette)
+      .getByRole('radio', { name: 'Clear selected span' });
+    expect(clearSelectedSpan).toBeTruthy();
+    fireEvent.click(clearSelectedSpan);
+    expect(onTitleSelectionColorChange).toHaveBeenCalledWith('');
+  });
+
   it('shows only labeled buttons at public size, with hover behavior and new-window controls', () => {
     const onButtonOpenInNewWindowChange = vi.fn();
     render(
@@ -167,6 +244,24 @@ describe('BillboardHudEditorPanel reference layout', () => {
     expect(onLeadCopySizeRemChange).toHaveBeenCalledWith(1.85);
   });
 
+  it('provides a lead-copy line-height slider in the copy panel', () => {
+    const onLeadCopyLineHeightChange = vi.fn();
+    render(
+      <BillboardHudEditorPanel
+        bodyHtml="<p>Rolling over retirement savings is simple.</p>"
+        leadCopyLineHeight={1.55}
+        onLeadCopyLineHeightChange={onLeadCopyLineHeightChange}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Copy' }));
+    const slider = screen.getByRole('slider', { name: 'Lead copy line height' });
+    expect(slider.value).toBe('1.55');
+
+    fireEvent.change(slider, { target: { value: '1.8' } });
+    expect(onLeadCopyLineHeightChange).toHaveBeenCalledWith(1.8);
+  });
+
   it('keeps rich body copy readable against the selected billboard background', () => {
     render(
       <BillboardHudEditorPanel
@@ -223,6 +318,58 @@ describe('BillboardHudEditorPanel reference layout', () => {
 
     fireEvent.change(slider, { target: { value: '2' } });
     expect(onHeaderGapRemChange).toHaveBeenCalledWith(2);
+  });
+
+  it('pairs compact billboard sliders with editable numeric inputs', () => {
+    const onTitleSizeRemChange = vi.fn();
+    const onSubtitleTrackingEmChange = vi.fn();
+    render(
+      <BillboardHudEditorPanel
+        titleSizeRem={3.4}
+        onTitleSizeRemChange={onTitleSizeRemChange}
+        subtitleTrackingEm={-0.02}
+        onSubtitleTrackingEmChange={onSubtitleTrackingEmChange}
+      />,
+    );
+
+    const titleSizeValue = screen.getByRole('spinbutton', { name: 'Title size value' });
+    const subtitleTrackingValue = screen.getByRole('spinbutton', { name: 'Subtitle tracking value' });
+    expect(titleSizeValue.value).toBe('3.4');
+    expect(subtitleTrackingValue.value).toBe('-0.02');
+    expect(titleSizeValue.title).toBe('rem');
+    expect(subtitleTrackingValue.title).toBe('em');
+    expect(titleSizeValue.closest('.admin-range-number-control')?.classList.contains('admin-range-number-control--unit-tooltip')).toBe(true);
+    expect(subtitleTrackingValue.closest('.admin-range-number-control')?.classList.contains('admin-range-number-control--unit-tooltip')).toBe(true);
+    expect(titleSizeValue.closest('.admin-range-number-control')?.textContent).not.toContain('rem');
+    expect(subtitleTrackingValue.closest('.admin-range-number-control')?.textContent).not.toContain('em');
+
+    fireEvent.change(titleSizeValue, { target: { value: '4.25' } });
+    fireEvent.change(subtitleTrackingValue, { target: { value: '0.01' } });
+    expect(onTitleSizeRemChange).toHaveBeenCalledWith(4.25);
+    expect(onSubtitleTrackingEmChange).toHaveBeenCalledWith(0.01);
+  });
+
+  it('separates subtitle tracking from title tracking', () => {
+    const onSubtitleTrackingEmChange = vi.fn();
+    const onTitleTrackingEmChange = vi.fn();
+    render(
+      <BillboardHudEditorPanel
+        subtitleTrackingEm={-0.02}
+        onSubtitleTrackingEmChange={onSubtitleTrackingEmChange}
+        titleTrackingEm={-0.03}
+        onTitleTrackingEmChange={onTitleTrackingEmChange}
+      />,
+    );
+
+    const subtitleTracking = screen.getByRole('slider', { name: 'Subtitle tracking' });
+    const titleTracking = screen.getByRole('slider', { name: 'Title tracking' });
+    expect(subtitleTracking.value).toBe('-0.02');
+    expect(titleTracking.value).toBe('-0.03');
+
+    fireEvent.change(subtitleTracking, { target: { value: '0.01' } });
+    fireEvent.change(titleTracking, { target: { value: '-0.005' } });
+    expect(onSubtitleTrackingEmChange).toHaveBeenCalledWith(0.01);
+    expect(onTitleTrackingEmChange).toHaveBeenCalledWith(-0.005);
   });
 
   it('lets the layout slider leave Auto and restores Auto when clicked', () => {
@@ -293,5 +440,21 @@ describe('BillboardHudEditorPanel reference layout', () => {
 
     fireEvent.change(slider, { target: { value: '6' } });
     expect(onPaddingTopRemChange).toHaveBeenCalledWith(6);
+  });
+
+  it('wires the dedicated space-above-buttons slider', () => {
+    const onActionGapRemChange = vi.fn();
+    render(
+      <BillboardHudEditorPanel
+        actionGapRem={2.35}
+        onActionGapRemChange={onActionGapRemChange}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Buttons' }));
+    const slider = screen.getByRole('slider', { name: 'Billboard button gap' });
+    expect(slider.value).toBe('2.35');
+    fireEvent.change(slider, { target: { value: '3.1' } });
+    expect(onActionGapRemChange).toHaveBeenCalledWith(3.1);
   });
 });

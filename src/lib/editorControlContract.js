@@ -173,3 +173,34 @@ export function buildEditorControlRuntime(definition, block) {
 export function getEditorControlDefinition(kind) {
   return getBlockDefinition(kind);
 }
+
+/**
+ * Resolve the complete editor contract used by either authoring surface.
+ * Hosts and custom editors use this model so section order, field IDs, and
+ * background ownership cannot drift between admin and HUD.
+ */
+export function getCanonicalEditorModel(kind, surface = 'admin', block = null) {
+  const surfaceToken = String(surface || 'admin').trim().toLowerCase();
+  const normalizedSurface = EDITOR_CONTROL_SURFACES.includes(surfaceToken) ? surfaceToken : 'admin';
+  const definition = getBlockDefinition(kind);
+  const sections = definition ? getBlockEditorSections(kind, normalizedSurface) : [];
+  const canonicalFields = sections.flatMap((section) => (
+    Array.isArray(section?.fields) ? section.fields : []
+  ));
+  const fields = canonicalFields.length || definition
+    ? canonicalFields
+    : (Array.isArray(block?.editableFields) ? block.editableFields : []);
+  const backgroundSections = sections.filter((section) => section?.id === 'background');
+
+  return {
+    kind: String(kind || '').trim(),
+    surface: normalizedSurface,
+    definition,
+    sections,
+    fields,
+    fieldIds: fields.map((field) => field.id),
+    backgroundSection: backgroundSections[0] || null,
+    hasSingleBackgroundSection: backgroundSections.length === 1,
+    block,
+  };
+}

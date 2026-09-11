@@ -8,7 +8,12 @@ function childBlockId(child) {
   if (!isValidElement(child)) {
     return '';
   }
-  return String(child.props?.['data-block-id'] || '').trim();
+  return String(
+    child.props?.['data-block-id']
+      || child.props?.blockId
+      || child.props?.block?.id
+      || '',
+  ).trim();
 }
 
 /**

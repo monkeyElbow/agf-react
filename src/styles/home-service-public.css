@@ -958,10 +958,11 @@
 
 .service-native-intro.dynamic-intro .native-info-intro-emphasis,
 .service-native-intro.test-dynamic-intro .native-info-intro-emphasis {
-  margin-top: 0;
+  margin-top: var(--service-native-intro-emphasis-space-before, 0);
   font-family: var(--ag-font-helv);
+  font-size: var(--service-native-intro-emphasis-size);
   font-weight: 700;
-  line-height: 1.35;
+  line-height: var(--service-native-intro-emphasis-line-height, 1.35);
 }
 
 .service-native-intro.dynamic-intro .service-native-action-row,
@@ -1456,22 +1457,18 @@
 
 .service-native-section.test-dynamic-billboard.is-bg-blue {
   background: var(--ag-surface-blue-gradient);
-  color: #ffffff;
 }
 
 .service-native-section.test-dynamic-billboard.is-bg-grey {
   background: linear-gradient(145deg, var(--ag-color-super-grey) 0%, #636265 100%);
-  color: #ffffff;
 }
 
 .service-native-section.test-dynamic-billboard.is-bg-sand {
   background: linear-gradient(147deg, rgb(242, 238, 235) 62%, rgb(218, 215, 208) 100%);
-  color: var(--ag-color-super-grey);
 }
 
 .service-native-section.test-dynamic-billboard.is-bg-white {
   background: #ffffff;
-  color: var(--ag-color-super-grey);
 }
 
 .service-native-section.test-dynamic-billboard.is-text-dark,
@@ -1507,24 +1504,6 @@
 .service-native-section.test-dynamic-billboard.is-text-blue .native-info-rich-html h3,
 .service-native-section.test-dynamic-billboard.is-text-blue .native-info-rich-html h4,
 .service-native-section.test-dynamic-billboard.is-text-blue .native-info-rich-html a:not(.service-native-btn) {
-  color: var(--ag-color-atlantean-dark);
-}
-
-.service-native-section.test-dynamic-billboard.is-bg-sand .native-info-section-copy > h2 {
-  color: var(--ag-color-super-grey);
-}
-
-.service-native-section.test-dynamic-billboard.is-bg-white .native-info-section-copy > h2 {
-  color: var(--ag-color-super-grey);
-}
-
-.service-native-section.test-dynamic-billboard.is-text-white.is-bg-sand .native-info-section-copy > h2,
-.service-native-section.test-dynamic-billboard.is-text-white.is-bg-white .native-info-section-copy > h2 {
-  color: #ffffff;
-}
-
-.service-native-section.test-dynamic-billboard.is-text-blue.is-bg-sand .native-info-section-copy > h2,
-.service-native-section.test-dynamic-billboard.is-text-blue.is-bg-white .native-info-section-copy > h2 {
   color: var(--ag-color-atlantean-dark);
 }
 
@@ -1668,22 +1647,18 @@
 
 .service-native-section.dynamic-billboard.is-bg-blue {
   background: var(--ag-surface-blue-gradient);
-  color: #ffffff;
 }
 
 .service-native-section.dynamic-billboard.is-bg-grey {
   background: linear-gradient(145deg, var(--ag-color-super-grey) 0%, #636265 100%);
-  color: #ffffff;
 }
 
 .service-native-section.dynamic-billboard.is-bg-sand {
   background: linear-gradient(147deg, rgb(242, 238, 235) 62%, rgb(218, 215, 208) 100%);
-  color: var(--ag-color-super-grey);
 }
 
 .service-native-section.dynamic-billboard.is-bg-white {
   background: #ffffff;
-  color: var(--ag-color-super-grey);
 }
 
 .service-native-section.dynamic-billboard.is-text-dark,
@@ -1719,24 +1694,6 @@
 .service-native-section.dynamic-billboard.is-text-blue .native-info-rich-html h3,
 .service-native-section.dynamic-billboard.is-text-blue .native-info-rich-html h4,
 .service-native-section.dynamic-billboard.is-text-blue .native-info-rich-html a:not(.service-native-btn) {
-  color: var(--ag-color-atlantean-dark);
-}
-
-.service-native-section.dynamic-billboard.is-bg-sand .native-info-section-copy > h2 {
-  color: var(--ag-color-super-grey);
-}
-
-.service-native-section.dynamic-billboard.is-bg-white .native-info-section-copy > h2 {
-  color: var(--ag-color-super-grey);
-}
-
-.service-native-section.dynamic-billboard.is-text-white.is-bg-sand .native-info-section-copy > h2,
-.service-native-section.dynamic-billboard.is-text-white.is-bg-white .native-info-section-copy > h2 {
-  color: #ffffff;
-}
-
-.service-native-section.dynamic-billboard.is-text-blue.is-bg-sand .native-info-section-copy > h2,
-.service-native-section.dynamic-billboard.is-text-blue.is-bg-white .native-info-section-copy > h2 {
   color: var(--ag-color-atlantean-dark);
 }
 
@@ -1812,32 +1769,37 @@
 .service-native-section.native-dynamic-cta.is-bg-blue,
 .service-native-section.test-dynamic-cta.is-bg-blue {
   background: var(--ag-surface-blue-gradient);
-  color: #ffffff;
 }
 
 .service-native-section.native-dynamic-cta.is-bg-grey,
 .service-native-section.test-dynamic-cta.is-bg-grey {
   background: linear-gradient(145deg, var(--ag-color-super-grey) 0%, #636265 100%);
-  color: #ffffff;
 }
 
 .service-native-section.native-dynamic-cta.is-bg-sand,
 .service-native-section.test-dynamic-cta.is-bg-sand {
   background: linear-gradient(147deg, rgb(242, 238, 235) 62%, rgb(218, 215, 208) 100%);
-  color: var(--ag-color-super-grey);
 }
 
 .service-native-section.native-dynamic-cta.is-bg-white,
 .service-native-section.test-dynamic-cta.is-bg-white {
   background: #ffffff;
+}
+
+.service-native-section:is(.native-dynamic-cta, .test-dynamic-cta).is-text-white {
+  color: #ffffff;
+}
+
+.service-native-section:is(.native-dynamic-cta, .test-dynamic-cta).is-text-dark {
   color: var(--ag-color-super-grey);
 }
 
-.service-native-section.native-dynamic-cta.is-bg-blue .native-info-section-copy > h2,
-.service-native-section.native-dynamic-cta.is-bg-grey .native-info-section-copy > h2,
-.service-native-section.test-dynamic-cta.is-bg-blue .native-info-section-copy > h2,
-.service-native-section.test-dynamic-cta.is-bg-grey .native-info-section-copy > h2 {
+.service-native-section:is(.native-dynamic-cta, .test-dynamic-cta).is-text-white .native-info-section-copy > h2 {
   color: #ffffff;
+}
+
+.service-native-section:is(.native-dynamic-cta, .test-dynamic-cta).is-text-dark .native-info-section-copy > h2 {
+  color: var(--ag-color-super-grey);
 }
 
 .service-native-section.native-dynamic-cta.is-bg-blue .native-info-inline-form,
@@ -2357,19 +2319,11 @@
 .service-native-section.native-dynamic-grid.is-bg-blue,
 .service-native-section.test-dynamic-grid.is-bg-blue {
   background: var(--ag-surface-blue-gradient);
-  --dynamic-grid-heading-color: #ffffff;
-  --dynamic-grid-card-title-color: #ffffff;
-  --dynamic-grid-body-color: rgba(255, 255, 255, 0.95);
-  --dynamic-grid-divider-color: rgba(255, 255, 255, 0.35);
 }
 
 .service-native-section.native-dynamic-grid.is-bg-grey,
 .service-native-section.test-dynamic-grid.is-bg-grey {
   background: linear-gradient(145deg, var(--ag-color-super-grey) 0%, #636265 100%);
-  --dynamic-grid-heading-color: #ffffff;
-  --dynamic-grid-card-title-color: #ffffff;
-  --dynamic-grid-body-color: rgba(255, 255, 255, 0.92);
-  --dynamic-grid-divider-color: rgba(255, 255, 255, 0.35);
 }
 
 .service-native-section.native-dynamic-grid.is-title-super-grey,
@@ -2564,10 +2518,6 @@
   --dynamic-grid-alt-title-one: var(--ag-color-atlantean);
   --dynamic-grid-alt-title-two: var(--ag-color-mango);
   --dynamic-grid-alt-title-three: var(--ag-color-melon);
-}
-
-.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-bg-blue, .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-bg-grey {
-  --dynamic-grid-alt-title-one: #ffffff;
 }
 
 .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-title-alternating .service-native-grid > .service-native-card:nth-child(3n + 1) h3, .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-title-alternating .service-native-grid > .service-native-card:nth-child(3n + 1) h3 mark {
@@ -3181,21 +3131,11 @@
 .service-native-section.native-dynamic-columns.is-bg-blue,
 .service-native-section.test-dynamic-columns.is-bg-blue {
   background: var(--ag-surface-blue-gradient);
-  --dynamic-columns-title-color: #ffffff;
-  --dynamic-columns-body-color: rgba(255, 255, 255, 0.95);
-  --dynamic-columns-line-color: rgba(255, 255, 255, 0.35);
-  --dynamic-columns-item-bg: rgba(255, 255, 255, 0.08);
-  --dynamic-columns-item-border: rgba(255, 255, 255, 0.22);
 }
 
 .service-native-section.native-dynamic-columns.is-bg-grey,
 .service-native-section.test-dynamic-columns.is-bg-grey {
   background: linear-gradient(145deg, var(--ag-color-super-grey) 0%, #636265 100%);
-  --dynamic-columns-title-color: #ffffff;
-  --dynamic-columns-body-color: rgba(255, 255, 255, 0.94);
-  --dynamic-columns-line-color: rgba(255, 255, 255, 0.35);
-  --dynamic-columns-item-bg: rgba(255, 255, 255, 0.06);
-  --dynamic-columns-item-border: rgba(255, 255, 255, 0.2);
 }
 
 @media (max-width: 980px) {

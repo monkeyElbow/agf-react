@@ -8,6 +8,7 @@ import {
   preloadFrontHudChrome,
 } from '../components/BlockHudPanelHostLoader';
 import FrontHudAnchorTag from '../components/FrontHudAnchorTag';
+import FrontHudDock from '../components/FrontHudDock';
 import PageShell from '../components/PageShell';
 import SafeRichText from '../components/SafeRichText';
 import RatesBlock from '../components/RatesBlock';
@@ -20,6 +21,7 @@ import useHudDockOrder from '../hooks/useHudDockOrder';
 import { useManagedContentSource } from '../hooks/useManagedContentSource';
 import { buildHudPanelsFromBlocks } from '../lib/blockHudRegistry';
 import { buildDynamicLegalCopyFromBlock, buildDynamicRatesFromBlock } from '../lib/dynamicPageBlocks';
+import { getBlockOwnershipVisual } from '../components/BlockOwnershipOverlay';
 
 function clampFrontHudOpacity(value) {
   const numeric = Number(value);
@@ -43,9 +45,17 @@ export default function RatesPage() {
   const managedBlockRef = useRef(null);
   const rateSectionRefs = useRef({});
   const {
+    getBlockCollaboration = () => null,
+    devIdentity = null,
+    setActiveBlockLock = () => ({ ok: false }),
     clearActiveBlockLock = () => ({ ok: false }),
     updateBlockSetting = () => {},
   } = useContentAdmin();
+  const clearActiveBlockLockRef = useRef(clearActiveBlockLock);
+
+  useEffect(() => {
+    clearActiveBlockLockRef.current = clearActiveBlockLock;
+  }, [clearActiveBlockLock]);
   const {
     enabled: frontHudEnabled,
     opacity: frontHudOpacity,
@@ -53,6 +63,8 @@ export default function RatesPage() {
   } = useFrontHud();
   const { blocksByPath: managedBlocksByPath } = useManagedContentSource({ pathname: '/rates' });
   const [hudDockCollapsed, setHudDockCollapsed] = useState(true);
+  const [hudDockIconsOnly, setHudDockIconsOnly] = useState(false);
+  const [hudDockHoverLabel, setHudDockHoverLabel] = useState(null);
   const [activeHudPanelId, setActiveHudPanelId] = useState('');
   useNativeEnhancements(pageRef);
   const managedBlocks = useMemo(
@@ -100,6 +112,12 @@ export default function RatesPage() {
     [dynamicRatesPageBlocks],
   );
   const showFrontHud = frontHudEnabled && hudPanels.length > 0;
+  const getOwnershipVisualForBlockId = (blockId) => {
+    if (!showFrontHud || !blockId) {
+      return { className: '', overlayLabel: '', overlayDetail: '', state: 'none', isOwnedByOther: false };
+    }
+    return getBlockOwnershipVisual(getBlockCollaboration('/rates', blockId), devIdentity?.userId);
+  };
   useEffect(() => {
     if (showFrontHud) {
       void preloadFrontHudChrome();
@@ -137,6 +155,8 @@ export default function RatesPage() {
     if (!showFrontHud) {
       setHudDockCollapsed(true);
       setActiveHudPanelId('');
+      setHudDockIconsOnly(false);
+      setHudDockHoverLabel(null);
     }
   }, [showFrontHud]);
 
@@ -161,6 +181,8 @@ export default function RatesPage() {
       return;
     }
     setHudDockCollapsed(false);
+    setHudDockIconsOnly(true);
+    setHudDockHoverLabel(null);
     setActiveHudPanelId(targetPanelId);
     scrollToElement(managedBlockRef.current);
   };
@@ -168,7 +190,13 @@ export default function RatesPage() {
   const closeHudDock = () => {
     setHudDockCollapsed(true);
     setActiveHudPanelId('');
+    setHudDockHoverLabel(null);
     setFrontHudEnabled?.(false);
+  };
+  const closeHudPanel = () => {
+    setHudDockCollapsed(false);
+    setActiveHudPanelId('');
+    setHudDockHoverLabel(null);
   };
 
   const setRateSectionRef = (anchorId, node) => {
@@ -186,9 +214,9 @@ export default function RatesPage() {
   useEffect(() => () => {
     const activeHudBlockId = String(activeHudPanel?.block?.id || '').trim();
     if (activeHudBlockId) {
-      clearActiveBlockLock('/rates', activeHudBlockId);
+      clearActiveBlockLockRef.current('/rates', activeHudBlockId);
     }
-  }, [activeHudPanel?.block?.id, clearActiveBlockLock]);
+  }, [activeHudPanel?.block?.id]);
   const renderHudAnchor = (panelId, layerClassName = '') => {
     if (!showFrontHud) {
       return null;
@@ -242,36 +270,26 @@ export default function RatesPage() {
       className={`rates-page${showFrontHud ? ' is-front-hud-docked admin-front-hud-scope' : ''}${hasOpenHudPanel ? ' has-active-front-hud-panel' : ''}`}
     >
       {showFrontHud ? (
-        <aside className={`admin-front-hud-dock${hudDockCollapsed ? ' is-collapsed' : ''}`} aria-label="Front HUD editor panels">
-          <div className={`admin-front-hud-dock-tabs${isDockDragging ? ' is-drag-active' : ''}`}>
-            {orderedHudPanels.map((panel) => (
-              <button
-                key={panel.id}
-                type="button"
-                className={`admin-front-hud-dock-tab${panel.isHidden ? ' is-hidden-block' : ''}${!hudDockCollapsed && activeHudPanelId === panel.id ? ' is-active' : ''}${isPanelDragging(panel.id) ? ' is-dragging' : ''}${isPanelDragOver(panel.id) ? ' is-drag-over' : ''}${getPanelDropPosition(panel.id) ? ` is-drop-${getPanelDropPosition(panel.id)}` : ''}`}
-                onClick={() => openRatesHudPanel(panel.id)}
-                aria-label={`Edit ${panel.label}${panel.isHidden ? ' (hidden from visitors)' : ''}`}
-                title={`Edit ${panel.label}${panel.isHidden ? ' — hidden from visitors' : ''}`}
-                {...getDockTabDragProps(panel.id)}
-              >
-                <img src={panel.icon} alt="" aria-hidden="true" className="admin-front-hud-dock-tab-icon" />
-                <span className="admin-front-hud-dock-tab-label">{panel.label}</span>
-                {panel.isHidden ? <span className="admin-front-hud-dock-tab-hidden-marker" aria-hidden="true">Hidden</span> : null}
-              </button>
-            ))}
-          </div>
-          <div className="admin-front-hud-dock-actions">
-            <button
-              type="button"
-              className="admin-front-hud-dock-collapse"
-              onClick={() => setHudDockCollapsed((current) => !current)}
-              aria-label={hudDockCollapsed ? 'Show panels' : 'Hide panels'}
-              title={hudDockCollapsed ? 'Show panels' : 'Hide panels'}
-            >
-              {hudDockCollapsed ? '▢' : '×'}
-            </button>
-          </div>
-        </aside>
+        <FrontHudDock
+          panels={orderedHudPanels}
+          activePanelId={activeHudPanelId}
+          isCollapsed={hudDockCollapsed}
+          isIconsOnly={hudDockIconsOnly}
+          isDockDragging={isDockDragging}
+          style={{ '--ag-admin-front-hud-opacity': String(frontHudOpacityRatio) }}
+          panelAriaLabelPrefix="Edit "
+          getPanelTitle={(panel) => `Edit ${panel.label}${panel.isHidden ? ' — hidden from visitors' : ''}`}
+          onPanelOpen={(panel) => openRatesHudPanel(panel.id)}
+          onPanelClose={closeHudPanel}
+          onToggleIconsOnly={() => setHudDockIconsOnly((current) => !current)}
+          onClose={closeHudDock}
+          getDockTabDragProps={getDockTabDragProps}
+          isPanelDragging={isPanelDragging}
+          isPanelDragOver={isPanelDragOver}
+          getPanelDropPosition={getPanelDropPosition}
+          onDockHoverLabelChange={setHudDockHoverLabel}
+          dockHoverLabel={hudDockHoverLabel}
+        />
       ) : null}
       <FrontHudPageWorkflow pathname="/rates" reviewHref="/admin/rates" reviewLabel="Open rates admin" placement="bar" isVisible={showFrontHud} />
       {hasOpenHudPanel && activeHudPanel ? (
@@ -279,7 +297,14 @@ export default function RatesPage() {
           title={activeHudPanel.label}
           blockId={activeHudPanel.block.id}
           pathname="/rates"
-          onClose={closeHudDock}
+          ownership={getOwnershipVisualForBlockId(activeHudPanel.block.id)}
+          onOwnershipAction={() => {
+            if (!activeHudPanel?.block?.id) {
+              return;
+            }
+            return setActiveBlockLock('/rates', activeHudPanel.block.id, { force: true });
+          }}
+          onClose={closeHudPanel}
           style={{ '--ag-admin-front-hud-opacity': String(frontHudOpacityRatio) }}
         >
           <FrontHudPageWorkflow
@@ -291,11 +316,25 @@ export default function RatesPage() {
             blockId={activeHudPanel.block.id}
             block={activeHudPanel.block}
             blockLabel={activeHudPanel.label}
+            ownership={getOwnershipVisualForBlockId(activeHudPanel.block.id)}
+            onOwnershipAction={() => {
+              if (!activeHudPanel?.block?.id) {
+                return;
+              }
+              return setActiveBlockLock('/rates', activeHudPanel.block.id, { force: true });
+            }}
             onDoneEditing={closeHudDock}
           />
           <BlockHudPanelHost
             block={activeHudPanel.block}
             pathname="/rates"
+            ownership={getOwnershipVisualForBlockId(activeHudPanel.block.id)}
+            onOwnershipAction={() => {
+              if (!activeHudPanel?.block?.id) {
+                return;
+              }
+              return setActiveBlockLock('/rates', activeHudPanel.block.id, { force: true });
+            }}
             ratesContext={{
               rates,
               iraRates,

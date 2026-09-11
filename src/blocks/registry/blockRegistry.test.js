@@ -13,6 +13,7 @@ import {
   getBlockPresetDefinition,
   getBlockPresetDefinitions,
   getEditableFieldsForKind,
+  buildCanonicalBlockRuntime,
   getMigratedBlockKinds,
   getSingletonBlockKinds,
 } from './index';
@@ -63,6 +64,7 @@ describe('canonical block registry', () => {
   it('keeps card-grid presets on the canonical definition instead of drifting into pseudo-kinds', () => {
     expect(getBlockPresetDefinitions('card_grid').map((preset) => preset.id)).toEqual([
       'default',
+      'value-cards',
       'investment-options',
       'eligibility-cards',
       'step-cards',
@@ -126,6 +128,8 @@ describe('canonical block registry', () => {
         const sections = surface === 'hud' ? hudSections : adminSections;
         const backgroundSections = sections.filter((section) => section.id === 'background');
         expect(backgroundSections, `${kind} ${surface} background sections`).toHaveLength(1);
+        expect(sections[sections.length - 2]?.id, `${kind} ${surface} background placement`)
+          .toBe('background');
         expect(backgroundSections[0].fields.map((field) => field.id), `${kind} ${surface} background fields`)
           .toEqual(['bgTone', 'backgroundEffectsJson']);
       });
@@ -134,6 +138,40 @@ describe('canonical block registry', () => {
       expect(adminSections.flatMap((section) => section.fields).map((field) => field.id))
         .toEqual(editableFields.map((field) => field.id));
     });
+  });
+
+  it('routes representative block instances through their definition-owned runtime builders', () => {
+    [
+      {
+        kind: 'billboard',
+        settings: { title: 'Canonical billboard' },
+      },
+      {
+        kind: 'card_grid',
+        settings: {
+          cardCount: '2',
+          card1Title: 'One',
+          card1Body: 'First',
+          card2Title: 'Two',
+          card2Body: 'Second',
+        },
+      },
+      {
+        kind: 'card_chart',
+        settings: {
+          cardCount: '2',
+          card1Title: 'One',
+          card1Bullets: 'First',
+          card2Title: 'Two',
+          card2Bullets: 'Second',
+        },
+      },
+    ].forEach((block) => {
+      expect(buildCanonicalBlockRuntime({ ...block, mode: 'dynamic' })).toEqual(
+        expect.any(Object),
+      );
+    });
+    expect(buildCanonicalBlockRuntime({ kind: 'unknown', mode: 'dynamic', settings: {} })).toBeNull();
   });
 
   it('uses the canonical editable-field API name', () => {
@@ -258,10 +296,10 @@ describe('canonical block registry', () => {
       'cardBodyLineHeight',
       'titleTone',
       'bodyTone',
-      'buttonLabel',
-      'buttonLinkJson',
       'bgTone',
       'backgroundEffectsJson',
+      'buttonLabel',
+      'buttonLinkJson',
     ]);
     expect(buttonLinkField).toEqual(expect.objectContaining({
       type: 'route_link',

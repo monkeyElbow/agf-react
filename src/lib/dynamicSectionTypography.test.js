@@ -4,6 +4,7 @@ import {
   buildBillboardSubtitleStyle,
   buildBillboardTitleStyle,
   normalizeBillboardLeadCopySizeRem,
+  normalizeBillboardLeadCopyLineHeight,
   normalizeBillboardSubtitleSizeRem,
   getIntroExtraLineDefaults,
   normalizeIntroExtraLineHeight,
@@ -49,9 +50,16 @@ describe('dynamicSectionTypography', () => {
     expect(normalizeBillboardLeadCopySizeRem(undefined)).toBe(1.65);
     expect(normalizeBillboardLeadCopySizeRem(0.2)).toBe(1);
     expect(normalizeBillboardLeadCopySizeRem(4.8)).toBe(4);
+    expect(normalizeBillboardLeadCopyLineHeight(undefined)).toBe(1.55);
+    expect(normalizeBillboardLeadCopyLineHeight(0.2)).toBe(0.9);
+    expect(normalizeBillboardLeadCopyLineHeight(2.8)).toBe(2.2);
     expect(buildBillboardLeadCopyStyle(undefined)).toBeUndefined();
     expect(buildBillboardLeadCopyStyle(1.85)).toEqual({
       '--dynamic-billboard-lead-copy-size': 'clamp(calc(1.85rem * 0.68), 2.1vw, 1.85rem)',
+    });
+    expect(buildBillboardLeadCopyStyle(1.85, 1.72)).toEqual({
+      '--dynamic-billboard-lead-copy-size': 'clamp(calc(1.85rem * 0.68), 2.1vw, 1.85rem)',
+      '--dynamic-billboard-lead-copy-line-height': '1.72',
     });
   });
 
@@ -69,6 +77,7 @@ describe('dynamicSectionTypography', () => {
       fontSynthesis: 'weight',
       fontSize: 'clamp(calc(3.37rem * 0.58), 8vw, 3.37rem)',
       letterSpacing: '-0.017em',
+      '--dynamic-billboard-title-tracking': '-0.017em',
     });
 
     expect(buildBillboardSubtitleStyle({
@@ -78,7 +87,7 @@ describe('dynamicSectionTypography', () => {
       titleFontFamily: 'helv',
       titleFontWeight: 700,
       titleSizeRem: 3.4,
-      titleLetterSpacingEm: -0.015,
+      subtitleLetterSpacingEm: -0.015,
     })).toEqual({
       color: 'var(--ag-color-mango)',
       fontSize: 'clamp(calc(1.42rem * 0.68), 5vw, 1.42rem)',

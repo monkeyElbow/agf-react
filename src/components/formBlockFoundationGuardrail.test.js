@@ -25,11 +25,9 @@ describe('form block foundation guardrail', () => {
     expect(requestSource).toContain("from '../blocks/foundation/forms'");
     expect(pageBlocksSource).toContain("from '../../blocks/foundation/forms'");
 
-    expect(nativeSource).toContain('const runtime = buildDynamicCtaFormFromBlock(block);');
-    expect(nativeSource).toContain('const runtime = buildDynamicRequestFormFromBlock(block);');
+    expect(nativeSource).toContain('const runtime = buildCanonicalBlockRuntime(block);');
     expect(dynamicCtaSource).toContain('buildDynamicCtaFormFromBlock');
-    expect(pageBlocksSource).toContain('buildDynamicCtaFormFromBlock');
-    expect(pageBlocksSource).toContain('buildDynamicRequestFormFromBlock');
+    expect(pageBlocksSource).toContain('buildCanonicalBlockRuntime');
     expect(runtimeSource).toContain('export function buildDynamicCtaFormFromBlock');
     expect(runtimeSource).toContain('export function buildDynamicRequestFormFromBlock');
     expect(runtimeSource).toContain("transitionalAdapter: 'step-fields-json'");
@@ -42,7 +40,7 @@ describe('form block foundation guardrail', () => {
     expect(editorSource).toContain('<span>Required</span>');
     expect(editorSource).toContain('<span>Full width</span>');
     expect(editorSource).toContain('swatchVariant="hud"');
-    expect(editorSource).toContain('admin-request-form-swatch-palette');
+    expect(editorSource).toContain('admin-color-text-swatch-list');
     expect(adminStylesSource).toContain('.admin-content-field-list label.admin-content-checkbox-row {');
     expect(adminStylesSource).toContain('.admin-request-form-step-field-behavior {');
     expect(adminStylesSource).toContain('.admin-request-form-step-field-behavior-toggles {');

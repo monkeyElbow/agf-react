@@ -11,8 +11,6 @@ import { SURFACE_BG_TONE_OPTIONS, normalizeSurfaceBgTone } from '../lib/colorSys
 export default function BackgroundEditorPage({
   backgroundTone,
   backgroundToneOptions = SURFACE_BG_TONE_OPTIONS,
-  // Kept for backwards-compatible callers. The universal page owns this label.
-  backgroundToneLabel: _backgroundToneLabel = 'Background color',
   onBackgroundToneChange,
   backgroundEffectsJson,
   onBackgroundEffectsChange,
@@ -33,7 +31,6 @@ export default function BackgroundEditorPage({
       paletteVariant={paletteVariant}
       backgroundTone={tone}
       backgroundToneOptions={options}
-      backgroundToneLabel="Background color"
       onBackgroundToneChange={onBackgroundToneChange}
       className={className}
     />

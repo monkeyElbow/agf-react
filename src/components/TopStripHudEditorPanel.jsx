@@ -12,6 +12,7 @@ const TOP_STRIP_EDITOR_SECTIONS = Object.freeze([
   { id: 'strip', label: 'Strip', icon: 'Aa' },
   { id: 'login', label: 'Secure Login', icon: '↗' },
   { id: 'rates', label: 'Phone + Rates', icon: '#' },
+  { id: 'background', label: 'Background', icon: '◌' },
 ]);
 
 function toBool(value, fallback = false) {

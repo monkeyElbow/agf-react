@@ -76,7 +76,7 @@ describe('investments feature block guardrails', () => {
     const blueprintSource = readSource('../data/contentBlockBlueprints.js');
 
     expect(pageSource).toContain('const ratesBlockRecord = useMemo(() => (');
-    expect(pageSource).toContain('buildDynamicRatesFromBlock(ratesBlock || DEFAULT_CERTIFICATES_RATES_BLOCK)');
+    expect(pageSource).toContain('buildCanonicalBlockRuntime(ratesBlock || DEFAULT_CERTIFICATES_RATES_BLOCK)');
     expect(pageSource).toContain('data-block-id="certificates_table"');
     expect(pageSource).toContain('certificates_table: INVESTMENTS_RATES_HUD_PANEL_ID');
     expect(pageSource).not.toContain("block?.id === 'rates_table'");
@@ -111,7 +111,7 @@ describe('investments feature block guardrails', () => {
     const blueprintSource = readSource('../data/contentBlockBlueprints.js');
 
     expect(pageSource).toContain('const calculatorCtaBlockRecord = useMemo(() => (');
-    expect(pageSource).toContain('calculatorCtaBlockIsHidden ? null : buildDynamicCalculatorCtaFromBlock(calculatorCtaBlock || DEFAULT_LADDERING_BLOCK)');
+    expect(pageSource).toContain('calculatorCtaBlockIsHidden ? null : buildCanonicalBlockRuntime(calculatorCtaBlock || DEFAULT_LADDERING_BLOCK)');
     expect(pageSource).toContain('data-block-id="laddering"');
     expect(pageSource).toContain('laddering: INVESTMENTS_CALCULATOR_CTA_HUD_PANEL_ID');
     expect(pageSource).toContain('{calculatorCtaRuntime ? (');

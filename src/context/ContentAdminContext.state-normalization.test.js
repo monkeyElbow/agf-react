@@ -62,6 +62,8 @@ describe('ContentAdminContext state normalization', () => {
       'online-contributions-step-cards',
       'numbered-step-cards-preset-metadata',
       'site-feature-repeatable-content-fields',
+      'services-breakdown-card-grid',
+      'about-strategy-billboard-block',
       'support-library-block-kind',
       'insurance-coverage-cta-fields',
       'insurance-feature-columns',

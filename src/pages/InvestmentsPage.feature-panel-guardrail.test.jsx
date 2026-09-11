@@ -14,7 +14,7 @@ describe('investments feature panel renderer guardrail', () => {
   it('keeps the shared dynamic feature panel builder in the investments page path', () => {
     const source = readSource('./InvestmentsPage.jsx');
 
-    expect(source).toContain('buildDynamicFeaturePanelFromBlock,');
+    expect(source).toContain("import { buildCanonicalBlockRuntime } from '../blocks/registry';");
     expect(source).toContain("block?.id === 'cash_reserves'");
     expect(source).toContain('const featurePanelRuntime = useMemo(');
     expect(source).toContain("panel.blockId === 'cash_reserves'");

@@ -20,4 +20,11 @@ describe('NativeContentPage rendered convergence guardrail', () => {
     expect(source).toContain('data-content-revision={sharedSnapshotUpdatedAt ? String(sharedSnapshotUpdatedAt) : undefined}');
     expect(source).toContain('data-runtime-build-id={RUNTIME_BUILD_ID}');
   });
+
+  it('routes managed billboards through the canonical BillboardBlock renderer', () => {
+    expect(source).toContain("import { BillboardBlock } from './blocks/PageBlocksRenderer';");
+    expect(source).toContain('if (isDynamicBillboardSection && dynamicSectionBlock)');
+    expect(source).toContain('<BillboardBlock');
+    expect(source).toContain('subtitleBaseClassName="native-info-section-subtitle"');
+  });
 });

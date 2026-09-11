@@ -11,8 +11,10 @@ import {
   normalizeDynamicGridHeaderWidthPercent,
   normalizeDynamicGridNumberPositionPercent,
   normalizeDynamicGridCardTitleLineHeight,
+  normalizeDynamicGridCardTitleBodySpaceRem,
   normalizeDynamicGridCardOutlineTone,
   normalizeDynamicGridCardOutlineWidthPx,
+  normalizeDynamicGridCardShadowOpacity,
 } from './dynamicGrid';
 
 const SHARED_TONE_OPTIONS = [
@@ -31,8 +33,11 @@ describe('dynamic grid contrast helpers', () => {
     expect(normalizeDynamicGridCardOutlineTone('unknown')).toBe('');
     expect(normalizeDynamicGridCardOutlineWidthPx(undefined)).toBe(1.5);
     expect(normalizeDynamicGridCardOutlineWidthPx(2.24)).toBe(2);
-    expect(normalizeDynamicGridCardOutlineWidthPx(8)).toBe(4);
+    expect(normalizeDynamicGridCardOutlineWidthPx(8)).toBe(3);
     expect(normalizeDynamicGridCardOutlineWidthPx(0)).toBe(0.5);
+    expect(normalizeDynamicGridCardShadowOpacity(undefined)).toBe(0.14);
+    expect(normalizeDynamicGridCardShadowOpacity(42)).toBe(0.42);
+    expect(normalizeDynamicGridCardShadowOpacity(140)).toBe(1);
   });
 
   it('allows borderless shadow cards and alternating title colors across section surfaces', () => {
@@ -96,5 +101,13 @@ describe('dynamic grid contrast helpers', () => {
     expect(normalizeDynamicGridCardTitleLineHeight(0.2)).toBe(0.8);
     expect(normalizeDynamicGridCardTitleLineHeight(2)).toBe(1.5);
     expect(normalizeDynamicGridCardTitleLineHeight(undefined)).toBe(1.2);
+  });
+
+  it('normalizes the Card Grid title-to-body spacing slider', () => {
+    expect(normalizeDynamicGridCardTitleBodySpaceRem(1.274)).toBe(1.27);
+    expect(normalizeDynamicGridCardTitleBodySpaceRem(-1)).toBe(0);
+    expect(normalizeDynamicGridCardTitleBodySpaceRem(5)).toBe(3);
+    expect(normalizeDynamicGridCardTitleBodySpaceRem(undefined)).toBe(1);
+    expect(normalizeDynamicGridCardTitleBodySpaceRem('')).toBe(1);
   });
 });

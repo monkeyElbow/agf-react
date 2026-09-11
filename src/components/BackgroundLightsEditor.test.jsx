@@ -98,6 +98,22 @@ describe('BackgroundLightsEditor', () => {
     expect(saved.lights[0]).toMatchObject({ x: -30, y: 125, positionModel: 'edge-v1' });
   });
 
+  it('uses Super Grey for the position number on white light knobs', () => {
+    const { container } = render(
+      <BackgroundLightsEditor
+        value={JSON.stringify({
+          enabled: true,
+          lights: [{ tone: 'white', x: 50, y: 50 }],
+        })}
+        onChange={vi.fn()}
+      />,
+    );
+
+    const knob = container.querySelector('.admin-background-light-position-knob');
+    expect(knob?.className).toContain('is-white-tone');
+    expect(knob?.querySelector('.admin-background-light-position-knob-label')).toBeTruthy();
+  });
+
   it('exposes scroll motion modes and only shows mode-specific controls', () => {
     const onChange = vi.fn();
     const firstSave = {

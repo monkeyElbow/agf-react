@@ -20,11 +20,13 @@ import {
   normalizeDynamicGridFineprintSizeRem,
   normalizeDynamicGridCardPaddingRem,
   normalizeDynamicGridCardTitleLineHeight,
+  normalizeDynamicGridCardTitleBodySpaceRem,
   normalizeDynamicGridCardTitleSizeRem,
   normalizeDynamicGridCardJustify,
   normalizeDynamicGridNumberPositionPercent,
   normalizeDynamicGridCardOutlineTone,
   normalizeDynamicGridCardOutlineWidthPx,
+  normalizeDynamicGridCardShadowOpacity,
   normalizeDynamicGridHeaderSizeRem,
   normalizeDynamicGridSubheadSizeRem,
   normalizeDynamicGridColumns,
@@ -58,6 +60,7 @@ import {
   normalizeIntroExtraLineSizeRem,
   normalizeIntroExtraLineSpaceBeforeRem,
   normalizeBillboardSubtitleDisplay,
+  normalizeBillboardLeadCopyLineHeight,
   normalizeBillboardLeadCopySizeRem,
   normalizeBillboardSubtitleSizeRem,
   normalizeBillboardTitleFontFamily,
@@ -1003,13 +1006,19 @@ function resolveBillboardSubtitleColor(value) {
 
 export function actionButtonClassName(style, tone) {
   const token = normalizeActionButtonStyle(style);
-  if (token === 'dark') {
-    return 'service-native-btn is-dark';
-  }
-  if (token === 'outline') {
-    return `service-native-btn is-outline is-tone-${normalizeActionButtonTone(tone)}`;
-  }
-  return 'service-native-btn';
+  const defaultTone = token === 'white'
+    ? 'white'
+    : (token === 'dark' || token === 'ghost' ? 'super-grey' : 'atlantean');
+  const resolvedTone = token === 'outline'
+    ? normalizeActionButtonTone(tone, defaultTone)
+    : defaultTone;
+  return [
+    'service-native-btn',
+    token === 'ghost' ? 'is-ghost' : '',
+    token === 'outline' ? 'is-outline' : '',
+    token === 'dark' ? 'is-dark' : '',
+    `is-tone-${resolvedTone}`,
+  ].filter(Boolean).join(' ');
 }
 
 function toIntroEmphasisClassName(value) {
@@ -1066,18 +1075,20 @@ export function buildDynamicIntroFromBlock(block) {
     buildCanonicalActionLinkFromFields(settings, {
       labelKeys: ['button1Label'],
       linkJsonKeys: ['button1LinkJson'],
-      hrefKeys: [],
-      toKeys: [],
+      hrefKeys: ['button1Url'],
+      toKeys: ['button1PageRef'],
       styleKeys: ['button1Style'],
-      openInNewWindowKeys: [],
+      toneKeys: ['button1Tone'],
+      openInNewWindowKeys: ['button1OpenInNewWindow'],
     }),
     buildCanonicalActionLinkFromFields(settings, {
       labelKeys: ['button2Label'],
       linkJsonKeys: ['button2LinkJson'],
-      hrefKeys: [],
-      toKeys: [],
+      hrefKeys: ['button2Url'],
+      toKeys: ['button2PageRef'],
       styleKeys: ['button2Style'],
-      openInNewWindowKeys: [],
+      toneKeys: ['button2Tone'],
+      openInNewWindowKeys: ['button2OpenInNewWindow'],
     }),
   ].filter(Boolean);
 
@@ -1143,7 +1154,20 @@ export function buildDynamicBillboardFromBlock(block) {
     titleFontFamily,
   );
   const titleSizeRem = normalizeBillboardTitleSizeRem(settings.titleSizeRem);
-  const titleLetterSpacingEm = normalizeBillboardTitleLetterSpacingEm(settings.titleLetterSpacingEm, titleFontFamily);
+  // `titleLetterSpacingEm` is the legacy shared value. Keep it as a fallback
+  // so existing billboards retain their appearance while new edits use
+  // independent title and subtitle tracking settings.
+  const legacyLetterSpacingEm = settings.titleLetterSpacingEm;
+  const titleTrackingIsExplicit = Number.isFinite(Number(settings.titleTrackingEm));
+  const subtitleTrackingIsExplicit = Number.isFinite(Number(settings.subtitleTrackingEm));
+  const titleLetterSpacingEm = normalizeBillboardTitleLetterSpacingEm(
+    titleTrackingIsExplicit ? settings.titleTrackingEm : legacyLetterSpacingEm,
+    titleFontFamily,
+  );
+  const subtitleLetterSpacingEm = normalizeBillboardTitleLetterSpacingEm(
+    subtitleTrackingIsExplicit ? settings.subtitleTrackingEm : legacyLetterSpacingEm,
+    titleFontFamily,
+  );
   const subtitleDisplay = normalizeBillboardSubtitleDisplay(settings.subtitleDisplay);
   const subtitleHasExplicitSize = String(settings.subtitleSizeRem ?? '').trim() !== ''
     && Number.isFinite(Number(settings.subtitleSizeRem));
@@ -1154,6 +1178,11 @@ export function buildDynamicBillboardFromBlock(block) {
     && Number.isFinite(Number(settings.leadCopySizeRem));
   const leadCopySizeRem = leadCopyHasExplicitSize
     ? normalizeBillboardLeadCopySizeRem(settings.leadCopySizeRem)
+    : null;
+  const leadCopyLineHeightHasExplicitValue = String(settings.leadCopyLineHeight ?? '').trim() !== ''
+    && Number.isFinite(Number(settings.leadCopyLineHeight));
+  const leadCopyLineHeight = leadCopyLineHeightHasExplicitValue
+    ? normalizeBillboardLeadCopyLineHeight(settings.leadCopyLineHeight)
     : null;
   const subtitleResolvedColor = resolveBillboardSubtitleColor(subtitleClassName);
   const hasContentWidthOverride = String(settings.contentMaxWidthPx ?? '').trim() !== ''
@@ -1170,6 +1199,11 @@ export function buildDynamicBillboardFromBlock(block) {
     && Number.isFinite(Number(settings.headerGapRem));
   const headerGapRem = hasHeaderGapOverride
     ? normalizePageContentSpaceRem(settings.headerGapRem, 1.15, 0, 4)
+    : null;
+  const hasActionGapOverride = String(settings.actionGapRem ?? '').trim() !== ''
+    && Number.isFinite(Number(settings.actionGapRem));
+  const actionGapRem = hasActionGapOverride
+    ? normalizePageContentSpaceRem(settings.actionGapRem, 1, 0, 8)
     : null;
   const hasPaddingTopOverride = String(settings.paddingTopRem ?? '').trim() !== ''
     && Number.isFinite(Number(settings.paddingTopRem));
@@ -1240,10 +1274,11 @@ export function buildDynamicBillboardFromBlock(block) {
       titleFontFamily,
       titleFontWeight,
       titleSizeRem,
-      titleLetterSpacingEm,
+      subtitleLetterSpacingEm,
     }),
     leadCopySizeRem,
-    bodyHtmlStyle: buildBillboardLeadCopyStyle(leadCopySizeRem),
+    leadCopyLineHeight,
+    bodyHtmlStyle: buildBillboardLeadCopyStyle(leadCopySizeRem, leadCopyLineHeight),
     titleStyle: buildBillboardTitleStyle({
       lineSpacing,
       titleFontFamily,
@@ -1251,6 +1286,8 @@ export function buildDynamicBillboardFromBlock(block) {
       titleSizeRem,
       titleLetterSpacingEm,
     }),
+    titleTrackingOverride: titleTrackingIsExplicit,
+    subtitleTrackingOverride: subtitleTrackingIsExplicit,
     bodyHtml,
     body,
     ...(bodyColorClassName ? { bodyColorClassName } : {}),
@@ -1269,11 +1306,14 @@ export function buildDynamicBillboardFromBlock(block) {
     copyStyle: contentMaxWidthPx || bodyMaxWidthPx
       || headerGapRem !== null
       || leadCopySizeRem !== null
+      || leadCopyLineHeight !== null
       ? {
           ...(contentMaxWidthPx ? { '--dynamic-billboard-copy-max-width': `${contentMaxWidthPx}px` } : {}),
           ...(bodyMaxWidthPx ? { '--dynamic-billboard-body-max-width': `${bodyMaxWidthPx}px` } : {}),
           ...(headerGapRem !== null ? { '--dynamic-billboard-header-gap': `${headerGapRem}rem` } : {}),
-          ...(leadCopySizeRem !== null ? buildBillboardLeadCopyStyle(leadCopySizeRem) : {}),
+          ...(leadCopySizeRem !== null || leadCopyLineHeight !== null
+            ? buildBillboardLeadCopyStyle(leadCopySizeRem, leadCopyLineHeight)
+            : {}),
         }
       : undefined,
     copyClassName: sanitizeClassName(settings.copyClassName || '')
@@ -1282,6 +1322,7 @@ export function buildDynamicBillboardFromBlock(block) {
     contentMaxWidthPx,
     bodyMaxWidthPx,
     headerGapRem,
+    actionGapRem,
     paddingTopRem,
     paddingBottomRem,
     action: actions[0] || null,
@@ -1502,7 +1543,18 @@ export function buildDynamicSiteFeatureFromBlock(block) {
       openInNewWindowKeys: ['buttonOpenInNewWindow'],
     })
     : null;
-  const action = overrideAction || featureRuntime.action || null;
+  const buttonLabelOverride = allowsAction && allowedFieldIds.has('buttonLabel')
+    && Object.prototype.hasOwnProperty.call(settings, 'buttonLabel')
+    ? String(settings.buttonLabel || '').trim()
+    : '';
+  // Some code-managed features own their CTA destination in the catalog while
+  // still allowing editors to change only the visible button text. Preserve
+  // that destination when a label-only override is supplied.
+  const action = overrideAction
+    || (buttonLabelOverride && featureRuntime.action
+      ? { ...featureRuntime.action, label: buttonLabelOverride }
+      : featureRuntime.action)
+    || null;
   const metrics = Array.isArray(featureRuntime.metrics)
     ? featureRuntime.metrics
       .filter((metric) => metric && typeof metric === 'object')
@@ -2215,6 +2267,9 @@ export function buildDynamicCtaFormFromBlock(block, { fallbackSettings = null, f
     fineprint,
     subtitle,
     bgTone,
+    backgroundEffects: normalizeBackgroundEffects(
+      resolveCtaFormSetting(settings, fallbackSettings, 'backgroundEffectsJson') || '',
+    ),
     submitLabel,
     successMessage,
     salesforceUrl,
@@ -2335,6 +2390,7 @@ export function buildDynamicRequestFormFromBlock(block) {
     presetId,
     bgTone,
     textTone,
+    backgroundEffects: normalizeBackgroundEffects(settings.backgroundEffectsJson),
     spaceBeforeRem,
     spaceAfterRem,
     hideStepTitles,
@@ -2583,7 +2639,7 @@ export function buildDynamicGridFromBlock(block) {
   const contentWidth = normalizeDynamicGridWidth(settings.contentWidth);
   // The investment-options preset owns its stacked-row layout; ignore stale
   // persisted column counts because the preset editor does not expose them.
-  const columns = presetId === 'investment-options'
+  const columns = ['investment-options', 'value-cards'].includes(presetId)
     ? 'one'
     : normalizeDynamicGridColumns(settings.columns);
   const parsedCardCount = Number(settings.cardCount);
@@ -2617,6 +2673,7 @@ export function buildDynamicGridFromBlock(block) {
   const cardShadow = hasCardShadowSetting
     ? toBoolean(settings.cardShadow)
     : (presetId === 'services-directory' ? true : null);
+  const cardShadowOpacity = normalizeDynamicGridCardShadowOpacity(settings.cardShadowOpacity);
   // Background and card-title color are separate authored controls. Cards
   // have their own surface, so changing the section background must not
   // silently replace the admin's title color with white.
@@ -2640,6 +2697,7 @@ export function buildDynamicGridFromBlock(block) {
     ? normalizeDynamicGridCardTitleLineHeight(settings.cardTitleLineHeight)
     : undefined;
   const cardTitleJustify = normalizeDynamicGridCardJustify(settings.cardTitleJustify, 'center');
+  const cardTitleBodySpaceRem = normalizeDynamicGridCardTitleBodySpaceRem(settings.cardTitleBodySpaceRem);
   const numberPositionPercent = normalizeDynamicGridNumberPositionPercent(settings.numberPositionPercent);
   const cardBodySizeRem = normalizeDynamicGridCardBodySizeRem(settings.cardBodySizeRem);
   const cardBulletSize = normalizeDynamicGridCardBulletSize(settings.cardBulletSize);
@@ -2680,6 +2738,7 @@ export function buildDynamicGridFromBlock(block) {
   const subheadSizeRem = hasSubheadSize
     ? normalizeDynamicGridSubheadSizeRem(settings.subheadSizeRem)
     : undefined;
+  const subtitleJustify = normalizeDynamicGridCardJustify(settings.subtitleJustify, 'center');
   const hasHeaderSize = settings.headerSizeRem !== null && settings.headerSizeRem !== ''
     && Number.isFinite(Number(settings.headerSizeRem));
   const headerSizeRem = hasHeaderSize
@@ -2711,13 +2770,13 @@ export function buildDynamicGridFromBlock(block) {
         ? { link: cardTitleLinkValue, ...linkValueToLinkProps(cardTitleLinkValue) }
         : null;
       const cardTitleClassName = normalizeHighlightClassName(settings[`card${slot}TitleClassName`] || '');
-      const hasAuthoredGridTitleTone = Object.prototype.hasOwnProperty.call(settings, 'titleTone')
-        && String(settings.titleTone ?? '').trim() !== '';
-      // Card Grid title color is a block-level control. Older card snapshots
-      // can still contain per-span highlight colors, which otherwise win over
-      // the grid tone for the whole title. Keep an explicit per-card class,
-      // but discard those legacy span colors once the grid tone is authored.
-      const cardTitleHighlights = hasAuthoredGridTitleTone && !cardTitleClassName
+      // A grid's base title tone colors the unmarked portion of each title.
+      // Per-card highlights are intentional authored content (including many
+      // legacy page accents), so they must remain visible rather than being
+      // mistaken for stale values whenever the grid has a default title tone.
+      const titleToneOverrideIsActive = settings.titleToneOverride === true
+        || String(settings.titleToneOverride || '').trim().toLowerCase() === 'true';
+      const cardTitleHighlights = titleToneOverrideIsActive && !cardTitleClassName
         ? []
         : parseTextHighlights(settings[`card${slot}TitleHighlightsJson`]);
       const cardBodySource = String(settings[`card${slot}Body`] || '').trim();
@@ -2852,6 +2911,7 @@ export function buildDynamicGridFromBlock(block) {
     cardOutlineTone,
     cardOutlineWidth,
     cardShadow,
+    cardShadowOpacity,
     titleTone,
     bodyTone,
     subheadTone,
@@ -2859,6 +2919,7 @@ export function buildDynamicGridFromBlock(block) {
     cardTitleSizeRem,
     cardTitleLineHeight,
     cardTitleJustify,
+    cardTitleBodySpaceRem,
     numberPositionPercent,
     cardBodySizeRem,
     cardBulletSize,
@@ -2874,6 +2935,7 @@ export function buildDynamicGridFromBlock(block) {
     headerCardsSpaceRem,
     headerWidthPercent,
     subheadSizeRem,
+    subtitleJustify,
     headerSizeRem,
     cardHoverScale,
     actions: sectionAction ? [sectionAction] : [],

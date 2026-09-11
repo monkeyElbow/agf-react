@@ -23,6 +23,7 @@ describe('card-grid editor wiring', () => {
     expect(headerSource).toContain('admin-card-grid-header-editor-columns');
     expect(headerSource).toContain('headerControlFields');
     expect(headerSource).toContain('baseColorClassName={normalizeSemanticTextColorClass(settings.subtitleClassName)}');
+    expect(headerSource).toContain('showAlignmentControls={false}');
     expect(headerSource).toContain("onBaseColorChange={(nextValue) => onSettingChange('subtitleClassName', nextValue)}");
     expect(headerSource).toContain('previewWrapClassName={`is-bg-${gridBgTone}`}');
     expect(headerSource).toContain("className={`is-bg-${gridBgTone}${subheadSizeRem !== null ? ' is-subhead-sized' : ''}`}");
@@ -39,7 +40,9 @@ describe('card-grid editor wiring', () => {
     expect(gridSource.indexOf('typographyFieldColumns.map', layoutPageStart)).toBeLessThan(appearancePageStart);
     expect(gridSource.slice(layoutPageStart, appearancePageStart)).not.toContain('admin-billboard-editor-panel-index');
     expect(gridSource).toContain('backgroundEffectsJson={settings.backgroundEffectsJson}');
-    expect(gridSource).toContain('const headerControlFields = [headerSizeField, headerWidthField, subheadSizeField, ...spacingFields].filter(Boolean);');
+    expect(gridSource).toContain('const subheadJustifyField = fieldById.get(\'subtitleJustify\') || null;');
+    expect(gridSource).toContain('const headerControlFields = [headerSizeField, headerWidthField, subheadSizeField, subheadJustifyField, ...spacingFields]');
+    expect(gridSource).toContain('.filter(Boolean)');
     expect(gridSource).not.toContain('admin-card-grid-hud-group--spacing');
     const frontHudCssSource = readFileSync(path.resolve(__dirname, '../styles/front-hud.css'), 'utf8');
     expect(hostSource).toContain("  'card_grid',");
@@ -69,6 +72,9 @@ describe('card-grid editor wiring', () => {
     expect(definitionSource).toContain('step: 0.05');
     expect(definitionSource).toContain("id: 'headerSizeRem'");
     expect(definitionSource).toContain("label: 'Header size (rem)'");
+    expect(definitionSource).toContain("id: 'subtitleJustify'");
+    expect(definitionSource).toContain("label: 'Grid subhead justify'");
+    expect(editorSource).toContain("const isSubheadJustify = field.id === 'subtitleJustify';");
   });
 
   it('exposes header width and separates header-to-subhead from post-subhead spacing', () => {
@@ -88,6 +94,10 @@ describe('card-grid editor wiring', () => {
     expect(nativeCssSource).toContain('width: var(--dynamic-grid-header-width, auto);');
     expect(nativeCssSource).toContain('max-width: var(--dynamic-grid-header-width, 86ch);');
     expect(nativeCssSource).toContain('margin-top: var(--dynamic-grid-header-cards-space, 0);');
+    expect(nativeCssSource).toContain('margin-top: var(--dynamic-grid-header-cards-space, clamp(2rem, 4vw, 3rem));');
+    expect(nativeCssSource).toContain('margin-top: var(--dynamic-grid-header-cards-space, clamp(2.4rem, 4.8vw, 3.6rem));');
+    expect(rendererSource).toContain("'--dynamic-grid-subhead-justify'");
+    expect(nativeCssSource).toContain('text-align: var(--dynamic-grid-subhead-justify, center) !important;');
   });
 
   it('exposes block-level card-title line height as a slider', () => {
@@ -105,6 +115,8 @@ describe('card-grid editor wiring', () => {
     expect(definitionSource).toContain("label: 'Card title justify'");
     expect(definitionSource).toContain("id: 'cardBodyJustify'");
     expect(definitionSource).toContain("label: 'Card body justify'");
+    expect(definitionSource).toContain("id: 'cardTitleBodySpaceRem'");
+    expect(definitionSource).toContain("label: 'Title-to-body space'");
     expect(editorSource).toContain("fieldById.get('cardTitleJustify')");
     expect(editorSource).toContain("fieldById.get('cardBodyJustify')");
     expect(editorSource).toContain("field.type === 'select' ? 'select' : 'range'");
@@ -112,11 +124,16 @@ describe('card-grid editor wiring', () => {
     expect(rendererSource).toContain("'--dynamic-grid-card-title-justify'");
     expect(rendererSource).toContain("'--dynamic-grid-card-title-justify-content'");
     expect(rendererSource).toContain("'--dynamic-grid-card-body-justify'");
+    expect(rendererSource).toContain("'--dynamic-grid-card-title-body-space'");
     const nativeCssSource = readFileSync(path.resolve(__dirname, '../styles/service-native.css'), 'utf8');
     expect(nativeCssSource).toContain('text-align: var(--dynamic-grid-card-title-justify, center) !important;');
     expect(nativeCssSource).toContain('justify-content: var(--dynamic-grid-card-title-justify-content, center) !important;');
     expect(nativeCssSource).toContain('text-align: var(--dynamic-grid-card-body-justify, left) !important;');
+    expect(nativeCssSource).toContain('margin: 0 0 var(--dynamic-grid-card-title-body-space, 1rem);');
     expect(nativeCssSource).toContain('.service-native-card-flow > :is(');
+    expect(nativeCssSource).toContain(
+      '.service-native-section.loans-native-options .service-native-card-flow > :is(\n  p:not(.service-native-card-subtitle):not(.service-native-card-phone):not(.service-native-card-fineprint),',
+    );
     const adminCssSource = readFileSync(path.resolve(__dirname, '../styles/admin.css'), 'utf8');
     expect(adminCssSource).toContain('.admin-justify-pill-control');
     expect(adminCssSource).toContain('height: 1.625rem;');
@@ -176,6 +193,9 @@ describe('card-grid editor wiring', () => {
     expect(definitionSource).toContain("id: 'cardOutline'");
     expect(definitionSource).toContain("label: 'Card outline'");
     expect(definitionSource).toContain("type: 'outline_mode'");
+    expect(editorSource).toContain("const isBinaryOutlineToggle = field.id === 'cardOutline';");
+    expect(editorSource).toContain("[['off', 'Off', false], ['on', 'On', true]]");
+    expect(editorSource).toContain("naturalOutlineEnabled");
     expect(definitionSource).toContain("id: 'cardOutlineTone'");
     expect(definitionSource).toContain("label: 'Border color'");
     expect(definitionSource).toContain("value: 'alternating'");
@@ -184,10 +204,17 @@ describe('card-grid editor wiring', () => {
     expect(editorSource).toContain("field.id !== 'cardOutlineTone'");
     expect(definitionSource).toContain("id: 'cardShadow'");
     expect(definitionSource).toContain("label: 'Card shadow'");
+    expect(definitionSource).toContain("id: 'cardShadowOpacity'");
+    expect(definitionSource).toContain("label: 'Card shadow opacity'");
     expect(editorSource).toContain("allowedLayoutFieldIds.add('cardOutline')");
     expect(editorSource).toContain("allowedLayoutFieldIds.add('cardShadow')");
+    expect(editorSource).toContain("allowedLayoutFieldIds.add('cardShadowOpacity')");
+    expect(editorSource).toContain("cardShadowIsOn ? fieldById.get('cardShadowOpacity') : null");
     expect(editorSource).toContain("const cardOutlineIsOff = settings.cardOutline === false");
-    expect(editorSource).toContain("disabled: cardOutlineIsOff");
+    expect(editorSource).toContain("['none', 'borderless-shadow'].includes(normalizedCardStyle)");
+    expect(editorSource).toContain("const resolvedMode = mode === 'default' && isBinaryOutlineToggle");
+    expect(editorSource).toContain("const cardOutlineToneField = !cardOutlineIsOff && cardOutlineToneFieldBase");
+    expect(editorSource).toContain("const cardOutlineWidthField = !cardOutlineIsOff && cardOutlineWidthFieldBase");
     expect(editorSource).toContain('const handleGridLayoutChange = (fieldId, nextValue) =>');
     expect(editorSource).toContain("if (fieldId === 'cardOutlineWidth')");
     expect(editorSource).toContain("onSettingChange('cardOutline', true)");
@@ -196,17 +223,23 @@ describe('card-grid editor wiring', () => {
     expect(adminCssSource).toContain("label[data-editor-field-id='cardShadow'] {\n  grid-column: 1;\n  grid-row: 5;");
     const frontHudCssSource = readFileSync(path.resolve(__dirname, '../styles/front-hud.css'), 'utf8');
     expect(frontHudCssSource).not.toContain("label[data-editor-field-id='cardShadow'] {\n  grid-column: 1;\n  grid-row: 5;");
+    expect(frontHudCssSource).toContain('grid-template-columns: minmax(max-content, 1fr) minmax(0, 2fr);');
+    expect(frontHudCssSource).toContain('container-type: inline-size;');
+    expect(frontHudCssSource).toContain('@container (max-width: 31rem)');
+    expect(frontHudCssSource).toContain(".admin-range-number-control > input[type='text']");
     const rendererSource = readFileSync(path.resolve(__dirname, './NativeContentPage.jsx'), 'utf8');
     const nativeCssSource = readFileSync(path.resolve(__dirname, '../styles/service-native.css'), 'utf8');
     expect(rendererSource).toContain("cardOutline === true ? ' is-card-outline' : ''");
     expect(rendererSource).toContain("is-card-outline-${cardOutlineTone}");
     expect(rendererSource).toContain("--dynamic-grid-card-outline-width");
     expect(rendererSource).toContain("cardShadow === true ? ' is-card-shadow' : ''");
+    expect(rendererSource).toContain("--dynamic-grid-card-shadow-opacity");
     expect(nativeCssSource).toContain('.is-card-outline .service-native-card');
     expect(nativeCssSource).toContain('.is-card-outline.is-card-outline-mango');
     expect(nativeCssSource).toContain('.is-card-outline.is-card-outline-alternating');
     expect(nativeCssSource).toContain('--dynamic-grid-card-outline-three');
     expect(nativeCssSource).toContain('var(--dynamic-grid-card-outline-width, 1.5px)');
     expect(nativeCssSource).toContain('.is-card-shadow .service-native-card');
+    expect(nativeCssSource).toContain('var(--dynamic-grid-card-shadow-opacity, 0.14)');
   });
 });

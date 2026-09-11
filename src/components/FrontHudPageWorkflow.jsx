@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import '../styles/front-hud.css';
 import { useContentAdmin } from '../context/ContentAdminContextCore';
 import { useFrontHud } from '../context/FrontHudContext';
+import { getBlockOwnershipVisual } from './BlockOwnershipOverlay';
 import { PUBLISH_STATUS } from '../lib/contentAdminPublishing';
 
 const HUD_WORKFLOW_SETTLED_STATUS_DELAY_MS = 1400;
@@ -179,10 +180,25 @@ export default function FrontHudPageWorkflow({
     resetBlockToSavedDraft = () => ({ ok: false }),
     publishSharedPageNow = async () => ({ ok: false }),
     publishSharedBlockNow = async () => ({ ok: false }),
+    getBlockCollaboration = () => null,
+    devIdentity = null,
+    setActiveBlockLock = null,
   } = useContentAdmin() || {};
   const { revealToken = 0, setEnabled: setFrontHudEnabled = null } = useFrontHud() || {};
   const normalizedPath = String(pathname || '').trim();
   const normalizedBlockId = String(blockId || '').trim();
+  const contextOwnership = normalizedPath && normalizedBlockId
+    ? getBlockOwnershipVisual(
+      getBlockCollaboration(normalizedPath, normalizedBlockId),
+      devIdentity?.userId,
+    )
+    : null;
+  const resolvedOwnership = ownership || contextOwnership;
+  const resolvedOwnershipAction = typeof onOwnershipAction === 'function'
+    ? onOwnershipAction
+    : normalizedPath && normalizedBlockId && typeof setActiveBlockLock === 'function'
+      ? () => setActiveBlockLock(normalizedPath, normalizedBlockId, { force: true })
+      : null;
   const contextBlock = normalizedPath && normalizedBlockId && Array.isArray(blocksByPath?.[normalizedPath])
     ? blocksByPath[normalizedPath].find((block) => String(block?.id || '').trim() === normalizedBlockId)
     : null;
@@ -429,8 +445,8 @@ export default function FrontHudPageWorkflow({
   const hasForeignBlockOwnership = Boolean(
     normalizedBlockId
     && (
-      ownership?.isOwnedByOther
-      || ['editing-other', 'drafted-other'].includes(String(ownership?.state || '').trim())
+      resolvedOwnership?.isOwnedByOther
+      || ['editing-other', 'drafted-other'].includes(String(resolvedOwnership?.state || '').trim())
       || workflowActivity?.otherActorBlocks?.some((entry) => entry?.blockId === normalizedBlockId)
     ),
   );
@@ -573,12 +589,12 @@ export default function FrontHudPageWorkflow({
         : 'This page is already live.';
 
   const canTakeOver = Boolean(
-    typeof onOwnershipAction === 'function'
-    && (ownership?.isOwnedByOther
-      || ownership?.state === 'editing-other'
-      || ownership?.state === 'drafted-other'),
+    typeof resolvedOwnershipAction === 'function'
+    && (resolvedOwnership?.isOwnedByOther
+      || resolvedOwnership?.state === 'editing-other'
+      || resolvedOwnership?.state === 'drafted-other'),
   );
-  const takeOverLabel = ownership?.state === 'drafted-other' ? 'Take over draft' : 'Take over edit';
+  const takeOverLabel = resolvedOwnership?.state === 'drafted-other' ? 'Take over draft' : 'Take over edit';
 
   const handleTakeOver = async () => {
     if (!canTakeOver || isTakingOver) {
@@ -587,7 +603,7 @@ export default function FrontHudPageWorkflow({
     setIsTakingOver(true);
     setSaveError('');
     try {
-      const result = await onOwnershipAction();
+      const result = await resolvedOwnershipAction();
       const settledResult = result?.pending && typeof result.pending.then === 'function'
         ? await result.pending
         : result;

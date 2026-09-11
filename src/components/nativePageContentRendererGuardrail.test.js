@@ -33,8 +33,8 @@ describe('native page content renderer guardrail', () => {
     const source = readSource('./NativeContentPage.jsx');
     const compositionSource = readSource('../lib/managedPageComposition.js');
 
-    expect(source).toContain('buildDynamicPageContentFromBlock,');
-    expect(source).toContain('const runtime = buildDynamicPageContentFromBlock(block);');
+    expect(source).toContain("import { buildCanonicalBlockRuntime } from '../blocks/registry';");
+    expect(source).toContain('const runtime = buildCanonicalBlockRuntime(block);');
     expect(source).toContain('blockKind === CALCULATOR_WIDGET_KIND');
     expect(source).toContain('blockKind === CALCULATOR_INTRO_KIND');
     expect(source).toContain("'native-dynamic-calculator-intro'");
@@ -84,8 +84,7 @@ describe('native page content renderer guardrail', () => {
     const source = readSource('./NativeContentPage.jsx');
     const compositionSource = readSource('../lib/managedPageComposition.js');
 
-    expect(source).toContain('buildDynamicSiteFeatureFromBlock,');
-    expect(source).toContain('const runtime = buildDynamicSiteFeatureFromBlock(block);');
+    expect(source).toContain('const runtime = buildCanonicalBlockRuntime(block);');
     expect(source).toContain('className: [');
     expect(source).toContain("pathname === '/test' ? 'test-dynamic-site-feature' : 'native-dynamic-site-feature'");
     expect(source).toContain('runtime.sectionClassName');
@@ -98,8 +97,7 @@ describe('native page content renderer guardrail', () => {
     const source = readSource('./NativeContentPage.jsx');
     const compositionSource = readSource('../lib/managedPageComposition.js');
 
-    expect(source).toContain('buildDynamicFeaturePanelFromBlock,');
-    expect(source).toContain('const runtime = buildDynamicFeaturePanelFromBlock(block);');
+    expect(source).toContain('const runtime = buildCanonicalBlockRuntime(block);');
     expect(source).toContain("className: `${pathname === '/test' ? 'test-dynamic-feature-panel' : 'native-dynamic-feature-panel'} service-native-feature-panel${runtime.sectionClassName ? ` ${runtime.sectionClassName}` : ''}`");
     expect(source).toContain("if (renderBlock.kind === 'feature_panel') {");
     expect(source).toContain('buildDynamicFeaturePanelSection(renderBlock, pathname);');
@@ -114,6 +112,8 @@ describe('native page content renderer guardrail', () => {
     expect(source).toContain("const isValueCardsFeatureSection = cardsPresetToken === 'value-cards';");
     expect(source).toContain("root.querySelectorAll('.service-native-section.is-cards-preset-value-cards')");
     expect(source).toContain("setupInvestmentsGrowthRevealMotion(node, { includeBackgroundMotion: false })");
+    expect(source).toContain('const valueCardsRevealSignature = sectionList');
+    expect(source).toContain('}, [activePath, valueCardsRevealSignature]);');
     expect(source).toContain("is-cards-preset-${cardsPresetToken}");
     expect(source).not.toContain("sectionClassName.includes('about-native-strategy')");
   });
@@ -184,14 +184,14 @@ describe('native page content renderer guardrail', () => {
     expect(cssSource).toContain('font-size: var(--dynamic-grid-card-title-size, clamp(1.68rem, 2.45vw, 2.14rem));');
     expect(cssSource).toContain('min-height: 0 !important;');
     expect(cssSource).toContain('align-items: flex-start !important;');
-    expect(cssSource).toContain('line-height: 0.9 !important;');
+    expect(cssSource).toContain('line-height: var(--dynamic-grid-card-title-line-height, 0.9) !important;');
     expect(cssSource).toContain('.service-native-section.native-dynamic-grid.retirement-403b-native-enroll,');
     expect(cssSource).toContain('.service-native-section.test-dynamic-grid.retirement-403b-native-enroll {');
     expect(cssSource).toContain('padding-bottom: clamp(6.9rem, 10.6vw, 9rem);');
     expect(cssSource).toContain('.service-native-section.native-dynamic-grid.retirement-403b-native-enroll .service-native-card h3,');
     expect(cssSource).toContain('.service-native-section.test-dynamic-grid.retirement-403b-native-enroll .service-native-card h3 {');
     expect(cssSource).toContain('font-size: var(--dynamic-grid-card-title-size, clamp(1.68rem, 2.45vw, 2.14rem)) !important;');
-    expect(cssSource).toContain('line-height: 0.9 !important;');
+    expect(cssSource).toContain('line-height: var(--dynamic-grid-card-title-line-height, 0.94) !important;');
     expect(cssSource).toContain('letter-spacing: -0.035em;');
   });
 

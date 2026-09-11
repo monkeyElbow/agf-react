@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 import { getBlockOwnershipVisual, isForeignOwnedBlockOwnership } from '../components/BlockOwnershipOverlay';
 import BlockSurfaceLayers from '../components/BlockSurfaceLayers';
 import FrontHudAnchorTag from '../components/FrontHudAnchorTag';
+import FrontHudDock from '../components/FrontHudDock';
 import PageBlocksRenderer from '../components/blocks/PageBlocksRenderer';
 import { inspectDynamicHeroSettings } from '../lib/dynamicHeroSettings';
 import { useContentAdmin } from '../context/ContentAdminContextCore';
@@ -54,15 +55,10 @@ import {
   replaceHeroLineColorClass,
 } from '../lib/heroHudRanges';
 import { applyTextColorSelection } from '../lib/textColorSelection';
+import { buildCanonicalBlockRuntime } from '../blocks/registry';
 import { logHeroDriftWarningOnce } from '../lib/heroDriftWarnings';
 import {
   actionButtonClassName,
-  buildDynamicCalculatorCtaFromBlock,
-  buildDynamicFeaturePanelFromBlock,
-  buildDynamicGridFromBlock,
-  buildDynamicHeroFromBlock,
-  buildDynamicIntroFromBlock,
-  buildDynamicRatesFromBlock,
   heroAnimationClassForLine,
   isExternalLinkHref,
   renderTextWithHighlights,
@@ -219,7 +215,7 @@ function resolveInvestmentCertificateCards(block) {
   const sourceBlock = block?.mode === 'dynamic' && block?.kind === 'card_grid'
     ? block
     : DEFAULT_CERTIFICATES_BLOCK;
-  const runtime = buildDynamicGridFromBlock(sourceBlock) || buildDynamicGridFromBlock(DEFAULT_CERTIFICATES_BLOCK);
+  const runtime = buildCanonicalBlockRuntime(sourceBlock) || buildCanonicalBlockRuntime(DEFAULT_CERTIFICATES_BLOCK);
   const settings = sourceBlock.settings || DEFAULT_CERTIFICATES_BLOCK.settings;
 
   return (runtime?.cards || []).map((card, index) => {
@@ -862,6 +858,11 @@ export default function InvestmentsPage() {
     registerExternalDraftFlushHandler = null,
     registerExternalDraftStatusHandler = null,
   } = useContentAdmin();
+  const clearActiveBlockLockRef = useRef(clearActiveBlockLock);
+
+  useEffect(() => {
+    clearActiveBlockLockRef.current = clearActiveBlockLock;
+  }, [clearActiveBlockLock]);
   const {
     enabled: frontHudEnabled,
     opacity: frontHudOpacity,
@@ -928,6 +929,8 @@ export default function InvestmentsPage() {
   });
   const [ladderDiscussMessage, setLadderDiscussMessage] = useState('');
   const [hudDockCollapsed, setHudDockCollapsed] = useState(true);
+  const [hudDockIconsOnly, setHudDockIconsOnly] = useState(false);
+  const [hudDockHoverLabel, setHudDockHoverLabel] = useState(null);
   const [activeHudPanelId, setActiveHudPanelId] = useState('');
   const [heroSelection, setHeroSelection] = useState({
     line: '',
@@ -1048,7 +1051,7 @@ export default function InvestmentsPage() {
     if (!introBlock) {
       return null;
     }
-    return buildDynamicIntroFromBlock({
+    return buildCanonicalBlockRuntime({
       ...introBlock,
       settings: introHudSettings,
     });
@@ -1066,7 +1069,7 @@ export default function InvestmentsPage() {
     if (!heroBlock) {
       return null;
     }
-    return buildDynamicHeroFromBlock({
+    return buildCanonicalBlockRuntime({
       ...heroBlock,
       settings: {
         ...heroHudSettings,
@@ -1115,7 +1118,7 @@ export default function InvestmentsPage() {
         to: CHURCH_CASH_RESERVES_ARTICLE_FEATURE.to,
       });
     }
-    return buildDynamicFeaturePanelFromBlock({
+    return buildCanonicalBlockRuntime({
       ...featurePanelBlock,
       settings: normalizedSettings,
     });
@@ -1137,11 +1140,11 @@ export default function InvestmentsPage() {
     }
   ), [ctaFormBlock, ctaFormBlockIsHidden]);
   const ratesRuntime = useMemo(
-    () => (ratesBlockIsHidden ? null : buildDynamicRatesFromBlock(ratesBlock || DEFAULT_CERTIFICATES_RATES_BLOCK)),
+    () => (ratesBlockIsHidden ? null : buildCanonicalBlockRuntime(ratesBlock || DEFAULT_CERTIFICATES_RATES_BLOCK)),
     [ratesBlock, ratesBlockIsHidden],
   );
   const calculatorCtaRuntime = useMemo(
-    () => (calculatorCtaBlockIsHidden ? null : buildDynamicCalculatorCtaFromBlock(calculatorCtaBlock || DEFAULT_LADDERING_BLOCK)),
+    () => (calculatorCtaBlockIsHidden ? null : buildCanonicalBlockRuntime(calculatorCtaBlock || DEFAULT_LADDERING_BLOCK)),
     [calculatorCtaBlock, calculatorCtaBlockIsHidden],
   );
   const heroHudLineHeight = Number.isFinite(Number(heroHudSettings.lineHeight))
@@ -1322,6 +1325,8 @@ export default function InvestmentsPage() {
     if (!showFrontHud) {
       setHudDockCollapsed(true);
       setActiveHudPanelId('');
+      setHudDockIconsOnly(false);
+      setHudDockHoverLabel(null);
     }
   }, [showFrontHud]);
 
@@ -1347,6 +1352,8 @@ export default function InvestmentsPage() {
   const setHudPanelOpen = (panelId, sectionRef, options = {}) => {
     const shouldScroll = options.scrollToTarget !== false;
     setHudDockCollapsed(false);
+    setHudDockIconsOnly(true);
+    setHudDockHoverLabel(null);
     setActiveHudPanelId(panelId);
     if (shouldScroll) {
       scrollElementWithNavOffset(sectionRef?.current);
@@ -1354,6 +1361,8 @@ export default function InvestmentsPage() {
   };
   const openHudPanelBySelector = (panelId, anchorSelector) => {
     setHudDockCollapsed(false);
+    setHudDockIconsOnly(true);
+    setHudDockHoverLabel(null);
     setActiveHudPanelId(panelId);
     scrollToSelector(anchorSelector);
   };
@@ -1370,15 +1379,21 @@ export default function InvestmentsPage() {
   const closeHudDock = () => {
     setHudDockCollapsed(true);
     setActiveHudPanelId('');
+    setHudDockHoverLabel(null);
     setFrontHudEnabled?.(false);
+  };
+  const closeHudPanel = () => {
+    setHudDockCollapsed(false);
+    setActiveHudPanelId('');
+    setHudDockHoverLabel(null);
   };
 
   useEffect(() => () => {
     const activeHudBlockId = String(activeHudPanel?.block?.id || '').trim();
     if (activeHudBlockId) {
-      clearActiveBlockLock('/services/investments', activeHudBlockId);
+      clearActiveBlockLockRef.current('/services/investments', activeHudBlockId);
     }
-  }, [activeHudPanel?.block?.id, clearActiveBlockLock]);
+  }, [activeHudPanel?.block?.id]);
   const renderHudAnchor = (blockId) => {
     if (!showFrontHud) {
       return null;
@@ -1940,36 +1955,26 @@ export default function InvestmentsPage() {
       className={`service-native-page investments-native-page${showFrontHud ? ' is-front-hud-docked admin-front-hud-scope' : ''}${hasOpenHudPanel ? ' has-active-front-hud-panel' : ''}`}
     >
       {showFrontHud ? (
-        <aside className={`admin-front-hud-dock${hudDockCollapsed ? ' is-collapsed' : ''}`} aria-label="Front HUD editor panels">
-          <div className={`admin-front-hud-dock-tabs${isDockDragging ? ' is-drag-active' : ''}`}>
-            {orderedHudPanels.map((panel) => (
-              <button
-                key={panel.id}
-                type="button"
-                className={`admin-front-hud-dock-tab${panel.isHidden ? ' is-hidden-block' : ''}${!hudDockCollapsed && activeHudPanel?.id === panel.id ? ' is-active' : ''}${isPanelDragging(panel.id) ? ' is-dragging' : ''}${isPanelDragOver(panel.id) ? ' is-drag-over' : ''}${getPanelDropPosition(panel.id) ? ` is-drop-${getPanelDropPosition(panel.id)}` : ''}`}
-                onClick={() => toggleHudPanel(panel.id, panel.sectionRef)}
-                aria-label={`Edit ${panel.label}${panel.isHidden ? ' (hidden from visitors)' : ''}`}
-                title={`Edit ${panel.label}${panel.isHidden ? ' — hidden from visitors' : ''}`}
-                {...getDockTabDragProps(panel.id)}
-              >
-                <img src={panel.icon} alt="" aria-hidden="true" className="admin-front-hud-dock-tab-icon" />
-                <span className="admin-front-hud-dock-tab-label">{panel.label}</span>
-                {panel.isHidden ? <span className="admin-front-hud-dock-tab-hidden-marker" aria-hidden="true">Hidden</span> : null}
-              </button>
-            ))}
-          </div>
-          <div className="admin-front-hud-dock-actions">
-            <button
-              type="button"
-              className="admin-front-hud-dock-collapse"
-              onClick={() => setHudDockCollapsed((current) => !current)}
-              aria-label={hudDockCollapsed ? 'Show panels' : 'Hide panels'}
-              title={hudDockCollapsed ? 'Show panels' : 'Hide panels'}
-            >
-              {hudDockCollapsed ? '▢' : '×'}
-            </button>
-          </div>
-        </aside>
+        <FrontHudDock
+          panels={orderedHudPanels}
+          activePanelId={activeHudPanelId}
+          isCollapsed={hudDockCollapsed}
+          isIconsOnly={hudDockIconsOnly}
+          isDockDragging={isDockDragging}
+          style={{ '--ag-admin-front-hud-opacity': String(frontHudOpacityRatio) }}
+          panelAriaLabelPrefix="Edit "
+          getPanelTitle={(panel) => `Edit ${panel.label}${panel.isHidden ? ' — hidden from visitors' : ''}`}
+          onPanelOpen={(panel) => openHudPanelBySelector(panel.id, panel.sectionRef)}
+          onPanelClose={closeHudPanel}
+          onToggleIconsOnly={() => setHudDockIconsOnly((current) => !current)}
+          onClose={closeHudDock}
+          getDockTabDragProps={getDockTabDragProps}
+          isPanelDragging={isPanelDragging}
+          isPanelDragOver={isPanelDragOver}
+          getPanelDropPosition={getPanelDropPosition}
+          onDockHoverLabelChange={setHudDockHoverLabel}
+          dockHoverLabel={hudDockHoverLabel}
+        />
       ) : null}
       <Suspense fallback={null}>
         <FrontHudPageWorkflow pathname="/services/investments" reviewHref="/admin/content?page=%2Fservices%2Finvestments" placement="bar" isVisible={showFrontHud} />
@@ -1985,9 +1990,9 @@ export default function InvestmentsPage() {
               if (!activeHudPanel?.block?.id) {
                 return;
               }
-              setActiveBlockLock('/services/investments', activeHudPanel.block.id, { force: true });
+              return setActiveBlockLock('/services/investments', activeHudPanel.block.id, { force: true });
             }}
-            onClose={closeHudDock}
+            onClose={closeHudPanel}
             style={{ '--ag-admin-front-hud-opacity': String(frontHudOpacityRatio) }}
           >
             <FrontHudPageWorkflow
@@ -1997,8 +2002,15 @@ export default function InvestmentsPage() {
             showBlockDiscardAction
             blockId={activeHudPanel.block.id}
             block={activeHudPanel.block}
-              blockLabel={activeHudPanel.label}
-              onDoneEditing={closeHudDock}
+            blockLabel={activeHudPanel.label}
+            ownership={getOwnershipVisualForBlockId(activeHudPanel.block.id)}
+            onOwnershipAction={() => {
+              if (!activeHudPanel?.block?.id) {
+                return;
+              }
+              return setActiveBlockLock('/services/investments', activeHudPanel.block.id, { force: true });
+            }}
+            onDoneEditing={closeHudDock}
             />
             <BlockHudPanelHost
               block={activeHudPanel.block}
@@ -2010,7 +2022,7 @@ export default function InvestmentsPage() {
                 if (!activeHudPanel?.block?.id) {
                   return;
                 }
-                setActiveBlockLock('/services/investments', activeHudPanel.block.id, { force: true });
+                return setActiveBlockLock('/services/investments', activeHudPanel.block.id, { force: true });
               }}
               onSettingChange={(settingKey, nextValue) => stageLocalBlockSetting(activeHudPanel.block.id, settingKey, nextValue)}
             />

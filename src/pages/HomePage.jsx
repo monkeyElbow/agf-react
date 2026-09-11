@@ -3,6 +3,7 @@ import '../styles/home-native.css';
 import '../styles/home-service-public.css';
 import { Link, useLocation } from 'react-router-dom';
 import { getBlockOwnershipVisual, isForeignOwnedBlockOwnership } from '../components/BlockOwnershipOverlay';
+import FrontHudDock from '../components/FrontHudDock';
 import { normalizeCtaHudSubmitStyle, normalizeCtaHudSubmitTone } from '../lib/ctaHudSettings';
 import PageBlocksRenderer from '../components/blocks/PageBlocksRenderer';
 import useNativeEnhancements from '../hooks/useNativeEnhancements';
@@ -157,6 +158,11 @@ export default function HomePage() {
     registerExternalDraftFlushHandler = null,
     registerExternalDraftStatusHandler = null,
   } = useContentAdmin();
+  const clearActiveBlockLockRef = useRef(clearActiveBlockLock);
+
+  useEffect(() => {
+    clearActiveBlockLockRef.current = clearActiveBlockLock;
+  }, [clearActiveBlockLock]);
   const {
     enabled: frontHudEnabled,
     opacity: frontHudOpacity,
@@ -168,6 +174,8 @@ export default function HomePage() {
   } = useManagedContentSource({ pathname: '/' });
   const [showReturnAssist, setShowReturnAssist] = useState(false);
   const [hudDockCollapsed, setHudDockCollapsed] = useState(true);
+  const [hudDockIconsOnly, setHudDockIconsOnly] = useState(false);
+  const [hudDockHoverLabel, setHudDockHoverLabel] = useState(null);
   const [activeHudPanelId, setActiveHudPanelId] = useState('');
   const [isMobileFrontHudViewport, setIsMobileFrontHudViewport] = useState(
     typeof window !== 'undefined' && typeof window.matchMedia === 'function'
@@ -382,6 +390,8 @@ export default function HomePage() {
     if (!showFrontHud) {
       setHudDockCollapsed(true);
       setActiveHudPanelId('');
+      setHudDockIconsOnly(false);
+      setHudDockHoverLabel(null);
       setMobileHudMoreOpen(false);
       setMobileHudDeleteConfirmBlockId('');
     }
@@ -451,6 +461,8 @@ export default function HomePage() {
   const setHudPanelOpen = (panelId, anchorSelector, options = {}) => {
     const shouldScroll = options.scrollToTarget !== false;
     setHudDockCollapsed(false);
+    setHudDockIconsOnly(true);
+    setHudDockHoverLabel(null);
     setActiveHudPanelId(panelId);
     if (!shouldScroll) {
       return;
@@ -478,7 +490,13 @@ export default function HomePage() {
   const closeHudDock = () => {
     setHudDockCollapsed(true);
     setActiveHudPanelId('');
+    setHudDockHoverLabel(null);
     setFrontHudEnabled?.(false);
+  };
+  const closeHudPanel = () => {
+    setHudDockCollapsed(false);
+    setActiveHudPanelId('');
+    setHudDockHoverLabel(null);
   };
   const closeMobileHudPanel = () => {
     setHudDockCollapsed(true);
@@ -486,6 +504,12 @@ export default function HomePage() {
     setMobileHudMoreOpen(false);
     setMobileHudDeleteConfirmBlockId('');
     setFrontHudEnabled?.(false);
+  };
+  const closeMobileHudEditor = () => {
+    setHudDockCollapsed(true);
+    setActiveHudPanelId('');
+    setMobileHudMoreOpen(false);
+    setMobileHudDeleteConfirmBlockId('');
   };
   const clearMobileHudSelection = () => {
     setHudDockCollapsed(true);
@@ -506,9 +530,9 @@ export default function HomePage() {
   useEffect(() => () => {
     const activeHudBlockId = String(activeHudPanel?.block?.id || '').trim();
     if (activeHudBlockId) {
-      clearActiveBlockLock('/', activeHudBlockId);
+      clearActiveBlockLockRef.current('/', activeHudBlockId);
     }
-  }, [activeHudPanel?.block?.id, clearActiveBlockLock]);
+  }, [activeHudPanel?.block?.id]);
   const handleMobilePageHudClickCapture = (event) => {
     if (!isMobileFrontHud || !showFrontHud || isMobileHudSelectionBlocked(event.target)) {
       return;
@@ -1060,38 +1084,26 @@ export default function HomePage() {
       onClickCapture={isMobileFrontHud ? handleMobilePageHudClickCapture : undefined}
     >
       {showFrontHud && !isMobileFrontHud ? (
-        <aside className={`admin-front-hud-dock${hudDockCollapsed ? ' is-collapsed' : ''}`} aria-label="Front HUD editor panels">
-          <div className={`admin-front-hud-dock-tabs${isDockDragging ? ' is-drag-active' : ''}`}>
-            {orderedHudPanels.map((panel) => (
-              <button
-                key={panel.id}
-                type="button"
-                className={`admin-front-hud-dock-tab${panel.isHidden ? ' is-hidden-block' : ''}${!hudDockCollapsed && activeHudPanel?.id === panel.id ? ' is-active' : ''}${isPanelDragging(panel.id) ? ' is-dragging' : ''}${isPanelDragOver(panel.id) ? ' is-drag-over' : ''}${getPanelDropPosition(panel.id) ? ` is-drop-${getPanelDropPosition(panel.id)}` : ''}`}
-                onClick={() => openHudPanel(panel.id, panel.anchorSelector)}
-                aria-label={`Edit ${panel.label}${panel.isHidden ? ' (hidden from visitors)' : ''}`}
-                title={`Edit ${panel.label}${panel.isHidden ? ' — hidden from visitors' : ''}`}
-                {...getDockTabDragProps(panel.id)}
-              >
-                <img src={panel.icon} alt="" aria-hidden="true" className="admin-front-hud-dock-tab-icon" />
-                <span className="admin-front-hud-dock-tab-label">{panel.label}</span>
-                {panel.isHidden ? <span className="admin-front-hud-dock-tab-hidden-marker" aria-hidden="true">Hidden</span> : null}
-              </button>
-            ))}
-          </div>
-          <div className="admin-front-hud-dock-actions">
-            {!hudDockCollapsed ? (
-              <button
-                type="button"
-                className="admin-front-hud-dock-collapse"
-                onClick={closeHudDock}
-                aria-label="Hide panels"
-                title="Hide panels"
-              >
-                ×
-              </button>
-            ) : null}
-          </div>
-        </aside>
+        <FrontHudDock
+          panels={orderedHudPanels}
+          activePanelId={activeHudPanelId}
+          isCollapsed={hudDockCollapsed}
+          isIconsOnly={hudDockIconsOnly}
+          isDockDragging={isDockDragging}
+          style={{ '--ag-admin-front-hud-opacity': String(frontHudOpacityRatio) }}
+          panelAriaLabelPrefix="Edit "
+          getPanelTitle={(panel) => `Edit ${panel.label}${panel.isHidden ? ' — hidden from visitors' : ''}`}
+          onPanelOpen={(panel) => openHudPanel(panel.id, panel.anchorSelector)}
+          onPanelClose={closeHudPanel}
+          onToggleIconsOnly={() => setHudDockIconsOnly((current) => !current)}
+          onClose={closeHudDock}
+          getDockTabDragProps={getDockTabDragProps}
+          isPanelDragging={isPanelDragging}
+          isPanelDragOver={isPanelDragOver}
+          getPanelDropPosition={getPanelDropPosition}
+          onDockHoverLabelChange={setHudDockHoverLabel}
+          dockHoverLabel={hudDockHoverLabel}
+        />
       ) : null}
       <Suspense fallback={null}>
         <FrontHudPageWorkflow pathname="/" reviewHref="/admin/content?page=%2F" placement="bar" isVisible={showFrontHud} />
@@ -1108,9 +1120,9 @@ export default function HomePage() {
               if (!activeHudPanel?.block?.id) {
                 return;
               }
-              setActiveBlockLock('/', activeHudPanel.block.id, { force: true });
+              return setActiveBlockLock('/', activeHudPanel.block.id, { force: true });
             }}
-            onClose={isMobileFrontHud ? closeMobileHudPanel : closeHudDock}
+            onClose={isMobileFrontHud ? closeMobileHudEditor : closeHudPanel}
             className={isMobileFrontHud ? 'is-mobile-sheet' : ''}
             draggable={!isMobileFrontHud}
             isMobileSheet={isMobileFrontHud}
@@ -1124,6 +1136,13 @@ export default function HomePage() {
               blockId={activeHudPanel.block.id}
               block={activeHudPanel.block}
               blockLabel={activeHudPanel.label}
+              ownership={getOwnershipVisualForBlockId(activeHudPanel.block.id)}
+              onOwnershipAction={() => {
+                if (!activeHudPanel?.block?.id) {
+                  return;
+                }
+                return setActiveBlockLock('/', activeHudPanel.block.id, { force: true });
+              }}
               onDoneEditing={isMobileFrontHud ? closeMobileHudPanel : closeHudDock}
             />
             <Suspense fallback={<BlockHudPanelLoading label={activeHudPanel.label} />}>
@@ -1136,7 +1155,7 @@ export default function HomePage() {
                   if (!activeHudPanel?.block?.id) {
                     return;
                   }
-                  setActiveBlockLock('/', activeHudPanel.block.id, { force: true });
+                  return setActiveBlockLock('/', activeHudPanel.block.id, { force: true });
                 }}
                 onSettingChange={(settingKey, nextValue) => stageLocalBlockSetting(activeHudPanel.block.id, settingKey, nextValue)}
               />

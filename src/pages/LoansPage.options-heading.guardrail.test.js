@@ -11,12 +11,26 @@ function readSource(relativePath) {
 }
 
 describe('loans options heading styles', () => {
+  it('keeps the Loans hero connected to shared headline sizing and tracking styles', () => {
+    const pageSource = readSource('./LoansPage.jsx');
+
+    expect(pageSource).toContain("import { buildHeroLineStyle, normalizeHeroLineGapEm } from '../lib/heroLineStyle';");
+    expect(pageSource).toContain('heroTitleSizeRemToRuntimeCss');
+    expect(pageSource).toContain('normalizeHeroTitleLetterSpacingEm');
+    expect(pageSource).toContain('const dynamicHeroTitleSize = heroTitleSizeRemToRuntimeCss(dynamicHero?.titleSizeRem);');
+    expect(pageSource).toContain('const dynamicHeroLetterSpacing = `${normalizeHeroTitleLetterSpacingEm(dynamicHero?.titleLetterSpacingEm)}em`;');
+    expect(pageSource).toContain('style={buildHeroLineStyle({');
+    expect(pageSource).toContain('fontSize: dynamicHeroTitleSize');
+    expect(pageSource).toContain('letterSpacing: dynamicHeroLetterSpacing');
+    expect(pageSource).toContain('lineGap: dynamicHeroLineGap');
+  });
+
   it('keeps the options heading sizing owned by scoped CSS instead of inline overrides', () => {
     const pageSource = readSource('./LoansPage.jsx');
     const cssSource = readSource('../styles/service-native.css');
 
     expect(pageSource).toContain("loanOptionsGrid.titleClassName || 'loans-native-display-heading loans-native-options-title'");
-    expect(pageSource).toContain('className="loans-native-display-heading loans-native-options-subtitle"');
+    expect(pageSource).toContain('className={`loans-native-display-heading loans-native-options-subtitle');
     expect(pageSource).toContain('className="loans-native-options-lead native-info-rich-html"');
     expect(pageSource).not.toContain("fontSize: '54.5px'");
     expect(pageSource).not.toContain("fontSize: '38.4px'");
@@ -28,16 +42,16 @@ describe('loans options heading styles', () => {
     expect(cssSource).toContain('.service-native-section.loans-native-options .loans-native-options-lead');
     expect(cssSource).toContain('--loans-native-options-title-size');
     expect(cssSource).toContain('--loans-native-options-subtitle-size');
-    expect(cssSource).toContain('grid-template-columns: repeat(4, minmax(0, 1fr));');
+    expect(cssSource).toContain('grid-template-columns: repeat(var(--dynamic-grid-columns, 4), minmax(0, 1fr));');
     expect(cssSource).toContain('.loans-native-option-card {');
-    expect(cssSource).toContain('padding: clamp(2.1rem, 3.2vw, 3rem);');
+    expect(cssSource).toContain('padding: var(--dynamic-grid-card-padding, clamp(2.1rem, 3.2vw, 3rem));');
     expect(cssSource).toContain('background: rgba(255, 255, 255, 0.96);');
     expect(cssSource).toContain('.loans-native-option-card h3 {');
-    expect(cssSource).toContain('font-size: clamp(1.68rem, 2.45vw, 2.14rem);');
-    expect(cssSource).toContain('margin: 0 0 clamp(0.95rem, 1.5vw, 1.25rem);');
-    expect(cssSource).toContain('line-height: 0.9 !important;');
+    expect(cssSource).toContain('font-size: var(--dynamic-grid-card-title-size, clamp(1.68rem, 2.45vw, 2.14rem));');
+    expect(cssSource).toContain('margin: 0 0 var(--dynamic-grid-card-title-body-space, clamp(0.95rem, 1.5vw, 1.25rem));');
+    expect(cssSource).toContain('line-height: var(--dynamic-grid-card-title-line-height, 0.9);');
     expect(cssSource).toContain('.loans-native-option-card > p {');
-    expect(cssSource).toContain('font-size: clamp(0.96rem, 0.9vw, 1.08rem);');
+    expect(cssSource).toContain('font-size: var(--dynamic-grid-card-body-size, clamp(0.96rem, 0.9vw, 1.08rem));');
     expect(cssSource).toContain('overflow-wrap: anywhere;');
     expect(cssSource).toContain('.loans-native-option-card:nth-child(4n + 1) h3,');
     expect(cssSource).toContain('.loans-native-option-card:nth-child(4n + 2) h3,');
@@ -49,5 +63,13 @@ describe('loans options heading styles', () => {
     expect(cssSource).not.toContain('min-height: var(--loans-native-option-card-min-height);');
     expect(cssSource).not.toContain('.loans-native-options-grid > .service-native-card:nth-last-child(3):nth-child(4n + 1),');
     expect(cssSource).not.toContain('grid-column: span 4;');
+  });
+
+  it('routes the primary Vision Fuel billboard through the shared billboard renderer', () => {
+    const pageSource = readSource('./LoansPage.jsx');
+
+    expect(pageSource).toContain('block={visionFuelBlock}');
+    expect(pageSource).toContain('extraSectionClassName={`loans-native-vision-fuel');
+    expect(pageSource).not.toContain('<section\n          className={`service-native-section dynamic-billboard loans-native-vision-fuel');
   });
 });

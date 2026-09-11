@@ -346,8 +346,8 @@ function ColumnSlotEditor({
         label="Enabled"
         value={enabled ? 'on' : 'off'}
         options={[
-          { value: 'on', label: 'On' },
           { value: 'off', label: 'Off' },
+          { value: 'on', label: 'On' },
         ]}
         onChange={(nextValue) => onSettingChange(`col${slot}Enabled`, nextValue === 'on')}
       />

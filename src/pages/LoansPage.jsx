@@ -12,7 +12,9 @@ import {
 } from '../components/BlockHudPanelHostLoader';
 import { getBlockOwnershipVisual } from '../components/BlockOwnershipOverlay';
 import BlockSurfaceLayers from '../components/BlockSurfaceLayers';
+import BlockBackgroundEffects from '../components/BlockBackgroundEffects';
 import FrontHudAnchorTag from '../components/FrontHudAnchorTag';
+import FrontHudDock from '../components/FrontHudDock';
 import DynamicCtaSection from '../components/DynamicCtaSection';
 import DynamicRequestFormSection from '../components/DynamicRequestFormSection';
 import ManagedBlockOrder from '../components/ManagedBlockOrder';
@@ -28,20 +30,28 @@ import useHudDockOrder from '../hooks/useHudDockOrder';
 import useLocalBlockDrafts from '../hooks/useLocalBlockDrafts';
 import { useManagedContentSource } from '../hooks/useManagedContentSource';
 import { buildHudPanelsFromBlocks } from '../lib/blockHudRegistry';
+import { buildCanonicalBlockRuntime } from '../blocks/registry';
 import { resolveTestimonialsBlockData } from '../lib/testimonials';
 import {
   actionButtonClassName,
-  buildDynamicBillboardFromBlock,
-  buildDynamicGridFromBlock,
-  buildDynamicHeroFromBlock,
-  buildDynamicIntroFromBlock,
   heroAnimationClassForLine,
   isExternalLinkHref,
   parseTextHighlights,
   renderTextWithHighlights,
 } from '../lib/dynamicPageBlocks';
+import { normalizeBackgroundEffects } from '../lib/backgroundEffects';
 import { defaultLoansCtaSettings } from '../data/ctaFormSeeds';
 import { buildDefaultLoansIntroRuntime } from '../data/loansIntroSeed';
+import { buildHeroLineStyle, normalizeHeroLineGapEm } from '../lib/heroLineStyle';
+import {
+  heroTitleSizeRemToRuntimeCss,
+  normalizeHeroTitleLetterSpacingEm,
+} from '../lib/heroTitleSize';
+import {
+  formatHudDiagnosticValue,
+  getHudInputDiagnosticKey,
+  updateHudInputDiagnostic,
+} from '../lib/hudInputDiagnostics';
 
 const LOANS_TARIFFS_ARTICLE_FEATURE = getResourceArticleFeatureConfig({
   slug: 'tariffs-timing-truth-keep-building-through-the-chaos',
@@ -70,6 +80,14 @@ const states = [
 ];
 
 const defaultLoanInquiryBodyHtml = 'First things first, whether you\'re simply curious or ready to greenlight your project: <mark>complete the inquiry form</mark>. It\'s short, sweet, and vital. The information you provide will help share your vision with your consultant.';
+
+// Some legacy Loans request-form records contain rich-text tags encoded one
+// extra time (for example, &lt;mark&gt;). Decode tag-shaped entities before the
+// shared sanitizer receives them so the front end restores the intended rich
+// text without making arbitrary HTML writable.
+function normalizeLoanInquiryRichText(value) {
+  return String(value || '').trim().replace(/&lt;(\/?[a-z][^<>]*?)&gt;/gi, '<$1>');
+}
 const DEFAULT_LOANS_INTRO = buildDefaultLoansIntroRuntime();
 const LOANS_HUD_ANCHOR_SELECTOR_BY_ID = {
   hero: '.service-native-hero',
@@ -189,9 +207,10 @@ function buildLoanInquiryConfigFromBlock(block) {
   }
   const settings = block.settings || {};
   const title = String(settings.title || '').trim() || 'Ready to grow\nwhen you are.';
+  const titleClassName = String(settings.titleClassName || '').trim();
   const titleHighlightsJson = String(settings.titleHighlightsJson || '').trim();
   const titleLines = title.split(/\n+/).map((part) => part.trim()).filter(Boolean);
-  const derivedSecondLineHighlight = !titleHighlightsJson && titleLines.length > 1
+  const derivedSecondLineHighlight = !titleHighlightsJson && !titleClassName && titleLines.length > 1
     ? JSON.stringify([
       {
         start: title.indexOf(titleLines[1]),
@@ -201,7 +220,8 @@ function buildLoanInquiryConfigFromBlock(block) {
     ])
     : titleHighlightsJson;
   const subtitle = String(settings.subtitle || '').trim();
-  const bodyHtml = String(settings.bodyHtml || '').trim() || (!subtitle.includes('<') ? '' : subtitle);
+  const bodyHtml = normalizeLoanInquiryRichText(settings.bodyHtml)
+    || (!subtitle.includes('<') ? '' : normalizeLoanInquiryRichText(subtitle));
   const steps = [1, 2, 3, 4, 5]
     .map((slot) => ({
       id: `step${slot}`,
@@ -217,10 +237,23 @@ function buildLoanInquiryConfigFromBlock(block) {
 
   return {
     title,
-    titleClassName: String(settings.titleClassName || '').trim(),
+    titleClassName,
     titleHighlightsJson: derivedSecondLineHighlight,
     subtitle: subtitle && !subtitle.includes('<') ? subtitle : '',
     bodyHtml: bodyHtml || defaultLoanInquiryBodyHtml,
+    bgTone: ['blue', 'sand', 'white', 'grey'].includes(String(settings.bgTone || '').trim().toLowerCase())
+      ? String(settings.bgTone).trim().toLowerCase()
+      : 'blue',
+    textTone: ['dark', 'white', 'blue'].includes(String(settings.textTone || '').trim().toLowerCase())
+      ? String(settings.textTone).trim().toLowerCase()
+      : 'white',
+    backgroundEffects: normalizeBackgroundEffects(settings.backgroundEffectsJson),
+    spaceBeforeRem: Number.isFinite(Number(settings.spaceBeforeRem))
+      ? Math.max(0, Math.min(8, Number(settings.spaceBeforeRem)))
+      : 0,
+    spaceAfterRem: Number.isFinite(Number(settings.spaceAfterRem))
+      ? Math.max(0, Math.min(8, Number(settings.spaceAfterRem)))
+      : 0,
     hideStepTitles: true,
     submitLabel: String(settings.submitLabel || '').trim() || 'Submit',
     successMessage: String(settings.successMessage || '').trim() || 'Your submission has been received. We\'ll be in touch shortly.',
@@ -336,7 +369,7 @@ function buildLoanVisionFuelConfigFromBlock(block) {
     return null;
   }
 
-  const dynamicBillboard = buildDynamicBillboardFromBlock(block);
+  const dynamicBillboard = buildCanonicalBlockRuntime(block);
   if (!dynamicBillboard) {
     return null;
   }
@@ -552,6 +585,11 @@ export default function LoansPage({ sectionsOnly = false }) {
     registerExternalDraftFlushHandler = null,
     registerExternalDraftStatusHandler = null,
   } = useContentAdmin();
+  const clearActiveBlockLockRef = useRef(clearActiveBlockLock);
+
+  useEffect(() => {
+    clearActiveBlockLockRef.current = clearActiveBlockLock;
+  }, [clearActiveBlockLock]);
   const {
     enabled: frontHudEnabled,
     opacity: frontHudOpacity,
@@ -591,6 +629,8 @@ export default function LoansPage({ sectionsOnly = false }) {
   const [loanPhone, setLoanPhone] = useState('');
   const [loanPhoneNote, setLoanPhoneNote] = useState('');
   const [hudDockCollapsed, setHudDockCollapsed] = useState(true);
+  const [hudDockIconsOnly, setHudDockIconsOnly] = useState(false);
+  const [hudDockHoverLabel, setHudDockHoverLabel] = useState(null);
   const [activeHudPanelId, setActiveHudPanelId] = useState('');
 
   useNativeEnhancements(pageRef);
@@ -605,6 +645,18 @@ export default function LoansPage({ sectionsOnly = false }) {
     commitBlockSettingsPatch,
     registerExternalDraftFlushHandler,
     registerExternalDraftStatusHandler,
+    onLocalDraftUpdate: ({ blockId, settingsPatch, blockChanged }) => {
+      const firstPatch = Object.entries(settingsPatch || {})[0];
+      const settingKey = firstPatch?.[0] || 'unknown';
+      updateHudInputDiagnostic(getHudInputDiagnosticKey('/services/loans', blockId), {
+        lastLocalDraftUpdate: {
+          blockChanged: Boolean(blockChanged),
+          settingKey,
+          value: formatHudDiagnosticValue(firstPatch?.[1], settingKey),
+          timestamp: new Date().toISOString(),
+        },
+      });
+    },
   });
 
   const heroBlock = useMemo(() => {
@@ -672,7 +724,100 @@ export default function LoansPage({ sectionsOnly = false }) {
     [requestFormBlock],
   );
   const loanOptionsGrid = useMemo(
-    () => buildDynamicGridFromBlock(loanOptionsBlock),
+    () => buildCanonicalBlockRuntime(loanOptionsBlock),
+    [loanOptionsBlock],
+  );
+  const loanOptionsGridStyle = useMemo(() => {
+    if (!loanOptionsGrid) {
+      return undefined;
+    }
+    const authoredSettings = loanOptionsBlock?.settings || {};
+    const hasSetting = (settingKey) => Object.prototype.hasOwnProperty.call(authoredSettings, settingKey);
+    return {
+      ...(Number.isFinite(Number(loanOptionsGrid.paddingTopRem))
+        ? { paddingTop: `${loanOptionsGrid.paddingTopRem}rem` }
+        : {}),
+      ...(Number.isFinite(Number(loanOptionsGrid.paddingBottomRem))
+        ? { paddingBottom: `${loanOptionsGrid.paddingBottomRem}rem` }
+        : {}),
+      '--dynamic-grid-card-padding': `${loanOptionsGrid.cardPaddingRem}rem`,
+      '--dynamic-grid-card-title-size': `${loanOptionsGrid.cardTitleSizeRem}rem`,
+      ...(hasSetting('cardTitleJustify')
+        ? {
+            '--dynamic-grid-card-title-justify': loanOptionsGrid.cardTitleJustify,
+            '--dynamic-grid-card-title-justify-content': loanOptionsGrid.cardTitleJustify === 'left'
+              ? 'flex-start'
+              : loanOptionsGrid.cardTitleJustify === 'right'
+                ? 'flex-end'
+                : 'center',
+          }
+        : {}),
+      ...(hasSetting('cardTitleBodySpaceRem')
+        ? { '--dynamic-grid-card-title-body-space': `${loanOptionsGrid.cardTitleBodySpaceRem}rem` }
+        : {}),
+      ...(Number.isFinite(Number(loanOptionsGrid.cardTitleLineHeight))
+        ? { '--dynamic-grid-card-title-line-height': String(loanOptionsGrid.cardTitleLineHeight) }
+        : {}),
+      '--dynamic-grid-card-outline-width': `${loanOptionsGrid.cardOutlineWidth}px`,
+      '--dynamic-grid-card-shadow-opacity': String(loanOptionsGrid.cardShadowOpacity),
+      '--dynamic-grid-card-body-size': `${loanOptionsGrid.cardBodySizeRem}rem`,
+      '--dynamic-grid-card-body-line-height': String(loanOptionsGrid.cardBodyLineHeight),
+      '--dynamic-grid-columns': {
+        one: '1',
+        two: '2',
+        three: '3',
+        four: '4',
+      }[loanOptionsGrid.columns] || '4',
+      ...(hasSetting('cardBodyJustify')
+        ? { '--dynamic-grid-card-body-justify': loanOptionsGrid.cardBodyJustify }
+        : {}),
+      ...(hasSetting('headerSubheadSpaceRem') && Number.isFinite(Number(loanOptionsGrid.headerSubheadSpaceRem))
+        ? { '--dynamic-grid-header-subhead-space': `${loanOptionsGrid.headerSubheadSpaceRem}rem` }
+        : {}),
+      ...(hasSetting('headerSizeRem') && Number.isFinite(Number(loanOptionsGrid.headerSizeRem))
+        ? { '--dynamic-grid-header-size': `${loanOptionsGrid.headerSizeRem}rem` }
+        : {}),
+      ...(hasSetting('headerWidthPercent') && Number.isFinite(Number(loanOptionsGrid.headerWidthPercent))
+        ? { '--dynamic-grid-header-width': `${loanOptionsGrid.headerWidthPercent}%` }
+        : {}),
+      ...(hasSetting('headerCardsSpaceRem') && Number.isFinite(Number(loanOptionsGrid.headerCardsSpaceRem))
+        ? { '--dynamic-grid-header-cards-space': `${loanOptionsGrid.headerCardsSpaceRem}rem` }
+        : {}),
+      ...(Number.isFinite(Number(loanOptionsGrid.subheadSizeRem))
+        ? { '--dynamic-grid-subhead-size': `${loanOptionsGrid.subheadSizeRem}rem` }
+        : {}),
+      ...(loanOptionsGrid.subtitleJustify
+        ? { '--dynamic-grid-subhead-justify': loanOptionsGrid.subtitleJustify }
+        : {}),
+      ...(Number.isFinite(Number(loanOptionsGrid.cardBulletSizeRem))
+        ? { '--planned-giving-bullet-size': `${loanOptionsGrid.cardBulletSizeRem}rem` }
+        : {}),
+      ...(Number.isFinite(Number(loanOptionsGrid.cardBulletLineHeight))
+        ? { '--planned-giving-bullet-line-height': String(loanOptionsGrid.cardBulletLineHeight) }
+        : {}),
+    };
+  }, [loanOptionsBlock, loanOptionsGrid]);
+  const loanOptionsGridClassName = [
+    loanOptionsGrid?.contentWidth ? `is-width-${loanOptionsGrid.contentWidth}` : '',
+    loanOptionsGrid?.subheadTone ? `is-subhead-${loanOptionsGrid.subheadTone}` : '',
+    loanOptionsGrid?.cardStyle ? `is-card-grid-style-${loanOptionsGrid.cardStyle}` : '',
+    loanOptionsGrid?.cardStyle === 'none' ? 'is-card-none' : '',
+    Number.isFinite(Number(loanOptionsGrid?.subheadSizeRem)) ? 'is-subhead-sized' : '',
+    Array.isArray(loanOptionsGrid?.cards) && loanOptionsGrid.cards.some((card) => (
+      (Array.isArray(card?.list) && card.list.length)
+      || /<(?:ul|ol)\b/i.test(String(card?.bodyHtml || ''))
+    )) ? 'is-card-grid-bullet-controlled' : '',
+    loanOptionsGrid?.cardOutline === true ? 'is-card-outline' : '',
+    loanOptionsGrid?.cardOutline === false ? 'is-card-outline-off' : '',
+    loanOptionsGrid?.cardOutlineTone ? `is-card-outline-${loanOptionsGrid.cardOutlineTone}` : '',
+    loanOptionsGrid?.cardShadow === true ? 'is-card-shadow' : '',
+    loanOptionsGrid?.cardShadow === false ? 'is-card-shadow-off' : '',
+    loanOptionsGrid?.titleTone ? `is-title-${loanOptionsGrid.titleTone}` : '',
+    loanOptionsGrid?.bodyTone ? `is-body-${loanOptionsGrid.bodyTone}` : '',
+    loanOptionsGrid?.bgTone ? `is-bg-${loanOptionsGrid.bgTone}` : '',
+  ].filter(Boolean).join(' ');
+  const loanOptionsBackgroundEffects = useMemo(
+    () => normalizeBackgroundEffects(loanOptionsBlock?.settings?.backgroundEffectsJson || ''),
     [loanOptionsBlock],
   );
   const renderedValueCardsBlock = useMemo(
@@ -680,35 +825,13 @@ export default function LoansPage({ sectionsOnly = false }) {
     [valueCardsBlock],
   );
   const loanOptionsBillboard = useMemo(
-    () => buildDynamicBillboardFromBlock(loanOptionsBillboardBlock),
+    () => buildCanonicalBlockRuntime(loanOptionsBillboardBlock),
     [loanOptionsBillboardBlock],
   );
   const dynamicVisionFuel = useMemo(
     () => buildLoanVisionFuelConfigFromBlock(visionFuelBlock),
     [visionFuelBlock],
   );
-  const resolvedVisionFuel = dynamicVisionFuel;
-  const visionFuelTitle = String(resolvedVisionFuel?.title || '').trim();
-  const visionFuelSubtitle = String(resolvedVisionFuel?.subtitle || '').trim();
-  const visionFuelBodyHtml = String(resolvedVisionFuel?.bodyHtml || '').trim();
-  const visionFuelBody = String(resolvedVisionFuel?.body || '').trim();
-  const visionFuelAction = resolvedVisionFuel?.action || null;
-  const visionFuelButtonLabel = String(visionFuelAction?.label || '').trim();
-  const visionFuelButtonHref = String(visionFuelAction?.to || visionFuelAction?.href || '').trim();
-  const visionFuelButtonOpenInNewWindow = Boolean(visionFuelAction?.openInNewWindow);
-  const visionFuelButtonClassName = String(resolvedVisionFuel?.buttonClassName || '').trim() || 'service-native-btn';
-  const visionFuelContentMaxWidthPx = Number(resolvedVisionFuel?.contentMaxWidthPx);
-  const visionFuelSectionStyle = visionFuelAction
-    ? { '--dynamic-billboard-padding-bottom': 'clamp(4.1rem, 8vw, 6.8rem)' }
-    : undefined;
-  const visionFuelRailStyle = Number.isFinite(visionFuelContentMaxWidthPx) && visionFuelContentMaxWidthPx > 0
-    ? { '--dynamic-billboard-max-width': `${Math.round(visionFuelContentMaxWidthPx)}px` }
-    : undefined;
-  const visionFuelCopyClassName = [
-    'native-info-section-copy',
-    `is-justify-${resolvedVisionFuel?.justify || 'center'}`,
-    resolvedVisionFuel?.copyClassName || '',
-  ].filter(Boolean).join(' ');
   const testimonialsData = useMemo(
     () => resolveTestimonialsBlockData({
       block: testimonialsBlock,
@@ -807,11 +930,16 @@ export default function LoansPage({ sectionsOnly = false }) {
     if (!showFrontHud) {
       setHudDockCollapsed(true);
       setActiveHudPanelId('');
+      setHudDockIconsOnly(false);
+      setHudDockHoverLabel(null);
     }
   }, [showFrontHud]);
 
-  const dynamicHero = useMemo(() => buildDynamicHeroFromBlock(heroBlock), [heroBlock]);
-  const dynamicIntro = useMemo(() => buildDynamicIntroFromBlock(introBlock), [introBlock]);
+  const dynamicHero = useMemo(() => buildCanonicalBlockRuntime(heroBlock), [heroBlock]);
+  const dynamicHeroTitleSize = heroTitleSizeRemToRuntimeCss(dynamicHero?.titleSizeRem);
+  const dynamicHeroLetterSpacing = `${normalizeHeroTitleLetterSpacingEm(dynamicHero?.titleLetterSpacingEm)}em`;
+  const dynamicHeroLineGap = normalizeHeroLineGapEm(dynamicHero?.lineGap);
+  const dynamicIntro = useMemo(() => buildCanonicalBlockRuntime(introBlock), [introBlock]);
   const resolvedIntro = dynamicIntro || DEFAULT_LOANS_INTRO;
 
   const canDownload = useMemo(
@@ -968,6 +1096,8 @@ export default function LoansPage({ sectionsOnly = false }) {
   const setHudPanelOpen = (panelId, anchorSelector, options = {}) => {
     const shouldScroll = options.scrollToTarget !== false;
     setHudDockCollapsed(false);
+    setHudDockIconsOnly(true);
+    setHudDockHoverLabel(null);
     setActiveHudPanelId(panelId);
     if (shouldScroll) {
       scrollToSelector(anchorSelector);
@@ -986,15 +1116,21 @@ export default function LoansPage({ sectionsOnly = false }) {
   const closeHudDock = () => {
     setHudDockCollapsed(true);
     setActiveHudPanelId('');
+    setHudDockHoverLabel(null);
     setFrontHudEnabled?.(false);
+  };
+  const closeHudPanel = () => {
+    setHudDockCollapsed(false);
+    setActiveHudPanelId('');
+    setHudDockHoverLabel(null);
   };
 
   useEffect(() => () => {
     const activeHudBlockId = String(activeHudPanel?.block?.id || '').trim();
     if (activeHudBlockId) {
-      clearActiveBlockLock('/services/loans', activeHudBlockId);
+      clearActiveBlockLockRef.current('/services/loans', activeHudBlockId);
     }
-  }, [activeHudPanel?.block?.id, clearActiveBlockLock]);
+  }, [activeHudPanel?.block?.id]);
   const resolveHudAnchor = (blockId) => {
     if (!showFrontHud) {
       return null;
@@ -1038,6 +1174,14 @@ export default function LoansPage({ sectionsOnly = false }) {
     if (!block) {
       return;
     }
+    updateHudInputDiagnostic(getHudInputDiagnosticKey('/services/loans', block.id), {
+      lastPagePatch: {
+        received: true,
+        settingKey: String(settingKey || '').trim() || 'unknown',
+        value: formatHudDiagnosticValue(settingValue, settingKey),
+        timestamp: new Date().toISOString(),
+      },
+    });
     stageLocalBlockSetting(block.id, settingKey, settingValue);
   };
   const renderAdditionalBillboardsAfter = (anchorBlockId) => {
@@ -1078,7 +1222,13 @@ export default function LoansPage({ sectionsOnly = false }) {
       );
     });
   };
-  const loanOptionsCards = Array.isArray(loanOptionsGrid?.cards) ? loanOptionsGrid.cards : [];
+  const loanOptionsCards = useMemo(() => {
+    const cards = Array.isArray(loanOptionsGrid?.cards) ? loanOptionsGrid.cards : [];
+    if (!Number.isFinite(Number(loanOptionsGrid?.cardCount)) || Number(loanOptionsGrid.cardCount) < 1) {
+      return cards;
+    }
+    return cards.filter((card) => Number(card?.slot) <= Number(loanOptionsGrid.cardCount));
+  }, [loanOptionsGrid]);
   const showLoanOptionsSection = Boolean(
     loanOptionsGrid?.title
     || loanOptionsGrid?.subtitle
@@ -1099,34 +1249,24 @@ export default function LoansPage({ sectionsOnly = false }) {
       className={`${sectionsOnly ? '' : 'service-native-page '}loans-native-page${showFrontHud ? ' is-front-hud-docked admin-front-hud-scope' : ''}${hasOpenHudPanel ? ' has-active-front-hud-panel' : ''}`}
     >
       {showFrontHud ? (
-        <aside className={`admin-front-hud-dock${hudDockCollapsed ? ' is-collapsed' : ''}`} aria-label="Front HUD editor panels">
-          <div className={`admin-front-hud-dock-tabs${isDockDragging ? ' is-drag-active' : ''}`}>
-            {orderedHudPanels.map((panel) => (
-              <button
-                key={panel.id}
-                type="button"
-                className={`admin-front-hud-dock-tab${panel.isHidden ? ' is-hidden-block' : ''}${!hudDockCollapsed && activeHudPanel?.id === panel.id ? ' is-active' : ''}${isPanelDragging(panel.id) ? ' is-dragging' : ''}${isPanelDragOver(panel.id) ? ' is-drag-over' : ''}${getPanelDropPosition(panel.id) ? ` is-drop-${getPanelDropPosition(panel.id)}` : ''}`}
-                onClick={() => toggleHudPanel(panel.id, panel.anchorSelector)}
-                {...getDockTabDragProps(panel.id)}
-              >
-                <img src={panel.icon} alt="" aria-hidden="true" className="admin-front-hud-dock-tab-icon" />
-                <span className="admin-front-hud-dock-tab-label">{panel.label}</span>
-                {panel.isHidden ? <span className="admin-front-hud-dock-tab-hidden-marker" aria-hidden="true">Hidden</span> : null}
-              </button>
-            ))}
-          </div>
-          <div className="admin-front-hud-dock-actions">
-            <button
-              type="button"
-              className="admin-front-hud-dock-collapse"
-              onClick={() => setHudDockCollapsed((current) => !current)}
-              aria-label={hudDockCollapsed ? 'Show panels' : 'Hide panels'}
-              title={hudDockCollapsed ? 'Show panels' : 'Hide panels'}
-            >
-              {hudDockCollapsed ? '▢' : '×'}
-            </button>
-          </div>
-        </aside>
+        <FrontHudDock
+          panels={orderedHudPanels}
+          activePanelId={activeHudPanel?.id}
+          isCollapsed={hudDockCollapsed}
+          isIconsOnly={hudDockIconsOnly}
+          isDockDragging={isDockDragging}
+          style={{ '--ag-admin-front-hud-opacity': String(frontHudOpacityRatio) }}
+          onPanelOpen={(panel) => setHudPanelOpen(panel.id, panel.anchorSelector)}
+          onPanelClose={closeHudPanel}
+          onToggleIconsOnly={() => setHudDockIconsOnly((current) => !current)}
+          onClose={closeHudDock}
+          getDockTabDragProps={getDockTabDragProps}
+          isPanelDragging={isPanelDragging}
+          isPanelDragOver={isPanelDragOver}
+          getPanelDropPosition={getPanelDropPosition}
+          onDockHoverLabelChange={setHudDockHoverLabel}
+          dockHoverLabel={hudDockHoverLabel}
+        />
       ) : null}
       <FrontHudPageWorkflow pathname="/services/loans" reviewHref="/admin/content?page=%2Fservices%2Floans" placement="bar" isVisible={showFrontHud} />
       {hasOpenHudPanel && activeHudPanel ? (
@@ -1139,9 +1279,9 @@ export default function LoansPage({ sectionsOnly = false }) {
             if (!activeHudPanel?.block?.id) {
               return;
             }
-            setActiveBlockLock('/services/loans', activeHudPanel.block.id, { force: true });
+            return setActiveBlockLock('/services/loans', activeHudPanel.block.id, { force: true });
           }}
-          onClose={closeHudDock}
+          onClose={closeHudPanel}
           style={{ '--ag-admin-front-hud-opacity': String(frontHudOpacityRatio) }}
         >
           <FrontHudPageWorkflow
@@ -1152,11 +1292,19 @@ export default function LoansPage({ sectionsOnly = false }) {
             blockId={activeHudPanel.block.id}
             block={activeHudPanel.block}
             blockLabel={activeHudPanel.label}
+            ownership={getOwnershipVisualForBlockId(activeHudPanel.block.id)}
+            onOwnershipAction={() => {
+              if (!activeHudPanel?.block?.id) {
+                return;
+              }
+              return setActiveBlockLock('/services/loans', activeHudPanel.block.id, { force: true });
+            }}
             onDoneEditing={closeHudDock}
           />
           <BlockHudPanelHost
             block={activeHudPanel.block}
             pathname="/services/loans"
+            activePanelId={activeHudPanel.id}
             routeOptions={routeLinkOptions}
             testimonialsLibrary={testimonialsLibrary}
             ownership={getOwnershipVisualForBlockId(activeHudPanel.block.id)}
@@ -1164,7 +1312,7 @@ export default function LoansPage({ sectionsOnly = false }) {
               if (!activeHudPanel?.block?.id) {
                 return;
               }
-              setActiveBlockLock('/services/loans', activeHudPanel.block.id, { force: true });
+              return setActiveBlockLock('/services/loans', activeHudPanel.block.id, { force: true });
             }}
             onSettingChange={(settingKey, nextValue) => updateLoansBlockSetting(activeHudPanel.block, settingKey, nextValue)}
           />
@@ -1188,9 +1336,13 @@ export default function LoansPage({ sectionsOnly = false }) {
               <h1
                 key={`loans-hero-line-${line.id || index + 1}`}
                 className={lineClassName}
-                style={{
+                style={buildHeroLineStyle({
                   lineHeight: dynamicHero.lineHeight,
-                }}
+                  fontSize: dynamicHeroTitleSize,
+                  letterSpacing: dynamicHeroLetterSpacing,
+                  lineGap: dynamicHeroLineGap,
+                  lineIndex: index,
+                })}
               >
                 <span dangerouslySetInnerHTML={{ __html: headingHtml }} />
               </h1>
@@ -1222,7 +1374,11 @@ export default function LoansPage({ sectionsOnly = false }) {
         data-block-id="intro"
         style={managedBlockOrderStyle('intro')}
       >
-        <BlockSurfaceLayers ownership={getOwnershipVisualForBlockId('intro')} hudAnchor={renderHudAnchor('intro')} />
+        <BlockSurfaceLayers
+          ownership={getOwnershipVisualForBlockId('intro')}
+          hudAnchor={renderHudAnchor('intro')}
+          backgroundEffects={<BlockBackgroundEffects effects={resolvedIntro.backgroundEffects} />}
+        />
         <div className="ag-panel-rail">
           <div
             className={`service-native-intro-copy is-justify-${resolvedIntro.justify || 'center'}`}
@@ -1236,9 +1392,13 @@ export default function LoansPage({ sectionsOnly = false }) {
               />
             </h2>
             {resolvedIntro.bodyHtml ? (
-              <SafeRichText as="div" className="native-info-rich-html" html={resolvedIntro.bodyHtml} />
+              <SafeRichText
+                as="div"
+                className={`native-info-rich-html${resolvedIntro.bodyColorClassName ? ` ${resolvedIntro.bodyColorClassName}` : ''}`}
+                html={resolvedIntro.bodyHtml}
+              />
             ) : resolvedIntro.body ? (
-              <p>{resolvedIntro.body}</p>
+              <p className={resolvedIntro.bodyColorClassName || undefined}>{resolvedIntro.body}</p>
             ) : null}
             {resolvedIntro.extraLine ? (
               <p
@@ -1249,11 +1409,11 @@ export default function LoansPage({ sectionsOnly = false }) {
               </p>
             ) : null}
             {(resolvedIntro.actions || []).length ? (
-              <div className={`service-native-action-row${(resolvedIntro.justify || 'center') === 'center' ? ' is-centered' : ''}`}>
+              <div className={`service-native-action-row${(resolvedIntro.justify || 'center') === 'center' ? ' is-centered' : ` is-${resolvedIntro.justify || 'center'}`}`}>
                 {resolvedIntro.actions.map((action) => {
                   const actionTarget = action.to || action.href || '';
                   const isInternal = Boolean(action.to || (action.href && !isExternalLinkHref(action.href) && action.href.startsWith('/')));
-                  const buttonClassName = actionButtonClassName(action.style);
+                  const buttonClassName = actionButtonClassName(action.style, action.tone);
                   return isInternal ? (
                     <Link
                       key={actionTarget}
@@ -1286,12 +1446,16 @@ export default function LoansPage({ sectionsOnly = false }) {
 
       {showLoanOptionsSection ? (
       <section
-        className={`service-native-section loans-native-options${getHudBlockStateClassName('loan_options')}${getOwnershipVisualForBlockId('loan_options').className || ''}`}
+        className={`service-native-section loans-native-options ${loanOptionsGridClassName}${getHudBlockStateClassName('loan_options')}${getOwnershipVisualForBlockId('loan_options').className || ''}`}
         id="loan-options"
         data-block-id="loan_options"
-        style={managedBlockOrderStyle('loan_options')}
+        style={{ ...managedBlockOrderStyle('loan_options'), ...loanOptionsGridStyle }}
       >
-        <BlockSurfaceLayers ownership={getOwnershipVisualForBlockId('loan_options')} hudAnchor={renderHudAnchor('loan_options')} />
+        <BlockSurfaceLayers
+          ownership={getOwnershipVisualForBlockId('loan_options')}
+          hudAnchor={renderHudAnchor('loan_options')}
+          backgroundEffects={<BlockBackgroundEffects effects={loanOptionsBackgroundEffects} />}
+        />
         <div className="ag-panel-rail-wide">
           {loanOptionsGrid?.title ? (
             <h2 className={loanOptionsGrid.titleClassName || 'loans-native-display-heading loans-native-options-title'}>
@@ -1301,7 +1465,7 @@ export default function LoansPage({ sectionsOnly = false }) {
             </h2>
           ) : null}
           {loanOptionsGrid?.subtitle ? (
-            <h3 className="loans-native-display-heading loans-native-options-subtitle">
+            <h3 className={`loans-native-display-heading loans-native-options-subtitle${loanOptionsGrid.subtitleClassName ? ` ${loanOptionsGrid.subtitleClassName}` : ''}`}>
               {loanOptionsGrid.subtitle}
             </h3>
           ) : null}
@@ -1316,14 +1480,112 @@ export default function LoansPage({ sectionsOnly = false }) {
                 <article
                   key={`loan-option-${item.slot}-${item.title}`}
                   className={['service-native-card loans-native-option-card fade-up', item.cardClass || 'card2'].filter(Boolean).join(' ')}
+                  style={{ '--dynamic-grid-card-padding': `${loanOptionsGrid.cardPaddingRem}rem` }}
                 >
-                  <h3 className={item.titleClassName || undefined}>
-                    {item.titleHighlights?.length
+                  <h3
+                    className={item.titleClassName || undefined}
+                    style={Number.isFinite(Number(loanOptionsGrid?.cardTitleLineHeight))
+                      ? { lineHeight: String(loanOptionsGrid.cardTitleLineHeight) }
+                      : undefined}
+                  >
+                    {item.titleLink?.to ? (
+                      <Link to={item.titleLink.to} target={item.titleLink.openInNewWindow ? '_blank' : undefined} rel={item.titleLink.openInNewWindow ? 'noreferrer noopener' : undefined}>
+                        {item.titleHighlights?.length
+                          ? renderHighlightedText(item.title, item.titleHighlights)
+                          : item.title}
+                      </Link>
+                    ) : item.titleLink?.href ? (
+                      <a href={item.titleLink.href} target={item.titleLink.openInNewWindow ? '_blank' : undefined} rel={item.titleLink.openInNewWindow ? 'noreferrer noopener' : undefined}>
+                        {item.titleHighlights?.length
+                          ? renderHighlightedText(item.title, item.titleHighlights)
+                          : item.title}
+                      </a>
+                    ) : item.titleHighlights?.length
                       ? renderHighlightedText(item.title, item.titleHighlights)
                       : item.title}
                   </h3>
                   {loanOptionsGrid.showTitleDivider ? <hr /> : null}
+                  <div className="service-native-card-flow">
                   {item.body ? <p>{item.body}</p> : null}
+                  {item.bodyHtml ? (
+                    <SafeRichText as="div" className="native-info-rich-html service-native-card-rich-body" html={item.bodyHtml} />
+                  ) : null}
+                  {Array.isArray(item.list) && item.list.length ? (
+                    <ul className="service-native-card-bullet-list">
+                      {item.list.map((line) => <li key={`${item.title}-${line}`}>{line}</li>)}
+                    </ul>
+                  ) : null}
+                  {Array.isArray(item.links) && item.links.length ? (
+                    <ul className="service-native-card-link-list">
+                      {item.links.map((link) => {
+                        const target = String(link?.to || link?.href || '').trim();
+                        const label = String(link?.label || target).trim();
+                        if (!target || !label) {
+                          return null;
+                        }
+                        return (
+                          <li key={`${item.title}-${label}-${target}`}>
+                            {link?.href ? (
+                              <a href={link.href} target={link.openInNewWindow ? '_blank' : undefined} rel={link.openInNewWindow ? 'noreferrer noopener' : undefined}>{label}</a>
+                            ) : (
+                              <Link to={link.to} target={link.openInNewWindow ? '_blank' : undefined} rel={link.openInNewWindow ? 'noreferrer noopener' : undefined}>{label}</Link>
+                            )}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  ) : null}
+                  {Array.isArray(item.accordions) && item.accordions.length ? (
+                    <div className="service-native-card-accordions">
+                      {item.accordions.map((accordion) => (
+                        <details key={`${item.title}-${accordion.title}`}>
+                          <summary>{accordion.title}</summary>
+                          {Array.isArray(accordion.links) && accordion.links.length ? (
+                            <ul className="service-native-card-accordion-links">
+                              {accordion.links.map((link) => {
+                                const target = String(link?.to || link?.href || '').trim();
+                                const label = String(link?.label || target).trim();
+                                if (!target || !label) {
+                                  return null;
+                                }
+                                return (
+                                  <li key={`${item.title}-${accordion.title}-${label}-${target}`}>
+                                    {link?.href ? <a href={link.href}>{label}</a> : <Link to={link.to}>{label}</Link>}
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          ) : null}
+                        </details>
+                      ))}
+                    </div>
+                  ) : null}
+                  {Array.isArray(item.fineprint) && item.fineprint.length
+                    ? item.fineprint.map((line, index) => (
+                      <p
+                        key={`${item.title}-fineprint-${index + 1}`}
+                        className="service-native-card-fineprint"
+                        style={{
+                          ...(Number.isFinite(Number(loanOptionsGrid?.fineprintSizeRem))
+                            ? { fontSize: `${loanOptionsGrid.fineprintSizeRem}rem` }
+                            : {}),
+                          ...(Number.isFinite(Number(item.fineprintSpaceBeforeRem))
+                            ? { marginTop: `${item.fineprintSpaceBeforeRem}rem` }
+                            : {}),
+                          ...(Number.isFinite(Number(item.fineprintLineHeight))
+                            ? { lineHeight: String(item.fineprintLineHeight) }
+                            : {}),
+                          ...(Number.isFinite(Number(item.fineprintSpaceAfterRem))
+                            ? { marginBottom: `${item.fineprintSpaceAfterRem}rem` }
+                            : {}),
+                          textAlign: item.fineprintJustify || 'left',
+                        }}
+                      >
+                        {line}
+                      </p>
+                    ))
+                    : null}
+                  </div>
                   {item.actions?.length ? (
                     <div className="service-native-action-row">
                       {item.actions.map((action) => {
@@ -1367,8 +1629,14 @@ export default function LoansPage({ sectionsOnly = false }) {
               <div className="native-info-section-copy is-justify-center">
                 {loanOptionsBillboard.title ? <h2>{loanOptionsBillboard.title}</h2> : null}
                 {loanOptionsBillboard.bodyHtml ? (
-                  <SafeRichText as="div" className="native-info-rich-html" html={loanOptionsBillboard.bodyHtml} />
-                ) : loanOptionsBillboard.body ? <p>{loanOptionsBillboard.body}</p> : null}
+                  <SafeRichText
+                    as="div"
+                    className={`native-info-rich-html${loanOptionsBillboard.bodyColorClassName ? ` ${loanOptionsBillboard.bodyColorClassName}` : ''}`}
+                    html={loanOptionsBillboard.bodyHtml}
+                  />
+                ) : loanOptionsBillboard.body ? (
+                  <p className={loanOptionsBillboard.bodyColorClassName || undefined}>{loanOptionsBillboard.body}</p>
+                ) : null}
                 {loanOptionsCtaLabel && loanOptionsCtaHref ? (
                   <div className="service-native-action-row is-centered">
                     {loanOptionsCtaHref.startsWith('/') ? (
@@ -1400,8 +1668,21 @@ export default function LoansPage({ sectionsOnly = false }) {
       ) : null}
       {renderAdditionalBillboardsAfter('loan_options')}
 
-      <section className={`service-native-section loans-native-inquiry native-dynamic-request is-request-form-preset-loans-inquiry is-bg-blue is-text-white${getHudBlockStateClassName('request_form')}${getOwnershipVisualForBlockId('request_form').className || ''}`} id="form" data-block-id="request_form" style={managedBlockOrderStyle('request_form')}>
-        <BlockSurfaceLayers ownership={getOwnershipVisualForBlockId('request_form')} hudAnchor={renderHudAnchor('request_form')} />
+      <section
+        className={`service-native-section loans-native-inquiry native-dynamic-request is-request-form-preset-loans-inquiry is-bg-${inquiryConfig.bgTone || 'blue'} is-text-${inquiryConfig.textTone || 'white'}${inquiryConfig.backgroundEffects?.enabled ? ' has-block-background-effects' : ''}${getHudBlockStateClassName('request_form')}${getOwnershipVisualForBlockId('request_form').className || ''}`}
+        id="form"
+        data-block-id="request_form"
+        style={{
+          ...managedBlockOrderStyle('request_form'),
+          '--dynamic-request-space-before': `${inquiryConfig.spaceBeforeRem ?? 0}rem`,
+          '--dynamic-request-space-after': `${inquiryConfig.spaceAfterRem ?? 0}rem`,
+        }}
+      >
+        <BlockSurfaceLayers
+          ownership={getOwnershipVisualForBlockId('request_form')}
+          hudAnchor={renderHudAnchor('request_form')}
+          backgroundEffects={<BlockBackgroundEffects effects={inquiryConfig.backgroundEffects} />}
+        />
         <div className="ag-panel-rail">
           <DynamicRequestFormSection config={inquiryConfig} />
         </div>
@@ -1622,70 +1903,16 @@ export default function LoansPage({ sectionsOnly = false }) {
         </div>
       </section>
 
-      {resolvedVisionFuel ? (
-        <section
-          className={`service-native-section dynamic-billboard loans-native-vision-fuel is-bg-${resolvedVisionFuel.bgTone || 'white'} is-text-${resolvedVisionFuel.textTone || 'dark'}${getHudBlockStateClassName('vision_fuel')}${getOwnershipVisualForBlockId('vision_fuel').className || ''}`}
-          data-block-id="vision_fuel"
-          style={{ ...managedBlockOrderStyle('vision_fuel'), ...(visionFuelSectionStyle || {}) }}
-        >
-          <BlockSurfaceLayers ownership={getOwnershipVisualForBlockId('vision_fuel')} hudAnchor={renderHudAnchor('vision_fuel')} />
-          <div className="ag-panel-rail" style={visionFuelRailStyle || undefined}>
-            <div
-              className={visionFuelCopyClassName}
-              style={resolvedVisionFuel.copyStyle || undefined}
-              data-fade-root-margin={resolvedVisionFuel.copyFadeRootMargin || undefined}
-            >
-              {visionFuelTitle ? (
-                <h2
-                  className={resolvedVisionFuel.titleClassName || undefined}
-                  style={resolvedVisionFuel.titleStyle}
-                >
-                  {resolvedVisionFuel.titleHighlights?.length
-                    ? renderHighlightedText(visionFuelTitle, resolvedVisionFuel.titleHighlights)
-                    : visionFuelTitle}
-                </h2>
-              ) : null}
-              {visionFuelSubtitle ? (
-                <p
-                  className={['native-info-section-subtitle', resolvedVisionFuel.subtitleClassName || ''].filter(Boolean).join(' ')}
-                  style={resolvedVisionFuel.subtitleStyle || undefined}
-                >
-                  {visionFuelSubtitle}
-                </p>
-              ) : null}
-              {visionFuelBodyHtml ? (
-                <SafeRichText as="div" className={`native-info-rich-html is-body-justify-${resolvedVisionFuel?.bodyJustify || resolvedVisionFuel?.justify || 'center'}${resolvedVisionFuel?.headerGapRem !== null && resolvedVisionFuel?.headerGapRem !== undefined ? ' is-dynamic-billboard-header-gap' : ''}`} html={visionFuelBodyHtml} />
-              ) : visionFuelBody ? (
-                <div className={`native-info-rich-html is-body-justify-${resolvedVisionFuel?.bodyJustify || resolvedVisionFuel?.justify || 'center'}${resolvedVisionFuel?.headerGapRem !== null && resolvedVisionFuel?.headerGapRem !== undefined ? ' is-dynamic-billboard-header-gap' : ''}`}>
-                  <p>{visionFuelBody}</p>
-                </div>
-              ) : null}
-              {visionFuelAction && visionFuelButtonLabel && visionFuelButtonHref ? (
-                <div className="service-native-action-row is-centered">
-                  {visionFuelButtonHref.startsWith('/') ? (
-                    <Link
-                      to={visionFuelButtonHref}
-                      className={visionFuelButtonClassName}
-                      target={visionFuelButtonOpenInNewWindow ? '_blank' : undefined}
-                      rel={visionFuelButtonOpenInNewWindow ? 'noreferrer' : undefined}
-                    >
-                      {visionFuelButtonLabel}
-                    </Link>
-                  ) : (
-                    <a
-                      href={visionFuelButtonHref}
-                      className={visionFuelButtonClassName}
-                      target={visionFuelButtonOpenInNewWindow ? '_blank' : undefined}
-                      rel={visionFuelButtonOpenInNewWindow ? 'noreferrer' : undefined}
-                    >
-                      {visionFuelButtonLabel}
-                    </a>
-                  )}
-                </div>
-              ) : null}
-            </div>
-          </div>
-        </section>
+      {dynamicVisionFuel ? (
+        <BillboardBlock
+          block={visionFuelBlock}
+          resolveTo={resolveRoutePath}
+          ownership={getOwnershipVisualForBlockId('vision_fuel')}
+          hudAnchor={renderHudAnchor('vision_fuel')}
+          extraSectionClassName={`loans-native-vision-fuel${getHudBlockStateClassName('vision_fuel')}`}
+          sectionStyle={managedBlockOrderStyle('vision_fuel')}
+          subtitleBaseClassName="native-info-section-subtitle"
+        />
       ) : null}
       {renderAdditionalBillboardsAfter('vision_fuel')}
 

@@ -11,6 +11,7 @@ describe('card grid preset definitions', () => {
   it('keeps the canonical card-grid family presets explicit', () => {
     expect(getCardGridPresetDefinitions().map((preset) => preset.id)).toEqual([
       'default',
+      'value-cards',
       'investment-options',
       'eligibility-cards',
       'step-cards',
@@ -25,6 +26,11 @@ describe('card grid preset definitions', () => {
     expect(resolveCardGridPresetId({ kind: 'card_grid', presetId: 'investment-options' })).toBe('investment-options');
     expect(resolveCardGridPresetId({ kind: 'card_grid', templateId: 'card_grid' })).toBe('default');
     expect(resolveCardGridPresetDefinition({ kind: 'card_grid', presetId: 'step-cards' })?.label).toBe('Step-by-step cards');
+    expect(resolveCardGridPresetId({
+      kind: 'card_grid',
+      presetId: 'default',
+      settings: { sectionClassName: 'about-native-values' },
+    })).toBe('value-cards');
   });
 
   it('keeps preset defaults and editor guardrails intentionally bounded', () => {
@@ -49,6 +55,11 @@ describe('card grid preset definitions', () => {
         directLinks: false,
         accordions: false,
       },
+    });
+    expect(getCardGridPresetDefinition('value-cards')?.editor).toMatchObject({
+      layoutFieldIds: ['contentWidth'],
+      cardAppearance: false,
+      typographyFields: false,
     });
   });
 });

@@ -1,8 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 
-function toDraftValue(value) {
+function toDraftValue(value, stepValue) {
   if (value === '' || value == null) {
     return '';
+  }
+  const numeric = Number(value);
+  const hasFiniteStep = stepValue !== undefined
+    && stepValue !== null
+    && String(stepValue).trim().toLowerCase() !== 'any'
+    && Number.isFinite(Number(stepValue));
+  if (hasFiniteStep && Number.isFinite(numeric)) {
+    return String(normalizeSteppedValue(numeric, stepValue));
   }
   return String(value);
 }
@@ -53,7 +61,7 @@ export default function AdminNumberInput({
   ...props
 }) {
   const isFocusedRef = useRef(false);
-  const [draftValue, setDraftValue] = useState(() => toDraftValue(value));
+  const [draftValue, setDraftValue] = useState(() => toDraftValue(value, step));
 
   const commitStepChange = (direction) => {
     const fallbackValue = Number(value);
@@ -74,9 +82,9 @@ export default function AdminNumberInput({
 
   useEffect(() => {
     if (!isFocusedRef.current) {
-      setDraftValue(toDraftValue(value));
+      setDraftValue(toDraftValue(value, step));
     }
-  }, [value]);
+  }, [step, value]);
 
   return (
     <input
@@ -116,7 +124,7 @@ export default function AdminNumberInput({
             setDraftValue(String(numeric));
             onChange?.(numeric);
           } else {
-            setDraftValue(toDraftValue(value));
+            setDraftValue(toDraftValue(value, step));
           }
         }
         onBlur?.(event);
@@ -131,7 +139,7 @@ export default function AdminNumberInput({
         }
         if (event.key === 'Escape') {
           event.preventDefault();
-          setDraftValue(toDraftValue(value));
+          setDraftValue(toDraftValue(value, step));
           event.currentTarget.blur();
           return;
         }

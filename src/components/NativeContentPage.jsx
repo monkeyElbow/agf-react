@@ -7,6 +7,7 @@ const CalculatorRouteStyles = lazy(() => import('./CalculatorRouteStyles'));
 import { getBlockOwnershipVisual, isForeignOwnedBlockOwnership } from './BlockOwnershipOverlay';
 import BlockBackgroundEffects from './BlockBackgroundEffects';
 import BlockSurfaceLayers from './BlockSurfaceLayers';
+import FrontHudDock from './FrontHudDock';
 import {
   createInitialFormValues,
   normalizeFormSubmissionConfig,
@@ -76,6 +77,7 @@ import {
 } from '../lib/dynamicPageBlocks';
 import { CALCULATOR_INTRO_KIND, CALCULATOR_WIDGET_KIND } from '../lib/calculatorWidgetIdentity';
 import { normalizeBlockForRender } from '../lib/blockPresentationContracts';
+import { buildCanonicalBlockRuntime } from '../blocks/registry';
 import { resolveNumberedStepCardsClassName } from '../lib/numberedStepCardsContract';
 import { normalizeBackgroundEffects } from '../lib/backgroundEffects';
 import {
@@ -111,6 +113,7 @@ import LegacyGivingStewardshipStoryFeature from './LegacyGivingStewardshipStoryF
 import PlannedGivingStepIcon from './PlannedGivingStepIcon';
 import ImpactProofStoryFeature from './ImpactProofStoryFeature';
 import DynamicRequestFormSection from './DynamicRequestFormSection';
+import { BillboardBlock } from './blocks/PageBlocksRenderer';
 import FrontHudAnchorTag from './FrontHudAnchorTag';
 import InfoTableSheet from './InfoTableSheet';
 import IraRatesSheet from './IraRatesSheet';
@@ -972,7 +975,7 @@ function toNativeActionItem(action) {
 }
 
 function buildNativeIntroConfig(block, { includeTestClassName = false } = {}) {
-  const runtime = buildDynamicIntroFromBlock(block);
+  const runtime = buildCanonicalBlockRuntime(block);
   if (!runtime) {
     return null;
   }
@@ -1001,7 +1004,7 @@ function buildNativeIntroConfig(block, { includeTestClassName = false } = {}) {
 }
 
 function buildDynamicHeroShellSection(block) {
-  const runtime = buildDynamicHeroFromBlock(block);
+  const runtime = buildCanonicalBlockRuntime(block);
   if (!runtime) {
     return null;
   }
@@ -1028,7 +1031,7 @@ function buildDynamicIntroShellSection(block, { includeTestClassName = false } =
 }
 
 function buildNativeBillboardSection(block, { includeTestClassName = false } = {}) {
-  const runtime = buildDynamicBillboardFromBlock(block);
+  const runtime = buildCanonicalBlockRuntime(block);
   if (!runtime) {
     return null;
   }
@@ -1094,6 +1097,7 @@ function buildNativeBillboardSection(block, { includeTestClassName = false } = {
     body: runtime.body ? [runtime.body] : [],
     bodyJustify: normalizeHeroJustify(runtime.bodyJustify || 'center'),
     headerGapRem: runtime.headerGapRem,
+    actionGapRem: runtime.actionGapRem,
     fineprint: runtime.fineprint || undefined,
     fineprintDisclosureId: runtime.fineprintDisclosureId || undefined,
     justify: normalizeHeroJustify(runtime.justify),
@@ -1107,7 +1111,7 @@ function buildNativeBillboardSection(block, { includeTestClassName = false } = {
 }
 
 function buildDynamicPageContentSection(block, pathname) {
-  const runtime = buildDynamicPageContentFromBlock(block);
+  const runtime = buildCanonicalBlockRuntime(block);
   if (!runtime) {
     return null;
   }
@@ -1216,7 +1220,7 @@ function buildDynamicPageContentSection(block, pathname) {
 }
 
 function buildDynamicRatesSection(block, pathname, { legalCopy = {}, ratesMeta = {} } = {}) {
-  const runtime = buildDynamicRatesFromBlock(block);
+  const runtime = buildCanonicalBlockRuntime(block);
   if (!runtime) {
     return null;
   }
@@ -1260,7 +1264,7 @@ function buildDynamicRatesSection(block, pathname, { legalCopy = {}, ratesMeta =
 }
 
 function buildDynamicCardChartSection(block, pathname) {
-  const runtime = buildDynamicCardChartFromBlock(block);
+  const runtime = buildCanonicalBlockRuntime(block);
   if (!runtime) {
     return null;
   }
@@ -1306,7 +1310,7 @@ function buildDynamicCardChartSection(block, pathname) {
 }
 
 function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}) {
-  const runtime = buildDynamicGridFromBlock(block);
+  const runtime = buildCanonicalBlockRuntime(block);
   if (!runtime) {
     return null;
   }
@@ -1320,6 +1324,7 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
     subtitle,
     subtitleClassName,
     subtitleHighlights,
+    subtitleJustify,
     body,
     bodyHtml,
     anchorId,
@@ -1337,6 +1342,7 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
     cardOutlineTone,
     cardOutlineWidth,
     cardShadow,
+    cardShadowOpacity,
     titleTone,
     bodyTone,
     subheadTone,
@@ -1344,6 +1350,7 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
     cardTitleSizeRem,
     cardTitleLineHeight,
     cardTitleJustify,
+    cardTitleBodySpaceRem,
     numberPositionPercent,
     cardBodySizeRem,
     cardBulletSize,
@@ -1456,6 +1463,7 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
       && !hasMergedIntro
       ? {
           marginTop: `${headerSubheadSpaceRem}rem`,
+          textAlign: subtitleJustify,
           ...(Number.isFinite(Number(subheadSizeRem)) ? { fontSize: `${subheadSizeRem}rem` } : {}),
         }
       : undefined,
@@ -1464,6 +1472,7 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
     htmlStyle: hasMergedIntro && Number.isFinite(Number(headerSubheadSpaceRem))
       ? {
           marginTop: `${headerSubheadSpaceRem}rem`,
+          '--dynamic-grid-subhead-justify': subtitleJustify,
           ...(Number.isFinite(Number(subheadSizeRem)) ? { '--dynamic-grid-subhead-size': `${subheadSizeRem}rem` } : {}),
         }
       : undefined,
@@ -1490,11 +1499,13 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
         : cardTitleJustify === 'right'
           ? 'flex-end'
           : 'center',
+      '--dynamic-grid-card-title-body-space': `${cardTitleBodySpaceRem}rem`,
       ...(Number.isFinite(Number(cardTitleLineHeight))
         ? { '--dynamic-grid-card-title-line-height': String(cardTitleLineHeight) }
         : {}),
       '--numbered-step-card-number-offset': `${numberPositionPercent}%`,
       '--dynamic-grid-card-outline-width': `${cardOutlineWidth}px`,
+      '--dynamic-grid-card-shadow-opacity': String(cardShadowOpacity),
       '--dynamic-grid-card-body-size': `${cardBodySizeRem}rem`,
       '--dynamic-grid-card-body-line-height': String(cardBodyLineHeight),
       '--dynamic-grid-card-body-justify': cardBodyJustify,
@@ -1507,6 +1518,7 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
       ...(Number.isFinite(Number(headerCardsSpaceRem))
         ? { '--dynamic-grid-header-cards-space': `${headerCardsSpaceRem}rem` }
         : {}),
+      '--dynamic-grid-subhead-justify': subtitleJustify,
       ...(hasControlledBulletTypography
         ? {
             '--planned-giving-bullet-size': `${plannedGivingBulletSizeRem}rem`,
@@ -1523,7 +1535,7 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
 }
 
 function buildDynamicColumnsSection(block, pathname) {
-  const runtime = buildDynamicColumnsFromBlock(block);
+  const runtime = buildCanonicalBlockRuntime(block);
   if (!runtime) {
     return null;
   }
@@ -1662,7 +1674,7 @@ function applyManagedChartsToSection(section, getChartValue) {
 }
 
 function buildDynamicCtaSection(block, pathname) {
-  const runtime = buildDynamicCtaFormFromBlock(block);
+  const runtime = buildCanonicalBlockRuntime(block);
   if (!runtime) {
     return null;
   }
@@ -1698,7 +1710,7 @@ function buildDynamicCtaSection(block, pathname) {
 }
 
 function buildDynamicRequestFormSection(block, pathname) {
-  const runtime = buildDynamicRequestFormFromBlock(block);
+  const runtime = buildCanonicalBlockRuntime(block);
   if (!runtime) {
     return null;
   }
@@ -1728,7 +1740,7 @@ function buildDynamicRequestFormSection(block, pathname) {
 }
 
 function buildDynamicTestimonialsSection(block, pathname, testimonialsLibrary) {
-  const runtime = buildDynamicTestimonialsFromBlock(block, {
+  const runtime = buildCanonicalBlockRuntime(block, {
     library: testimonialsLibrary,
   });
   if (!runtime) {
@@ -1751,7 +1763,7 @@ function buildDynamicTestimonialsSection(block, pathname, testimonialsLibrary) {
 }
 
 function buildDynamicNewsletterSection(block, pathname) {
-  const runtime = buildDynamicNewsletterFromBlock(block);
+  const runtime = buildCanonicalBlockRuntime(block);
   if (!runtime) {
     return null;
   }
@@ -1790,7 +1802,7 @@ function buildDynamicNewsletterSection(block, pathname) {
 }
 
 function buildDynamicFeaturePanelSection(block, pathname) {
-  const runtime = buildDynamicFeaturePanelFromBlock(block);
+  const runtime = buildCanonicalBlockRuntime(block);
   if (!runtime) {
     return null;
   }
@@ -1816,7 +1828,7 @@ function buildDynamicFeaturePanelSection(block, pathname) {
 }
 
 function buildDynamicSiteFeatureSection(block, pathname) {
-  const runtime = buildDynamicSiteFeatureFromBlock(block);
+  const runtime = buildCanonicalBlockRuntime(block);
   if (!runtime) {
     return null;
   }
@@ -1832,6 +1844,7 @@ function buildDynamicSiteFeatureSection(block, pathname) {
       isHistoryGallery ? `is-body-${runtime.bodyTone || 'super-grey'}` : '',
     ].filter(Boolean).join(' '),
     siteFeatureRuntime: runtime,
+    backgroundEffectsDisabled: isHistoryGallery,
     featureIntro: runtime.featureIntro || undefined,
     sectionStyle: isHistoryGallery ? {
       ...(Number.isFinite(Number(runtime.cardTitleSizeRem))
@@ -1854,6 +1867,11 @@ function buildDynamicSiteFeatureSection(block, pathname) {
       ...baseSection,
       hideTitle: true,
       cardsPreset: 'value-cards',
+      // History is a quiet editorial gallery. Its value-card markup is
+      // reused for layout, but it must not inherit the preset's baked light
+      // field; the block's optional background-effects layer remains
+      // separately controlled by its background-lights data.
+      cardsPresetSurface: false,
       cards: Array.isArray(runtime.cards) ? runtime.cards : [],
       justify: 'center',
       actions: runtime.action ? [toNativeActionItem(runtime.action)].filter(Boolean) : [],
@@ -4869,6 +4887,7 @@ export default function NativeContentPage({ page }) {
   const { getVisibleJobs } = useCareersJobs();
   const { getChartValue } = useCharts();
   const { getDisclosureValue } = useDisclosures();
+  const { resolveDocumentLink } = useDocuments();
   const { rates, iraRates, ratesMeta, legalCopy } = useRates();
   const {
     enabled: frontHudEnabled,
@@ -4975,6 +4994,8 @@ export default function NativeContentPage({ page }) {
   const introHudSectionRef = useRef(null);
   const dynamicHudSectionRefs = useRef({});
   const inlineCtaRevealSectionRefs = useRef({});
+  const [hudDockIconsOnly, setHudDockIconsOnly] = useState(false);
+  const [hudDockHoverLabel, setHudDockHoverLabel] = useState(null);
   const [heroActiveLine, setHeroActiveLine] = useState('');
   const [heroSelection, setHeroSelection] = useState({ line: '', start: 0, end: 0, text: '' });
   const [heroShowOptionalLine3, setHeroShowOptionalLine3] = useState(false);
@@ -5091,6 +5112,22 @@ export default function NativeContentPage({ page }) {
   const preIntroSections = Array.isArray(contentWithManagedDisclosures.preIntroSections) ? contentWithManagedDisclosures.preIntroSections : [];
   const postIntroSections = Array.isArray(contentWithManagedDisclosures.sections) ? contentWithManagedDisclosures.sections : [];
   const sectionList = [...preIntroSections, ...postIntroSections];
+  const valueCardsRevealSignature = sectionList
+    .filter((section) => String(section?.cardsPreset || '').trim().toLowerCase() === 'value-cards')
+    .map((section) => JSON.stringify({
+      blockId: section?.blockId || '',
+      cardsPresetSurface: section?.cardsPresetSurface,
+      cards: (Array.isArray(section?.cards) ? section.cards : []).map((card) => ({
+        slot: card?.slot,
+        id: card?.id,
+        title: card?.title,
+        body: card?.body,
+        bodyHtml: card?.bodyHtml,
+        cardClass: card?.cardClass,
+        panelTone: card?.panelTone,
+      })),
+    }))
+    .join('|');
   const inlineCtaRevealTargets = useMemo(() => {
     const lookup = new Map();
     const entries = sectionList
@@ -5499,7 +5536,7 @@ export default function NativeContentPage({ page }) {
         }
       });
     };
-  }, [activePath, sectionList.length]);
+  }, [activePath, valueCardsRevealSignature]);
 
   const {
     orderedPanels: orderedHudDockPanels,
@@ -5660,6 +5697,8 @@ export default function NativeContentPage({ page }) {
     }
     setActiveHudPanelId(panelId);
     setHudDockCollapsed(false);
+    setHudDockIconsOnly(true);
+    setHudDockHoverLabel(null);
     if (options.scrollToTarget) {
       window.requestAnimationFrame(() => {
         scrollHudPanelIntoView(panelId);
@@ -5689,8 +5728,9 @@ export default function NativeContentPage({ page }) {
   };
 
   const closeHudBlockEditor = () => {
-    setHudDockCollapsed(true);
+    setHudDockCollapsed(false);
     setActiveHudPanelId('');
+    setHudDockHoverLabel(null);
     setLivePreviewBlockId('');
     clearHeroSelection();
     setMobileHudMoreOpen(false);
@@ -5705,6 +5745,15 @@ export default function NativeContentPage({ page }) {
     setMobileHudMoreOpen(false);
     setMobileHudDeleteConfirmBlockId('');
     setFrontHudEnabled?.(false);
+  };
+
+  const closeMobileHudEditor = () => {
+    setHudDockCollapsed(true);
+    setActiveHudPanelId('');
+    setLivePreviewBlockId('');
+    clearHeroSelection();
+    setMobileHudMoreOpen(false);
+    setMobileHudDeleteConfirmBlockId('');
   };
 
   const clearMobileHudSelection = () => {
@@ -5794,6 +5843,8 @@ export default function NativeContentPage({ page }) {
     if (!showFrontHud || !hudDockPanels.length) {
       setHudDockCollapsed(true);
       setActiveHudPanelId('');
+      setHudDockIconsOnly(false);
+      setHudDockHoverLabel(null);
       return;
     }
     if (hudDockCollapsed) {
@@ -5803,6 +5854,12 @@ export default function NativeContentPage({ page }) {
       setActiveHudPanelId('');
     }
   }, [showFrontHud, hudDockPanels, activeHudPanelId, hudDockCollapsed, isMobileFrontHud]);
+
+  useEffect(() => {
+    if (!hudDockIconsOnly) {
+      setHudDockHoverLabel(null);
+    }
+  }, [hudDockIconsOnly]);
 
   useEffect(() => {
     if (!isMobileFrontHud || !mobileSelectedHudBlockId || hasOpenHudPanel) {
@@ -6129,47 +6186,24 @@ export default function NativeContentPage({ page }) {
         onClickCapture={isMobileFrontHud ? handleMobilePageHudClickCapture : undefined}
       >
       {showFrontHud && !isMobileFrontHud ? (
-        <aside className={`admin-front-hud-dock${hudDockCollapsed ? ' is-collapsed' : ''}`} aria-label="Front HUD editor panels">
-          <div className={`admin-front-hud-dock-tabs${isDockDragging ? ' is-drag-active' : ''}`}>
-            {orderedHudDockPanels.map((panel) => (
-              <button
-                key={`dock-${panel.id}`}
-                type="button"
-                className={`admin-front-hud-dock-tab${panel.isHidden ? ' is-hidden-block' : ''}${!hudDockCollapsed && activeHudPanelId === panel.id ? ' is-active' : ''}${isPanelDragging(panel.id) ? ' is-dragging' : ''}${isPanelDragOver(panel.id) ? ' is-drag-over' : ''}${getPanelDropPosition(panel.id) ? ` is-drop-${getPanelDropPosition(panel.id)}` : ''}`}
-                onClick={() => toggleHudPanel(panel.id, { scrollToTarget: true })}
-                title={`${panel.label}${panel.isHidden ? ' — hidden from visitors' : ''}`}
-                aria-label={`${panel.label}${panel.isHidden ? ' (hidden from visitors)' : ''}`}
-                {...getDockTabDragProps(panel.id)}
-              >
-                {panel.icon ? (
-                  <img
-                    src={panel.icon}
-                    alt=""
-                    className="admin-front-hud-dock-tab-icon"
-                    aria-hidden="true"
-                  />
-                ) : (
-                  <span className="admin-front-hud-dock-tab-fallback" aria-hidden="true">{panel.label.slice(0, 1)}</span>
-                )}
-                <span className="admin-front-hud-dock-tab-label">{panel.label}</span>
-                {panel.isHidden ? <span className="admin-front-hud-dock-tab-hidden-marker" aria-hidden="true">Hidden</span> : null}
-              </button>
-            ))}
-          </div>
-          <div className="admin-front-hud-dock-actions">
-            {!hudDockCollapsed ? (
-              <button
-                type="button"
-                className="admin-front-hud-dock-collapse"
-                onClick={closeHudDock}
-                aria-label="Hide panels"
-                title="Hide panels"
-              >
-                <span className="admin-front-hud-close-glyph" aria-hidden="true">×</span>
-              </button>
-            ) : null}
-          </div>
-        </aside>
+        <FrontHudDock
+          panels={orderedHudDockPanels}
+          activePanelId={activeHudPanelId}
+          isCollapsed={hudDockCollapsed}
+          isIconsOnly={hudDockIconsOnly}
+          isDockDragging={isDockDragging}
+          style={{ '--ag-admin-front-hud-opacity': String(frontHudOpacityRatio) }}
+          onPanelOpen={(panel) => openHudPanel(panel.id, { scrollToTarget: true })}
+          onPanelClose={closeHudBlockEditor}
+          onToggleIconsOnly={() => setHudDockIconsOnly((current) => !current)}
+          onClose={closeHudDock}
+          getDockTabDragProps={getDockTabDragProps}
+          isPanelDragging={isPanelDragging}
+          isPanelDragOver={isPanelDragOver}
+          getPanelDropPosition={getPanelDropPosition}
+          onDockHoverLabelChange={setHudDockHoverLabel}
+          dockHoverLabel={hudDockHoverLabel}
+        />
       ) : null}
       <FrontHudPageWorkflow pathname={adminHudEditPath} reviewHref={adminHudEditHref} placement="bar" isVisible={showFrontHud && hudDockPanels.length > 0} />
       {shouldRenderHero ? (
@@ -6400,7 +6434,7 @@ export default function NativeContentPage({ page }) {
         }
         const cards = Array.isArray(section.cards) ? section.cards : [];
         const columnsItems = Array.isArray(section.columnsItems) ? section.columnsItems : [];
-        const sectionKey = `${activePath}-${section.blockId || section.id || globalSectionIndex}`;
+        const sectionKey = `${activePath}-${section.blockId || section.id || globalSectionIndex}-${sectionIndex}`;
         const sectionHtml = normalizeHtmlContent(section.html);
         const sectionJustifyToken = typeof section.justify === 'string' && section.justify.trim()
           ? normalizeHeroJustify(section.justify)
@@ -6484,6 +6518,38 @@ export default function NativeContentPage({ page }) {
           )
           && !showFrontHud;
         const isDynamicBillboardSection = sectionClassName.includes('dynamic-billboard');
+        const hasDynamicBillboardBody = Boolean(
+          sectionHtml
+          || (Array.isArray(section.body) && section.body.length),
+        );
+        // Header gap normally belongs on billboard body copy. Body-less
+        // billboards (such as the 403(b) investment strategy heading) put
+        // their next content in the action row instead, so carry the same
+        // spacing contract to that row without double-spacing body copy.
+        const dynamicBillboardActionHeaderGapClassName = isDynamicBillboardSection
+          && !hasDynamicBillboardBody
+          && section.headerGapRem !== null
+          && section.headerGapRem !== undefined
+          ? ' is-dynamic-billboard-header-gap'
+          : '';
+        const dynamicBillboardActionGapClassName = isDynamicBillboardSection
+          && section.actionGapRem !== null
+          && section.actionGapRem !== undefined
+          && Number.isFinite(Number(section.actionGapRem))
+          ? ' is-dynamic-billboard-action-gap'
+          : '';
+        const dynamicBillboardActionGapStyle = dynamicBillboardActionGapClassName
+          ? {
+              '--dynamic-billboard-action-gap': `${section.actionGapRem}rem`,
+              marginTop: `${section.actionGapRem}rem`,
+            }
+          : undefined;
+        // Billboard actions render outside the copy wrapper. Keep Header gap's
+        // variable on the action row itself so it cannot be lost at that
+        // wrapper boundary (notably the 403(b) strategy billboard).
+        const dynamicBillboardActionHeaderGapStyle = dynamicBillboardActionHeaderGapClassName
+          ? { '--dynamic-billboard-header-gap': `${section.headerGapRem}rem` }
+          : undefined;
         const sectionBodyJustifyToken = isDynamicBillboardSection
           ? normalizeHeroJustify(section.bodyJustify || 'center')
           : '';
@@ -6509,7 +6575,12 @@ export default function NativeContentPage({ page }) {
         const firstDynamicSectionIndex = dynamicSectionBlockId
           ? (firstDynamicSectionIndexByBlockId[dynamicSectionBlockId] ?? -1)
           : -1;
-        const isDynamicSectionHudTarget = Boolean(dynamicSectionHudPanelId) && sectionIndex === firstDynamicSectionIndex;
+        // firstDynamicSectionIndexByBlockId is based on sectionList (which
+        // includes pre-intro sections), while this loop renders only the
+        // post-intro portion. Compare using the global index so a block after
+        // a pre-intro section cannot lose its focus target and get dimmed.
+        const isDynamicSectionHudTarget = Boolean(dynamicSectionHudPanelId)
+          && globalSectionIndex === firstDynamicSectionIndex;
         const activePanelIsShellHeroOrIntro = !isBlockOnlyManagedPage && hasOpenHudPanel && (
           activeHudPanelId === heroHudPanelId
           || activeHudPanelId === introHudPanelId
@@ -6526,6 +6597,10 @@ export default function NativeContentPage({ page }) {
           ? (isSectionHudFocusTarget ? ' is-hud-focus-target' : ' is-hud-dimmed')
           : '';
         const sectionOwnership = getOwnershipVisualForBlockId(dynamicSectionBlockId);
+        const dynamicCardPaddingValue = section.sectionStyle?.['--dynamic-grid-card-padding'];
+        const dynamicCardPaddingStyle = dynamicCardPaddingValue
+          ? { '--dynamic-grid-card-padding': dynamicCardPaddingValue }
+          : undefined;
         const showSectionHud = showFrontHud && Boolean(dynamicSectionPanel) && isDynamicSectionHudTarget;
         const showBillboardSectionHud = isDynamicBillboardSection && showSectionHud;
         const showCtaSectionHud = isDynamicCtaSection && showSectionHud;
@@ -6534,6 +6609,81 @@ export default function NativeContentPage({ page }) {
         const useCertificateCardLayout = section.cardLayout === 'certificate' || section.cardLayout === 'retirement-certificate';
         const useRetirementCertificateCardLayout = section.cardLayout === 'retirement-certificate';
         const useCharitableTrustChoiceLayout = sectionClassName.includes('legacy-child-native-trust-choices--trusts');
+
+        if (isDynamicBillboardSection && dynamicSectionBlock) {
+          const billboardHudAnchor = showSectionHud && !isMobileFrontHud ? (
+            <FrontHudAnchorTag
+              label={dynamicSectionPanel?.label || ''}
+              icon={dynamicSectionPanel?.icon}
+              isActive={isHudPanelVisible(dynamicSectionHudPanelId)}
+              onClick={() => toggleHudPanel(dynamicSectionHudPanelId, { scrollToTarget: true })}
+              layerClassName="is-section"
+              style={{ '--ag-admin-front-hud-opacity': String(frontHudOpacityRatio) }}
+              structureControls={(
+                <FrontHudStructureControls pathname={hudContentPath} blockId={dynamicSectionBlockId} placement="anchor" />
+              )}
+            />
+          ) : null;
+          const billboardBodyEditProps = showBillboardSectionHud && allowOnPageClickEdit
+            ? {
+                onClick: (event) => handleSectionBodyEditIntent(dynamicSectionHudPanelId, event),
+                onKeyDown: (event) => handleBodyEditKeyDown(event, (nextEvent) => handleSectionBodyEditIntent(dynamicSectionHudPanelId, nextEvent)),
+                role: 'button',
+                tabIndex: 0,
+                'aria-label': 'Edit billboard body HTML',
+              }
+            : {};
+
+          return (
+            <BillboardBlock
+              key={sectionKey}
+              block={dynamicSectionBlock}
+              resolveTo={managedResolveManagedPathFromRef}
+              resolveDocumentLink={resolveDocumentLink}
+              ownership={sectionOwnership}
+              hudAnchor={billboardHudAnchor}
+              backgroundEffects={section.backgroundEffectsDisabled
+                ? { enabled: false, lights: [] }
+                : resolveBlockBackgroundEffects(dynamicSectionBlock, section.backgroundEffects)}
+              sectionId={section.anchorId}
+              sectionRef={(node) => {
+                if (dynamicSectionBlockId && isDynamicSectionHudTarget) {
+                  dynamicHudSectionRefs.current[dynamicSectionBlockId] = node;
+                }
+              }}
+              sectionStyle={section.sectionStyle}
+              sectionDataAttributes={{
+                'data-render-contract-version': renderContract.version || undefined,
+                'data-render-kind': renderContract.kind || undefined,
+                'data-render-preset-id': renderContract.presetId || undefined,
+                'data-render-root-class': renderContract.rootClassName || undefined,
+                'data-render-runtime-class': renderContract.runtimeClassName || undefined,
+                'data-content-source': contentSource,
+                'data-content-revision': sharedSnapshotUpdatedAt ? String(sharedSnapshotUpdatedAt) : undefined,
+                'data-runtime-build-id': RUNTIME_BUILD_ID,
+                'data-mobile-front-hud-selectable': showSectionHud && isMobileFrontHud ? 'true' : undefined,
+                'data-mobile-front-hud-selected': isMobileHudPanelSelected(dynamicSectionHudPanelId) ? 'true' : undefined,
+                'data-mobile-front-hud-label': showSectionHud && isMobileFrontHud ? (dynamicSectionPanel?.label || 'Section') : undefined,
+              }}
+              railClassName={section.railClassName || (section.fullBleed ? 'ag-panel-rail-wide native-info-full-bleed' : (section.wide ? 'ag-panel-rail-wide' : 'ag-panel-rail'))}
+              railStyle={section.railStyle}
+              titleTag={SectionTitleTag}
+              subtitleBaseClassName="native-info-section-subtitle"
+              logoComponent={SectionLogoComponent}
+              logoImage={section.logoImage}
+              logoAlt={section.logoAlt}
+              logoText={section.logoText}
+              fineprint={section.fineprint}
+              fineprintStyle={section.fineprintStyle}
+              bodyEditProps={billboardBodyEditProps}
+              extraSectionClassName={[
+                isTestPage ? 'test-dynamic-billboard' : '',
+                showSectionHud ? 'has-admin-front-hud' : '',
+                sectionHudFocusClass,
+              ].filter(Boolean).join(' ')}
+            />
+          );
+        }
 
         if (section.nativeHero) {
           const sectionHero = dynamicSectionBlockId === String(dynamicHeroBlock?.id || '').trim()
@@ -6972,7 +7122,13 @@ export default function NativeContentPage({ page }) {
           >
             <BlockSurfaceLayers
               ownership={sectionOwnership}
-              backgroundEffects={<BlockBackgroundEffects effects={resolveBlockBackgroundEffects(dynamicSectionBlock, section.backgroundEffects)} />}
+              backgroundEffects={(
+                <BlockBackgroundEffects
+                  effects={section.backgroundEffectsDisabled
+                    ? { enabled: false, lights: [] }
+                    : resolveBlockBackgroundEffects(dynamicSectionBlock, section.backgroundEffects)}
+                />
+              )}
             />
             {shouldShowValueCardsSurface ? (
               <div className="investments-native-growth-surface native-columns-growth-surface" aria-hidden="true">
@@ -7240,8 +7396,12 @@ export default function NativeContentPage({ page }) {
 
             {section.actionsBeforeCards && Array.isArray(section.actions) && section.actions.length ? (
               <div
-                className={buildActionRowClassName(sectionJustifyToken, 'left')}
-                style={buildActionRowStyle(sectionJustifyToken, 'left')}
+                className={`${buildActionRowClassName(sectionJustifyToken, 'left')}${dynamicBillboardActionHeaderGapClassName}${dynamicBillboardActionGapClassName}`}
+                style={{
+                  ...buildActionRowStyle(sectionJustifyToken, 'left'),
+                  ...dynamicBillboardActionHeaderGapStyle,
+                  ...dynamicBillboardActionGapStyle,
+                }}
               >
                 {section.actions.map((item) => (
                   <Action key={`${item.label}-${item.to || item.href || item.documentId}`} item={item} />
@@ -7309,12 +7469,13 @@ export default function NativeContentPage({ page }) {
               <div className="investments-native-growth-grid native-value-cards-grid">
                 {visibleCards.map((card, cardIndex) => (
                   <article
-                    key={`value-card-${card.slot}`}
+                    key={`value-card-${card.slot || card.id || card.title || cardIndex + 1}`}
                     className={[
                       'investments-native-growth-card',
                       'investments-growth-scroll-reveal',
                       String(card.cardClass || '').trim(),
                     ].filter(Boolean).join(' ')}
+                    style={dynamicCardPaddingStyle}
                     data-investments-growth-reveal="card"
                     data-investments-growth-background-panel={String(card.panelTone || '').trim() || ['blue', 'mango', 'sand'][cardIndex % 3]}
                     data-investments-growth-start-vh="1.08"
@@ -7376,6 +7537,7 @@ export default function NativeContentPage({ page }) {
                     <article
                       key={`certificate-card-${card.slot}`}
                       className={`service-native-card ${useRetirementCertificateCardLayout ? `retirement-account-card retirement-account-card--certificate retirement-account-card--${cardTone}` : `investments-native-cert-card investments-native-cert-card--${cardTone}`}${useCharitableTrustChoiceLayout ? ' charitable-trusts-native-choice-card' : ''} fade-up`}
+                      style={dynamicCardPaddingStyle}
                     >
                       {card.title ? (
                         <div className={useRetirementCertificateCardLayout ? 'retirement-account-card__cap' : 'investments-native-cert-card__cap'}>
@@ -7420,14 +7582,14 @@ export default function NativeContentPage({ page }) {
 
             {cards.length && visibleCards.length && !isValueCardsFeatureSection && !useCertificateCardLayout ? (
               <div className={`service-native-grid${section.columns ? ` is-${section.columns}` : ''}${focusMessageCard && activeMessageCard ? ' is-focus-open' : ''}`}>
-                {visibleCards.map((card) => {
+                {visibleCards.map((card, cardIndex) => {
                   const isActiveMessageCard = focusMessageCard && activeMessageCard === card.title;
                   const resolvedMessageLayout = isActiveMessageCard && card.messagePanel ? 'inline' : 'toggle';
                   const shouldAnimateCard = !focusMessageCard;
                   const forceScrollRevealCard = shouldAnimateCard && sectionClassName.includes('legacy-giving-types');
 
                   return (
-                  <article key={`grid-card-${card.slot}`} className={`service-native-card ${shouldAnimateCard ? 'fade-up fade-up-fail-open' : ''}${forceScrollRevealCard ? ' fade-up-force-observe' : ''} ${card.cardClass || 'card2'}${card.messagePanel && resolvedMessageLayout === 'inline' ? ' has-inline-message' : ''}`.trim()}>
+                  <article key={`grid-card-${card.slot || card.id || card.title || cardIndex + 1}`} className={`service-native-card ${shouldAnimateCard ? 'fade-up fade-up-fail-open' : ''}${forceScrollRevealCard ? ' fade-up-force-observe' : ''} ${card.cardClass || 'card2'}${card.messagePanel && resolvedMessageLayout === 'inline' ? ' has-inline-message' : ''}`.trim()} style={dynamicCardPaddingStyle}>
                     <div className={card.messagePanel && resolvedMessageLayout === 'inline' ? 'consultant-card-details' : undefined}>
                       {card.iconKey ? (
                         <PlannedGivingStepIcon iconKey={card.iconKey} tone={card.iconTone} />
@@ -7687,8 +7849,12 @@ export default function NativeContentPage({ page }) {
 
             {!section.actionsBeforeCards && Array.isArray(section.actions) && section.actions.length ? (
               <div
-                className={buildActionRowClassName(sectionJustifyToken, 'left')}
-                style={buildActionRowStyle(sectionJustifyToken, 'left')}
+                className={`${buildActionRowClassName(sectionJustifyToken, 'left')}${dynamicBillboardActionHeaderGapClassName}${dynamicBillboardActionGapClassName}`}
+                style={{
+                  ...buildActionRowStyle(sectionJustifyToken, 'left'),
+                  ...dynamicBillboardActionHeaderGapStyle,
+                  ...dynamicBillboardActionGapStyle,
+                }}
               >
                 {section.actions.map((item) => (
                   <Action key={`${item.label}-${item.to || item.href || item.documentId}`} item={item} />
@@ -7726,7 +7892,7 @@ export default function NativeContentPage({ page }) {
             }
             return setActiveBlockLock(editableBlockPath, activeHudPanel.block.id, { force: true });
           }}
-          onClose={isMobileFrontHud ? closeMobileHudPanel : closeHudBlockEditor}
+          onClose={isMobileFrontHud ? closeMobileHudEditor : closeHudBlockEditor}
           className={isMobileFrontHud ? 'is-mobile-sheet' : ''}
           draggable={!isMobileFrontHud}
           isMobileSheet={isMobileFrontHud}

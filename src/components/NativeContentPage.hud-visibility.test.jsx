@@ -1,3 +1,4 @@
+import { createContext } from 'react';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -46,6 +47,7 @@ vi.mock('../context/RatesContext', () => ({
 }));
 
 vi.mock('../context/DocumentsContext', () => ({
+  DocumentsContext: createContext({ documents: [] }),
   useDocuments: () => ({
     resolveDocumentLink: mockResolveDocumentLink,
   }),
@@ -381,6 +383,53 @@ describe('NativeContentPage HUD visibility boundaries', () => {
     expect(screen.queryByLabelText('Hero mobile HUD actions')).toBeNull();
   });
 
+  it('opens the charitable trusts card chart through the front HUD editor path', async () => {
+    mockFrontHudEnabled = true;
+    const pathname = '/services/planned-giving/charitable-trusts';
+    mockBlocksByPath = {
+      [pathname]: [
+        {
+          id: 'remainder_trust_type_cards',
+          name: 'Remainder Trust Type Chart',
+          kind: 'card_chart',
+          mode: 'dynamic',
+          hidden: false,
+          settings: {
+            title: '',
+            justify: 'center',
+            bgTone: 'white',
+            cardCount: '2',
+            card1Title: 'Charitable Remainder Unitrust (CRUT)',
+            card1Color: 'atlantean',
+            card1Bullets: 'Annual payout is determined by donor',
+            card2Title: 'Charitable Remainder Annuity (CRAT)',
+            card2Color: 'mango',
+            card2Bullets: 'Donor receives a fixed payment',
+          },
+        },
+      ],
+    };
+
+    render(
+      <MemoryRouter>
+        <NativeContentPage page={{ path: pathname, title: 'Charitable Trusts' }} />
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Card Chart' }));
+    const editorRail = await screen.findByRole('navigation', { name: 'Card Chart editor sections' });
+    expect([...editorRail.querySelectorAll('button')].map((button) => button.getAttribute('aria-label'))).toEqual([
+      'Header',
+      'Spacing',
+      'Cards',
+      'Fineprint',
+      'Layout',
+      'Background',
+      'Block options',
+    ]);
+    expect(screen.getByRole('textbox', { name: 'Chart heading' })).toBeTruthy();
+  });
+
   it('carries a test-page Hero preview selection into the HUD color assignment', async () => {
     mockFrontHudEnabled = true;
     const testHero = structuredClone(contentBlockBlueprintsByPath['/test'] || []).find((block) => block?.id === 'hero');
@@ -489,6 +538,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Open Hero HUD panel' }));
     await waitFor(() => expect(screen.getByRole('button', { name: 'Close panel' })).toBeTruthy());
+    expect(screen.getByLabelText('Front HUD editor panels').className).toContain('is-icons-only');
     fireEvent.click(screen.getByRole('button', { name: 'Close panel' }));
 
     await waitFor(() => {
@@ -496,6 +546,102 @@ describe('NativeContentPage HUD visibility boundaries', () => {
     });
     expect(mockSetFrontHudEnabled).not.toHaveBeenCalledWith(false);
     expect(screen.queryByRole('button', { name: 'Close panel' })).toBeNull();
+  });
+
+  it('restores every block canvas immediately after closing a card-grid editor', async () => {
+    mockFrontHudEnabled = true;
+    mockBlocksByPath = {
+      ...mockBlocksByPath,
+      '/services/insurance/ministers-group-life-plan': [
+        ...mockBlocksByPath['/services/insurance/ministers-group-life-plan'],
+        {
+          id: 'card_grid',
+          name: 'Card Grid',
+          kind: 'card_grid',
+          mode: 'dynamic',
+          hidden: false,
+          settings: {
+            title: 'Who qualifies',
+            cardStyle: 'none',
+            card1Title: 'Eligible employees',
+            card1Body: 'Eligibility details.',
+          },
+          editableFields: [],
+        },
+      ],
+    };
+
+    const { container } = render(
+      <MemoryRouter>
+        <NativeContentPage
+          page={{
+            path: '/services/insurance/ministers-group-life-plan',
+            title: 'Ministers Group Life Plan',
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open Card Grid · Flexible cards HUD panel' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Close panel' })).toBeTruthy());
+    expect(container.querySelector('[data-block-id="card_grid"]')?.className).toContain('is-hud-focus-target');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Close panel' }));
+
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'Close panel' })).toBeNull());
+    expect(container.querySelector('.service-native-page')?.className).not.toContain('has-active-front-hud-panel');
+    expect(container.querySelectorAll('.is-hud-dimmed')).toHaveLength(0);
+  });
+
+  it('keeps the active card-grid target undimmed while a foreign lock is visible', async () => {
+    mockFrontHudEnabled = true;
+    mockBlocksByPath = {
+      ...mockBlocksByPath,
+      '/services/insurance/ministers-group-life-plan': [
+        ...mockBlocksByPath['/services/insurance/ministers-group-life-plan'],
+        {
+          id: 'card_grid',
+          name: 'Card Grid',
+          kind: 'card_grid',
+          mode: 'dynamic',
+          hidden: false,
+          settings: {
+            title: 'Who qualifies',
+            cardStyle: 'none',
+            card1Title: 'Eligible employees',
+            card1Body: 'Eligibility details.',
+          },
+          editableFields: [],
+        },
+      ],
+    };
+    mockGetBlockCollaboration.mockImplementation((pathname, blockId) => (
+      pathname === '/services/insurance/ministers-group-life-plan' && blockId === 'card_grid'
+        ? {
+            lockedBy: {
+              userId: 'dev-sarah',
+              displayName: 'Sarah Laptop',
+            },
+          }
+        : {}
+    ));
+
+    const { container } = render(
+      <MemoryRouter>
+        <NativeContentPage
+          page={{
+            path: '/services/insurance/ministers-group-life-plan',
+            title: 'Ministers Group Life Plan',
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open Card Grid · Flexible cards HUD panel' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Close panel' })).toBeTruthy());
+    const cardGrid = container.querySelector('[data-block-id="card_grid"]');
+    expect(cardGrid?.className).toContain('is-hud-focus-target');
+    expect(cardGrid?.className).toContain('is-admin-owned-editing-other');
   });
 
   it('shows hero and intro HUD controls on the managed planned giving overview page', () => {
@@ -649,7 +795,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
     await waitFor(() => {
       expect(screen.queryByLabelText('Hero mobile HUD actions')).toBeNull();
     });
-    expect(mockSetFrontHudEnabled).toHaveBeenCalledWith(false);
+    expect(mockSetFrontHudEnabled).not.toHaveBeenCalled();
     expect(container.querySelector('[data-block-id="hero"]')?.getAttribute('data-mobile-front-hud-selected')).not.toBe('true');
   });
 
@@ -1275,9 +1421,9 @@ describe('NativeContentPage HUD visibility boundaries', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Open CTA Form HUD panel' }));
     await waitFor(() => {
-      expect(screen.getByRole('radiogroup', { name: 'CTA background' })).toBeTruthy();
+      expect(screen.getByRole('radiogroup', { name: 'Background color' })).toBeTruthy();
     });
-    fireEvent.click(within(screen.getByRole('radiogroup', { name: 'CTA background' })).getByRole('radio', { name: 'Blue' }));
+    fireEvent.click(within(screen.getByRole('radiogroup', { name: 'Background color' })).getByRole('radio', { name: 'Blue' }));
 
     await waitFor(() => {
       expect(ctaSection?.className).toContain('is-bg-blue');

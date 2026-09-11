@@ -192,6 +192,21 @@ describe('implementation-ownership.service-native style ownership', () => {
     });
   });
 
+  it('keeps the 403(b) eligibility card padding owned by the card-grid control', () => {
+    const source = readSource('./service-native.css');
+
+    expect(source).toContain(
+      '  padding: var(--dynamic-grid-card-padding, clamp(1.75rem, 2.6vw, 2.25rem));',
+    );
+    expect(source).toContain(
+      '.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).retirement-403b-native-qualify.is-card-none .service-native-card.card-none,',
+    );
+    expect(source).toContain(
+      '.native-info-page--retirement-child .retirement-child-native-qualify .service-native-card,',
+    );
+    expect(source).not.toContain('box-shadow: 0 14px 30px rgba(16, 43, 64, 0.06) !important;');
+  });
+
   it('keeps planned-giving asset bullet cards padded beyond the dynamic-grid default', () => {
     const source = readSource('./service-native.css');
 
@@ -529,6 +544,15 @@ describe('implementation-ownership.service-native style ownership', () => {
     expect(source).not.toContain(
       '.service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart) .info-table-sheet__cell-list {\n'
         + '  min-height: 24rem;',
+    );
+    expect(source).not.toContain(
+      '.service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart).is-bg-blue {\n'
+        + '  background: var(--ag-surface-blue-gradient);\n'
+        + '  color: #ffffff;',
+    );
+    expect(source).not.toContain(
+      '.service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart).is-bg-blue\n'
+        + '  > :is(.native-info-full-bleed, .ag-panel-rail-wide, .ag-panel-rail) > h2,',
     );
   });
 

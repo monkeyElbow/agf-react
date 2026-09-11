@@ -925,7 +925,7 @@ export function HeroHudEditorPanel({
               min={4.5}
               max={9}
               step={0.1}
-              displayValue={`${Number(titleSizeRem || 0).toFixed(1)}rem`}
+              unit="rem"
               onChange={onTitleSizeChange}
             />
             <BillboardSlider
@@ -935,7 +935,7 @@ export function HeroHudEditorPanel({
               min={0.72}
               max={1.2}
               step={0.01}
-              displayValue={`${Number(lineHeight || 0).toFixed(2)}em`}
+              unit="em"
               onChange={onLineHeightChange}
             />
             <BillboardSlider
@@ -945,7 +945,7 @@ export function HeroHudEditorPanel({
               min={-0.08}
               max={0.04}
               step={0.005}
-              displayValue={`${normalizeHeroTitleLetterSpacingEm(titleLetterSpacingEm).toFixed(3)}em`}
+              unit="em"
               onChange={onTitleLetterSpacingChange}
             />
             <BillboardSlider
@@ -955,7 +955,7 @@ export function HeroHudEditorPanel({
               min={HERO_PADDING_MIN_REM}
               max={HERO_PADDING_MAX_REM}
               step={HERO_PADDING_STEP_REM}
-              displayValue={`${normalizeHeroPaddingRem(paddingTopRem).toFixed(2)}rem`}
+              unit="rem"
               onChange={onPaddingTopRemChange}
             />
             <BillboardSlider
@@ -965,7 +965,7 @@ export function HeroHudEditorPanel({
               min={HERO_PADDING_MIN_REM}
               max={HERO_PADDING_MAX_REM}
               step={HERO_PADDING_STEP_REM}
-              displayValue={`${normalizeHeroPaddingRem(paddingBottomRem).toFixed(2)}rem`}
+              unit="rem"
               onChange={onPaddingBottomRemChange}
             />
           </div>

@@ -28,6 +28,7 @@ const CTA_FIELD_TYPE_LABELS = new Map(
 );
 const CTA_EDITOR_SECTIONS = Object.freeze([
   { id: 'heading', label: 'Heading', icon: 'Aa' },
+  { id: 'background', label: 'Background', icon: '◉' },
   { id: 'message', label: 'Message + Submit', icon: '↗' },
   { id: 'fields', label: 'Form Fields', icon: '☷' },
 ]);
@@ -336,21 +337,24 @@ export default function CtaHudEditorPanel({
                 </div>
               </div>
             ) : null}
-            <BackgroundEditorPage
-              backgroundTone={resolvedBgTone}
-              backgroundToneOptions={SURFACE_BG_TONE_OPTIONS}
-              backgroundToneLabel="CTA background"
-              onBackgroundToneChange={handleBgToneChange}
-              backgroundEffectsJson={backgroundEffectsJson}
-              onBackgroundEffectsChange={onBackgroundEffectsChange}
-              paletteVariant="hud"
-              className="admin-cta-hud-background-page"
-            />
           </div>
           <p className="admin-front-hud-note admin-cta-hud-heading-note">
             Highlight heading text first for span color. With no selection, color applies to the full heading.
           </p>
         </div>
+      </section>
+
+      <section className="admin-front-hud-card admin-cta-hud-card admin-cta-hud-card--background">
+        <BackgroundEditorPage
+          backgroundTone={resolvedBgTone}
+          backgroundToneOptions={SURFACE_BG_TONE_OPTIONS}
+          backgroundToneLabel="CTA background"
+          onBackgroundToneChange={handleBgToneChange}
+          backgroundEffectsJson={backgroundEffectsJson}
+          onBackgroundEffectsChange={onBackgroundEffectsChange}
+          paletteVariant="hud"
+          className="admin-cta-hud-background-page"
+        />
       </section>
 
       <section className="admin-front-hud-card admin-cta-hud-card--message">

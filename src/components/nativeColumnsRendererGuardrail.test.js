@@ -14,8 +14,7 @@ describe('native columns renderer guardrail', () => {
   it('keeps the shared dynamic columns builder in the native page path', () => {
     const source = readSource('./NativeContentPage.jsx');
 
-    expect(source).toContain('buildDynamicColumnsFromBlock,');
-    expect(source).toContain('const runtime = buildDynamicColumnsFromBlock(block);');
+    expect(source).toContain('const runtime = buildCanonicalBlockRuntime(block);');
     expect(source).toContain("const sectionClassBase = pathname === '/test' ? 'test-dynamic-columns' : 'native-dynamic-columns';");
     expect(source).toContain('const presetClassToken = resolvePresetFamilyClassToken(block);');
     expect(source).toContain("const presetRuntimeClassName = buildPresetFamilyRuntimeClassName('columns', presetClassToken);");

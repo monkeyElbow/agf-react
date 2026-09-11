@@ -100,6 +100,13 @@ export const SYSTEM_READABILITY_BOUNDARIES = Object.freeze([
     pass: 'Pass 5',
   },
   {
+    file: 'src/pages/LoansPage.jsx',
+    owner: 'loans root product route and custom dynamic block rendering',
+    currentBoundary: 'root product page with route-local application flow, HUD, and block rendering',
+    nextSplit: 'separate loan application widgets from route shell or move simple blocks behind the common renderer',
+    pass: 'Pass 5',
+  },
+  {
     file: 'src/pages/RetirementPage.jsx',
     owner: 'retirement root product route and custom dynamic block rendering',
     currentBoundary: 'root product page with route-local calculators, HUD, and block rendering',

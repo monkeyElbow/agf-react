@@ -107,6 +107,7 @@ export default function DynamicCtaSection({
   const fineprint = String(runtime?.fineprint || '').trim();
   const subtitle = String(runtime?.subtitle || '').trim();
   const bgTone = String(runtime?.bgTone || 'white').trim().toLowerCase() || 'white';
+  const textTone = ['blue', 'grey'].includes(bgTone) ? 'white' : 'dark';
   const submitLabel = normalizeFollowUpSubmitLabel(runtime?.submitLabel);
   const successMessage = String(runtime?.successMessage || '').trim() || 'Thanks. We’ll reach out soon.';
   const salesforceUrl = String(runtime?.salesforceUrl || '').trim();
@@ -192,7 +193,7 @@ export default function DynamicCtaSection({
 
   return (
     <section
-      className={`${sectionClassName} native-dynamic-cta is-bg-${bgTone}${presentationClassName ? ` ${presentationClassName}` : ''}${sectionHudClassName ? ` ${sectionHudClassName}` : ''}${ownership?.className || ''}`}
+      className={`${sectionClassName} native-dynamic-cta is-bg-${bgTone} is-text-${textTone}${presentationClassName ? ` ${presentationClassName}` : ''}${sectionHudClassName ? ` ${sectionHudClassName}` : ''}${ownership?.className || ''}`}
       data-block-id={dynamicCtaBlock?.id || 'cta_form'}
       data-cta-display-mode={runtime?.displayMode || 'default'}
       data-cta-trigger-mode={runtime?.triggerMode || 'default'}

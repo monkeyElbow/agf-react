@@ -675,6 +675,11 @@ describe('buildDynamicIntroFromBlock', () => {
           to: '/services/retirement',
         }),
         button1Style: 'outline',
+        button1Tone: 'white',
+        button2Label: 'Contact us',
+        button2Url: '/contact-us',
+        button2PageRef: '/contact-us',
+        button2Style: 'dark',
       },
     });
 
@@ -706,6 +711,12 @@ describe('buildDynamicIntroFromBlock', () => {
           label: 'Learn more',
           to: '/services/retirement',
           style: 'outline',
+          tone: 'white',
+        }),
+        expect.objectContaining({
+          label: 'Contact us',
+          to: '/contact-us',
+          style: 'dark',
         }),
       ],
     });
@@ -822,6 +833,38 @@ describe('buildDynamicBillboardFromBlock', () => {
     }));
   });
 
+  it('keeps legacy tracking values as a fallback while allowing title and subtitle tracking to diverge', () => {
+    const legacyRuntime = buildDynamicBillboardFromBlock({
+      kind: 'billboard',
+      mode: 'dynamic',
+      settings: {
+        title: 'Legacy title',
+        subtitle: 'Legacy subtitle',
+        subtitleDisplay: 'headline',
+        titleLetterSpacingEm: -0.035,
+      },
+    });
+    expect(legacyRuntime?.titleStyle?.letterSpacing).toBe('-0.035em');
+    expect(legacyRuntime?.subtitleStyle?.letterSpacing).toBe('-0.035em');
+
+    const splitRuntime = buildDynamicBillboardFromBlock({
+      kind: 'billboard',
+      mode: 'dynamic',
+      settings: {
+        title: 'Split title',
+        subtitle: 'Split subtitle',
+        subtitleDisplay: 'headline',
+        titleLetterSpacingEm: -0.035,
+        titleTrackingEm: -0.005,
+        subtitleTrackingEm: 0.01,
+      },
+    });
+    expect(splitRuntime?.titleStyle?.letterSpacing).toBe('-0.005em');
+    expect(splitRuntime?.subtitleStyle?.letterSpacing).toBe('0.01em');
+    expect(splitRuntime?.titleTrackingOverride).toBe(true);
+    expect(splitRuntime?.subtitleTrackingOverride).toBe(true);
+  });
+
   it('uses the content rail as the billboard title boundary for legacy narrow settings', () => {
     const runtime = buildDynamicBillboardFromBlock({
       kind: 'billboard',
@@ -866,6 +909,24 @@ describe('buildDynamicBillboardFromBlock', () => {
         '--dynamic-billboard-header-gap': '1.17rem',
       },
       headerGapRem: 1.17,
+    });
+  });
+
+  it('normalizes an explicit space-above-buttons override without changing the body gap', () => {
+    const runtime = buildDynamicBillboardFromBlock({
+      kind: 'billboard',
+      mode: 'dynamic',
+      settings: {
+        title: 'One account.',
+        bodyHtml: '<p>Simple rollover copy.</p>',
+        headerGapRem: 1.2,
+        actionGapRem: 2.37,
+      },
+    });
+
+    expect(runtime).toMatchObject({
+      headerGapRem: 1.2,
+      actionGapRem: 2.37,
     });
   });
 
@@ -1486,6 +1547,24 @@ describe('buildDynamicSiteFeatureFromBlock', () => {
       cardBodyLineHeight: 1.9,
       titleTone: 'mango',
       bodyTone: 'atlantean',
+    });
+  });
+
+  it('applies a History Gallery button text override while retaining its code-owned destination', () => {
+    const runtime = buildDynamicSiteFeatureFromBlock({
+      id: 'history',
+      kind: 'site_feature',
+      mode: 'dynamic',
+      settings: {
+        featureId: 'about_history_feature',
+        buttonLabel: 'Explore our impact',
+      },
+    });
+
+    expect(runtime?.action).toMatchObject({
+      label: 'Explore our impact',
+      to: '/about-us/impact',
+      openInNewWindow: false,
     });
   });
 
@@ -2145,6 +2224,7 @@ describe('buildDynamicGridFromBlock', () => {
         bodyTone: 'mango',
         headerSizeRem: 3.1,
         subheadSizeRem: 1.6,
+        subtitleJustify: 'right',
         headerSubheadSpaceRem: 4,
         headerCardsSpaceRem: 2.25,
         headerWidthPercent: 72,
@@ -2160,6 +2240,7 @@ describe('buildDynamicGridFromBlock', () => {
       bodyTone: 'mango',
       headerSizeRem: 3.1,
       subheadSizeRem: 1.6,
+      subtitleJustify: 'right',
       headerSubheadSpaceRem: 4,
       headerCardsSpaceRem: 2.25,
       headerWidthPercent: 72,
@@ -2227,13 +2308,14 @@ describe('buildDynamicGridFromBlock', () => {
     }));
   });
 
-  it('lets an authored grid title tone replace legacy per-span card title colors', () => {
+  it('lets an explicit grid title-tone override replace legacy per-span card title colors', () => {
     const runtime = buildDynamicGridFromBlock({
       id: 'legacy-colored-card-grid',
       kind: 'card_grid',
       mode: 'dynamic',
       settings: {
         titleTone: 'super-grey',
+        titleToneOverride: true,
         card1Title: 'MBA Income Fund',
         card1TitleHighlightsJson: JSON.stringify([
           { text: 'MBA Income Fund', className: 'is-atlantean' },
@@ -2249,6 +2331,25 @@ describe('buildDynamicGridFromBlock', () => {
       expect.objectContaining({ title: 'MBA Income Fund', titleHighlights: [] }),
       expect.objectContaining({ title: 'Screened Investments', titleHighlights: [] }),
     ]);
+  });
+
+  it('keeps legacy card title accents when a seeded base title tone is present', () => {
+    const runtime = buildDynamicGridFromBlock({
+      id: 'legacy-highlighted-card-grid',
+      kind: 'card_grid',
+      mode: 'dynamic',
+      settings: {
+        titleTone: 'super-grey',
+        card1Title: 'Charitable Remainder Trust',
+        card1TitleHighlightsJson: JSON.stringify([
+          { text: 'Remainder', className: 'is-melon' },
+        ]),
+      },
+    });
+
+    expect(runtime.cards[0]).toEqual(expect.objectContaining({
+      titleHighlights: [{ text: 'Remainder', className: 'is-melon' }],
+    }));
   });
 
   it('keeps legacy cards visible when no explicit count was saved', () => {
@@ -2579,7 +2680,8 @@ describe('buildDynamicGridFromBlock', () => {
     });
 
     expect(runtime).toMatchObject({
-      presetId: 'default',
+      presetId: 'value-cards',
+      columns: 'one',
       cardsPreset: 'value-cards',
       sectionClassName: 'about-native-values',
       cards: [
@@ -2666,7 +2768,7 @@ describe('buildDynamicGridFromBlock', () => {
       kind: 'card_grid',
       mode: 'dynamic',
       settings: {
-        cardStyle: 'card2',
+        cardStyle: 'none',
         cardOutline: true,
         cardOutlineTone: 'MANGO',
         cardOutlineWidth: 2.24,
@@ -2674,6 +2776,8 @@ describe('buildDynamicGridFromBlock', () => {
       },
     });
 
+    expect(runtime?.cardStyle).toBe('none');
+    expect(runtime?.cardOutline).toBe(true);
     expect(runtime?.cardOutlineTone).toBe('mango');
     expect(runtime?.cardOutlineWidth).toBe(2);
   });

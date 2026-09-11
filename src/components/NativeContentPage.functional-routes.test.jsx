@@ -992,7 +992,18 @@ describe('NativeContentPage functional routes', () => {
         contentBlockBlueprintsByPath['/about-us'] || []
       ).map((block) => ({
         ...block,
-        settings: { ...(block?.settings || {}) },
+        settings: {
+          ...(block?.settings || {}),
+          ...(block?.id === 'history'
+            ? {
+              buttonLabel: 'Explore our impact',
+              backgroundEffectsJson: JSON.stringify({
+                enabled: true,
+                lights: [{ id: 'stale-history-light', enabled: true, tone: 'blue', strength: 100, x: 50, y: 50, size: 100 }],
+              }),
+            }
+            : {}),
+        },
         editableFields: Array.isArray(block?.editableFields) ? [...block.editableFields] : [],
       })),
     };
@@ -1044,6 +1055,7 @@ describe('NativeContentPage functional routes', () => {
     expect(valuesSection).toBeTruthy();
     expect(valuesSection?.className).toContain('is-cards-preset-value-cards');
     expect(valuesSection?.querySelector('.investments-native-growth-surface')).toBeTruthy();
+    expect(valuesSection?.querySelector('.block-background-effects')).toBeNull();
     expect(valuesSection?.querySelector('.investments-native-growth-grid')).toBeTruthy();
     expect(valuesSection?.querySelectorAll('.investments-native-growth-card')).toHaveLength(3);
     expect(valuesSection?.querySelectorAll('.investments-native-growth-card.investments-growth-scroll-reveal')).toHaveLength(3);
@@ -1057,10 +1069,11 @@ describe('NativeContentPage functional routes', () => {
 
     const historySection = document.querySelector('.about-native-history');
     expect(historySection).toBeTruthy();
-    expect(historySection?.querySelector('.investments-native-growth-surface')).toBeTruthy();
+    expect(historySection?.querySelector('.block-background-effects')).toBeNull();
+    expect(historySection?.querySelector('.investments-native-growth-surface')).toBeNull();
     expect(historySection?.querySelector('.investments-native-growth-grid')).toBeTruthy();
     expect(historySection?.querySelectorAll('.investments-native-growth-card')).toHaveLength(6);
-    expect(historySection?.querySelector('.service-native-action-row')).toBeTruthy();
+    expect(within(historySection).getByRole('link', { name: 'Explore our impact' }).getAttribute('href')).toBe('/about-us/impact');
     expect(historySection?.className).toContain('is-title-super-grey');
     expect(historySection?.className).toContain('is-body-super-grey');
     expect(historySection?.style.getPropertyValue('--dynamic-grid-card-title-size')).toBe('5.4rem');
@@ -1221,7 +1234,26 @@ describe('NativeContentPage functional routes', () => {
 
   it('renders the careers route through NativeContentPage with delegated jobs behavior intact', () => {
     mockBlocksByPath = {
-      '/about-us/careers': contentBlockBlueprintsByPath['/about-us/careers'],
+      '/about-us/careers': contentBlockBlueprintsByPath['/about-us/careers'].map((block) => (
+        block.id === 'ready'
+          ? {
+              ...block,
+              settings: {
+                ...block.settings,
+                paddingTopRem: 3.25,
+                paddingBottomRem: 4.5,
+                leadCopyLineHeight: 1.8,
+                backgroundEffectsJson: JSON.stringify({
+                  enabled: true,
+                  clip: true,
+                  lights: [
+                    { id: 'careers-ready-light', tone: 'mango', strength: 72, x: 22, y: 34, size: 64 },
+                  ],
+                }),
+              },
+            }
+          : block
+      )),
     };
     mockVisibleJobs = [
       {
@@ -1267,6 +1299,12 @@ describe('NativeContentPage functional routes', () => {
     expect(document.querySelector('.careers-native-ready-copy.fade-up.fade-up-force-observe')).toBeTruthy();
     const careersReadyCopy = screen.getByText('See all positions below and apply online.');
     expect(careersReadyCopy.className).toContain('is-mango');
+    const careersReadyBillboard = document.querySelector('[data-block-id="ready"]');
+    expect(careersReadyBillboard?.className).toContain('dynamic-billboard');
+    expect(careersReadyBillboard?.getAttribute('style')).toContain('--dynamic-billboard-padding-top: 3.25rem');
+    expect(careersReadyBillboard?.getAttribute('style')).toContain('--dynamic-billboard-padding-bottom: 4.5rem');
+    expect(careersReadyBillboard?.querySelector('.block-background-effects .block-background-light')).toBeTruthy();
+    expect(careersReadyBillboard?.querySelector('.native-info-rich-html')?.style.getPropertyValue('--dynamic-billboard-lead-copy-line-height')).toBe('1.8');
     expect(screen.getByRole('heading', { name: 'Marketing Manager' })).toBeTruthy();
     expect(screen.getByText('Springfield, MO')).toBeTruthy();
     expect(screen.getByText('Posted March 20, 2026')).toBeTruthy();
@@ -1676,7 +1714,7 @@ describe('NativeContentPage functional routes', () => {
     expect(givingOptionsSection?.textContent).toContain('This is legacy planning and charitable giving made easy.');
     expect(givingOptionsSection?.querySelector('mark.is-atlantean')?.textContent).toBe('made easy');
     expect(productCards.length).toBeGreaterThan(0);
-    expect(firstCard?.getAttribute('style') || '').not.toContain('padding');
+    expect(firstCard?.getAttribute('style') || '').toContain('--dynamic-grid-card-padding: 1.35rem');
     expect(firstCard?.className).toContain('fade-up');
     expect(firstCard?.className).toContain('fade-up-force-observe');
     expect(within(firstCard).getByRole('heading', { name: 'Donor Advised Funds' })).toBeTruthy();
@@ -1905,7 +1943,25 @@ describe('NativeContentPage functional routes', () => {
   it('does not render the retired standalone 403(b) enroll CTA below the investment strategy feature section', () => {
     mockBlocksByPath = {
       '/services/retirement/403b': (contentBlockBlueprintsByPath['/services/retirement/403b'] || [])
-        .filter((block) => block?.mode !== 'static'),
+        .filter((block) => block?.mode !== 'static')
+        .map((block) => block?.id === 'investment_strategy_heading'
+          ? {
+              ...block,
+              settings: {
+                ...(block.settings || {}),
+                headerGapRem: 2.3,
+                actionGapRem: 2.7,
+              },
+          }
+          : block?.id === 'who_qualifies'
+            ? {
+              ...block,
+              settings: {
+                ...(block.settings || {}),
+                cardPaddingRem: 1.15,
+              },
+            }
+          : block),
     };
 
     const { container } = render(
@@ -1920,14 +1976,22 @@ describe('NativeContentPage functional routes', () => {
     );
 
     const strategyGridSection = container.querySelector('.retirement-403b-native-strategy-options');
+    const qualifyCard = container.querySelector('.retirement-403b-native-qualify .service-native-card');
     const strategyEnrollSection = container.querySelector('.retirement-403b-native-strategy-enroll-cta');
     const strategyHeadingSection = container.querySelector('.retirement-403b-native-strategy-heading');
     const loanApplySection = container.querySelector('.retirement-403b-native-loan-apply');
     const loanDetailsSection = container.querySelector('.retirement-403b-native-loans');
 
     expect(strategyGridSection).toBeTruthy();
+    expect(qualifyCard?.getAttribute('style') || '').toContain('--dynamic-grid-card-padding: 1.15rem');
     expect(strategyHeadingSection?.getAttribute('style') || '').toContain('--dynamic-billboard-padding-top: 4.8rem');
     expect(strategyHeadingSection?.getAttribute('style') || '').toContain('--dynamic-billboard-padding-bottom: 7.6rem');
+    const strategyActionRow = strategyHeadingSection?.querySelector('.service-native-action-row');
+    expect(strategyActionRow?.className).toContain('is-dynamic-billboard-header-gap');
+    expect(strategyActionRow?.getAttribute('style') || '').toContain('--dynamic-billboard-header-gap: 2.3rem');
+    expect(strategyActionRow?.className).toContain('is-dynamic-billboard-action-gap');
+    expect(strategyActionRow?.getAttribute('style') || '').toContain('--dynamic-billboard-action-gap: 2.7rem');
+    expect(strategyActionRow?.getAttribute('style') || '').toContain('margin-top: 2.7rem');
     expect(loanApplySection?.className).toContain('is-bg-sandstone');
     expect(loanDetailsSection?.getAttribute('style') || '').toContain('--dyn-content-padding-bottom: 4.8rem');
     expect(strategyEnrollSection).toBeNull();
@@ -2087,6 +2151,23 @@ describe('NativeContentPage functional routes', () => {
       ).map((block) => ({
         ...block,
         hidden: false,
+        settings: {
+          ...(block.settings || {}),
+          ...(block.id === 'remainder_trust_billboard' ? { bodyColorClassName: 'is-mango' } : {}),
+          ...(block.id === 'lead_trust_billboard'
+            ? {
+              bodyColorClassName: 'is-atlantean',
+              backgroundEffectsJson: JSON.stringify({
+                enabled: true,
+                clip: false,
+                lights: [
+                  { id: 'light-1', tone: 'sand', strength: 100, x: 15.3, y: 66.21, size: 82 },
+                  { id: 'light-2', tone: 'sand', strength: 28, x: 86, y: 80, size: 56 },
+                ],
+              }),
+            }
+            : {}),
+        },
       })),
     };
 
@@ -2155,6 +2236,7 @@ describe('NativeContentPage functional routes', () => {
     expect(charitableRemainderTrust).toBeTruthy();
     expect(within(charitableRemainderTrust).getByRole('heading', { name: 'Charitable Remainder Trust' })).toBeTruthy();
     expect(within(charitableRemainderTrust).getByText(/The trust pays you \(and your spouse, if married\) income for life\./)).toBeTruthy();
+    expect(charitableRemainderTrust?.querySelector('.native-info-rich-html')?.className).toContain('is-mango');
     expect(document.querySelector('.legacy-child-native-flow-steps.legacy-child-native-trusts-crt-steps')).toBeNull();
     expect(screen.queryByRole('heading', { name: 'How it works' })).toBeNull();
     expect(screen.queryByText('Placeholder: describe the first CRT step here.')).toBeNull();
@@ -2167,6 +2249,9 @@ describe('NativeContentPage functional routes', () => {
     expect(charitableLeadTrust).toBeTruthy();
     expect(within(charitableLeadTrust).getByRole('heading', { name: 'Charitable Lead Trust' })).toBeTruthy();
     expect(within(charitableLeadTrust).getByText(/The trust pays income to the ministry you’ve selected for a set number of years\./)).toBeTruthy();
+    expect(charitableLeadTrust?.querySelector('.native-info-rich-html')?.className).toContain('is-atlantean');
+    expect(charitableLeadTrust?.querySelector('.block-background-effects.is-uncropped')).toBeTruthy();
+    expect(charitableLeadTrust?.querySelectorAll('.block-background-light')).toHaveLength(2);
     expect(charitableLeadTrustTypes).toBeTruthy();
     expect(charitableLeadTrustTypes?.querySelector('.info-table-sheet[data-info-table-first-column-header="false"]')).toBeTruthy();
     expect(within(charitableLeadTrustTypes).getAllByText('Grantor Lead Trust').length).toBeGreaterThan(0);

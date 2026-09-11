@@ -5,6 +5,19 @@ import AdminNumberInput from './AdminNumberInput';
 void AdminNumberInput;
 
 describe('AdminNumberInput', () => {
+  it('removes unnecessary trailing zeroes when a stepped value is supplied', () => {
+    render(
+      <AdminNumberInput
+        aria-label="Shadow opacity"
+        value="14.0000"
+        step="1"
+        onChange={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByLabelText('Shadow opacity').value).toBe('14');
+  });
+
   it('accepts decimal values that start with a dot without clobbering the edit', () => {
     const onChange = vi.fn();
 

@@ -1,0 +1,60 @@
+# Editor control reachability audit
+
+The audit has two layers. The structural layer runs with the normal Vitest
+suite. The browser layer launches its own Vite authority with cloned temporary
+content files and a temporary headless Chrome profile, so probes cannot touch
+the working development snapshot.
+
+## Structural/runtime audit
+
+```bash
+npm run test:control-reachability
+```
+
+This audits every registered block definition and reports a red test failure
+when a setting is dropped or its runtime builder throws. `npm test` discovers
+this test automatically.
+
+## Browser/visual audit
+
+Run directly from the repository (it starts and removes its isolated server):
+
+```bash
+npm run test:control-reachability:browser
+```
+
+The browser audit:
+
+- launches an isolated temporary Chrome or Edge profile;
+- enables the development HUD only in that profile;
+- opens the configured route set;
+- opens each rendered HUD block editor;
+- exercises safe controls while blocking content-authority writes;
+- compares the block's DOM attributes, text, inline values, CSS variables, and
+  computed style signature;
+- exits with status 1 and lists the exact route, block, and setting when a
+  control does not retain its probe value;
+- reports controls that retain their staged value but have no visible DOM/style
+  change as visual-review findings, since URL metadata and hidden conditional
+  fields are valid non-visual settings.
+
+The browser layer uses DOM-level probes, not human-trusted pointer/keyboard
+events. Controlled range inputs and a small number of rerendering button groups
+can therefore produce a browser-only retention finding even when the shared
+React wiring test passes. Treat those findings as a prompt to reproduce the
+same control manually; the focused component tests remain the authoritative
+wiring check for those controls.
+
+Useful options:
+
+```bash
+npm run test:control-reachability:browser -- --paths=/services/loans --wait-ms=400
+npm run test:control-reachability:browser -- --paths=/services/loans --blocks=hero --wait-ms=400
+BROWSER_BIN="/path/to/browser" npm run test:control-reachability:browser
+```
+
+Blocks with no HUD anchor are reported as skipped coverage. A requested route
+that renders no block sections is a harness failure, so the audit cannot report
+a false green after testing zero blocks. Known non-block routes are excluded
+from the default route list. No browser-layer test should be interpreted as a
+publish or save operation.

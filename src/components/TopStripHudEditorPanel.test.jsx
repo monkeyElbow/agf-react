@@ -46,6 +46,24 @@ describe('TopStripHudEditorPanel', () => {
     expect(screen.getByRole('button', { name: 'Phone + Rates' })).toBeTruthy();
   });
 
+  it('keeps the shared background page on the rail when enabled', () => {
+    render(
+      <TopStripHudEditorPanel
+        showBackgroundPage
+        settings={{}}
+        onSettingChange={vi.fn()}
+        bgOptions={BG_OPTIONS}
+        textOptions={TEXT_OPTIONS}
+        loginToneOptions={LOGIN_TONE_OPTIONS}
+        ratesToneOptions={RATES_TONE_OPTIONS}
+      />,
+    );
+
+    expect(screen.getByRole('button', { name: 'Background' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Background' }));
+    expect(screen.getByRole('group', { name: 'Enable background lights' })).toBeTruthy();
+  });
+
   it('shows the full shared palette for rates link color', () => {
     renderPanel({
       ratesButtonTone: 'mango',

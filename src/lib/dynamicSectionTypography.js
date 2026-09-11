@@ -11,6 +11,7 @@ export const DEFAULT_BILLBOARD_TITLE_FONT_WEIGHT = 800;
 export const DEFAULT_BILLBOARD_TITLE_LETTER_SPACING_EM = -0.03;
 export const DEFAULT_BILLBOARD_SUBTITLE_SIZE_REM = 1.18;
 export const DEFAULT_BILLBOARD_LEAD_COPY_SIZE_REM = 1.65;
+export const DEFAULT_BILLBOARD_LEAD_COPY_LINE_HEIGHT = 1.55;
 
 export function normalizeIntroLineSpacing(value, fallback = DEFAULT_INTRO_LINE_SPACING) {
   const numeric = Number(value);
@@ -127,6 +128,17 @@ export function normalizeBillboardLeadCopySizeRem(value, fallback = DEFAULT_BILL
   return Math.max(1, Math.min(4, Number(numeric.toFixed(2))));
 }
 
+export function normalizeBillboardLeadCopyLineHeight(
+  value,
+  fallback = DEFAULT_BILLBOARD_LEAD_COPY_LINE_HEIGHT,
+) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return fallback;
+  }
+  return Math.max(0.9, Math.min(2.2, Number(numeric.toFixed(2))));
+}
+
 export function buildBillboardTitleStyle({
   lineSpacing,
   titleFontFamily,
@@ -150,6 +162,7 @@ export function buildBillboardTitleStyle({
     fontSynthesis: 'weight',
     fontSize: `clamp(calc(${normalizedTitleSizeRem}rem * 0.58), 8vw, ${normalizedTitleSizeRem}rem)`,
     letterSpacing: `${normalizedLetterSpacing}em`,
+    '--dynamic-billboard-title-tracking': `${normalizedLetterSpacing}em`,
   };
 }
 
@@ -160,14 +173,14 @@ export function buildBillboardSubtitleStyle({
   titleFontFamily,
   titleFontWeight,
   titleSizeRem,
-  titleLetterSpacingEm,
+  subtitleLetterSpacingEm,
 }) {
   const normalizedDisplay = normalizeBillboardSubtitleDisplay(subtitleDisplay);
   const normalizedFontFamily = normalizeBillboardTitleFontFamily(titleFontFamily);
   const normalizedFontWeight = normalizeBillboardTitleFontWeight(titleFontWeight, normalizedFontFamily);
   const normalizedTitleSizeRem = normalizeBillboardTitleSizeRem(titleSizeRem);
   const normalizedLetterSpacing = normalizeBillboardTitleLetterSpacingEm(
-    titleLetterSpacingEm,
+    subtitleLetterSpacingEm,
     normalizedFontFamily,
   );
   const normalizedSubtitleSizeRem = subtitleSizeRem == null
@@ -191,13 +204,22 @@ export function buildBillboardSubtitleStyle({
   };
 }
 
-export function buildBillboardLeadCopyStyle(leadCopySizeRem) {
-  if (leadCopySizeRem == null || String(leadCopySizeRem).trim() === '') {
+export function buildBillboardLeadCopyStyle(leadCopySizeRem, leadCopyLineHeight) {
+  const hasSize = leadCopySizeRem != null && String(leadCopySizeRem).trim() !== '';
+  const hasLineHeight = leadCopyLineHeight != null && String(leadCopyLineHeight).trim() !== '';
+  if (!hasSize && !hasLineHeight) {
     return undefined;
   }
 
-  const normalizedSizeRem = normalizeBillboardLeadCopySizeRem(leadCopySizeRem);
-  return {
-    '--dynamic-billboard-lead-copy-size': `clamp(calc(${normalizedSizeRem}rem * 0.68), 2.1vw, ${normalizedSizeRem}rem)`,
-  };
+  const style = {};
+  if (hasSize) {
+    const normalizedSizeRem = normalizeBillboardLeadCopySizeRem(leadCopySizeRem);
+    style['--dynamic-billboard-lead-copy-size'] = `clamp(calc(${normalizedSizeRem}rem * 0.68), 2.1vw, ${normalizedSizeRem}rem)`;
+  }
+  if (hasLineHeight) {
+    style['--dynamic-billboard-lead-copy-line-height'] = String(
+      normalizeBillboardLeadCopyLineHeight(leadCopyLineHeight),
+    );
+  }
+  return style;
 }

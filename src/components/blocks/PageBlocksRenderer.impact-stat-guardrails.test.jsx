@@ -64,9 +64,9 @@ describe('home impact stat renderer guardrail', () => {
   it('keeps the shared dynamic impact stat builder in the home page block renderer', () => {
     const source = readSource('./PageBlocksRenderer.jsx');
 
-    expect(source).toContain('buildDynamicImpactStatFromBlock,');
+    expect(source).toContain('buildCanonicalBlockRuntime');
     expect(source).toContain("from '../../lib/dynamicPageBlocks';");
-    expect(source).toContain('const runtime = buildDynamicImpactStatFromBlock(block);');
+    expect(source).toContain('const runtime = buildCanonicalBlockRuntime(block);');
     expect(source).not.toContain("kind: 'impact_stat',");
     expect(source).toContain('function ImpactStatBlock({ block, resolveTo, ownership, hudAnchor }) {');
     expect(source).toContain('<HomeImpactStoryFeature');

@@ -45,6 +45,7 @@ import {
   resolvePanelTextToneClassName,
 } from '../lib/colorSystem';
 import { applyTextColorSelection } from '../lib/textColorSelection';
+import { getCanonicalEditorModel } from '../lib/editorControlContract';
 import { buildAdminBlockInsertChoices } from '../lib/adminBlockInsertChoices';
 import { normalizeAdminBlockName } from '../lib/blockDisplayName';
 import { PUBLISH_STATUS } from '../lib/contentAdminPublishing';
@@ -89,7 +90,7 @@ const ADMIN_BLOCKS_WITH_INLINE_BACKGROUND = new Set([
 
 function AdminBlockBackgroundPage({ block, onSettingChange }) {
   const settings = block?.settings || {};
-  const fields = Array.isArray(block?.editableFields) ? block.editableFields : [];
+  const fields = getCanonicalEditorModel(block?.kind, 'admin', block).fields;
   const backgroundToneField = fields.find((field) => field?.id === 'bgTone');
   const backgroundToneOptions = Array.isArray(backgroundToneField?.options) && backgroundToneField.options.length
     ? backgroundToneField.options
@@ -263,6 +264,27 @@ function formatAdminTimestamp(value) {
 
 function formatActorName(actor, fallback = 'Unknown') {
   return String(actor?.displayName || '').trim() || fallback;
+}
+
+function AdminBlockListTooltip({ label, items = [], title = 'Included blocks' }) {
+  const visibleItems = Array.isArray(items) ? items.filter(Boolean) : [];
+  if (!visibleItems.length) {
+    return <span>{label}</span>;
+  }
+
+  return (
+    <span
+      className="admin-block-list-tooltip"
+      tabIndex={0}
+      aria-label={`${label}. Focus or hover to see the block list.`}
+    >
+      <span>{label}</span>
+      <span className="admin-block-list-tooltip-panel" role="tooltip">
+        <strong>{title}</strong>
+        {visibleItems.map((item) => <span key={item}>{item}</span>)}
+      </span>
+    </span>
+  );
 }
 
 function getActionFailureMessage(result, fallback) {
@@ -1170,17 +1192,17 @@ function renderFieldControl(field, value, onChange, settings, onSettingChange, r
       <div className="admin-boolean-pill" role="group" aria-label={field.label || 'Boolean setting'}>
         <button
           type="button"
-          className={`admin-boolean-pill-option${activeValue ? ' is-active' : ''}`}
-          onClick={() => onChange(true)}
-        >
-          On
-        </button>
-        <button
-          type="button"
           className={`admin-boolean-pill-option${!activeValue ? ' is-active' : ''}`}
           onClick={() => onChange(false)}
         >
           Off
+        </button>
+        <button
+          type="button"
+          className={`admin-boolean-pill-option${activeValue ? ' is-active' : ''}`}
+          onClick={() => onChange(true)}
+        >
+          On
         </button>
       </div>
     );
@@ -1973,6 +1995,20 @@ export default function AdminContentPage() {
     'Make live: already live',
     canPartiallyPublishPage ? publishablePageBlockIds.length : null,
   );
+  const blockLabelById = new Map(
+    selectedBlocks.map((block) => [String(block?.id || '').trim(), getAdminBlockLabel(block)]),
+  );
+  const otherAdminBlockLabels = (Array.isArray(selectedPathWorkflowActivity?.otherActorBlocks)
+    ? selectedPathWorkflowActivity.otherActorBlocks
+    : [])
+    .map((entry) => blockLabelById.get(String(entry?.blockId || '').trim()) || String(entry?.blockId || '').trim())
+    .filter(Boolean);
+  const makeLiveBlockIds = canPartiallyPublishPage
+    ? publishablePageBlockIds
+    : (Array.isArray(selectedPathPublishSummary?.changedBlockIds) ? selectedPathPublishSummary.changedBlockIds : []);
+  const makeLiveBlockLabels = makeLiveBlockIds
+    .map((blockId) => blockLabelById.get(String(blockId || '').trim()) || String(blockId || '').trim())
+    .filter(Boolean);
   const hasMakeLiveChanges = selectedPathDirty
     || Boolean(selectedPathPublishSummary?.hasUnsavedChanges)
     || selectedPathHasPendingLocalDraft;
@@ -2681,17 +2717,23 @@ export default function AdminContentPage() {
                 </span>
               </div>
               <div className="admin-page-save-bar-meta">
-                {changedBlockLabel ? (
-                  <span>{changedBlockLabel}</span>
-                ) : null}
-                {hasUnpublishedPageChanges ? <span>{draftScopeLabel}</span> : null}
-                <span>{publishScopeLabel}</span>
-                {selectedPathChangeSummary?.hasOrderChanges ? (
-                  <span>Order changed</span>
-                ) : null}
-                {selectedPathChangeSummary?.hasPageMetaChanges ? (
-                  <span>Page details changed</span>
-                ) : null}
+                <span className={!changedBlockLabel ? 'admin-page-save-bar-meta-reserved' : ''} aria-hidden={!changedBlockLabel || undefined}>
+                  {changedBlockLabel || '\u00a0'}
+                </span>
+                <span className={!hasUnpublishedPageChanges ? 'admin-page-save-bar-meta-reserved' : ''} aria-hidden={!hasUnpublishedPageChanges || undefined}>
+                  {hasUnpublishedPageChanges ? draftScopeLabel : '\u00a0'}
+                </span>
+                <AdminBlockListTooltip
+                  label={publishScopeLabel}
+                  items={makeLiveBlockLabels}
+                  title="Blocks included in Make live"
+                />
+                <span className={!selectedPathChangeSummary?.hasOrderChanges ? 'admin-page-save-bar-meta-reserved' : ''} aria-hidden={!selectedPathChangeSummary?.hasOrderChanges || undefined}>
+                  {selectedPathChangeSummary?.hasOrderChanges ? 'Order changed' : '\u00a0'}
+                </span>
+                <span className={!selectedPathChangeSummary?.hasPageMetaChanges ? 'admin-page-save-bar-meta-reserved' : ''} aria-hidden={!selectedPathChangeSummary?.hasPageMetaChanges || undefined}>
+                  {selectedPathChangeSummary?.hasPageMetaChanges ? 'Page details changed' : '\u00a0'}
+                </span>
                 {selectedPathPublishSummary?.hasUnsavedChanges ? (
                   <details className="admin-page-save-bar-details admin-page-save-bar-review-details">
                     <summary>Review changes</summary>
@@ -2704,10 +2746,18 @@ export default function AdminContentPage() {
                       {selectedPathPublishSummary.hasPageMetaChanges ? <span>Page details</span> : null}
                     </div>
                   </details>
-                ) : null}
+                ) : (
+                  <span className="admin-page-save-bar-meta-reserved-row" aria-hidden="true">&nbsp;</span>
+                )}
                 {selectedPathWorkflowActivity?.otherActorBlockCount ? (
-                  <span>{selectedPathWorkflowActivity.otherActorBlockCount} other-admin block{selectedPathWorkflowActivity.otherActorBlockCount === 1 ? '' : 's'}</span>
-                ) : null}
+                  <AdminBlockListTooltip
+                    label={`${selectedPathWorkflowActivity.otherActorBlockCount} other-admin block${selectedPathWorkflowActivity.otherActorBlockCount === 1 ? '' : 's'}`}
+                    items={otherAdminBlockLabels}
+                    title="Blocks owned by another admin"
+                  />
+                ) : (
+                  <span className="admin-page-save-bar-meta-reserved" aria-hidden="true">&nbsp;</span>
+                )}
                 {selectedPathWorkflowActivity?.otherActorBlocks?.length
                   || selectedPathWorkflowActivity?.currentActorBlockIds?.length ? (
                   <details className="admin-page-save-bar-details admin-page-save-bar-ownership-details">
@@ -2746,14 +2796,24 @@ export default function AdminContentPage() {
                       ) : null}
                     </div>
                   </details>
-                ) : null}
-                {ownershipMessage ? <span role="status">{ownershipMessage}</span> : null}
+                ) : (
+                  <span className="admin-page-save-bar-meta-reserved-row" aria-hidden="true">&nbsp;</span>
+                )}
+                {ownershipMessage ? (
+                  <span role="status">{ownershipMessage}</span>
+                ) : (
+                  <span className="admin-page-save-bar-meta-reserved" aria-hidden="true">&nbsp;</span>
+                )}
                 {selectedPathSaveResult?.blockedBlocks.length ? (
                   <span>{selectedPathSaveResult.blockedBlocks.length} conflict{selectedPathSaveResult.blockedBlocks.length === 1 ? '' : 's'}</span>
-                ) : null}
+                ) : (
+                  <span className="admin-page-save-bar-meta-reserved" aria-hidden="true">&nbsp;</span>
+                )}
                 {selectedPathPublishResult?.blockedBlocks.length ? (
                   <span>{selectedPathPublishResult.blockedBlocks.length} publish block{selectedPathPublishResult.blockedBlocks.length === 1 ? '' : 's'}</span>
-                ) : null}
+                ) : (
+                  <span className="admin-page-save-bar-meta-reserved" aria-hidden="true">&nbsp;</span>
+                )}
                 {pageSaveFeedback ? (
                   <span
                     className={`admin-page-save-feedback${selectedPathSaveResult?.error ? ' is-error' : ''}`}
@@ -2762,10 +2822,14 @@ export default function AdminContentPage() {
                   >
                     {pageSaveFeedback}
                   </span>
-                ) : null}
+                ) : (
+                  <span className="admin-page-save-bar-meta-reserved" aria-hidden="true">&nbsp;</span>
+                )}
                 {pagePublishFeedback ? (
                   <span role="status" aria-live="polite">{pagePublishFeedback}</span>
-                ) : null}
+                ) : (
+                  <span className="admin-page-save-bar-meta-reserved" aria-hidden="true">&nbsp;</span>
+                )}
                 <details className="admin-page-save-bar-details">
                   <summary>Details</summary>
                   <div className="admin-page-save-bar-details-copy">
@@ -2852,12 +2916,15 @@ export default function AdminContentPage() {
                 >
                   Make live
                 </button>
+              </div>
+              <div className="admin-page-save-bar-danger-actions" aria-label="Destructive recovery actions">
+                <span className="admin-page-save-bar-danger-label">Destructive recovery</span>
                 <button
                   type="button"
                   className="action-btn action-btn-danger"
                   onClick={handleDiscardPageDraft}
                   disabled={!canDiscardPageDraft}
-                  title="Discard all unpublished changes on this page; live content remains unchanged."
+                  title="Discard all unpublished changes on this page; live content remains unchanged. A confirmation is required."
                 >
                   {draftDiscardBusy ? 'Discarding…' : 'Discard all page drafts'}
                 </button>
@@ -3433,7 +3500,7 @@ export default function AdminContentPage() {
                     />
                   ) : (
                     <FieldControlGrid
-                      fields={selectedBlock.editableFields}
+                      fields={getCanonicalEditorModel(selectedBlock.kind, 'admin', selectedBlock).fields}
                       settings={selectedBlock.settings}
                       className={selectedBlock.kind === 'top_strip' ? 'admin-top-strip-grid' : ''}
                       routeOptions={routeLinkOptions}

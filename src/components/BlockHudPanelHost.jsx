@@ -1,4 +1,4 @@
-import { createContext, useContext, useRef, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import * as ContentAdminContextModule from '../context/ContentAdminContext';
 import { isForeignOwnedBlockOwnership } from './BlockOwnershipOverlay';
 import HudBlockOptions from './HudBlockOptions';
@@ -12,20 +12,15 @@ import {
   FieldControlGrid,
   getMigratedBlockEditorComponent,
 } from './block-editors/migratedBlockEditors';
-import CtaHudEditorPanel from './CtaHudEditorPanel';
-import { normalizeCtaHudSubmitStyle, normalizeCtaHudSubmitTone } from '../lib/ctaHudSettings';
 import { getBlockHudDefinition } from '../lib/blockHudRegistry';
-import { getBlockEditorSections } from '../blocks/registry';
+import { getCanonicalEditorModel } from '../lib/editorControlContract';
 import { SURFACE_BG_TONE_OPTIONS } from '../lib/colorSystem';
+import HudInputDiagnostics from './HudInputDiagnostics';
 import {
-  extractHeroLineColorToken,
-  removeSelectionRange,
-} from '../lib/heroHudRanges';
-import { applyTextColorSelection } from '../lib/textColorSelection';
-import {
-  buildCtaFormSettingsPatch,
-  extractCtaFormFields,
-} from '../blocks/foundation/forms';
+  formatHudDiagnosticValue,
+  getHudInputDiagnosticKey,
+  updateHudInputDiagnostic,
+} from '../lib/hudInputDiagnostics';
 
 const EmptyContentAdminContext = createContext(null);
 
@@ -70,6 +65,7 @@ const HUD_EDITORS_WITH_SECTION_RAIL = new Set([
   'columns',
   'request_form',
   'support_library',
+  'cta_form',
 ]);
 
 const HUD_BLOCKS_WITH_INLINE_BACKGROUND = new Set([
@@ -85,7 +81,7 @@ const HUD_BLOCKS_WITH_INLINE_BACKGROUND = new Set([
 
 function HudBlockBackgroundPage({ block, onSettingChange }) {
   const settings = block?.settings || {};
-  const fields = Array.isArray(block?.editableFields) ? block.editableFields : [];
+  const fields = getCanonicalEditorModel(block?.kind, 'hud', block).fields;
   const backgroundToneField = fields.find((field) => field?.id === 'bgTone');
   const backgroundToneOptions = Array.isArray(backgroundToneField?.options) && backgroundToneField.options.length
     ? backgroundToneField.options
@@ -108,7 +104,7 @@ function HudBlockBackgroundPage({ block, onSettingChange }) {
 
 function HudEditorCompatibilityShell({ block, blockKind, blockLabel, children, blockOptions = null, onSettingChange }) {
   const label = String(blockLabel || 'Block').trim() || 'Block';
-  const definitionSections = getBlockEditorSections(blockKind, 'hud');
+  const definitionSections = getCanonicalEditorModel(blockKind, 'hud').sections;
   const modelSections = definitionSections.length
     ? definitionSections.map((section, index) => ({
       id: String(section.id || `section-${index + 1}`),
@@ -119,7 +115,7 @@ function HudEditorCompatibilityShell({ block, blockKind, blockLabel, children, b
   const sections = appendHudBlockOptionsSection(modelSections, blockOptions);
   const [activeSection, setActiveSection] = useState(sections[0]?.id || 'controls');
   const settings = block?.settings || {};
-  const backgroundToneField = (Array.isArray(block?.editableFields) ? block.editableFields : [])
+  const backgroundToneField = getCanonicalEditorModel(block?.kind, 'hud', block).fields
     .find((field) => field?.id === 'bgTone');
   const backgroundToneOptions = Array.isArray(backgroundToneField?.options) && backgroundToneField.options.length
     ? backgroundToneField.options
@@ -176,13 +172,61 @@ export default function BlockHudPanelHost({
   showPublishAction = true,
   heroSelection = null,
   onHeroSelectionClear = null,
+  activePanelId = '',
   onSettingChange,
 }) {
-  const ctaTitleInputRef = useRef(null);
-  const [ctaTitleSelection, setCtaTitleSelection] = useState({ start: 0, end: 0, text: '' });
   const contentAdmin = useContext(
     readOptionalModuleExport(ContentAdminContextModule, 'ContentAdminContext') || EmptyContentAdminContext,
   );
+  const diagnosticKey = getHudInputDiagnosticKey(pathname, block?.id);
+  const currentClient = contentAdmin?.devIdentity || null;
+  const collaboration = block?.id && typeof contentAdmin?.getBlockCollaboration === 'function'
+    ? contentAdmin.getBlockCollaboration(pathname, block.id)
+    : null;
+  const isForeignOwned = isForeignOwnedBlockOwnership(ownership);
+  const isOwnedByMe = Boolean(
+    currentClient?.userId
+    && ownership?.owner?.userId === currentClient.userId,
+  );
+  const canEdit = !isForeignOwned;
+  const isReadOnly = isForeignOwned;
+  const callbackMode = isForeignOwned ? 'NO-OP callback' : 'REAL callback';
+
+  useEffect(() => {
+    if (!block?.id) {
+      return;
+    }
+    updateHudInputDiagnostic(diagnosticKey, {
+      route: pathname,
+      blockId: block.id,
+      blockKind: block.kind,
+      currentClientUserId: currentClient?.userId || '',
+      currentClientDisplayName: currentClient?.displayName || '',
+      lockedBy: collaboration?.lockedBy || null,
+      draftedBy: collaboration?.draftedBy || null,
+      ownershipStatus: ownership?.state || 'none',
+      canEdit,
+      isReadOnly,
+      isOwnedByMe,
+      callbackMode,
+      activePanelId,
+    });
+  }, [
+    activePanelId,
+    block?.id,
+    block?.kind,
+    callbackMode,
+    canEdit,
+    collaboration?.draftedBy,
+    collaboration?.lockedBy,
+    currentClient?.displayName,
+    currentClient?.userId,
+    diagnosticKey,
+    isOwnedByMe,
+    isReadOnly,
+    ownership?.state,
+    pathname,
+  ]);
 
   if (!block || typeof onSettingChange !== 'function') {
     return null;
@@ -190,14 +234,8 @@ export default function BlockHudPanelHost({
 
   const definition = getBlockHudDefinition(block);
   const MigratedHudEditor = getMigratedBlockEditorComponent(block.kind, 'hud');
-  const editableFields = Array.isArray(block.editableFields) ? block.editableFields : [];
+  const editableFields = getCanonicalEditorModel(block.kind, 'hud', block).fields;
   const settings = block.settings || {};
-  const ctaFields = extractCtaFormFields(settings, null, {
-    allowLegacyStepFields: String(settings.sectionClassName || '')
-      .split(/\s+/)
-      .includes('insurance-native-cta'),
-  });
-  const isForeignOwned = isForeignOwnedBlockOwnership(ownership);
   const releaseDraft = onReleaseDraft || (
     typeof contentAdmin?.releaseActiveBlockDraft === 'function'
       ? (force = false) => contentAdmin.releaseActiveBlockDraft(pathname, block.id, { force })
@@ -208,9 +246,28 @@ export default function BlockHudPanelHost({
       ? () => contentAdmin.publishSharedBlockNow(pathname, block.id, 'HUD block publish')
       : null
   );
-  const blockedOnSettingChange = isForeignOwned
+  const rawBlockedOnSettingChange = isForeignOwned
     ? () => {}
     : onSettingChange;
+  const blockedOnSettingChange = (settingKey, nextValue) => {
+    const timestamp = new Date().toISOString();
+    updateHudInputDiagnostic(diagnosticKey, {
+      lastControlEvent: {
+        settingKey: String(settingKey || '').trim() || 'unknown',
+        incomingValue: formatHudDiagnosticValue(nextValue, settingKey),
+        timestamp,
+      },
+      lastEditorCallback: {
+        fired: true,
+        outcome: isForeignOwned ? 'blocked' : 'accepted',
+        reason: isForeignOwned
+          ? `BlockHudPanelHost ${ownership?.state || 'foreign-owned'}`
+          : '',
+        timestamp,
+      },
+    });
+    return rawBlockedOnSettingChange(settingKey, nextValue);
+  };
   const hudOwnershipNotice = ownership?.state === 'drafted-other'
     ? {
       state: ownership.state,
@@ -231,26 +288,6 @@ export default function BlockHudPanelHost({
       }
       : null;
 
-  const captureGenericSelection = (inputRef, setter) => {
-    const input = inputRef?.current;
-    if (!input) {
-      return;
-    }
-    const rawStart = Number(input.selectionStart);
-    const rawEnd = Number(input.selectionEnd);
-    if (!Number.isInteger(rawStart) || !Number.isInteger(rawEnd)) {
-      return;
-    }
-    const start = Math.max(0, Math.min(rawStart, rawEnd));
-    const end = Math.max(start, rawStart, rawEnd);
-    const source = String(input.value || '');
-    setter({
-      start,
-      end,
-      text: source.slice(start, end),
-    });
-  };
-
   const ownershipNoticeMarkup = hudOwnershipNotice ? (
     <div className={`admin-front-hud-ownership-note is-${hudOwnershipNotice.state}`} role="status">
       <div className="admin-front-hud-ownership-copy">
@@ -265,6 +302,22 @@ export default function BlockHudPanelHost({
       </div>
     </div>
   ) : null;
+
+  const diagnosticsMarkup = (
+    <HudInputDiagnostics
+      diagnosticKey={diagnosticKey}
+      route={pathname}
+      block={block}
+      activePanelId={activePanelId}
+      currentClient={currentClient}
+      collaboration={collaboration}
+      ownership={ownership}
+      canEdit={canEdit}
+      isReadOnly={isReadOnly}
+      isOwnedByMe={isOwnedByMe}
+      callbackMode={callbackMode}
+    />
+  );
 
   const blockOptionsMarkup = (
     <HudBlockOptions
@@ -283,9 +336,7 @@ export default function BlockHudPanelHost({
   const isDynamicMigratedHudEditor = Boolean(
     MigratedHudEditor && String(block.mode || '').trim() === 'dynamic',
   );
-  const usesInlineBackgroundPage = isDynamicMigratedHudEditor
-    && HUD_BLOCKS_WITH_INLINE_BACKGROUND.has(String(block.kind || '').trim())
-    || (!MigratedHudEditor && String(definition.editorType || '').trim() === 'cta_form');
+  const usesInlineBackgroundPage = HUD_BLOCKS_WITH_INLINE_BACKGROUND.has(String(block.kind || '').trim());
   const usesCompatibilityBackgroundPage = isDynamicMigratedHudEditor
     && !HUD_EDITORS_WITH_SECTION_RAIL.has(String(block.kind || '').trim());
   const sharedBackgroundPage = usesInlineBackgroundPage || usesCompatibilityBackgroundPage
@@ -340,6 +391,7 @@ export default function BlockHudPanelHost({
     return (
       <>
         {ownershipNoticeMarkup}
+        {diagnosticsMarkup}
         {renderReadOnlyShell(
           <>
             {renderMigratedHudEditor()}
@@ -350,110 +402,20 @@ export default function BlockHudPanelHost({
     );
   }
 
-  switch (definition.editorType) {
-    case 'cta_form':
-      return (
-      <>
-        {ownershipNoticeMarkup}
-        {renderReadOnlyShell(
-            <>
-              <CtaHudEditorPanel
-              sourceRevision={contentAdmin?.sharedSnapshotUpdatedAt || 0}
-              settings={settings}
-              bgTone={String(settings.bgTone || 'white')}
-              submitStyle={normalizeCtaHudSubmitStyle(settings.submitStyle)}
-              submitTone={normalizeCtaHudSubmitTone(settings.submitTone, settings.submitStyle)}
-              bodyHtml={String(settings.bodyHtml || '')}
-              subtitle={String(settings.subtitle || '')}
-              bodyColorClassName={String(settings.bodyColorClassName || 'is-super-grey')}
-              titleColor={extractHeroLineColorToken(settings.titleClassName)}
-              titleSelection={ctaTitleSelection}
-              setTitleInputRef={(node) => {
-                ctaTitleInputRef.current = node;
-              }}
-              onTitleSelectionCapture={() => captureGenericSelection(ctaTitleInputRef, setCtaTitleSelection)}
-              onTitleChange={(nextValue) => {
-                blockedOnSettingChange('title', nextValue);
-                setCtaTitleSelection({ start: 0, end: 0, text: '' });
-              }}
-              onBodyHtmlChange={(nextValue) => blockedOnSettingChange('bodyHtml', nextValue)}
-              onSubtitleChange={(nextValue) => blockedOnSettingChange('subtitle', nextValue)}
-              onBodyColorChange={(nextValue) => blockedOnSettingChange('bodyColorClassName', nextValue)}
-              fields={ctaFields}
-              includeContactPreference={Boolean(settings.includeContactPreference)}
-              onFieldsChange={(nextFields) => {
-                Object.entries(buildCtaFormSettingsPatch({
-                  fields: nextFields,
-                  includeContactPreference: settings.includeContactPreference,
-                })).forEach(([fieldId, nextValue]) => {
-                  blockedOnSettingChange(fieldId, nextValue);
-                });
-              }}
-              onIncludeContactPreferenceChange={(nextValue) => {
-                blockedOnSettingChange('includeContactPreference', nextValue);
-              }}
-              onSubmitLabelChange={(nextValue) => blockedOnSettingChange('submitLabel', nextValue)}
-              onSubmitStyleChange={(nextValue) => blockedOnSettingChange('submitStyle', nextValue)}
-              onSubmitToneChange={(nextValue) => blockedOnSettingChange('submitTone', nextValue)}
-              onBgToneChange={(nextValue) => blockedOnSettingChange('bgTone', nextValue)}
-              backgroundEffectsJson={settings.backgroundEffectsJson}
-              onBackgroundEffectsChange={(nextValue) => blockedOnSettingChange('backgroundEffectsJson', nextValue)}
-              onApplySelectionColor={(colorValue, selectedTitle = ctaTitleSelection) => {
-                const sourceText = String(settings.title || '');
-                const result = applyTextColorSelection({
-                  text: sourceText,
-                  lineClassName: String(settings.titleClassName || ''),
-                  highlightsJson: settings.titleHighlightsJson,
-                  selection: selectedTitle,
-                  colorValue,
-                });
-                if (result.target !== 'selection') {
-                  return;
-                }
-                blockedOnSettingChange(
-                  'titleHighlightsJson',
-                  result.highlightsJson,
-                );
-              }}
-              onTitleColorChange={(colorValue) => {
-                blockedOnSettingChange('titleClassName', applyTextColorSelection({
-                  text: String(settings.title || ''),
-                  lineClassName: String(settings.titleClassName || ''),
-                  highlightsJson: settings.titleHighlightsJson,
-                  selection: { start: 0, end: 0 },
-                  colorValue,
-                }).lineClassName);
-              }}
-              onRemoveTitleSpan={(index) => {
-                blockedOnSettingChange(
-                  'titleHighlightsJson',
-                  removeSelectionRange(settings.titleHighlightsJson, settings.title, index),
-                );
-              }}
-              onClearTitleSpans={() => {
-                blockedOnSettingChange('titleHighlightsJson', '');
-                setCtaTitleSelection({ start: 0, end: 0, text: '' });
-              }}
-                blockOptions={blockOptionsMarkup}
-              />
-              {sharedBackgroundPage}
-            </>,
-          )}
-        </>
-      );
-    default:
-      if (!editableFields.length) {
+  if (!editableFields.length) {
         return (
           <>
             {ownershipNoticeMarkup}
+            {diagnosticsMarkup}
             <p className="admin-front-hud-note">This dynamic block does not have HUD-editable fields yet.</p>
             {blockOptionsMarkup}
           </>
         );
       }
-      return (
+  return (
         <>
           {ownershipNoticeMarkup}
+          {diagnosticsMarkup}
           {renderReadOnlyShell(
             <HudEditorCompatibilityShell block={block} blockKind={block.kind} blockLabel={definition.label || block.kind} blockOptions={blockOptionsMarkup} onSettingChange={blockedOnSettingChange}>
               <FieldControlGrid
@@ -466,6 +428,5 @@ export default function BlockHudPanelHost({
             </HudEditorCompatibilityShell>,
           )}
         </>
-      );
-  }
+  );
 }

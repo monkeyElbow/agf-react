@@ -7,6 +7,7 @@ import SharedRouteLinkField from '../RouteLinkField';
 import BillboardHudEditorPanel, {
   BillboardSlider,
   normalizeBillboardBodyWidth,
+  normalizeBillboardActionGap,
   normalizeBillboardHeaderGap,
   normalizeBillboardPadding,
   normalizeBillboardWidth,
@@ -18,6 +19,7 @@ import PageContentHudEditorPanel, { PageContentLayoutControls } from '../PageCon
 import TestimonialsHudEditorPanel from '../TestimonialsHudEditorPanel';
 import TopStripHudEditorPanel from '../TopStripHudEditorPanel';
 import ColumnsHudEditorPanel from '../ColumnsHudEditorPanel';
+import CtaHudEditorPanel from '../CtaHudEditorPanel';
 import {
   HudEditorBlockOptionsPage,
   HudEditorModelLayout,
@@ -59,6 +61,7 @@ import {
   supportsOptionalHeroLine3,
 } from '../../lib/heroEditorLines';
 import { normalizeHeroLineGapEm } from '../../lib/heroLineStyle';
+import { normalizeCtaHudSubmitStyle, normalizeCtaHudSubmitTone } from '../../lib/ctaHudSettings';
 import { normalizeHeroPaddingRem } from '../../lib/heroPadding';
 import {
   DEFAULT_HERO_TITLE_LETTER_SPACING_EM,
@@ -68,6 +71,7 @@ import {
 } from '../../lib/heroTitleSize';
 import {
   normalizeBillboardLeadCopySizeRem,
+  normalizeBillboardLeadCopyLineHeight,
   normalizeBillboardLineSpacing,
   normalizeBillboardSubtitleSizeRem,
   normalizeBillboardTitleFontFamily,
@@ -94,11 +98,10 @@ import {
   resolveTestimonialsBlockData,
 } from '../../lib/testimonials';
 import {
-  getGridCompatibleCardStyleOptions,
-  getGridSafeCardStyleForBg,
   getGridSafeToneForBg,
   DEFAULT_DYNAMIC_GRID_CARD_BULLET_LINE_HEIGHT,
   DEFAULT_DYNAMIC_GRID_CARD_BULLET_SIZE_REM,
+  normalizeDynamicGridCardJustify,
   normalizeGridBgTone,
   normalizeGridCardStyleToken,
   normalizeGridToneToken,
@@ -1115,9 +1118,14 @@ function CardGridHeaderEditor({
   const subheadSizeRem = Number.isFinite(Number(settings.subheadSizeRem))
     ? Number(settings.subheadSizeRem)
     : null;
-  const subheadPreviewStyle = subheadSizeRem !== null
-    ? { '--dynamic-grid-subhead-size': `${subheadSizeRem}rem` }
-    : undefined;
+  const subtitleJustify = normalizeDynamicGridCardJustify(settings.subtitleJustify, 'center');
+  const subheadPreviewStyle = {
+    '--dynamic-grid-subhead-justify': subtitleJustify,
+    ...(subheadSizeRem !== null ? { '--dynamic-grid-subhead-size': `${subheadSizeRem}rem` } : {}),
+    ...(Number.isFinite(Number(settings.headerSubheadSpaceRem))
+      ? { '--dynamic-grid-header-subhead-space': `${Number(settings.headerSubheadSpaceRem)}rem` }
+      : {}),
+  };
   const titleColorOptions = Array.isArray(titleColorField?.options) && titleColorField.options.length
     ? titleColorField.options
     : HERO_SWATCH_OPTIONS;
@@ -1162,6 +1170,7 @@ function CardGridHeaderEditor({
                 ariaLabel="Grid subhead and intro copy"
                 className={`is-bg-${gridBgTone}${subheadSizeRem !== null ? ' is-subhead-sized' : ''}`}
                 style={subheadPreviewStyle}
+                showAlignmentControls={false}
                 baseColorClassName={normalizeSemanticTextColorClass(settings.subtitleClassName)}
                 onBaseColorChange={(nextValue) => onSettingChange('subtitleClassName', nextValue)}
               />
@@ -2464,23 +2473,27 @@ function renderFieldControl(field, value, onChange, settings, onSettingChange, r
     : (field.suffix === '' ? '' : (field.suffix || 'rem'));
 
   if (field.type === 'outline_mode') {
+    const isBinaryOutlineToggle = field.id === 'cardOutline';
     const normalizedValue = String(value ?? '').trim().toLowerCase();
+    const naturalOutlineEnabled = !['none', 'borderless-shadow'].includes(normalizeGridCardStyleToken(settings?.cardStyle));
     const mode = value === true || normalizedValue === 'true'
       ? 'on'
       : value === false || normalizedValue === 'false'
         ? 'off'
-        : 'default';
+        : (isBinaryOutlineToggle && naturalOutlineEnabled ? 'on' : 'default');
+    const options = isBinaryOutlineToggle
+      ? [['off', 'Off', false], ['on', 'On', true]]
+      : [['default', 'Default', null], ['off', 'Off', false], ['on', 'On', true]];
+    const resolvedMode = mode === 'default' && isBinaryOutlineToggle
+      ? (naturalOutlineEnabled ? 'on' : 'off')
+      : mode;
     return (
       <div className="admin-boolean-pill admin-outline-mode-pill" role="group" aria-label={field.label || 'Card outline'}>
-        {[
-          ['default', 'Default', null],
-          ['on', 'On', true],
-          ['off', 'Off', false],
-        ].map(([optionMode, label, nextValue]) => (
+        {options.map(([optionMode, label, nextValue]) => (
           <button
             key={optionMode}
             type="button"
-            className={`admin-boolean-pill-option${mode === optionMode ? ' is-active' : ''}`}
+            className={`admin-boolean-pill-option${resolvedMode === optionMode ? ' is-active' : ''}`}
             onClick={() => onChange(nextValue)}
           >
             {label}
@@ -2496,19 +2509,19 @@ function renderFieldControl(field, value, onChange, settings, onSettingChange, r
       <div className="admin-boolean-pill" role="group" aria-label={field.label || 'Boolean setting'}>
         <button
           type="button"
-          className={`admin-boolean-pill-option${activeValue ? ' is-active' : ''}`}
-          onClick={() => onChange(true)}
-          disabled={isDisabled}
-        >
-          On
-        </button>
-        <button
-          type="button"
           className={`admin-boolean-pill-option${!activeValue ? ' is-active' : ''}`}
           onClick={() => onChange(false)}
           disabled={isDisabled}
         >
           Off
+        </button>
+        <button
+          type="button"
+          className={`admin-boolean-pill-option${activeValue ? ' is-active' : ''}`}
+          onClick={() => onChange(true)}
+          disabled={isDisabled}
+        >
+          On
         </button>
       </div>
     );
@@ -2571,7 +2584,8 @@ function renderFieldControl(field, value, onChange, settings, onSettingChange, r
     const isFineprintJustify = /(?:FineprintJustify|fineprintJustify)$/.test(String(field.id || ''));
     const isCardTitleJustify = field.id === 'cardTitleJustify';
     const isCardBodyJustify = field.id === 'cardBodyJustify';
-    if (field.id === 'justify' || isFineprintJustify || isCardTitleJustify || isCardBodyJustify) {
+    const isSubheadJustify = field.id === 'subtitleJustify';
+    if (field.id === 'justify' || isFineprintJustify || isCardTitleJustify || isCardBodyJustify || isSubheadJustify) {
       return (
           <JustifyPillControl
           label={field.label}
@@ -3346,13 +3360,9 @@ function serializeRequestFormStepFields(fields) {
 }
 
 export function resolveRequestFormLeadCopyFieldId(settings = {}) {
-  if (String(settings?.subtitle || '').trim()) {
-    return 'subtitle';
-  }
-  if (String(settings?.body || '').trim()) {
-    return 'body';
-  }
-  return 'subtitle';
+  // Request-form lead copy is now authored as HTML. Legacy subtitle/body text
+  // remains available as the display fallback until the editor is saved.
+  return 'bodyHtml';
 }
 
 function RequestFormStepEditor({ stepNumber, settings, onSettingChange, expanded, onToggle }) {
@@ -3707,6 +3717,101 @@ function createRequestFormStepFieldDraft(fieldNumber) {
   };
 }
 
+export function CtaFormHudBlockEditor({ block, onSettingChange, sourceRevision = 0, blockOptions = null }) {
+  const settings = block?.settings || {};
+  const [titleSelection, setTitleSelection] = useState({ start: 0, end: 0, text: '' });
+  const titleInputRef = useRef(null);
+  const fields = resolveEditorFields('cta_form', 'hud', block?.editableFields);
+  const ctaFields = extractCtaFormFields(settings, null, {
+    allowLegacyStepFields: String(settings.sectionClassName || '')
+      .split(/\s+/)
+      .includes('insurance-native-cta'),
+  });
+  const captureTitleSelection = () => {
+    const input = titleInputRef.current;
+    if (!input) {
+      return;
+    }
+    const rawStart = Number(input.selectionStart);
+    const rawEnd = Number(input.selectionEnd);
+    if (!Number.isInteger(rawStart) || !Number.isInteger(rawEnd)) {
+      return;
+    }
+    const start = Math.max(0, Math.min(rawStart, rawEnd));
+    const end = Math.max(start, rawStart, rawEnd);
+    const source = String(input.value || '');
+    setTitleSelection({ start, end, text: source.slice(start, end) });
+  };
+  const onChange = typeof onSettingChange === 'function' ? onSettingChange : () => {};
+
+  return (
+    <CtaHudEditorPanel
+      sourceRevision={sourceRevision}
+      settings={settings}
+      bgTone={String(settings.bgTone || 'white')}
+      submitStyle={normalizeCtaHudSubmitStyle(settings.submitStyle)}
+      submitTone={normalizeCtaHudSubmitTone(settings.submitTone, settings.submitStyle)}
+      bodyHtml={String(settings.bodyHtml || '')}
+      subtitle={String(settings.subtitle || '')}
+      bodyColorClassName={String(settings.bodyColorClassName || 'is-super-grey')}
+      titleColor={extractHeroLineColorToken(settings.titleClassName)}
+      titleSelection={titleSelection}
+      setTitleInputRef={(node) => { titleInputRef.current = node; }}
+      onTitleSelectionCapture={captureTitleSelection}
+      onTitleChange={(nextValue) => {
+        onChange('title', nextValue);
+        setTitleSelection({ start: 0, end: 0, text: '' });
+      }}
+      onBodyHtmlChange={(nextValue) => onChange('bodyHtml', nextValue)}
+      onSubtitleChange={(nextValue) => onChange('subtitle', nextValue)}
+      onBodyColorChange={(nextValue) => onChange('bodyColorClassName', nextValue)}
+      fields={fields}
+      includeContactPreference={Boolean(settings.includeContactPreference)}
+      onFieldsChange={(nextFields) => {
+        Object.entries(buildCtaFormSettingsPatch({
+          fields: nextFields,
+          includeContactPreference: settings.includeContactPreference,
+        })).forEach(([fieldId, nextValue]) => onChange(fieldId, nextValue));
+      }}
+      onIncludeContactPreferenceChange={(nextValue) => onChange('includeContactPreference', nextValue)}
+      onSubmitLabelChange={(nextValue) => onChange('submitLabel', nextValue)}
+      onSubmitStyleChange={(nextValue) => onChange('submitStyle', nextValue)}
+      onSubmitToneChange={(nextValue) => onChange('submitTone', nextValue)}
+      onBgToneChange={(nextValue) => onChange('bgTone', nextValue)}
+      backgroundEffectsJson={settings.backgroundEffectsJson}
+      onBackgroundEffectsChange={(nextValue) => onChange('backgroundEffectsJson', nextValue)}
+      onApplySelectionColor={(colorValue, selectedTitle = titleSelection) => {
+        const result = applyTextColorSelection({
+          text: String(settings.title || ''),
+          lineClassName: String(settings.titleClassName || ''),
+          highlightsJson: settings.titleHighlightsJson,
+          selection: selectedTitle,
+          colorValue,
+        });
+        if (result.target === 'selection') {
+          onChange('titleHighlightsJson', result.highlightsJson);
+        }
+      }}
+      onTitleColorChange={(colorValue) => onChange('titleClassName', applyTextColorSelection({
+        text: String(settings.title || ''),
+        lineClassName: String(settings.titleClassName || ''),
+        highlightsJson: settings.titleHighlightsJson,
+        selection: { start: 0, end: 0 },
+        colorValue,
+      }).lineClassName)}
+      onRemoveTitleSpan={(index) => onChange(
+        'titleHighlightsJson',
+        removeSelectionRange(settings.titleHighlightsJson, settings.title, index),
+      )}
+      onClearTitleSpans={() => {
+        onChange('titleHighlightsJson', '');
+        setTitleSelection({ start: 0, end: 0, text: '' });
+      }}
+      blockOptions={blockOptions}
+    />
+  );
+}
+
 export function RequestFormBlockEditor({
   block,
   onSettingChange,
@@ -3715,11 +3820,10 @@ export function RequestFormBlockEditor({
   blockOptions = null,
 }) {
   const settings = block.settings || {};
-  const allFields = resolveEditorFields(block.kind, 'admin', block.editableFields);
+  const allFields = resolveEditorFields(block.kind, hudMode ? 'hud' : 'admin', block.editableFields);
   const fieldById = new Map(allFields.map((field) => [field.id, field]));
   const titleColorField = fieldById.get('titleClassName') || null;
   const bgToneField = fieldById.get('bgTone') || null;
-  const textToneField = fieldById.get('textTone') || null;
   const requestBgTone = normalizePanelBgTone(settings.bgTone);
   const requestTextTone = normalizePanelTextTone(settings.textTone, 'dark');
   const requestHeadingPreviewWrapClassName = [
@@ -3733,20 +3837,6 @@ export function RequestFormBlockEditor({
   const requestTitleColorOptions = Array.isArray(titleColorField?.options) && titleColorField.options.length
     ? titleColorField.options
     : HERO_SWATCH_OPTIONS;
-  const requestTextColorControl = textToneField ? (
-    <label className="admin-request-form-swatch-group admin-request-form-lead-text-color">
-      <span>{textToneField.label || 'Text color'}</span>
-      <ColorPalette
-        variant="hud"
-        className="is-compact is-icon-only is-circular admin-request-form-hud-swatch-palette admin-request-form-swatch-palette"
-        ariaLabel={textToneField.label || 'Request form text color'}
-        options={Array.isArray(textToneField.options) ? textToneField.options : []}
-        value={String(settings.textTone || '')}
-        preventMouseDown
-        onChange={(nextValue) => onSettingChange('textTone', nextValue)}
-      />
-    </label>
-  ) : null;
   const leadCopyFieldId = resolveRequestFormLeadCopyFieldId(settings);
   const {
     draftValues: requestFormDraftValues,
@@ -3762,6 +3852,9 @@ export function RequestFormBlockEditor({
     ...settings,
     ...requestFormDraftValues,
   }), [requestFormDraftValues, settings]);
+  const requestFormLeadCopyFallback = String(
+    requestFormDraftSettings.subtitle || requestFormDraftSettings.body || '',
+  ).trim();
   const visibleStepNumbers = [1, 2, 3, 4, 5].filter((stepNumber) => (
     parseRequestFormStepFieldsJson(settings?.[`step${stepNumber}FieldsJson`]).length > 0
   ));
@@ -3784,57 +3877,62 @@ export function RequestFormBlockEditor({
   }, [settings?.step1FieldsJson, settings?.step2FieldsJson, settings?.step3FieldsJson, settings?.step4FieldsJson, settings?.step5FieldsJson]);
 
   const headingAndLeadContent = (
-    <>
-      <ColorTextSelectionEditor
-        label="Form heading"
-        text={settings.title ?? ''}
-        lineClassName={settings.titleClassName ?? ''}
-        highlightsJson={settings.titleHighlightsJson ?? ''}
-        onTextChange={(nextValue) => onSettingChange('title', nextValue)}
-        onLineClassNameChange={(nextValue) => onSettingChange('titleClassName', nextValue)}
-        onHighlightsJsonChange={(nextValue) => onSettingChange('titleHighlightsJson', nextValue)}
-        placeholder="Request form heading"
-        rows={2}
-        className="is-intro-heading"
-        unifiedPreviewEditor
-        previewTagName="h2"
-        previewClassName={getPanelTextTonePreviewClassName(requestTextTone, 'dark')}
-        previewWrapClassName={requestHeadingPreviewWrapClassName}
-        spanDetailsUnderToggle
-        useResetForClear
-        swatchOptions={requestTitleColorOptions}
-        swatchVariant="hud"
-      />
-      <div className="admin-request-form-lead-row">
-        <label className="admin-front-hud-field admin-request-form-lead-field">
-          <span>Lead Copy</span>
-          <textarea
-            rows={3}
-            value={String(requestFormDraftSettings[leadCopyFieldId] || '')}
-            onChange={(event) => updateRequestFormDraftField(leadCopyFieldId, event.target.value)}
-            onBlur={() => commitRequestFormDraftOnBlur(leadCopyFieldId)}
-          />
-        </label>
-        {requestTextColorControl}
+    <div className="admin-request-form-content-grid">
+      <div className="admin-request-form-heading-column">
+        <ColorTextSelectionEditor
+          label="Form heading"
+          text={settings.title ?? ''}
+          lineClassName={settings.titleClassName ?? ''}
+          highlightsJson={settings.titleHighlightsJson ?? ''}
+          onTextChange={(nextValue) => onSettingChange('title', nextValue)}
+          onLineClassNameChange={(nextValue) => onSettingChange('titleClassName', nextValue)}
+          onHighlightsJsonChange={(nextValue) => onSettingChange('titleHighlightsJson', nextValue)}
+          placeholder="Request form heading"
+          rows={2}
+          className="is-intro-heading"
+          unifiedPreviewEditor
+          previewTagName="h2"
+          previewClassName={getPanelTextTonePreviewClassName(requestTextTone, 'dark')}
+          previewWrapClassName={requestHeadingPreviewWrapClassName}
+          spanDetailsUnderToggle
+          useResetForClear
+          swatchOptions={requestTitleColorOptions}
+          swatchVariant="hud"
+        />
       </div>
-    </>
+      <div className="admin-request-form-lead-column">
+        <div className="admin-front-hud-field admin-request-form-lead-field">
+          <span>Lead Copy</span>
+          <AdminHtmlEditor
+            compact
+            value={toEditorHtml(requestFormDraftSettings[leadCopyFieldId], requestFormLeadCopyFallback)}
+            onChange={(nextValue) => updateRequestFormDraftField(leadCopyFieldId, nextValue)}
+            onBlur={() => commitRequestFormDraftOnBlur(leadCopyFieldId)}
+            placeholder="Optional lead copy above the form"
+            ariaLabel="Lead Copy"
+            paletteVariant={hudMode ? 'hud' : 'admin'}
+          />
+        </div>
+      </div>
+    </div>
   );
 
-  const appearanceContent = (
-    <div className="admin-request-form-appearance-content">
-      <div className="admin-request-form-swatch-groups">
-        <BackgroundEditorPage
-          backgroundTone={settings.bgTone}
-          backgroundToneOptions={Array.isArray(bgToneField?.options) ? bgToneField.options : []}
-          backgroundToneLabel={bgToneField?.label || 'Request form background'}
-          onBackgroundToneChange={(nextValue) => onSettingChange('bgTone', nextValue)}
-          backgroundEffectsJson={settings.backgroundEffectsJson}
-          onBackgroundEffectsChange={(nextValue) => onSettingChange('backgroundEffectsJson', nextValue)}
-          paletteVariant="hud"
-        />
+  const backgroundContent = (
+    <div className="admin-request-form-background-content">
+      <BackgroundEditorPage
+        backgroundTone={settings.bgTone}
+        backgroundToneOptions={Array.isArray(bgToneField?.options) ? bgToneField.options : []}
+        backgroundToneLabel={bgToneField?.label || 'Request form background'}
+        onBackgroundToneChange={(nextValue) => onSettingChange('bgTone', nextValue)}
+        backgroundEffectsJson={settings.backgroundEffectsJson}
+        onBackgroundEffectsChange={(nextValue) => onSettingChange('backgroundEffectsJson', nextValue)}
+        paletteVariant="hud"
+      />
+    </div>
+  );
 
-      </div>
-
+  const layoutContent = (
+    <div className="admin-request-form-layout-content">
       {spacingFields.length ? (
         <div className="admin-request-form-spacing-controls" aria-label="Spacing controls">
           <div className="admin-request-form-spacing-head">
@@ -3852,7 +3950,7 @@ export function RequestFormBlockEditor({
                   max={Number(field.max) || 8}
                   step={Number(field.step) || 0.25}
                   value={currentValue}
-                  displayValue={`${currentValue.toFixed(2)}rem`}
+                  unit="rem"
                   ariaLabel={field.label}
                   onChange={(nextValue) => onSettingChange(field.id, nextValue)}
                 />
@@ -3861,6 +3959,13 @@ export function RequestFormBlockEditor({
           </div>
         </div>
       ) : null}
+    </div>
+  );
+
+  const appearanceContent = (
+    <div className="admin-request-form-appearance-content">
+      {backgroundContent}
+      {layoutContent}
     </div>
   );
 
@@ -3943,7 +4048,8 @@ export function RequestFormBlockEditor({
 
   const hudSections = appendHudBlockOptionsSection([
     { id: 'content', label: 'Content', icon: '✦' },
-    { id: 'appearance', label: 'Appearance', icon: '◉' },
+    { id: 'layout', label: 'Layout', icon: '◫' },
+    { id: 'background', label: 'Background', icon: '◉' },
     { id: 'integration', label: 'Form options', icon: '↔' },
     { id: 'steps', label: 'Form steps', icon: '☷' },
   ], blockOptions);
@@ -3962,12 +4068,19 @@ export function RequestFormBlockEditor({
         <section className="admin-request-form-hud-page admin-request-form-hud-page--content">
           {headingAndLeadContent}
         </section>
-        <section className="admin-request-form-hud-page admin-request-form-hud-page--appearance">
+        <section className="admin-request-form-hud-page admin-request-form-hud-page--layout">
           <div className="admin-request-form-page-heading">
-            <h3>Appearance</h3>
-            <p>Set the surface, text tone, and vertical spacing for this form.</p>
+            <h3>Layout</h3>
+            <p>Set the vertical spacing around this form.</p>
           </div>
-          {appearanceContent}
+          {layoutContent}
+        </section>
+        <section className="admin-request-form-hud-page admin-request-form-hud-page--background">
+          <div className="admin-request-form-page-heading">
+            <h3>Background</h3>
+            <p>Set the background color and optional lights for this form.</p>
+          </div>
+          {backgroundContent}
         </section>
         <section className="admin-request-form-hud-page admin-request-form-hud-page--integration">
           {formOptionsContent}
@@ -4506,6 +4619,7 @@ export function HeroBlockEditor({ block, pathname = '', onSettingChange, routeOp
     'animationPreset',
     'justify',
     'bgTone',
+    'backgroundEffectsJson',
     'heightMode',
     'heightSvh',
     'paddingTopRem',
@@ -5310,18 +5424,25 @@ export function BillboardBlockEditor({ block, onSettingChange, routeOptions = []
   );
   const billboardLineSpacing = normalizeBillboardLineSpacing(effectiveBillboardSettings.lineSpacing);
   const billboardHeaderGapRem = normalizeBillboardHeaderGap(effectiveBillboardSettings.headerGapRem);
+  const billboardActionGapRem = normalizeBillboardActionGap(effectiveBillboardSettings.actionGapRem);
   const billboardTitleFontFamily = normalizeBillboardTitleFontFamily(effectiveBillboardSettings.titleFontFamily);
   const billboardTitleFontWeight = normalizeBillboardTitleFontWeight(
     effectiveBillboardSettings.titleFontWeight,
     billboardTitleFontFamily,
   );
   const billboardTitleSizeRem = normalizeBillboardTitleSizeRem(effectiveBillboardSettings.titleSizeRem);
-  const billboardTitleLetterSpacingEm = normalizeBillboardTitleLetterSpacingEm(
-    effectiveBillboardSettings.titleLetterSpacingEm,
+  const legacyBillboardLetterSpacingEm = effectiveBillboardSettings.titleLetterSpacingEm;
+  const billboardTitleTrackingEm = normalizeBillboardTitleLetterSpacingEm(
+    effectiveBillboardSettings.titleTrackingEm ?? legacyBillboardLetterSpacingEm,
+    billboardTitleFontFamily,
+  );
+  const billboardSubtitleTrackingEm = normalizeBillboardTitleLetterSpacingEm(
+    effectiveBillboardSettings.subtitleTrackingEm ?? legacyBillboardLetterSpacingEm,
     billboardTitleFontFamily,
   );
   const billboardSubtitleSizeRem = normalizeBillboardSubtitleSizeRem(effectiveBillboardSettings.subtitleSizeRem);
   const billboardLeadCopySizeRem = normalizeBillboardLeadCopySizeRem(effectiveBillboardSettings.leadCopySizeRem);
+  const billboardLeadCopyLineHeight = normalizeBillboardLeadCopyLineHeight(effectiveBillboardSettings.leadCopyLineHeight);
   const billboardTextTone = normalizePanelTextTone(effectiveBillboardSettings.textTone, 'white');
   const billboardTitleInputRef = useRef(null);
   const [billboardTitleSelection, setBillboardTitleSelection] = useState({
@@ -5416,6 +5537,8 @@ export function BillboardBlockEditor({ block, onSettingChange, routeOptions = []
           result.highlightsJson,
         );
       }}
+      titleHighlightsJson={effectiveBillboardSettings.titleHighlightsJson}
+      onTitleHighlightsChange={(nextValue) => onSettingChange('titleHighlightsJson', nextValue)}
       titleColorOptions={HERO_SWATCH_OPTIONS}
       bodyHtml={String(draftValues.bodyHtml || '')}
       onBodyHtmlChange={(nextValue) => updateDraftField('bodyHtml', nextValue)}
@@ -5430,6 +5553,8 @@ export function BillboardBlockEditor({ block, onSettingChange, routeOptions = []
       )}
       leadCopySizeRem={billboardLeadCopySizeRem}
       onLeadCopySizeRemChange={(nextValue) => onSettingChange('leadCopySizeRem', Number(nextValue))}
+      leadCopyLineHeight={billboardLeadCopyLineHeight}
+      onLeadCopyLineHeightChange={(nextValue) => onSettingChange('leadCopyLineHeight', Number(nextValue))}
       bodyColorClassName={String(effectiveBillboardSettings.bodyColorClassName || resolvePanelTextToneClassName(billboardTextTone, 'white'))}
       onBodyColorChange={(nextValue) => onSettingChange('bodyColorClassName', nextValue)}
       bgTone={billboardBgTone}
@@ -5453,8 +5578,10 @@ export function BillboardBlockEditor({ block, onSettingChange, routeOptions = []
       onHeaderGapRemChange={(nextValue) => onSettingChange('headerGapRem', normalizeBillboardHeaderGap(nextValue))}
       titleSizeRem={billboardTitleSizeRem}
       onTitleSizeRemChange={(nextValue) => onSettingChange('titleSizeRem', Number(nextValue))}
-      titleLetterSpacingEm={billboardTitleLetterSpacingEm}
-      onTitleLetterSpacingEmChange={(nextValue) => onSettingChange('titleLetterSpacingEm', Number(nextValue))}
+      titleTrackingEm={billboardTitleTrackingEm}
+      onTitleTrackingEmChange={(nextValue) => onSettingChange('titleTrackingEm', Number(nextValue))}
+      subtitleTrackingEm={billboardSubtitleTrackingEm}
+      onSubtitleTrackingEmChange={(nextValue) => onSettingChange('subtitleTrackingEm', Number(nextValue))}
       buttonLabel={String(draftValues.buttonLabel || '')}
       onButtonLabelChange={(nextValue) => updateDraftField('buttonLabel', nextValue)}
       onButtonLabelBlur={() => commitDraftOnBlur('buttonLabel')}
@@ -5515,6 +5642,8 @@ export function BillboardBlockEditor({ block, onSettingChange, routeOptions = []
       button2Tone={String(effectiveBillboardSettings.button2Tone || '').trim().toLowerCase() || 'white'}
       onButton2ToneChange={(nextValue) => onSettingChange('button2Tone', nextValue)}
       button2ToneOptions={Array.isArray(button2ToneField?.options) && button2ToneField.options.length ? button2ToneField.options : BILLBOARD_BUTTON_TONE_OPTIONS}
+      actionGapRem={billboardActionGapRem}
+      onActionGapRemChange={(nextValue) => onSettingChange('actionGapRem', normalizeBillboardActionGap(nextValue))}
       contentMaxWidthPx={effectiveBillboardSettings.contentMaxWidthPx ?? null}
       onContentMaxWidthPxChange={(nextValue) => onSettingChange('contentMaxWidthPx', nextValue == null || nextValue === '' ? '' : normalizeBillboardWidth(nextValue))}
       paddingTopRem={effectiveBillboardSettings.paddingTopRem ?? null}
@@ -6227,6 +6356,9 @@ export function SiteFeatureBlockEditor({ block, onSettingChange, routeOptions = 
     fieldById.get('introEmphasis'),
   ].filter(Boolean);
   const buttonLabelField = fieldById.get('buttonLabel');
+  const historyButtonLabelField = settings.featureId === 'about_history_feature' && buttonLabelField
+    ? { ...buttonLabelField, label: 'Button text' }
+    : buttonLabelField;
   const buttonUrlField = getPromotedRouteLinkField(fieldById, 'buttonUrl', 'buttonPageRef');
   const allowsActionOverrides = SITE_FEATURE_ACTION_FIELD_IDS.some((fieldId) => allowedFieldIds.has(fieldId));
   const historyGalleryFields = [
@@ -6462,13 +6594,13 @@ export function SiteFeatureBlockEditor({ block, onSettingChange, routeOptions = 
         <section className="admin-cta-field-slot-card admin-site-feature-editor-page admin-site-feature-editor-page--action">
           <h4>Optional CTA override</h4>
           <div className="admin-site-feature-field-stack">
-            {buttonLabelField && allowedFieldIds.has('buttonLabel') ? (
+            {historyButtonLabelField && allowedFieldIds.has('buttonLabel') ? (
               <SiteFeatureDraftField
-                field={buttonLabelField}
+                field={historyButtonLabelField}
                 value={draftValues.buttonLabel}
                 onChange={(nextValue) => updateDraftField('buttonLabel', nextValue)}
                 onBlur={() => commitDraftOnBlur('buttonLabel')}
-                hideLabel
+                hideLabel={settings.featureId !== 'about_history_feature'}
                 fullWidth
               />
             ) : null}
@@ -6845,12 +6977,13 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
   const presetDefinition = resolveBlockPresetDefinition(block);
   const presetId = String(presetDefinition?.id || block?.presetId || '').trim().toLowerCase() || 'default';
   const presetEditor = presetDefinition?.editor || {};
+  const isValueCardsPresentation = presetId === 'value-cards';
   const presetCardFeatures = presetEditor?.cardFeatures || {};
   const isNumberedStepCardsGrid = isNumberedStepCardsSection({
     presetId,
     sectionClassName: settings.sectionClassName,
   });
-  const allFields = resolveEditorFields(block.kind, 'admin', block.editableFields);
+  const allFields = resolveEditorFields(block.kind, hudMode ? 'hud' : 'admin', block.editableFields);
   const fieldById = new Map(allFields.map((field) => [field.id, field]));
   const bgToneField = fieldById.get('bgTone') || null;
   const headerSizeField = fieldById.get('headerSizeRem') || null;
@@ -6860,6 +6993,7 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
   const titleToneFieldBase = fieldById.get('titleTone') || null;
   const bodyToneFieldBase = fieldById.get('bodyTone') || null;
   const subheadSizeField = fieldById.get('subheadSizeRem') || null;
+  const subheadJustifyField = fieldById.get('subtitleJustify') || null;
   const cardStyleFieldBase = fieldById.get('cardStyle') || null;
   const cardOutlineToneFieldBase = fieldById.get('cardOutlineTone') || null;
   const cardOutlineWidthFieldBase = fieldById.get('cardOutlineWidth') || null;
@@ -6875,19 +7009,22 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
     if (!cardStyleFieldBase) {
       return null;
     }
-    const compatibleOptions = getGridCompatibleCardStyleOptions(cardStyleFieldBase.options, gridBgTone);
     return {
       ...cardStyleFieldBase,
-      options: compatibleOptions.length ? compatibleOptions : (Array.isArray(cardStyleFieldBase.options) ? cardStyleFieldBase.options : []),
+      options: Array.isArray(cardStyleFieldBase.options) ? cardStyleFieldBase.options : [],
     };
-  }, [cardStyleFieldBase, gridBgTone]);
+  }, [cardStyleFieldBase]);
+  const normalizedCardStyle = normalizeGridCardStyleToken(settings.cardStyle);
+  const hasExplicitCardOutlineSetting = typeof settings.cardOutline === 'boolean'
+    || ['true', 'false'].includes(String(settings.cardOutline || '').trim().toLowerCase());
   const cardOutlineIsOff = settings.cardOutline === false
-    || String(settings.cardOutline || '').trim().toLowerCase() === 'false';
-  const cardOutlineToneField = cardOutlineToneFieldBase
-    ? { ...cardOutlineToneFieldBase, disabled: cardOutlineIsOff }
+    || String(settings.cardOutline || '').trim().toLowerCase() === 'false'
+    || (!hasExplicitCardOutlineSetting && ['none', 'borderless-shadow'].includes(normalizedCardStyle));
+  const cardOutlineToneField = !cardOutlineIsOff && cardOutlineToneFieldBase
+    ? { ...cardOutlineToneFieldBase }
     : null;
-  const cardOutlineWidthField = cardOutlineWidthFieldBase
-    ? { ...cardOutlineWidthFieldBase, disabled: cardOutlineIsOff }
+  const cardOutlineWidthField = !cardOutlineIsOff && cardOutlineWidthFieldBase
+    ? { ...cardOutlineWidthFieldBase }
     : null;
   const hasExplicitCardCount = Number.isFinite(Number(settings.cardCount))
     && Number(settings.cardCount) >= 1;
@@ -6911,6 +7048,8 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
         : {}
     ),
   };
+  const cardShadowIsOn = layoutSettings.cardShadow === true
+    || String(layoutSettings.cardShadow || '').trim().toLowerCase() === 'true';
   const allowedLayoutFieldIds = new Set(
     Array.isArray(presetEditor.layoutFieldIds) && presetEditor.layoutFieldIds.length
       ? presetEditor.layoutFieldIds
@@ -6919,17 +7058,21 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
   if (fieldById.has('cardCount')) {
     allowedLayoutFieldIds.add('cardCount');
   }
-  if (fieldById.has('cardOutline')) {
+  const allowCardAppearanceControls = presetEditor.cardAppearance !== false;
+  if (allowCardAppearanceControls && fieldById.has('cardOutline')) {
     allowedLayoutFieldIds.add('cardOutline');
   }
-  if (fieldById.has('cardOutlineTone')) {
+  if (allowCardAppearanceControls && fieldById.has('cardOutlineTone')) {
     allowedLayoutFieldIds.add('cardOutlineTone');
   }
-  if (fieldById.has('cardOutlineWidth')) {
+  if (allowCardAppearanceControls && fieldById.has('cardOutlineWidth')) {
     allowedLayoutFieldIds.add('cardOutlineWidth');
   }
-  if (fieldById.has('cardShadow')) {
+  if (allowCardAppearanceControls && fieldById.has('cardShadow')) {
     allowedLayoutFieldIds.add('cardShadow');
+  }
+  if (allowCardAppearanceControls && fieldById.has('cardShadowOpacity')) {
+    allowedLayoutFieldIds.add('cardShadowOpacity');
   }
   if (isInsuranceCoverageGrid && fieldById.has('cardHoverScale')) {
     allowedLayoutFieldIds.add('cardHoverScale');
@@ -6961,6 +7104,7 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
     cardOutlineToneField,
     cardOutlineWidthField,
     fieldById.get('cardShadow'),
+    cardShadowIsOn ? fieldById.get('cardShadowOpacity') : null,
     cardHoverScaleField,
     fieldById.get('cardCount'),
   ].filter((field) => field && allowedLayoutFieldIds.has(field.id));
@@ -6972,7 +7116,7 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
   const headerSubheadSpacingField = hasHeaderSubhead && headerSubheadSpaceField
     ? headerSubheadSpaceField
     : null;
-  const headerCardsSpacingField = headerCardsSpaceField
+  const headerCardsSpacingField = !isValueCardsPresentation && headerCardsSpaceField
     ? {
         ...headerCardsSpaceField,
         label: hasHeaderSubhead ? 'Space below subhead' : 'Space below header',
@@ -6984,7 +7128,13 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
     headerSubheadSpacingField,
     headerCardsSpacingField,
   ].filter(Boolean);
-  const headerControlFields = [headerSizeField, headerWidthField, subheadSizeField, ...spacingFields].filter(Boolean);
+  const headerControlFields = [headerSizeField, headerWidthField, subheadSizeField, subheadJustifyField, ...spacingFields]
+    .filter(Boolean)
+    .filter((field) => (
+      !isValueCardsPresentation
+      || hasHeaderSubhead
+      || !['subheadSizeRem', 'subtitleJustify', 'headerSubheadSpaceRem'].includes(field.id)
+    ));
   const cardTypographyFields = [
     fieldById.get('cardTitleSizeRem'),
     fieldById.get('cardTitleLineHeight'),
@@ -6997,6 +7147,7 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
     fieldById.get('cardBodyLineHeight'),
     fieldById.get('cardTitleJustify'),
     fieldById.get('cardBodyJustify'),
+    fieldById.get('cardTitleBodySpaceRem'),
     fieldById.get('cardPaddingRem'),
     fieldById.get('fineprintSizeRem'),
     ...(isNumberedStepCardsGrid ? [fieldById.get('numberPositionPercent')] : []),
@@ -7029,12 +7180,12 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
     return columns;
   };
   const layoutFieldColumns = buildFieldColumns(layoutFields, [
-    ['contentWidth', 'cardStyle', 'cardOutline', 'cardShadow'],
+    ['contentWidth', 'cardStyle', 'cardOutline', 'cardShadow', 'cardShadowOpacity'],
     ['columns', 'cardCount', 'cardOutlineTone', 'cardOutlineWidth', 'cardHoverScale'],
   ]);
   const typographyFieldColumns = buildFieldColumns(cardGridTypographyFields, [
-    ['titleTone', 'cardTitleSizeRem', 'cardBodySizeRem', 'cardTitleJustify', 'cardPaddingRem'],
-    ['bodyTone', 'cardTitleLineHeight', 'cardBodyLineHeight', 'cardBodyJustify', 'fineprintSizeRem'],
+    ['titleTone', 'cardTitleSizeRem', 'cardBodySizeRem', 'cardTitleJustify', 'cardBodyJustify', 'cardPaddingRem'],
+    ['bodyTone', 'cardTitleLineHeight', 'cardTitleBodySpaceRem', 'cardBodyLineHeight', 'fineprintSizeRem'],
   ]);
   const editorSections = appendHudBlockOptionsSection([
     { id: 'header', label: 'Header', icon: 'H' },
@@ -7043,6 +7194,12 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
     { id: 'cards', label: 'Cards', icon: '▦' },
   ], blockOptions);
   const [activeSection, setActiveSection] = useState(editorSections[0]?.id || 'header');
+  const valueCardsPresentationNotice = isValueCardsPresentation ? (
+    <div className="admin-card-grid-preset-notice" role="note">
+      <strong>Value cards · stacked feature</strong>
+      <span>Card text and card content remain editable. This presentation intentionally keeps the cards stacked, so grid columns and card-surface controls are not used.</span>
+    </div>
+  ) : null;
   const normalizedRouteOptions = useMemo(
     () => (Array.isArray(routeOptions) ? routeOptions.map(normalizeRouteOption).filter(Boolean) : []),
     [routeOptions],
@@ -7056,17 +7213,6 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
       }))
   ), [documents]);
 
-  useEffect(() => {
-    if (!cardStyleFieldBase) {
-      return;
-    }
-    const normalizedCurrentStyle = normalizeGridCardStyleToken(settings.cardStyle);
-    const nextStyle = getGridSafeCardStyleForBg(settings.cardStyle, gridBgTone, cardStyleFieldBase.options);
-    if (nextStyle !== normalizedCurrentStyle) {
-      onSettingChange('cardStyle', nextStyle);
-    }
-  }, [cardStyleFieldBase, gridBgTone, onSettingChange, settings.cardStyle]);
-
   const handleGridBackgroundChange = (nextBgToneRaw) => {
     const nextBgTone = normalizeGridBgTone(nextBgToneRaw);
     onSettingChange('bgTone', nextBgTone);
@@ -7074,8 +7220,7 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
 
   const handleGridLayoutChange = (fieldId, nextValue) => {
     if (fieldId === 'cardStyle') {
-      const nextStyle = getGridSafeCardStyleForBg(nextValue, gridBgTone, cardStyleFieldBase?.options);
-      onSettingChange('cardStyle', nextStyle);
+      onSettingChange('cardStyle', normalizeGridCardStyleToken(nextValue));
       return;
     }
 
@@ -7086,6 +7231,16 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
       onSettingChange('cardOutline', true);
     }
     onSettingChange(fieldId, nextValue);
+  };
+
+  const handleGridTypographyChange = (fieldId, nextValue) => {
+    onSettingChange(fieldId, nextValue);
+    if (fieldId === 'titleTone') {
+      // Legacy grids use titleTone as a base color while retaining authored
+      // per-word accents. A deliberate editor choice opts into replacing
+      // those accents; choosing Default restores them without deleting data.
+      onSettingChange('titleToneOverride', String(nextValue || '').trim() !== '');
+    }
   };
 
   const cardSlots = useMemo(() => (
@@ -7245,6 +7400,7 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
           />
         </div>
         <div className="admin-card-grid-hud-page admin-card-grid-hud-page--layout">
+          {valueCardsPresentationNotice}
           <div className="admin-card-grid-hud-content-groups">
             {layoutFieldColumns.map((fields, index) => (
               <section
@@ -7272,7 +7428,7 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
                 <FieldControlGrid
                   fields={fields}
                   settings={settings}
-                  onSettingChange={onSettingChange}
+                  onSettingChange={handleGridTypographyChange}
                   className="admin-content-field-list--inline admin-card-grid-hud-fields"
                   paletteVariant="hud"
                 />
@@ -7336,6 +7492,7 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
 
       <section className="admin-card-grid-control-group">
         <h4>Layout</h4>
+        {valueCardsPresentationNotice}
         <FieldControlGrid
           fields={layoutFields}
           settings={layoutSettings}
@@ -7349,7 +7506,7 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
           <FieldControlGrid
             fields={cardGridTypographyFields}
             settings={settings}
-            onSettingChange={onSettingChange}
+            onSettingChange={handleGridTypographyChange}
             className="admin-content-field-list--inline admin-grid-layout-fields"
           />
         </section>
@@ -7360,9 +7517,9 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
   );
 }
 
-export function NewsletterBlockEditor({ block, onSettingChange }) {
+export function NewsletterBlockEditor({ block, onSettingChange, hudMode = false }) {
   const settings = block.settings || {};
-  const allFields = resolveEditorFields(block.kind, 'admin', block.editableFields);
+  const allFields = resolveEditorFields(block.kind, hudMode ? 'hud' : 'admin', block.editableFields);
   const fieldById = new Map(allFields.map((field) => [field.id, field]));
   const bgToneField = fieldById.get('bgTone') || null;
   const textToneField = fieldById.get('textTone') || null;
@@ -7379,6 +7536,7 @@ export function NewsletterBlockEditor({ block, onSettingChange }) {
     && field.id !== 'bodyColorClassName'
     && field.id !== 'bgTone'
     && field.id !== 'textTone'
+    && field.id !== 'backgroundEffectsJson'
   ));
 
   return (
@@ -7423,15 +7581,17 @@ export function NewsletterBlockEditor({ block, onSettingChange }) {
             className="admin-panel-appearance--intro-text"
           />
 
-          <BackgroundEditorPage
-            backgroundTone={newsletterBgTone}
-            backgroundToneOptions={Array.isArray(bgToneField?.options) ? bgToneField.options : []}
-            backgroundToneLabel={bgToneField?.label || 'Newsletter background'}
-            onBackgroundToneChange={(nextValue) => onSettingChange('bgTone', nextValue)}
-            backgroundEffectsJson={settings.backgroundEffectsJson}
-            onBackgroundEffectsChange={(nextValue) => onSettingChange('backgroundEffectsJson', nextValue)}
-            paletteVariant="admin"
-          />
+          {!hudMode ? (
+            <BackgroundEditorPage
+              backgroundTone={newsletterBgTone}
+              backgroundToneOptions={Array.isArray(bgToneField?.options) ? bgToneField.options : []}
+              backgroundToneLabel={bgToneField?.label || 'Newsletter background'}
+              onBackgroundToneChange={(nextValue) => onSettingChange('bgTone', nextValue)}
+              backgroundEffectsJson={settings.backgroundEffectsJson}
+              onBackgroundEffectsChange={(nextValue) => onSettingChange('backgroundEffectsJson', nextValue)}
+              paletteVariant="admin"
+            />
+          ) : null}
         </div>
       </div>
 
@@ -8333,102 +8493,36 @@ function ColumnsHudBlockEditor({ block, onSettingChange, sourceRevision = 0, blo
   );
 }
 
+const MIGRATED_BLOCK_EDITOR_COMPONENTS = Object.freeze({
+  content: { admin: PageContentBlockEditor, hud: PageContentHudBlockEditor },
+  support_library: { admin: SupportLibraryBlockEditor, hud: SupportLibraryBlockEditor },
+  calculator_cta: { admin: CalculatorCtaBlockEditor, hud: CalculatorCtaBlockEditor },
+  calculator_intro: { admin: CalculatorWidgetBlockEditor, hud: CalculatorWidgetBlockEditor },
+  calculator_widget: { admin: CalculatorWidgetBlockEditor, hud: CalculatorWidgetBlockEditor },
+  cta_form: { admin: CtaFormBlockEditor, hud: CtaFormHudBlockEditor },
+  request_form: { admin: RequestFormBlockEditor, hud: RequestFormBlockEditor },
+  hero: { admin: HeroBlockEditor, hud: HeroBlockEditor },
+  hero_pie: { admin: HeroPieBlockEditor, hud: HeroPieBlockEditor },
+  impact_stat: { admin: ImpactStatBlockEditor, hud: ImpactStatBlockEditor },
+  intro: { admin: IntroBlockEditor, hud: IntroHudBlockEditor },
+  legal_copy: { admin: LegalCopyBlockEditor, hud: LegalCopyBlockEditor },
+  billboard: { admin: BillboardBlockEditor, hud: BillboardBlockEditor },
+  columns: { admin: ColumnsBlockEditor, hud: ColumnsHudBlockEditor },
+  feature_panel: { admin: FeaturePanelBlockEditor, hud: FeaturePanelBlockEditor },
+  photo_column: { admin: PhotoColumnBlockEditor, hud: PhotoColumnBlockEditor },
+  card_grid: { admin: GridBlockEditor, hud: GridBlockEditor },
+  card_chart: { admin: CardChartBlockEditor, hud: CardChartBlockEditor },
+  newsletter: { admin: NewsletterBlockEditor, hud: NewsletterBlockEditor },
+  rates: { admin: RatesBlockEditor, hud: RatesBlockEditor },
+  services_grid: { admin: ServicesGridBlockEditor, hud: ServicesGridBlockEditor },
+  site_feature: { admin: SiteFeatureBlockEditor, hud: SiteFeatureBlockEditor },
+  split_panel: { admin: SplitPanelBlockEditor, hud: SplitPanelBlockEditor },
+  testimonials: { admin: TestimonialsBlockEditor, hud: TestimonialsHudBlockEditor },
+  top_strip: { admin: TopStripBlockEditor, hud: TopStripHudBlockEditor },
+});
+
 export function getMigratedBlockEditorComponent(kind, surface = 'admin') {
   const token = String(kind || '').trim();
-  const normalizedSurface = String(surface || 'admin').trim().toLowerCase();
-
-  if (normalizedSurface === 'hud' && token === 'intro') {
-    return IntroHudBlockEditor;
-  }
-  if (normalizedSurface === 'hud' && token === 'content') {
-    return PageContentHudBlockEditor;
-  }
-  if (normalizedSurface === 'hud' && token === 'support_library') {
-    return SupportLibraryBlockEditor;
-  }
-  if (normalizedSurface === 'hud' && token === 'top_strip') {
-    return TopStripHudBlockEditor;
-  }
-  if (normalizedSurface === 'hud' && token === 'testimonials') {
-    return TestimonialsHudBlockEditor;
-  }
-  if (normalizedSurface === 'hud' && token === 'columns') {
-    return ColumnsHudBlockEditor;
-  }
-  if (token === 'hero') {
-    return HeroBlockEditor;
-  }
-  if (token === 'hero_pie') {
-    return HeroPieBlockEditor;
-  }
-  if (token === 'calculator_cta') {
-    return CalculatorCtaBlockEditor;
-  }
-  if (token === 'calculator_intro') {
-    return CalculatorWidgetBlockEditor;
-  }
-  if (token === 'calculator_widget') {
-    return CalculatorWidgetBlockEditor;
-  }
-  if (normalizedSurface === 'admin' && token === 'cta_form') {
-    return CtaFormBlockEditor;
-  }
-  if (token === 'request_form') {
-    return RequestFormBlockEditor;
-  }
-  if (token === 'impact_stat') {
-    return ImpactStatBlockEditor;
-  }
-  if (token === 'rates') {
-    return RatesBlockEditor;
-  }
-  if (token === 'legal_copy') {
-    return LegalCopyBlockEditor;
-  }
-  if (token === 'intro') {
-    return IntroBlockEditor;
-  }
-  if (token === 'billboard') {
-    return BillboardBlockEditor;
-  }
-  if (token === 'feature_panel') {
-    return FeaturePanelBlockEditor;
-  }
-  if (token === 'site_feature') {
-    return SiteFeatureBlockEditor;
-  }
-  if (token === 'split_panel') {
-    return SplitPanelBlockEditor;
-  }
-  if (token === 'services_grid') {
-    return ServicesGridBlockEditor;
-  }
-  if (token === 'card_grid') {
-    return GridBlockEditor;
-  }
-  if (token === 'card_chart') {
-    return CardChartBlockEditor;
-  }
-  if (token === 'newsletter') {
-    return NewsletterBlockEditor;
-  }
-  if (token === 'content') {
-    return PageContentBlockEditor;
-  }
-  if (token === 'support_library') {
-    return SupportLibraryBlockEditor;
-  }
-  if (token === 'top_strip') {
-    return TopStripBlockEditor;
-  }
-  if (token === 'testimonials') {
-    return TestimonialsBlockEditor;
-  }
-  if (token === 'columns') {
-    return ColumnsBlockEditor;
-  }
-  if (token === 'photo_column') {
-    return PhotoColumnBlockEditor;
-  }
-  return null;
+  const normalizedSurface = String(surface || 'admin').trim().toLowerCase() === 'hud' ? 'hud' : 'admin';
+  return MIGRATED_BLOCK_EDITOR_COMPONENTS[token]?.[normalizedSurface] || null;
 }

@@ -137,6 +137,10 @@ describe('HomeDoTheMathBadge', () => {
     const spawnedBlock = {
       ...JSON.parse(JSON.stringify(sourceBlock)),
       id: 'vision_fuel_2',
+      settings: {
+        ...JSON.parse(JSON.stringify(sourceBlock.settings || {})),
+        actionGapRem: 2.35,
+      },
     };
 
     const { container } = render(
@@ -148,7 +152,10 @@ describe('HomeDoTheMathBadge', () => {
     );
 
     const section = container.querySelector('[data-block-id="vision_fuel_2"]');
+    const actionRow = section?.querySelector('.service-native-action-row');
     expect(section?.className).toContain('dynamic-billboard');
     expect(section?.className).toContain('loans-native-vision-fuel');
+    expect(actionRow?.getAttribute('style') || '').toContain('--dynamic-billboard-action-gap: 2.35rem');
+    expect(actionRow?.getAttribute('style') || '').toContain('margin-top: 2.35rem');
   });
 });

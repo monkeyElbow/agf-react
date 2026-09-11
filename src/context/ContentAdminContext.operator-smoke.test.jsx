@@ -1026,6 +1026,61 @@ describe('ContentAdminContext operator smoke and recovery', () => {
     expect(screen.getByTestId('workflow-current').textContent).toBe('1');
   });
 
+  it('does not let an in-flight stale route read undo a block takeover', async () => {
+    const previousPath = window.location.pathname;
+    window.history.replaceState({}, '', PAGE_PATH);
+    let resolveRouteSnapshot;
+    const pendingRouteSnapshot = new Promise((resolve) => {
+      resolveRouteSnapshot = resolve;
+    });
+    const foreignState = buildState({
+      collaborationByPath: {
+        [PAGE_PATH]: {
+          blocks: {
+            hero: {
+              lockedBy: OTHER_ACTOR,
+              lockedAt: 1710000000000,
+              draftedBy: OTHER_ACTOR,
+              draftedAt: 1710000000000,
+            },
+          },
+          history: [],
+        },
+      },
+    });
+    authorityMocks.fetchSharedContentRouteSnapshot.mockReturnValue(pendingRouteSnapshot);
+
+    renderOperatorProvider(foreignState, buildState({ heroText: 'Published hero' }));
+    await waitFor(() => {
+      expect(authorityMocks.fetchSharedContentRouteSnapshot).toHaveBeenCalledWith(PAGE_PATH);
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Take lock' }));
+    await waitFor(() => {
+      expect(authorityMocks.acquireSharedBlockLock).toHaveBeenCalledWith(
+        PAGE_PATH,
+        'hero',
+        expect.objectContaining({ userId: CURRENT_ACTOR.userId }),
+        { force: true },
+      );
+    });
+    expect(screen.getByTestId('lock-owner').textContent).toBe(CURRENT_ACTOR.displayName);
+
+    await act(async () => {
+      resolveRouteSnapshot({
+        initialized: true,
+        state: clone(foreignState),
+        baseSnapshot: buildState({ heroText: 'Published hero' }),
+        updatedAt: 1710000009000,
+      });
+      await Promise.resolve();
+    });
+
+    expect(screen.getByTestId('lock-owner').textContent).toBe(CURRENT_ACTOR.displayName);
+    expect(screen.getByTestId('workflow-current').textContent).toBe('1');
+    window.history.replaceState({}, '', previousPath);
+  });
+
   it('reconciles a route-scoped page publish immediately without replacing unrelated published routes', async () => {
     const draftState = buildState({ heroText: 'Route draft hero' });
     const publishedState = buildState({ heroText: 'Route live hero' });

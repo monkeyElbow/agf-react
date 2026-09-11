@@ -23,6 +23,10 @@ describe('block ownership overlay guardrail', () => {
 
     expect(cssSource).toContain('.is-admin-owned-drafted-other::after');
     expect(cssSource).toContain('.is-admin-owned-editing-other::after');
+    expect(cssSource).toContain('opacity: var(--ag-admin-front-hud-dim-strength, 0.42);');
+    expect(cssSource).not.toContain('opacity: 0.74;');
+    expect(cssSource).toContain('.is-admin-owned-editing-other.is-hud-focus-target::after');
+    expect(cssSource).toContain('opacity: 0 !important;');
     expect(cssSource).toContain('/* A passive draft is available to inspect, not disabled. */');
     expect(cssSource).toContain('/* A historical save is context, not a blocking state. */');
     expect(cssSource).toContain('/* Ownership badges identify passive drafts');
@@ -77,7 +81,7 @@ describe('block ownership overlay guardrail', () => {
 
     expect(cssSource).toMatch(/\.admin-front-hud-dock\s*\{[\s\S]*?width: min\(220px, calc\(100vw - 24px\)\);[\s\S]*?max-width: calc\(100vw - 24px\);/);
     expect(cssSource).toMatch(/\.admin-front-hud-dock\s*\{[\s\S]*?grid-template-rows: auto minmax\(0, 1fr\);[\s\S]*?overflow: visible;/);
-    expect(cssSource).toMatch(/\.admin-front-hud-dock-tabs\s*\{[\s\S]*?overflow-x: hidden;[\s\S]*?overflow-y: auto;[\s\S]*?overscroll-behavior: contain;/);
+    expect(cssSource).toMatch(/\.admin-front-hud-dock-tabs\s*\{[\s\S]*?overflow-x: visible;[\s\S]*?overflow-y: auto;[\s\S]*?overscroll-behavior: contain;/);
     expect(cssSource).toContain('scrollbar-gutter: stable;');
     expect(cssSource).toContain('--ag-admin-front-hud-editor-top');
     expect(cssSource).toMatch(/\.admin-front-hud-dock-tab:hover,\s*\.admin-front-hud-dock-tab:focus-visible \{\s*transform: none;/);

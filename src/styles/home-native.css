@@ -1659,22 +1659,18 @@ p.home-services-feature-panel-body {
 
 .home-native-page .service-native-section.home-native-billboard.is-bg-blue {
   background: var(--ag-surface-blue-gradient);
-  color: #ffffff;
 }
 
 .home-native-page .service-native-section.home-native-billboard.is-bg-grey {
   background: var(--ag-color-super-grey);
-  color: #ffffff;
 }
 
 .home-native-page .service-native-section.home-native-billboard.is-bg-sand {
   background: linear-gradient(147deg, rgb(242, 238, 235) 62%, rgb(218, 215, 208) 100%);
-  color: var(--ag-color-super-grey);
 }
 
 .home-native-page .service-native-section.home-native-billboard.is-bg-white {
   background: #ffffff;
-  color: var(--ag-color-super-grey);
 }
 
 .home-native-page .service-native-section.home-native-billboard.is-text-dark,

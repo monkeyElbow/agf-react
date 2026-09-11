@@ -173,12 +173,13 @@ describe('BlockHudPanelHost', () => {
     expect(editorPanels.map((panel) => panel.getAttribute('data-editor-panel-column'))).toEqual(['1', '2', '3', '4']);
     expect(document.querySelector('.admin-card-grid-hud-page--layout h3')).toBeNull();
     expect(screen.getByRole('slider', { name: 'Fineprint size' })).toBeTruthy();
+    expect(screen.getByRole('slider', { name: 'Title-to-body space' })).toBeTruthy();
     const typographyFieldsByColumn = [...document.querySelectorAll(
       '.admin-card-grid-hud-page--layout .admin-card-grid-hud-group--typography .admin-card-grid-hud-fields',
     )].map((list) => [...list.children].map((field) => field.getAttribute('data-editor-field-id')));
     expect(typographyFieldsByColumn).toEqual([
-      ['titleTone', 'cardTitleSizeRem', 'cardBodySizeRem', 'cardTitleJustify', 'cardPaddingRem'],
-      ['bodyTone', 'cardTitleLineHeight', 'cardBodyLineHeight', 'cardBodyJustify', 'fineprintSizeRem'],
+      ['titleTone', 'cardTitleSizeRem', 'cardBodySizeRem', 'cardTitleJustify', 'cardBodyJustify', 'cardPaddingRem'],
+      ['bodyTone', 'cardTitleLineHeight', 'cardTitleBodySpaceRem', 'cardBodyLineHeight', 'fineprintSizeRem'],
     ]);
     const titleSizeNumber = document.querySelector(
       '.admin-card-grid-hud-group--typography label[data-editor-field-id="cardTitleSizeRem"] input[role="spinbutton"]',
@@ -196,6 +197,36 @@ describe('BlockHudPanelHost', () => {
     expect(screen.getByRole('button', { name: 'Card 6' })).toBeTruthy();
     expect(document.querySelector('.admin-card-grid-card-preview')).toBeNull();
     expect(document.querySelector('.admin-card-grid-hud-reference .admin-front-hud-swatch-row')).toBeTruthy();
+  });
+
+  it('describes About Values as a stacked feature and hides unsupported generic layout controls', () => {
+    render(createElement(BlockHudPanelHost, {
+      block: {
+        id: 'values',
+        kind: 'card_grid',
+        mode: 'dynamic',
+        presetId: 'default',
+        settings: {
+          sectionClassName: 'about-native-values',
+          columns: 'three',
+          card1Title: 'Focus',
+          card1Body: 'Focused copy.',
+          card2Title: 'Responsibility',
+          card2Body: 'Responsible copy.',
+          card3Title: 'Guidance',
+          card3Body: 'Guidance copy.',
+        },
+      },
+      onSettingChange: vi.fn(),
+    }));
+
+    expect(screen.getByText('Value cards · stacked feature')).toBeTruthy();
+    expect(screen.queryByLabelText('Grid columns')).toBeNull();
+    expect(screen.queryByLabelText('Card base style')).toBeNull();
+    expect(screen.queryByLabelText('Card outline')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Layout & typography' })).toBeTruthy();
+    expect(document.querySelector('.admin-card-grid-hud-page--layout .admin-card-grid-hud-group--typography')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Cards' })).toBeTruthy();
   });
 
   it('hides header-to-subhead spacing when the subhead is empty but keeps header-to-card spacing', () => {
@@ -245,6 +276,62 @@ describe('BlockHudPanelHost', () => {
     expect(onSettingChange).not.toHaveBeenCalledWith('bodyTone', 'white');
     expect(within(titlePalette).getByRole('radio', { name: 'Melon' }).getAttribute('aria-checked')).toBe('true');
     expect(within(bodyPalette).getByRole('radio', { name: 'Melon' }).getAttribute('aria-checked')).toBe('true');
+  });
+
+  it('retains the card shadow toggle after the layout panel rerenders', () => {
+    const onSettingChange = vi.fn();
+    render(createElement(CardGridSettingsProbe, {
+      initialSettings: {
+        cardStyle: 'card2',
+        cardShadow: true,
+        card1Title: 'Card one',
+      },
+      onSettingChange,
+    }));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Layout & typography' }));
+    const shadowGroup = screen.getByRole('group', { name: 'Card shadow' });
+    fireEvent.click(shadowGroup.querySelectorAll('button')[0]);
+
+    expect(onSettingChange).toHaveBeenCalledWith('cardShadow', false);
+    expect(shadowGroup.querySelectorAll('button')[0].classList.contains('is-active')).toBe(true);
+  });
+
+  it('loads borderless card grids with outline controls off and hidden', () => {
+    render(createElement(CardGridSettingsProbe, {
+      initialSettings: {
+        cardStyle: 'none',
+        card1Title: 'Card one',
+      },
+    }));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Layout & typography' }));
+
+    const outlineGroup = screen.getByRole('group', { name: 'Card outline' });
+    expect(outlineGroup.querySelector('button')?.classList.contains('is-active')).toBe(true);
+    const shadowGroup = screen.getByRole('group', { name: 'Card shadow' });
+    expect(shadowGroup.querySelector('button')?.classList.contains('is-active')).toBe(true);
+    expect(screen.queryByRole('radiogroup', { name: 'Border color' })).toBeNull();
+    expect(screen.queryByRole('slider', { name: 'Border width' })).toBeNull();
+  });
+
+  it('writes card padding from the shared typography panel', () => {
+    const onSettingChange = vi.fn();
+    render(createElement(CardGridSettingsProbe, {
+      initialSettings: {
+        cardStyle: 'none',
+        cardPaddingRem: 1.35,
+        card1Title: 'Card one',
+      },
+      onSettingChange,
+    }));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Layout & typography' }));
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Card padding value' }), {
+      target: { value: '1.9' },
+    });
+
+    expect(onSettingChange).toHaveBeenCalledWith('cardPaddingRem', 1.9);
   });
 
   it('keeps card setting writes bound to the selected slot with six cards', () => {
@@ -501,12 +588,13 @@ describe('BlockHudPanelHost', () => {
     expect(bodyFineprintColumns.children).toHaveLength(2);
     expect(bodyFineprintColumns.querySelector('.admin-card-grid-body-editor .admin-card-grid-rich-body-editor')).toBeTruthy();
     expect(bodyFineprintColumns.querySelector('.admin-card-grid-fineprint-controls .admin-card-grid-fineprint-editor')).toBeTruthy();
-    expect(screen.getByRole('radiogroup', { name: 'Card 1 fineprint justify' })).toBeTruthy();
-    expect(screen.getByRole('radio', { name: 'Left' }).getAttribute('aria-checked')).toBe('true');
+    const fineprintJustify = screen.getByRole('radiogroup', { name: 'Card 1 fineprint justify' });
+    expect(fineprintJustify).toBeTruthy();
+    expect(within(fineprintJustify).getByRole('radio', { name: 'Left' }).getAttribute('aria-checked')).toBe('true');
     expect(screen.getByRole('slider', { name: 'Card 1 fineprint space above' })).toBeTruthy();
     expect(screen.getByRole('slider', { name: 'Card 1 fineprint line height' })).toBeTruthy();
     expect(screen.getByRole('slider', { name: 'Card 1 fineprint space below' })).toBeTruthy();
-    fireEvent.click(screen.getByRole('radio', { name: 'Right' }));
+    fireEvent.click(within(fineprintJustify).getByRole('radio', { name: 'Right' }));
     expect(onSettingChange).toHaveBeenLastCalledWith('card1FineprintJustify', 'right');
   });
 
@@ -609,7 +697,7 @@ describe('BlockHudPanelHost', () => {
       onSettingChange: vi.fn(),
     }));
 
-    const backgroundPalette = screen.getByRole('radiogroup', { name: 'Intro background' });
+    const backgroundPalette = screen.getByRole('radiogroup', { name: 'Background color' });
     expect(backgroundPalette).toBeTruthy();
     expect(within(backgroundPalette).getByRole('radio', { name: 'Sand' })).toBeTruthy();
     expect(screen.getByText('Core Color')).toBeTruthy();
@@ -1059,11 +1147,14 @@ describe('BlockHudPanelHost', () => {
     expect(screen.getByLabelText('Form heading text')).toBeTruthy();
     expect(screen.getByLabelText('Lead Copy')).toBeTruthy();
     const contentPage = document.querySelector('.admin-request-form-hud-page--content');
-    expect(contentPage?.querySelector('.admin-request-form-lead-row')).toBeTruthy();
+    expect(contentPage?.querySelector('.admin-request-form-content-grid')).toBeTruthy();
+    expect(contentPage?.querySelector('.admin-request-form-heading-column')).toBeTruthy();
+    expect(contentPage?.querySelector('.admin-request-form-lead-column')).toBeTruthy();
     expect(contentPage?.querySelector('.admin-request-form-lead-field')).toBeTruthy();
-    expect(contentPage?.querySelector('.admin-request-form-lead-text-color')).toBeTruthy();
+    expect(contentPage?.querySelector('.admin-request-form-lead-text-color')).toBeNull();
     expect(screen.queryByText('Set the heading and supporting copy shown beside the form.')).toBeNull();
-    expect(screen.getByRole('radiogroup', { name: 'Text color' })).toBeTruthy();
+    expect(within(contentPage).getByRole('radiogroup', { name: 'Text color' })).toBeTruthy();
+    expect(within(contentPage).getByRole('toolbar', { name: 'Article body formatting' })).toBeTruthy();
     expect(document.querySelector('.admin-color-text-swatch-list.hud-standard-swatch-palette')).toBeTruthy();
     const headingColorControls = screen.getByRole('radiogroup', { name: 'Form heading color controls' });
     [
@@ -1080,7 +1171,8 @@ describe('BlockHudPanelHost', () => {
     expect(screen.getByLabelText('Step 1 field 1 label')).toBeTruthy();
     expect(screen.getByRole('navigation', { name: 'Request form editor sections' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Content' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Appearance' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Layout' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Background' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Form options' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Form steps' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Block options' })).toBeTruthy();
@@ -1091,9 +1183,9 @@ describe('BlockHudPanelHost', () => {
     expect(submitButtonPreview.getAttribute('type')).toBe('button');
     expect(submitButtonPreview.className).toContain('service-native-btn');
 
-    fireEvent.click(screen.getByRole('button', { name: 'Appearance' }));
-    expect(screen.getByRole('button', { name: 'Appearance' }).getAttribute('aria-pressed')).toBe('true');
-    expect(document.querySelector('.admin-request-form-hud-editor.is-section-appearance')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Layout' }));
+    expect(screen.getByRole('button', { name: 'Layout' }).getAttribute('aria-pressed')).toBe('true');
+    expect(document.querySelector('.admin-request-form-hud-editor.is-section-layout')).toBeTruthy();
 
     fireEvent.click(screen.getByRole('button', { name: 'Form steps' }));
     expect(screen.getByRole('button', { name: /step 1/i }).getAttribute('aria-expanded')).toBe('true');

@@ -308,6 +308,10 @@ describe('planned giving review polish guardrail', () => {
 
     expect(cssSource).toContain('.legacy-child-native-trusts-crt-types,\n.legacy-child-native-trusts-clt-types {');
     expect(cssSource).toContain('padding: clamp(1.6rem, 3.5vw, 2.7rem) 0 clamp(2.6rem, 5vw, 4.2rem);');
+    expect(cssSource).toContain('.service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart).is-bg-blue {');
+    expect(cssSource).not.toContain(
+      '.legacy-child-native-trusts-crt-types,\n.legacy-child-native-trusts-clt-types {\n  padding: clamp(1.6rem, 3.5vw, 2.7rem) 0 clamp(2.6rem, 5vw, 4.2rem);\n  background: #ffffff;',
+    );
   });
 
   it('keeps CGA options and outro on the planned-giving billboard/card rhythm', () => {
@@ -359,7 +363,7 @@ describe('planned giving review polish guardrail', () => {
     expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-qcd .service-native-section.native-dynamic-grid.is-card-grid-style-planned-giving-centered > .ag-panel-rail > .native-info-section-copy > h2 {');
     expect(cssSource).toContain('margin-bottom: clamp(0.9rem, 1.8vw, 1.35rem);');
     expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-qcd .service-native-section.native-dynamic-grid.is-card-grid-style-planned-giving-centered .service-native-grid {');
-    expect(cssSource).toContain('margin-top: clamp(2.4rem, 4.8vw, 3.6rem);');
+    expect(cssSource).toContain('margin-top: var(--dynamic-grid-header-cards-space, clamp(2.4rem, 4.8vw, 3.6rem));');
     expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-qcd .service-native-section.native-dynamic-grid.is-card-grid-style-planned-giving-centered .service-native-card {');
     expect(cssSource).toContain('padding: clamp(2rem, 4vw, 3rem);');
   });

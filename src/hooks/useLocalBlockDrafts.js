@@ -143,6 +143,7 @@ export default function useLocalBlockDrafts({
   commitBlockSettingsPatch = () => false,
   registerExternalDraftFlushHandler = null,
   registerExternalDraftStatusHandler = null,
+  onLocalDraftUpdate = null,
 }) {
   const normalizedPath = String(pathname || '').trim();
   const [draftsByBlockId, setDraftsByBlockId] = useState({});
@@ -259,6 +260,7 @@ export default function useLocalBlockDrafts({
     const nextDraft = {
       ...previousDraft,
     };
+    let blockChanged = false;
     let nextSettledDrafts = settledDraftsByBlockIdRef.current || {};
     const sourceBlock = (Array.isArray(blocksRef.current) ? blocksRef.current : [])
       .find((block) => String(block?.id || '').trim() === normalizedBlockId);
@@ -274,6 +276,9 @@ export default function useLocalBlockDrafts({
         : Object.prototype.hasOwnProperty.call(nextSettledDrafts?.[normalizedBlockId] || {}, settingKey)
           ? nextSettledDrafts[normalizedBlockId][settingKey]
           : sourceSettings?.[settingKey];
+      if (!settingsValueEquals(previousVisibleValue, settingValue)) {
+        blockChanged = true;
+      }
       const previousProtectionValues = Array.isArray(previousProtection?.[settingKey]?.previousValues)
         ? previousProtection[settingKey].previousValues
         : [previousProtection?.[settingKey]?.previousValue].filter((value) => value !== undefined);
@@ -297,6 +302,11 @@ export default function useLocalBlockDrafts({
     };
     syncDraftStateFromRef();
     syncSettledDraftStateFromRef();
+    onLocalDraftUpdate?.({
+      blockId: normalizedBlockId,
+      settingsPatch: Object.fromEntries(normalizedPatchEntries),
+      blockChanged,
+    });
 
     clearCommitTimer(normalizedBlockId);
     if (typeof window !== 'undefined') {
@@ -305,7 +315,7 @@ export default function useLocalBlockDrafts({
       }, LOCAL_BLOCK_DRAFT_IDLE_COMMIT_DELAY_MS);
       commitTimersRef.current.set(normalizedBlockId, timerId);
     }
-  }, [claimBufferedBlockEdit, clearCommitTimer, commitDraftPatch, normalizedPath, syncDraftStateFromRef, syncSettledDraftStateFromRef]);
+  }, [claimBufferedBlockEdit, clearCommitTimer, commitDraftPatch, normalizedPath, onLocalDraftUpdate, syncDraftStateFromRef, syncSettledDraftStateFromRef]);
 
   const stageLocalBlockSetting = useCallback((blockId, settingKey, settingValue) => {
     const normalizedSettingKey = String(settingKey || '').trim();

@@ -123,7 +123,7 @@ function BackgroundLightPositionControl({ lights, onChange }) {
             <button
               key={light.id}
               type="button"
-              className={`admin-background-light-position-knob${selectedActiveIndex === index ? ' is-selected' : ''}`}
+              className={`admin-background-light-position-knob${selectedActiveIndex === index ? ' is-selected' : ''}${light.tone === 'white' ? ' is-white-tone' : ''}`}
               style={{
                 left: `${positionToMapPercent(light.x)}%`,
                 top: `${positionToMapPercent(light.y)}%`,
@@ -168,7 +168,6 @@ export default function BackgroundLightsEditor({
   paletteVariant = 'hud',
   backgroundTone = 'white',
   backgroundToneOptions = [],
-  backgroundToneLabel: _backgroundToneLabel = 'Background color',
   onBackgroundToneChange,
   className = '',
 }) {
@@ -196,7 +195,7 @@ export default function BackgroundLightsEditor({
       <div className="admin-background-editor-page__layout">
         <div className="admin-background-editor-page__left">
           <div className="admin-background-editor-page__surface">
-                <strong>Background color</strong>
+            <strong>Background color</strong>
             {toneOptions.length ? (
               <ColorPalette
                 variant={paletteVariant}

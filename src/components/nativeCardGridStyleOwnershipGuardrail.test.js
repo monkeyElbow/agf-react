@@ -56,6 +56,73 @@ describe('native card-grid style ownership guardrail', () => {
     expect(source).toContain('line-height: var(--dynamic-grid-card-title-line-height) !important;');
   });
 
+  it('keeps card-grid background swatches from rewriting text, divider, or outline colors', () => {
+    const source = readSource('../styles/service-native.css');
+    const homeSource = readSource('../styles/home-service-public.css');
+
+    expect(source).toContain(
+      '.service-native-section.native-dynamic-grid.is-bg-blue,\n'
+        + '.service-native-section.test-dynamic-grid.is-bg-blue {\n'
+        + '  background: var(--ag-surface-blue-gradient);\n'
+        + '}',
+    );
+    expect(source).toContain(
+      '.service-native-section.native-dynamic-grid.is-bg-grey,\n'
+        + '.service-native-section.test-dynamic-grid.is-bg-grey {\n'
+        + '  background: linear-gradient(145deg, var(--ag-color-super-grey) 0%, #636265 100%);\n'
+        + '}',
+    );
+    expect(source).not.toContain(
+      'background: var(--ag-surface-blue-gradient);\n'
+        + '  --dynamic-grid-heading-color: #ffffff;\n'
+        + '  --dynamic-grid-card-title-color: #ffffff;\n'
+        + '  --dynamic-grid-body-color: rgba(255, 255, 255, 0.95);\n'
+        + '  --dynamic-grid-divider-color: rgba(255, 255, 255, 0.35);',
+    );
+    expect(source).not.toContain(
+      'background: linear-gradient(145deg, var(--ag-color-super-grey) 0%, #636265 100%);\n'
+        + '  --dynamic-grid-heading-color: #ffffff;\n'
+        + '  --dynamic-grid-card-title-color: #ffffff;\n'
+        + '  --dynamic-grid-body-color: rgba(255, 255, 255, 0.92);\n'
+        + '  --dynamic-grid-divider-color: rgba(255, 255, 255, 0.35);',
+    );
+    expect(source).not.toContain(
+      '.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-outline:is(.is-bg-blue, .is-bg-grey)',
+    );
+    expect(source).not.toContain('--dynamic-grid-alt-title-one: #ffffff;');
+    expect(source).not.toContain(
+      '.native-info-page--legacy-child .legacy-child-native-assets,\n'
+        + '.native-info-page--legacy-child .legacy-child-native-stock,\n'
+        + '.native-info-page--legacy-child .legacy-child-native-guide,\n'
+        + '.native-info-page--legacy-child .legacy-child-native-duo {\n'
+        + '  background: #fff;',
+    );
+    expect(source).not.toContain(
+      '.legacy-child-native-trusts-funding,\n'
+        + '.legacy-child-native-trusts-funding:nth-of-type(even) {\n'
+        + '  background: #ffffff;',
+    );
+    expect(homeSource).not.toContain(
+      'background: var(--ag-surface-blue-gradient);\n'
+        + '  --dynamic-grid-heading-color: #ffffff;\n'
+        + '  --dynamic-grid-card-title-color: #ffffff;\n'
+        + '  --dynamic-grid-body-color: rgba(255, 255, 255, 0.95);\n'
+        + '  --dynamic-grid-divider-color: rgba(255, 255, 255, 0.35);',
+    );
+    expect(homeSource).not.toContain(
+      'background: linear-gradient(145deg, var(--ag-color-super-grey) 0%, #636265 100%);\n'
+        + '  --dynamic-grid-heading-color: #ffffff;\n'
+        + '  --dynamic-grid-card-title-color: #ffffff;\n'
+        + '  --dynamic-grid-body-color: rgba(255, 255, 255, 0.92);\n'
+        + '  --dynamic-grid-divider-color: rgba(255, 255, 255, 0.35);',
+    );
+    expect(homeSource).not.toContain(
+      '.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-bg-blue, '
+        + '.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-bg-grey {\n'
+        + '  --dynamic-grid-alt-title-one: #ffffff;',
+    );
+  });
+
   it('keeps planned-giving gift-card bullets regular weight with shared spacing', () => {
     const source = readSource('../styles/service-native.css');
 

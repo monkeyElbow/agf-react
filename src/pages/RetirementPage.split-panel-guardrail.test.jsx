@@ -14,7 +14,7 @@ describe('retirement split panel renderer guardrail', () => {
   it('keeps the shared dynamic split panel builder in the retirement page path', () => {
     const source = readSource('./RetirementPage.jsx');
 
-    expect(source).toContain('buildDynamicSplitPanelFromBlock,');
+    expect(source).toContain("import { buildCanonicalBlockRuntime } from '../blocks/registry';");
     expect(source).toContain("kind: 'split_panel',");
     expect(source).toContain("id: 'split_options',");
     expect(source).toContain("presentation: 'certificate_cards'");

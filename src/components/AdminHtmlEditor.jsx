@@ -313,24 +313,62 @@ export default function AdminHtmlEditor({
     return editorRef.current.innerHTML || '<p></p>';
   }
 
-  function applyCommand(command, commandValue = null) {
+  function applySemanticColorToRange(range, className) {
+    if (!range || range.collapsed || !editorRef.current || !className) {
+      return false;
+    }
+
+    const fragment = range.extractContents();
+    if (!fragment.textContent) {
+      return false;
+    }
+    const wrapper = document.createElement('span');
+    wrapper.className = className;
+    wrapper.appendChild(fragment);
+    range.insertNode(wrapper);
+    return true;
+  }
+
+  function applyCommand(command, commandValue = null, semanticClassName = '') {
     if (!editorRef.current) {
       return;
     }
 
+    const selection = document.getSelection?.();
+    const currentRange = selection && selection.rangeCount > 0
+      ? selection.getRangeAt(0).cloneRange()
+      : null;
     editorRef.current.focus();
-    const savedRange = savedSelectionRangeRef.current;
+    const savedRange = savedSelectionRangeRef.current || currentRange;
     if (savedRange && typeof document !== 'undefined') {
-      const selection = document.getSelection?.();
-      if (selection) {
-        selection.removeAllRanges();
-        selection.addRange(savedRange);
+      const restoredSelection = document.getSelection?.();
+      if (restoredSelection) {
+        restoredSelection.removeAllRanges();
+        restoredSelection.addRange(savedRange);
       }
     }
-    if (command === 'foreColor') {
-      document.execCommand('styleWithCSS', false, true);
+    const previousHtml = readEditorHtml();
+    let didApplyCommand = false;
+    try {
+      if (command === 'foreColor') {
+        document.execCommand('styleWithCSS', false, true);
+      }
+      didApplyCommand = document.execCommand(command, false, commandValue);
+    } catch {
+      didApplyCommand = false;
     }
-    document.execCommand(command, false, commandValue);
+
+    if (
+      command === 'foreColor'
+      && semanticClassName
+      && (!didApplyCommand || readEditorHtml() === previousHtml)
+    ) {
+      const fallbackSelection = savedRange?.cloneRange?.();
+      if (fallbackSelection && !fallbackSelection.collapsed) {
+        applySemanticColorToRange(fallbackSelection, semanticClassName);
+      }
+    }
+
     savedSelectionRangeRef.current = null;
     emitChange(readEditorHtml());
   }
@@ -390,6 +428,7 @@ export default function AdminHtmlEditor({
           options={HTML_EDITOR_COLOR_PALETTE_OPTIONS}
           value={selectedColorId}
           preventMouseDown
+          onOptionMouseDown={() => captureSelection()}
           onChange={(nextValue) => {
             const nextSwatch = HTML_EDITOR_COLOR_SWATCHES.find((swatch) => swatch.id === nextValue);
             if (!nextSwatch) {
@@ -400,7 +439,7 @@ export default function AdminHtmlEditor({
               onBaseColorChange(nextSwatch.className);
               return;
             }
-            applyCommand('foreColor', nextSwatch.value);
+            applyCommand('foreColor', nextSwatch.value, nextSwatch.className);
           }}
           getOptionClassName={(option, state) => `admin-html-editor-color-swatch${state.active ? ' is-active' : ''}${option.value === 'white' ? ' is-light' : ''}`}
           getOptionLabel={(option) => option.label}

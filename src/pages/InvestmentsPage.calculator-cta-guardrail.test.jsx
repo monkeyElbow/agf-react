@@ -14,7 +14,7 @@ describe('investments calculator cta renderer guardrail', () => {
   it('keeps the shared dynamic calculator cta builder in the investments page path', () => {
     const source = readSource('./InvestmentsPage.jsx');
 
-    expect(source).toContain('buildDynamicCalculatorCtaFromBlock,');
+    expect(source).toContain("import { buildCanonicalBlockRuntime } from '../blocks/registry';");
     expect(source).toContain("id: 'laddering',");
     expect(source).toContain("kind: 'calculator_cta',");
     expect(source).toContain('const calculatorCtaRuntime = useMemo(');

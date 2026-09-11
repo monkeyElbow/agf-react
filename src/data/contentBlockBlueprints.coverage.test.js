@@ -2404,12 +2404,10 @@ describe('source-default content block blueprint coverage', () => {
     expect(servicesBlocks.find((block) => block?.id === 'intro' && block?.mode === 'dynamic')?.kind).toBe('billboard');
     expect(servicesBlocks.find((block) => block?.id === 'intro' && block?.mode === 'dynamic')?.settings?.title).toBe('A robust financial strategy for your ministry and your family.');
     expect(servicesBlocks.find((block) => block?.id === 'services_cards')).toMatchObject({
-      kind: 'site_feature',
+      kind: 'card_grid',
       mode: 'dynamic',
-      settings: {
-        featureId: 'services_breakdown',
-        sectionClassName: 'services-native-grid-wrap services-breakdown-section',
-      },
+      presetId: 'services-directory',
+      settings: { sectionClassName: 'services-native-grid-wrap services-breakdown-section' },
     });
     expect(servicesBlocks.find((block) => block?.id === 'matters_band')).toMatchObject({
       kind: 'billboard',
@@ -2485,7 +2483,7 @@ describe('source-default content block blueprint coverage', () => {
     expect(servicesBlocks.find((block) => block?.id === 'services_cards')).toMatchObject({
       id: 'services_cards',
       mode: 'dynamic',
-      kind: 'site_feature',
+      kind: 'card_grid',
     });
     expect(servicesBlocks.find((block) => block?.id === 'matters_band')).toMatchObject({
       id: 'matters_band',

@@ -53,7 +53,7 @@ describe('services page spacing and typography guardrail', () => {
     expect(cssSource).toContain('.services-breakdown-shell {');
     expect(cssSource).toContain('display: grid;');
     expect(cssSource).toContain('.services-breakdown-header {');
-    expect(cssSource).toContain('padding: clamp(0.85rem, 1.8vw, 1.2rem) 0 clamp(1.15rem, 2.4vw, 1.65rem);');
+    expect(cssSource).toContain('padding: clamp(0.85rem, 1.8vw, 1.2rem) 0 var(--services-breakdown-header-cards-space, clamp(1.15rem, 2.4vw, 1.65rem));');
     expect(cssSource).toContain('.services-breakdown-list {');
     expect(cssSource).toContain('.services-breakdown-panel {');
     expect(cssSource).toContain('grid-template-columns: minmax(182px, 0.48fr) minmax(220px, 0.68fr) minmax(240px, 0.84fr);');
@@ -82,7 +82,7 @@ describe('services page spacing and typography guardrail', () => {
 
     expect(cssSource).not.toContain('.services-breakdown-eyebrow {');
     expect(cssSource).toContain('.services-breakdown-header h2 {');
-    expect(cssSource).toContain('font-size: clamp(1.95rem, 3.15vw, 2.55rem);');
+    expect(cssSource).toContain('font-size: var(--services-breakdown-header-size, clamp(1.95rem, 3.15vw, 2.55rem));');
   });
 
   it('keeps titles graphite and links on one consistent Atlantean brand treatment', () => {

@@ -41,7 +41,7 @@ const ASSERT_PREVIEW_BY_KIND = {
     expect(screen.getByRole('radiogroup', { name: /Hero color controls/i })).toBeTruthy();
   },
   intro: () => {
-    expect(screen.getByRole('radiogroup', { name: /Intro background/i })).toBeTruthy();
+    expect(screen.getByRole('radiogroup', { name: /Background color/i })).toBeTruthy();
     expect(screen.getByText('Core Color')).toBeTruthy();
   },
   billboard: () => {
@@ -50,7 +50,7 @@ const ASSERT_PREVIEW_BY_KIND = {
     if (backgroundButton) {
       fireEvent.click(backgroundButton);
     }
-    expect(screen.getByRole('radiogroup', { name: /Billboard background/i })).toBeTruthy();
+    expect(screen.getByRole('radiogroup', { name: /Background color/i })).toBeTruthy();
   },
   cta_form: () => {
     expect(screen.getByRole('radiogroup', { name: /CTA form heading color|CTA heading color/i })).toBeTruthy();
@@ -62,14 +62,18 @@ const ASSERT_PREVIEW_BY_KIND = {
   },
   columns: () => {
     expect(screen.getByRole('radiogroup', { name: /Columns heading color/i })).toBeTruthy();
-    expect(screen.getByRole('radiogroup', { name: /Columns background/i })).toBeTruthy();
+    expect(screen.getByRole('radiogroup', { name: /Background color/i })).toBeTruthy();
   },
   newsletter: () => {
-    expect(screen.getByRole('radiogroup', { name: /Newsletter background/i })).toBeTruthy();
     expect(screen.getByText('Newsletter heading')).toBeTruthy();
+    const backgroundButton = screen.queryByRole('button', { name: 'Background' });
+    if (backgroundButton) {
+      fireEvent.click(backgroundButton);
+    }
+    expect(screen.getByRole('radiogroup', { name: /Background color/i })).toBeTruthy();
   },
   card_grid: () => {
-    expect(screen.getByRole('radiogroup', { name: /Grid background/i })).toBeTruthy();
+    expect(screen.getByRole('radiogroup', { name: /Background color/i })).toBeTruthy();
     expect(screen.getByText(/Grid header|Grid intro heading|Intro handled outside this preset/i)).toBeTruthy();
     expect(screen.getByText('Core Color')).toBeTruthy();
   },

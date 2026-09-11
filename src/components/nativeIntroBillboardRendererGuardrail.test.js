@@ -16,25 +16,24 @@ describe('native intro and billboard renderer guardrail', () => {
     const runtimeSource = readSource('../lib/dynamicPageBlocks.js');
     const compositionSource = readSource('../lib/managedPageComposition.js');
 
-    expect(source).toContain('buildDynamicIntroFromBlock,');
-    expect(source).toContain('buildDynamicBillboardFromBlock,');
+    expect(source).toContain("import { buildCanonicalBlockRuntime } from '../blocks/registry';");
     expect(source).toContain("import { normalizeIntroLineSpacing } from '../lib/dynamicSectionTypography';");
     expect(source).toContain("function buildActionRowClassName(justify, fallback = 'left') {");
     expect(source).toContain("function buildActionRowStyle(justify, fallback = 'left') {");
     expect(source).toContain('function buildNativeIntroConfig(block, { includeTestClassName = false } = {}) {');
-    expect(source).toContain('const runtime = buildDynamicIntroFromBlock(block);');
+    expect(source).toContain('const runtime = buildCanonicalBlockRuntime(block);');
     expect(source).toContain('className: `dynamic-intro${runtime.sectionClassName');
     expect(source).toContain("is-bg-${normalizeSurfaceBgTone(runtime.bgTone, 'sand')}");
     expect(source).toContain('backgroundEffects: runtime.backgroundEffects');
     expect(source).toContain('function buildNativeBillboardSection(block, { includeTestClassName = false } = {}) {');
-    expect(source).toContain('const runtime = buildDynamicBillboardFromBlock(block);');
+    expect(source).toContain('const runtime = buildCanonicalBlockRuntime(block);');
     expect(source).not.toContain("targetSectionKey: runtime.targetSectionKey || '',");
     expect(source).not.toContain('const targetedDynamicBillboardSections = new Map();');
     expect(source).not.toContain('consumedDynamicBillboardBlockIds.add(targetEntry.block.id);');
     expect(source).toContain('.split(/\\s+/)');
     expect(source).toContain("const heroActionRowClass = buildActionRowClassName(heroActionJustify, 'center');");
     expect(source).toContain('className={buildActionRowClassName(introJustify, \'center\')}');
-    expect(source).toContain("className={buildActionRowClassName(sectionJustifyToken, 'left')}");
+    expect(source).toContain("className={`${buildActionRowClassName(sectionJustifyToken, 'left')}${dynamicBillboardActionHeaderGapClassName}`}");
     expect(source).toContain("style={buildActionRowStyle(sectionJustifyToken, 'left')}");
     expect(source).toContain('function buildManagedBlockSection(block, {');
     expect(source).toContain("if (renderBlock.kind === 'billboard') {");
@@ -76,6 +75,27 @@ describe('native intro and billboard renderer guardrail', () => {
     expect(cssSource).toContain(`${selector}.is-sandstone`);
     expect(cssSource).toContain(`${selector}.is-super-grey`);
     expect(cssSource).toContain(`${selector}.is-white`);
+  });
+
+  it('keeps billboard background swatches separate from the explicit text-tone swatch', () => {
+    const cssSource = readSource('../styles/service-native.css');
+    const homeCssSource = readSource('../styles/home-native.css');
+
+    expect(cssSource).not.toContain(
+      '.service-native-section.dynamic-billboard.is-bg-blue {\n'
+        + '  background: var(--ag-surface-blue-gradient);\n'
+        + '  color: #ffffff;',
+    );
+    expect(cssSource).not.toContain(
+      '.service-native-section.test-dynamic-billboard.is-bg-blue {\n'
+        + '  background: var(--ag-surface-blue-gradient);\n'
+        + '  color: #ffffff;',
+    );
+    expect(homeCssSource).not.toContain(
+      '.home-native-page .service-native-section.home-native-billboard.is-bg-blue {\n'
+        + '  background: var(--ag-surface-blue-gradient);\n'
+        + '  color: #ffffff;',
+    );
   });
 
   it('keeps shared intro heading color overrides available in generic runtime CSS, not only the test route', () => {
@@ -123,6 +143,7 @@ describe('native intro and billboard renderer guardrail', () => {
   it('keeps custom billboard pages wired to the shared runtime contract without page-local fallback blocks', () => {
     const loansSource = readSource('../pages/LoansPage.jsx');
     const retirementSource = readSource('../pages/RetirementPage.jsx');
+    const servicesSource = readSource('../pages/ServicesPage.jsx');
     const cssSource = readSource('../styles/service-native.css');
 
     expect(loansSource).toContain("className={`service-native-section dynamic-billboard loans-native-vision-fuel is-bg-${resolvedVisionFuel.bgTone || 'white'} is-text-${resolvedVisionFuel.textTone || 'dark'}");
@@ -134,6 +155,8 @@ describe('native intro and billboard renderer guardrail', () => {
     expect(loansSource).toContain('{visionFuelSubtitle ? (');
     expect(loansSource).toContain(') : visionFuelBody ? (');
     expect(loansSource).toContain('visionFuelAction && visionFuelButtonLabel && visionFuelButtonHref');
+    expect(loansSource).toContain('resolvedVisionFuel?.bodyColorClassName || \'\'');
+    expect(loansSource).toContain('loanOptionsBillboard.bodyColorClassName');
     expect(cssSource).toContain('.loans-native-vision-fuel > .ag-panel-rail {');
     expect(cssSource).toContain('.service-native-section.dynamic-billboard .native-info-section-copy {');
     expect(cssSource).toContain('.service-native-section.dynamic-billboard > .ag-panel-rail {');
@@ -159,7 +182,19 @@ describe('native intro and billboard renderer guardrail', () => {
     expect(retirementSource).toContain(') : renderedBillboard.body ? (');
     expect(retirementSource).toContain('{renderedRolloverBillboard.subtitle ? (');
     expect(retirementSource).toContain(') : renderedRolloverBillboard.body ? (');
+    expect(retirementSource).toContain('renderedBillboard.bodyColorClassName || \'\'');
+    expect(retirementSource).toContain('renderedRolloverBillboard.bodyColorClassName || \'\'');
+    expect(retirementSource).toContain('retirementDoTheMathRuntime.bodyColorClassName');
     expect(retirementSource).toContain("renderedBillboard.action?.label && (renderedBillboard.action?.to || renderedBillboard.action?.href)");
     expect(retirementSource).toContain("renderedRolloverBillboard.action?.label && (renderedRolloverBillboard.action?.to || renderedRolloverBillboard.action?.href)");
+
+    expect(servicesSource).toContain('bodyColorClassName: runtime.bodyColorClassName');
+    expect(servicesSource).toContain('resolvedIntro.bodyColorClassName');
+    expect(servicesSource).toContain('servicesMattersRuntime.bodyColorClassName');
+
+    expect(cssSource).toContain('.services-native-page [data-block-id="intro"]');
+    expect(cssSource).toContain('.services-native-page [data-block-id="matters_band"]');
+    expect(cssSource).toContain('.loans-native-option-question-wrap');
+    expect(cssSource).toContain('.retirement-do-the-math-billboard');
   });
 });

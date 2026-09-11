@@ -13,7 +13,11 @@ function unavailableClientError() {
 }
 
 export function isDevContentAuthorityEnabled() {
-  return Boolean(import.meta.env.DEV && import.meta.env.MODE !== 'test');
+  return Boolean(
+    import.meta.env.DEV
+    && import.meta.env.MODE !== 'test'
+    && (typeof window === 'undefined' || window.__AGF_CONTROL_AUDIT_READ_ONLY__ !== true),
+  );
 }
 
 export async function fetchPublishedContentRouteSnapshot(...args) {

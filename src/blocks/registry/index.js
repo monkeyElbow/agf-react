@@ -25,6 +25,7 @@ import { supportLibraryBlockDefinition } from '../definitions/supportLibrary.def
 import { splitPanelBlockDefinition } from '../definitions/splitPanel.definition';
 import { testimonialsBlockDefinition } from '../definitions/testimonials.definition';
 import { topStripBlockDefinition } from '../definitions/topStrip.definition';
+import { resolveCardGridPresetDefinition } from '../../lib/cardGridPresets';
 
 const MIGRATED_BLOCK_DEFINITIONS = Object.freeze({
   content: pageContentBlockDefinition,
@@ -75,6 +76,14 @@ export function getBlockPresetDefinition(kind, presetId) {
 }
 
 export function resolveBlockPresetDefinition(block) {
+  // Card Grid has one legacy presentation whose visual identity is carried by
+  // section settings rather than the original preset id. Use the same
+  // effective resolver as the runtime so HUD labels and editor guardrails do
+  // not describe controls the renderer ignores.
+  if (block?.kind === 'card_grid') {
+    return resolveCardGridPresetDefinition(block);
+  }
+
   const definition = getBlockDefinition(block?.kind);
   if (!definition) {
     return null;
@@ -131,6 +140,24 @@ export function getBlockEditorSections(kind, surface = 'admin') {
 
 export function getEditableFieldsForKind(kind, surface = 'admin') {
   return flattenEditorFields(getBlockEditorSections(kind, surface));
+}
+
+/**
+ * The single runtime boundary for registered dynamic blocks. Page renderers
+ * may still shape their surrounding markup, but they all consume the same
+ * definition-owned builder for the block's settings-to-runtime conversion.
+ */
+export function buildCanonicalBlockRuntime(block, ...args) {
+  const kind = String(block?.kind || block?.type || '').trim();
+  const definition = getBlockDefinition(kind);
+  if (!definition || typeof definition.renderer?.buildRuntime !== 'function') {
+    return null;
+  }
+  return definition.renderer.buildRuntime({
+    ...block,
+    kind,
+    mode: block?.mode || 'dynamic',
+  }, ...args);
 }
 
 export function applyCanonicalDefinitionToBlock(block, surface = 'admin') {

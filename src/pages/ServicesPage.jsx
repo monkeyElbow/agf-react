@@ -3,6 +3,7 @@ import '../styles/home-native.css';
 import '../styles/service-native.css';
 import { Link } from 'react-router-dom';
 import { getBlockOwnershipVisual } from '../components/BlockOwnershipOverlay';
+import FrontHudDock from '../components/FrontHudDock';
 import BlockSurfaceLayers from '../components/BlockSurfaceLayers';
 import DynamicCtaSection from '../components/DynamicCtaSection';
 import FrontHudAnchorTag from '../components/FrontHudAnchorTag';
@@ -16,6 +17,7 @@ import useHudDockOrder from '../hooks/useHudDockOrder';
 import useLocalBlockDrafts from '../hooks/useLocalBlockDrafts';
 import { useManagedContentSource } from '../hooks/useManagedContentSource';
 import { buildHudPanelsFromBlocks } from '../lib/blockHudRegistry';
+import { buildCanonicalBlockRuntime } from '../blocks/registry';
 import {
   formatTestimonialAttribution,
   normalizeDisplayTestimonials,
@@ -25,11 +27,6 @@ import {
 } from '../lib/testimonials';
 import {
   actionButtonClassName,
-  buildDynamicBillboardFromBlock,
-  buildDynamicHeroPieFromBlock,
-  buildDynamicIntroFromBlock,
-  buildDynamicGridFromBlock,
-  buildDynamicSiteFeatureFromBlock,
   DEFAULT_SERVICE_HERO_PIE_SLICES,
   isExternalLinkHref,
   renderTextWithHighlights,
@@ -70,7 +67,7 @@ const SERVICES_HUD_SECTION_KEY_BY_BLOCK_ID = {
 };
 
 function buildServicesBreakdownRuntime(block) {
-  const gridRuntime = buildDynamicGridFromBlock(block);
+  const gridRuntime = buildCanonicalBlockRuntime(block);
   if (gridRuntime) {
     return {
       ...gridRuntime,
@@ -85,7 +82,7 @@ function buildServicesBreakdownRuntime(block) {
       })),
     };
   }
-  return buildDynamicSiteFeatureFromBlock(block);
+  return buildCanonicalBlockRuntime(block);
 }
 
 function clampFrontHudOpacity(value) {
@@ -112,6 +109,7 @@ function mapServicesBillboardToIntroRuntime(runtime) {
     extraLineStyle: undefined,
     bgTone: runtime.bgTone,
     textTone: runtime.textTone,
+    bodyColorClassName: runtime.bodyColorClassName,
     justify: runtime.justify || 'center',
     lineSpacing: runtime.lineSpacing || 1.04,
     actions: Array.isArray(runtime.actions) ? runtime.actions : [],
@@ -170,6 +168,11 @@ export default function ServicesPage() {
     registerExternalDraftFlushHandler = null,
     registerExternalDraftStatusHandler = null,
   } = useContentAdmin();
+  const clearActiveBlockLockRef = useRef(clearActiveBlockLock);
+
+  useEffect(() => {
+    clearActiveBlockLockRef.current = clearActiveBlockLock;
+  }, [clearActiveBlockLock]);
   const {
     enabled: frontHudEnabled,
     opacity: frontHudOpacity,
@@ -187,6 +190,8 @@ export default function ServicesPage() {
   const [heroPieReducedMotion, setHeroPieReducedMotion] = useState(false);
   const [heroPieCardMinHeight, setHeroPieCardMinHeight] = useState(0);
   const [hudDockCollapsed, setHudDockCollapsed] = useState(true);
+  const [hudDockIconsOnly, setHudDockIconsOnly] = useState(false);
+  const [hudDockHoverLabel, setHudDockHoverLabel] = useState(null);
   const [activeHudPanelId, setActiveHudPanelId] = useState('');
   const managedBlocksSource = useMemo(
     () => (Array.isArray(managedBlocksByPath?.['/services']) ? managedBlocksByPath['/services'] : []),
@@ -272,8 +277,7 @@ export default function ServicesPage() {
     [servicesBreakdownBlock],
   );
   const servicesMattersRuntime = useMemo(
-    () => buildDynamicBillboardFromBlock(servicesMattersBlock)
-      || buildDynamicSiteFeatureFromBlock(servicesMattersBlock),
+    () => buildCanonicalBlockRuntime(servicesMattersBlock),
     [servicesMattersBlock],
   );
   const testimonialsData = useMemo(
@@ -285,15 +289,15 @@ export default function ServicesPage() {
     [dynamicTestimonialsBlock, testimonialsLibrary],
   );
   const dynamicIntro = useMemo(() => {
-    const servicesBillboard = buildDynamicBillboardFromBlock(billboardIntroBlock);
+    const servicesBillboard = buildCanonicalBlockRuntime(billboardIntroBlock);
     if (servicesBillboard) {
       return mapServicesBillboardToIntroRuntime(servicesBillboard);
     }
-    return buildDynamicIntroFromBlock(introBlock);
+    return buildCanonicalBlockRuntime(introBlock);
   }, [billboardIntroBlock, introBlock]);
   const resolvedIntro = dynamicIntro || DEFAULT_SERVICES_INTRO;
   const heroPieRuntime = useMemo(() => (
-    buildDynamicHeroPieFromBlock(heroPieBlock || {
+    buildCanonicalBlockRuntime(heroPieBlock || {
       id: 'hero_pie',
       kind: 'hero_pie',
       mode: 'dynamic',
@@ -413,6 +417,8 @@ export default function ServicesPage() {
     if (!showFrontHud) {
       setHudDockCollapsed(true);
       setActiveHudPanelId('');
+      setHudDockIconsOnly(false);
+      setHudDockHoverLabel(null);
     }
   }, [showFrontHud]);
 
@@ -579,21 +585,29 @@ export default function ServicesPage() {
       return;
     }
     setHudDockCollapsed(false);
+    setHudDockIconsOnly(true);
+    setHudDockHoverLabel(null);
     setActiveHudPanelId(panelId);
     scrollToHudSection(sectionKey);
   };
   const closeHudDock = () => {
     setHudDockCollapsed(true);
     setActiveHudPanelId('');
+    setHudDockHoverLabel(null);
     setFrontHudEnabled?.(false);
+  };
+  const closeHudPanel = () => {
+    setHudDockCollapsed(false);
+    setActiveHudPanelId('');
+    setHudDockHoverLabel(null);
   };
 
   useEffect(() => () => {
     const activeHudBlockId = String(activeHudPanel?.block?.id || '').trim();
     if (activeHudBlockId) {
-      clearActiveBlockLock('/services', activeHudBlockId);
+      clearActiveBlockLockRef.current('/services', activeHudBlockId);
     }
-  }, [activeHudPanel?.block?.id, clearActiveBlockLock]);
+  }, [activeHudPanel?.block?.id]);
   const renderHudAnchor = (blockId) => {
     if (!showFrontHud) {
       return null;
@@ -673,36 +687,26 @@ export default function ServicesPage() {
       className={`service-native-page services-native-page${showFrontHud ? ' is-front-hud-docked admin-front-hud-scope' : ''}${hasOpenHudPanel ? ' has-active-front-hud-panel' : ''}`}
     >
       {showFrontHud ? (
-        <aside className={`admin-front-hud-dock${hudDockCollapsed ? ' is-collapsed' : ''}`} aria-label="Front HUD editor panels">
-          <div className={`admin-front-hud-dock-tabs${isDockDragging ? ' is-drag-active' : ''}`}>
-            {orderedHudPanels.map((panel) => (
-              <button
-                key={panel.id}
-                type="button"
-                className={`admin-front-hud-dock-tab${panel.isHidden ? ' is-hidden-block' : ''}${!hudDockCollapsed && activeHudPanel?.id === panel.id ? ' is-active' : ''}${isPanelDragging(panel.id) ? ' is-dragging' : ''}${isPanelDragOver(panel.id) ? ' is-drag-over' : ''}${getPanelDropPosition(panel.id) ? ` is-drop-${getPanelDropPosition(panel.id)}` : ''}`}
-                onClick={() => openHudPanel(panel.id, panel.sectionKey)}
-                aria-label={`Edit ${panel.label}${panel.isHidden ? ' (hidden from visitors)' : ''}`}
-                title={`Edit ${panel.label}${panel.isHidden ? ' — hidden from visitors' : ''}`}
-                {...getDockTabDragProps(panel.id)}
-              >
-                <img src={panel.icon} alt="" aria-hidden="true" className="admin-front-hud-dock-tab-icon" />
-                <span className="admin-front-hud-dock-tab-label">{panel.label}</span>
-                {panel.isHidden ? <span className="admin-front-hud-dock-tab-hidden-marker" aria-hidden="true">Hidden</span> : null}
-              </button>
-            ))}
-          </div>
-          <div className="admin-front-hud-dock-actions">
-            <button
-              type="button"
-              className="admin-front-hud-dock-collapse"
-              onClick={() => setHudDockCollapsed((current) => !current)}
-              aria-label={hudDockCollapsed ? 'Show panels' : 'Hide panels'}
-              title={hudDockCollapsed ? 'Show panels' : 'Hide panels'}
-            >
-              {hudDockCollapsed ? '▢' : '×'}
-            </button>
-          </div>
-        </aside>
+        <FrontHudDock
+          panels={orderedHudPanels}
+          activePanelId={activeHudPanelId}
+          isCollapsed={hudDockCollapsed}
+          isIconsOnly={hudDockIconsOnly}
+          isDockDragging={isDockDragging}
+          style={{ '--ag-admin-front-hud-opacity': String(frontHudOpacityRatio) }}
+          panelAriaLabelPrefix="Edit "
+          panelTitlePrefix="Edit "
+          onPanelOpen={(panel) => openHudPanel(panel.id, panel.sectionKey)}
+          onPanelClose={closeHudPanel}
+          onToggleIconsOnly={() => setHudDockIconsOnly((current) => !current)}
+          onClose={closeHudDock}
+          getDockTabDragProps={getDockTabDragProps}
+          isPanelDragging={isPanelDragging}
+          isPanelDragOver={isPanelDragOver}
+          getPanelDropPosition={getPanelDropPosition}
+          onDockHoverLabelChange={setHudDockHoverLabel}
+          dockHoverLabel={hudDockHoverLabel}
+        />
       ) : null}
       <FrontHudPageWorkflow pathname="/services" reviewHref="/admin/content?page=%2Fservices" placement="bar" isVisible={showFrontHud} />
       {hasOpenHudPanel && activeHudPanel ? (
@@ -715,9 +719,9 @@ export default function ServicesPage() {
             if (!activeHudPanel?.block?.id) {
               return;
             }
-            setActiveBlockLock('/services', activeHudPanel.block.id, { force: true });
+            return setActiveBlockLock('/services', activeHudPanel.block.id, { force: true });
           }}
-          onClose={closeHudDock}
+          onClose={closeHudPanel}
           style={{ '--ag-admin-front-hud-opacity': String(frontHudOpacityRatio) }}
         >
           <FrontHudPageWorkflow
@@ -728,6 +732,13 @@ export default function ServicesPage() {
             blockId={activeHudPanel.block.id}
             block={activeHudPanel.block}
             blockLabel={activeHudPanel.label}
+            ownership={getOwnershipVisualForBlockId(activeHudPanel.block.id)}
+            onOwnershipAction={() => {
+              if (!activeHudPanel?.block?.id) {
+                return;
+              }
+              return setActiveBlockLock('/services', activeHudPanel.block.id, { force: true });
+            }}
             onDoneEditing={closeHudDock}
           />
           <Suspense fallback={<BlockHudPanelLoading label={activeHudPanel.label} />}>
@@ -741,7 +752,7 @@ export default function ServicesPage() {
                 if (!activeHudPanel?.block?.id) {
                   return;
                 }
-                setActiveBlockLock('/services', activeHudPanel.block.id, { force: true });
+                return setActiveBlockLock('/services', activeHudPanel.block.id, { force: true });
               }}
               onSettingChange={(settingKey, nextValue) => stageLocalBlockSetting(activeHudPanel.block.id, settingKey, nextValue)}
             />
@@ -852,9 +863,13 @@ export default function ServicesPage() {
               />
             </h2>
             {resolvedIntro.bodyHtml ? (
-              <SafeRichText as="div" className="native-info-rich-html" html={resolvedIntro.bodyHtml} />
+              <SafeRichText
+                as="div"
+                className={`native-info-rich-html${resolvedIntro.bodyColorClassName ? ` ${resolvedIntro.bodyColorClassName}` : ''}`}
+                html={resolvedIntro.bodyHtml}
+              />
             ) : resolvedIntro.body ? (
-              <p>{resolvedIntro.body}</p>
+              <p className={resolvedIntro.bodyColorClassName || undefined}>{resolvedIntro.body}</p>
             ) : null}
             {resolvedIntro.extraLine ? (
               <p
@@ -1006,8 +1021,14 @@ export default function ServicesPage() {
             />
           </h2>
           {servicesMattersRuntime.bodyHtml ? (
-            <SafeRichText as="div" className="native-info-rich-html" html={servicesMattersRuntime.bodyHtml} />
-          ) : servicesMattersRuntime.body ? <p>{servicesMattersRuntime.body}</p> : null}
+            <SafeRichText
+              as="div"
+              className={`native-info-rich-html${servicesMattersRuntime.bodyColorClassName ? ` ${servicesMattersRuntime.bodyColorClassName}` : ''}`}
+              html={servicesMattersRuntime.bodyHtml}
+            />
+          ) : servicesMattersRuntime.body ? (
+            <p className={servicesMattersRuntime.bodyColorClassName || undefined}>{servicesMattersRuntime.body}</p>
+          ) : null}
           {servicesMattersRuntime.action ? (
             <div className="service-native-action-row is-centered">
               {isExternalLinkHref(servicesMattersRuntime.action.href || servicesMattersRuntime.action.to) ? (

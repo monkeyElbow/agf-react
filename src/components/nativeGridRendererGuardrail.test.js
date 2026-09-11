@@ -14,8 +14,7 @@ describe('native grid renderer guardrail', () => {
   it('keeps the shared dynamic grid builder in the native page path', () => {
     const source = readSource('./NativeContentPage.jsx');
 
-    expect(source).toContain('buildDynamicGridFromBlock,');
-    expect(source).toContain('const runtime = buildDynamicGridFromBlock(block);');
+    expect(source).toContain('const runtime = buildCanonicalBlockRuntime(block);');
     expect(source).toContain("const sectionClassBase = pathname === '/test' ? 'test-dynamic-grid' : 'native-dynamic-grid';");
     expect(source).toContain("const presetRuntimeClassName = buildPresetFamilyRuntimeClassName('card_grid', presetId);");
     expect(source).not.toContain('is-card-grid-preset-${presetId}');

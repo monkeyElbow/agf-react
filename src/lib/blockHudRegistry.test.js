@@ -121,6 +121,18 @@ describe('buildHudPanelsFromBlocks', () => {
     });
   });
 
+  it('labels the legacy About Values block with its effective stacked feature preset', () => {
+    expect(getBlockHudDefinition({
+      id: 'values',
+      kind: 'card_grid',
+      mode: 'dynamic',
+      presetId: 'default',
+      settings: {
+        sectionClassName: 'about-native-values',
+      },
+    }).label).toBe('Card Grid · Value cards · stacked feature');
+  });
+
   it('keeps dashboard login on the Billboard family without creating a pseudo-kind', () => {
     expect(getBlockHudDefinition({
       id: 'dashboard_login_cta',

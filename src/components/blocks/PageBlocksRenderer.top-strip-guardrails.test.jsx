@@ -67,10 +67,10 @@ describe('home top strip renderer guardrail', () => {
   it('keeps the shared dynamic top strip builder in the home page block renderer', () => {
     const source = readSource('./PageBlocksRenderer.jsx');
 
-    expect(source).toContain('buildDynamicTopStripFromBlock,');
+    expect(source).toContain("import { buildCanonicalBlockRuntime } from '../../blocks/registry';");
     expect(source).toContain("from '../../lib/dynamicPageBlocks';");
-    expect(source).toContain('const runtime = buildDynamicTopStripFromBlock(block);');
-    expect(source).not.toContain('const runtime = buildDynamicTopStripFromBlock(block) || buildDynamicTopStripFromBlock({');
+    expect(source).toContain('const runtime = buildCanonicalBlockRuntime(block);');
+    expect(source).not.toContain('const runtime = buildCanonicalBlockRuntime(block) || buildCanonicalBlockRuntime({');
     expect(source).toContain('const ratesTo = runtime.ratesIsExternal ? runtime.ratesPath : resolveTo(runtime.ratesPath, \'/rates\');');
     expect(source).toContain('const stripClassName = `home-native-strip is-bg-${runtime.bgTone} is-text-${runtime.textTone}`;');
     expect(source).toContain("heroHud={blockKind === 'hero' ? heroHud : null}");

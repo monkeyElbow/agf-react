@@ -158,6 +158,48 @@ function normalizeBlockSettings(settings) {
   return next;
 }
 
+function normalizeOrphanHeroActionSettings(block) {
+  if (!isObject(block) || String(block.kind || '').trim().toLowerCase() !== 'hero' || !isObject(block.settings)) {
+    return block;
+  }
+
+  const nextSettings = { ...block.settings };
+  let changed = false;
+  [1, 2].forEach((buttonNumber) => {
+    const actionKey = `button${buttonNumber}Action`;
+    const label = String(nextSettings[`button${buttonNumber}Label`] || '').trim();
+    const targetAnchorId = String(nextSettings[`button${buttonNumber}TargetAnchorId`] || '').trim();
+    const targetBlockId = String(nextSettings[`button${buttonNumber}TargetBlockId`] || '').trim();
+    if (String(nextSettings[actionKey] || '').trim() && !label && !targetAnchorId && !targetBlockId) {
+      delete nextSettings[actionKey];
+      changed = true;
+    }
+  });
+
+  return changed ? { ...block, settings: nextSettings } : block;
+}
+
+function normalizeRetirementPlanFeatureBlock(pathname, block) {
+  if (
+    normalizeManagedContentPath(pathname) !== '/services/retirement'
+    || !isObject(block)
+    || String(block.id || '').trim() !== 'retirement_plan_feature'
+    || String(block.kind || '').trim() !== 'site_feature'
+    || !isObject(block.settings)
+    || String(block.settings.featureId || '').trim() === 'retirement_plan_feature'
+  ) {
+    return block;
+  }
+
+  return {
+    ...cloneJson(block),
+    settings: {
+      ...block.settings,
+      featureId: 'retirement_plan_feature',
+    },
+  };
+}
+
 export function normalizeRetirement403bRatesBlock(pathname, rawBlock) {
   if (normalizeManagedContentPath(pathname) !== '/services/retirement/403b' || !isObject(rawBlock)) {
     return rawBlock;
@@ -577,24 +619,27 @@ export function normalizeContentAdminState(rawState, options = {}) {
       const pathname = normalizeManagedContentPath(rawPath);
       return [pathname || rawPath, (Array.isArray(rawBlocks) ? rawBlocks : [])
         .filter((block) => !isRetiredNonDynamicContentAdminBlock(block))
-        .map((block) => normalizeContentAdminBlock(
-          normalizeRetirement403bRatesBlock(
+        .map((block) => normalizeOrphanHeroActionSettings(normalizeContentAdminBlock(
+          normalizeRetirementPlanFeatureBlock(
             pathname,
-            normalizeRetirementIraRatesBlock(
+            normalizeRetirement403bRatesBlock(
               pathname,
-              normalizeIraContributionLimitsChart(
+              normalizeRetirementIraRatesBlock(
                 pathname,
-                normalize403bContributionLimitsChart(
+                normalizeIraContributionLimitsChart(
                   pathname,
-                  normalizeLegacyCharitableTrustTypeChart(
+                  normalize403bContributionLimitsChart(
                     pathname,
-                    normalizeLegacyIraComparisonChart(pathname, block),
+                    normalizeLegacyCharitableTrustTypeChart(
+                      pathname,
+                      normalizeLegacyIraComparisonChart(pathname, block),
+                    ),
                   ),
                 ),
               ),
             ),
           ),
-        ))];
+        )))]
     }),
   );
 

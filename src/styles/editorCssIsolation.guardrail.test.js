@@ -100,4 +100,12 @@ describe('editor CSS isolation', () => {
       expect(readSource(pageFile)).toContain('admin-front-hud-scope');
     });
   });
+
+  it('removes the canvas dim immediately after the active editor closes', () => {
+    const hudSource = readSource('./front-hud.css');
+
+    expect(hudSource).toContain('.service-native-page:not(.has-active-front-hud-panel)');
+    expect(hudSource).toContain('.home-native-page:not(.has-active-front-hud-panel)');
+    expect(hudSource).toMatch(/not\(\.has-active-front-hud-panel\)[\s\S]*?transition: none;/);
+  });
 });

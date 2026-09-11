@@ -35,9 +35,9 @@ describe('migrated block editor buffered draft coverage', () => {
     ]);
   });
 
-  it('uses populated request-form lead-copy storage without changing canonical precedence', () => {
-    expect(resolveRequestFormLeadCopyFieldId({ subtitle: 'Canonical lead copy', body: 'Fallback copy' })).toBe('subtitle');
-    expect(resolveRequestFormLeadCopyFieldId({ subtitle: '', body: 'Existing fallback copy' })).toBe('body');
-    expect(resolveRequestFormLeadCopyFieldId({ subtitle: '', body: '' })).toBe('subtitle');
+  it('uses bodyHtml as the canonical request-form lead-copy storage', () => {
+    expect(resolveRequestFormLeadCopyFieldId({ subtitle: 'Legacy lead copy', body: 'Fallback copy' })).toBe('bodyHtml');
+    expect(resolveRequestFormLeadCopyFieldId({ bodyHtml: '<p>Rich lead copy</p>' })).toBe('bodyHtml');
+    expect(resolveRequestFormLeadCopyFieldId({ subtitle: '', body: '' })).toBe('bodyHtml');
   });
 });

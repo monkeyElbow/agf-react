@@ -25,7 +25,7 @@ describe('retirement 403(b) review polish guardrail', () => {
     const catalogSource = readSource('../data/siteFeatureCatalog.js');
 
     expect(source).toContain("import InvestmentsGrowthFeature from '../components/InvestmentsGrowthFeature';");
-    expect(source).toContain('buildDynamicSiteFeatureFromBlock');
+    expect(source).toContain('buildCanonicalBlockRuntime(retirementPlanFeatureBlock)');
     expect(catalogSource).toContain("featureId: 'retirement_plan_feature'");
     expect(catalogSource).toContain("className: 'retirement-plan-feature'");
     expect(catalogSource).toContain("titleClassName: 'is-white'");
@@ -101,7 +101,7 @@ describe('retirement 403(b) review polish guardrail', () => {
     expect(source).toContain("columns_math: '.retirement-do-the-math-billboard'");
     expect(source).toContain("block?.id === 'columns_math'");
     expect(source).toContain("block?.kind === 'billboard'");
-    expect(source).toContain("import { HomeDoTheMathBadge } from '../components/blocks/PageBlocksRenderer';");
+    expect(source).toContain("import { BillboardBlock, HomeDoTheMathBadge } from '../components/blocks/PageBlocksRenderer';");
     expect(source).toContain("managedBlocksByPath['/services/retirement'].filter((block) => block && typeof block === 'object')");
     expect(source).not.toContain('HOME_COLUMNS_MATH_BILLBOARD_DEFAULTS');
     expect(source).not.toContain('const columnsMathBillboardBlock = useMemo(() => {');
@@ -109,7 +109,7 @@ describe('retirement 403(b) review polish guardrail', () => {
     expect(source).not.toContain('setupInvestmentsGrowthRevealMotion');
     expect(source).not.toContain('data-block-id="housing_feature"');
     expect(source).toContain('function buildRetirementDoTheMathRuntime(block) {');
-    expect(source).toContain("const runtime = buildDynamicBillboardFromBlock(block);");
+    expect(source).toContain("const runtime = buildCanonicalBlockRuntime(block);");
     expect(source).not.toMatch(/function buildRetirementDoTheMathRuntime\(block\) \{[\s\S]*?justify: 'left',[\s\S]*?\n\}/);
     expect(source).toContain("const RETIREMENT_SCALE_REVEAL_CLASS_NAME = 'fade-up fade-up-force-observe fade-up-repeat-observe billboard-scroll-reveal-scale-up';");
     expect(source).toContain("const RETIREMENT_SCALE_REVEAL_ROOT_MARGIN = '0px 0px -20% 0px';");
@@ -149,7 +149,7 @@ describe('retirement 403(b) review polish guardrail', () => {
     expect(retirementSource).toContain("'--dynamic-billboard-padding-bottom': 'clamp(6rem, 12vw, 9rem)'");
     expect(retirementSource).toContain("const billboardCopyUsesScrollProgress = renderedBillboard?.scrollReveal === 'scale-up';");
     expect(retirementSource).toContain("'billboard-scroll-progress-copy'");
-    expect(retirementSource).toContain('data-fade-root-margin={billboardCopyUsesScrollProgress ? undefined : (renderedBillboard.copyFadeRootMargin || undefined)}');
+    expect(retirementSource).toContain("copyFadeRootMargin={billboardCopyUsesScrollProgress ? '' : renderedBillboard.copyFadeRootMargin}");
     expect(cssSource).toContain('--retirement-billboard-starting-gap: clamp(0.6rem, 1.175vw, 0.85rem);');
     expect(cssSource).toContain('padding-bottom: var(--dynamic-billboard-padding-bottom, clamp(6rem, 12vw, 9rem));');
     expect(runtimeSource).toContain('const scrollReveal = normalizeBillboardScrollReveal(settings.scrollReveal);');
@@ -207,8 +207,8 @@ describe('retirement 403(b) review polish guardrail', () => {
     expect(cssSource).toContain('justify-self: center;');
 
     [
-      'data-block-id="billboard"',
-      'data-block-id="rollover_billboard"',
+      "id: 'billboard', kind: 'billboard'",
+      "id: 'rollover_billboard', kind: 'billboard'",
       'data-block-id="columns_math"',
       'id="retirement-savings-calculator"',
       '<DynamicCtaSection',
@@ -249,5 +249,19 @@ describe('retirement 403(b) review polish guardrail', () => {
     expect(cssSource).toContain('.retirement-lead-form form {');
     expect(cssSource).toContain('border-radius: 20px;');
     expect(cssSource).toContain('background: rgba(255, 255, 255, 0.94);');
+  });
+
+  it('keeps rollover button spacing attached to the shared billboard setting', () => {
+    const source = readSource('./RetirementPage.jsx');
+    const sharedBillboardSource = readSource('../components/blocks/PageBlocksRenderer.jsx');
+    const definitionSource = readSource('../blocks/definitions/billboard.definition.js');
+    const runtimeSource = readSource('../lib/dynamicPageBlocks.js');
+    const cssSource = readSource('../styles/service-native.css');
+
+    expect(definitionSource).toContain("id: 'actionGapRem'");
+    expect(runtimeSource).toContain('actionGapRem');
+    expect(source).toContain('runtimeOverride={renderedRolloverBillboard}');
+    expect(sharedBillboardSource).toContain('buildBillboardActionRowStyle(effectiveJustify, runtime.actionGapRem)');
+    expect(cssSource).toContain('margin-top: var(--dynamic-billboard-action-gap, clamp(2.32rem, 4.16vw, 3.08rem));');
   });
 });

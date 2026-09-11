@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
 import AdminHtmlEditor from './AdminHtmlEditor';
+import AdminNumberInput from './AdminNumberInput';
 import BackgroundEditorPage from './BackgroundEditorPage';
 import ColorPalette from './ColorPalette';
 import RouteLinkField from './RouteLinkField';
@@ -9,7 +10,14 @@ import {
   appendHudBlockOptionsSection,
 } from './HudEditorShell';
 import { getTokenSwatch } from '../lib/colorSystem';
-import { normalizeBillboardLeadCopySizeRem } from '../lib/dynamicSectionTypography';
+import {
+  normalizeBillboardLeadCopyLineHeight,
+  normalizeBillboardLeadCopySizeRem,
+} from '../lib/dynamicSectionTypography';
+import {
+  parseHeroRangeHighlights,
+  removeSelectionRange,
+} from '../lib/heroHudRanges';
 
 export const BILLBOARD_WIDTH_MIN_PX = 560;
 export const BILLBOARD_WIDTH_MAX_PX = 1440;
@@ -23,6 +31,9 @@ export const BILLBOARD_HEADER_GAP_STEP_REM = 0.05;
 export const BILLBOARD_PADDING_MIN_REM = 0;
 export const BILLBOARD_PADDING_MAX_REM = 8;
 export const BILLBOARD_PADDING_STEP_REM = 0.25;
+export const BILLBOARD_ACTION_GAP_MIN_REM = 0;
+export const BILLBOARD_ACTION_GAP_MAX_REM = 8;
+export const BILLBOARD_ACTION_GAP_STEP_REM = 0.05;
 
 export const BILLBOARD_EDITOR_SECTIONS = Object.freeze([
   { id: 'heading', label: 'Heading', icon: 'Aa' },
@@ -127,6 +138,18 @@ export function normalizeBillboardPadding(value) {
   return Number((Math.round(clamped / BILLBOARD_PADDING_STEP_REM) * BILLBOARD_PADDING_STEP_REM).toFixed(2));
 }
 
+export function normalizeBillboardActionGap(value) {
+  if (value == null || String(value).trim() === '') {
+    return null;
+  }
+  const numericValue = Number(value);
+  if (!Number.isFinite(numericValue)) {
+    return null;
+  }
+  const clamped = Math.min(BILLBOARD_ACTION_GAP_MAX_REM, Math.max(BILLBOARD_ACTION_GAP_MIN_REM, numericValue));
+  return Number((Math.round(clamped / BILLBOARD_ACTION_GAP_STEP_REM) * BILLBOARD_ACTION_GAP_STEP_REM).toFixed(2));
+}
+
 function BillboardField({ label, children, className = '' }) {
   return (
     <label className={`admin-front-hud-field admin-billboard-editor-field${className ? ` ${className}` : ''}`}>
@@ -170,21 +193,34 @@ function BillboardSegment({ label, options = [], value, onChange, className = ''
   );
 }
 
-export function BillboardSlider({ label, value, min, max, step, displayValue, onChange, ariaLabel = label, className = '' }) {
+export function BillboardSlider({ label, value, min, max, step, onChange, ariaLabel = label, unit = '', className = '' }) {
   const safeValue = normalizeSliderValue(value, min, min, max, step);
   return (
     <label className={`admin-front-hud-range admin-billboard-editor-slider${className ? ` ${className}` : ''}`}>
       <span>{label}</span>
-      <input
-        type="range"
-        min={min}
-        max={max}
-        step={step}
-        value={safeValue}
-        aria-label={ariaLabel}
-        onChange={(event) => onChange?.(normalizeSliderValue(event.target.value, safeValue, min, max, step))}
-      />
-      <strong>{displayValue ?? safeValue}</strong>
+      <div
+        className={`admin-range-number-control${unit ? ' admin-range-number-control--unit-tooltip' : ''}`}
+        data-measurement-unit={unit || undefined}
+      >
+        <input
+          type="range"
+          min={min}
+          max={max}
+          step={step}
+          value={safeValue}
+          aria-label={ariaLabel}
+          onChange={(event) => onChange?.(normalizeSliderValue(event.target.value, safeValue, min, max, step))}
+        />
+        <AdminNumberInput
+          value={safeValue}
+          min={min}
+          max={max}
+          step={step}
+          aria-label={`${ariaLabel} value`}
+          title={unit || undefined}
+          onChange={(nextValue) => onChange?.(normalizeSliderValue(nextValue, safeValue, min, max, step))}
+        />
+      </div>
     </label>
   );
 }
@@ -200,6 +236,69 @@ function BillboardColors({ ariaLabel, options = [], value, onChange, preventMous
       preventMouseDown={preventMouseDown}
       onChange={onChange}
     />
+  );
+}
+
+function BillboardTitleColorState({
+  title,
+  titleSelection,
+  titleHighlightsJson,
+  titleColor,
+  titleColorOptions = [],
+  onTitleHighlightsChange,
+  onTitleColorChange,
+}) {
+  const highlights = parseHeroRangeHighlights(titleHighlightsJson, title);
+  const hasMarkedSpans = highlights.length > 0;
+
+  const clearAllTitleColors = () => {
+    onTitleColorChange?.('');
+    onTitleHighlightsChange?.('');
+  };
+
+  return (
+    <div className="admin-billboard-title-color-state" aria-label="Billboard title color state">
+      <div className="admin-billboard-title-color-state-head">
+        <span>{hasMarkedSpans ? `${highlights.length} marked span${highlights.length === 1 ? '' : 's'}` : 'No marked spans'}</span>
+        <button
+          type="button"
+          className="admin-billboard-title-color-reset"
+          onClick={clearAllTitleColors}
+          disabled={!hasMarkedSpans && !String(titleColor || '').trim()}
+          title="Reset title color and marked spans"
+        >
+          Reset title colors
+        </button>
+      </div>
+      {hasMarkedSpans ? (
+        <div className="admin-billboard-title-color-badges">
+          {highlights.map((range, index) => {
+            const swatch = titleColorOptions.find((option) => option.value === range.className);
+            const isSelected = titleSelection?.start === range.start && titleSelection?.end === range.end;
+            return (
+              <button
+                key={`billboard-title-span-${range.start}-${range.end}-${range.className}`}
+                type="button"
+                className={`admin-billboard-title-color-badge${isSelected ? ' is-selected' : ''}`}
+                onClick={() => onTitleHighlightsChange?.(removeSelectionRange(titleHighlightsJson, title, index))}
+                title="Remove this marked span"
+                aria-label={`Remove marked span ${title.slice(range.start, range.end)}`}
+              >
+                <span
+                  className="admin-billboard-title-color-badge-swatch"
+                  aria-hidden="true"
+                  style={{ background: swatch?.swatch || '#ddd' }}
+                />
+                <span>{`“${title.slice(range.start, range.end)}”`}</span>
+                <span className="admin-billboard-title-color-badge-range">{range.start}-{range.end}</span>
+              </button>
+            );
+          })}
+        </div>
+      ) : (
+        <span className="admin-billboard-title-color-state-help">Select title text, then choose a swatch to mark it.</span>
+      )}
+    </div>
   );
 }
 
@@ -298,6 +397,8 @@ export default function BillboardHudEditorPanel({
   titleColor,
   onTitleColorChange,
   onTitleSelectionColorChange,
+  titleHighlightsJson,
+  onTitleHighlightsChange,
   titleColorOptions = [],
   bodyHtml,
   onBodyHtmlChange,
@@ -311,6 +412,8 @@ export default function BillboardHudEditorPanel({
   onHeaderGapRemChange,
   leadCopySizeRem,
   onLeadCopySizeRemChange,
+  leadCopyLineHeight,
+  onLeadCopyLineHeightChange,
   bodyColorClassName,
   onBodyColorChange,
   bgTone,
@@ -329,8 +432,10 @@ export default function BillboardHudEditorPanel({
   onLineSpacingChange,
   titleSizeRem,
   onTitleSizeRemChange,
-  titleLetterSpacingEm,
-  onTitleLetterSpacingEmChange,
+  titleTrackingEm,
+  onTitleTrackingEmChange,
+  subtitleTrackingEm,
+  onSubtitleTrackingEmChange,
   buttonLabel,
   onButtonLabelChange,
   onButtonLabelBlur,
@@ -363,6 +468,8 @@ export default function BillboardHudEditorPanel({
   button2Tone,
   onButton2ToneChange,
   button2ToneOptions = [],
+  actionGapRem,
+  onActionGapRemChange,
   contentMaxWidthPx,
   onContentMaxWidthPxChange,
   paddingTopRem,
@@ -376,6 +483,11 @@ export default function BillboardHudEditorPanel({
   const [activeSection, setActiveSection] = useState('heading');
   const editorSections = appendHudBlockOptionsSection(BILLBOARD_EDITOR_SECTIONS, blockOptions);
   const hasSelection = Boolean(String(titleSelection?.text || '').trim());
+  const visibleTitleColorOptions = (Array.isArray(titleColorOptions) ? titleColorOptions : [])
+    .filter((option) => hasSelection || option?.value !== '')
+    .map((option) => option?.value === '' && hasSelection
+      ? { ...option, label: 'Clear selected span', shortLabel: 'Clear selected span' }
+      : option);
   const previewButtons = [
     { label: buttonLabel, style: buttonStyle, tone: buttonTone },
     { label: button2Label, style: button2Style, tone: button2Tone },
@@ -402,70 +514,95 @@ export default function BillboardHudEditorPanel({
               title="Heading"
               description="Title, subtitle, and typography"
               className="is-heading-panel"
+              showHeader={false}
             >
-            <div className="admin-billboard-hud-heading-copy-box">
-              <div className="admin-billboard-hud-heading-row">
-                <BillboardField label="Title">
-                  <input
-                    ref={titleInputRef}
-                    type="text"
-                    value={String(title || '')}
-                    onChange={(event) => onTitleChange?.(event.target.value)}
-                    onBlur={() => onTitleBlur?.()}
-                    onSelect={() => onTitleSelectionCapture?.()}
-                    onMouseUp={() => onTitleSelectionCapture?.()}
-                    onKeyUp={() => onTitleSelectionCapture?.()}
+              <div className="admin-billboard-hud-heading-workbench">
+                <div className="admin-billboard-hud-heading-copy-box">
+                  <div className="admin-billboard-hud-heading-row">
+                    <BillboardField label="Title">
+                      <input
+                        ref={titleInputRef}
+                        type="text"
+                        value={String(title || '')}
+                        onChange={(event) => onTitleChange?.(event.target.value)}
+                        onBlur={() => onTitleBlur?.()}
+                        onSelect={() => onTitleSelectionCapture?.()}
+                        onMouseUp={() => onTitleSelectionCapture?.()}
+                        onKeyUp={() => onTitleSelectionCapture?.()}
+                      />
+                    </BillboardField>
+                    <div className="admin-hud-editor-inline-control">
+                      <span>{formatSelectionLabel(titleSelection?.text)}</span>
+                      <BillboardColors
+                        ariaLabel="Billboard title color"
+                        options={visibleTitleColorOptions}
+                        value={titleColor}
+                        preventMouseDown
+                        onChange={(nextValue) => {
+                          if (hasSelection) {
+                            onTitleSelectionColorChange?.(nextValue);
+                            return;
+                          }
+                          onTitleColorChange?.(nextValue);
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <BillboardTitleColorState
+                    title={String(title || '')}
+                    titleSelection={titleSelection}
+                    titleHighlightsJson={titleHighlightsJson}
+                    titleColor={titleColor}
+                    titleColorOptions={titleColorOptions}
+                    onTitleHighlightsChange={onTitleHighlightsChange}
+                    onTitleColorChange={onTitleColorChange}
                   />
-                </BillboardField>
-                <div className="admin-hud-editor-inline-control">
-                  <span>{formatSelectionLabel(titleSelection?.text)}</span>
-                  <BillboardColors
-                    ariaLabel="Billboard title color"
-                    options={titleColorOptions}
-                    value={titleColor}
-                    preventMouseDown
-                    onChange={(nextValue) => {
-                      if (hasSelection) {
-                        onTitleSelectionColorChange?.(nextValue);
-                        return;
-                      }
-                      onTitleColorChange?.(nextValue);
-                    }}
+                  <div className="admin-billboard-hud-heading-row">
+                    <BillboardField label="Subtitle">
+                      <input type="text" value={String(subtitle || '')} onChange={(event) => onSubtitleChange?.(event.target.value)} onBlur={() => onSubtitleBlur?.()} />
+                    </BillboardField>
+                    <div className="admin-hud-editor-inline-control">
+                      <span>Subtitle color</span>
+                      <BillboardColors ariaLabel="Billboard subtitle color" options={subtitleColorOptions} value={subtitleColor} onChange={onSubtitleColorChange} />
+                    </div>
+                  </div>
+                </div>
+                <div className="admin-billboard-hud-heading-settings-box admin-billboard-hud-heading-slider-panel">
+                  <BillboardSlider
+                    label="Title size"
+                    ariaLabel="Title size"
+                    value={titleSizeRem}
+                    min={2.4}
+                    max={8}
+                    step={0.05}
+                    unit="rem"
+                    onChange={onTitleSizeRemChange}
                   />
+                  <BillboardSlider
+                    label="Subtitle size"
+                    ariaLabel="Subtitle size"
+                    value={subtitleSizeRem}
+                    min={1}
+                    max={8}
+                    step={0.05}
+                    unit="rem"
+                    onChange={onSubtitleSizeRemChange}
+                  />
+                  <BillboardSlider label="Leading" ariaLabel="Title line height" value={lineSpacing} min={0.85} max={1.25} step={0.01} onChange={onLineSpacingChange} />
+                  <BillboardSlider
+                    label="Header gap"
+                    ariaLabel="Header gap"
+                    value={normalizeBillboardHeaderGap(headerGapRem) ?? 1.15}
+                    min={BILLBOARD_HEADER_GAP_MIN_REM}
+                    max={BILLBOARD_HEADER_GAP_MAX_REM}
+                    step={BILLBOARD_HEADER_GAP_STEP_REM}
+                    unit="rem"
+                    onChange={onHeaderGapRemChange}
+                  />
+                  <BillboardSlider label="Subtitle Tracking" ariaLabel="Subtitle tracking" value={subtitleTrackingEm} min={-0.12} max={0.04} step={0.005} unit="em" onChange={onSubtitleTrackingEmChange} />
+                  <BillboardSlider label="Title Tracking" ariaLabel="Title tracking" value={titleTrackingEm} min={-0.12} max={0.04} step={0.005} unit="em" onChange={onTitleTrackingEmChange} />
                 </div>
-                <BillboardSlider
-                  label="Title size"
-                  ariaLabel="Title size"
-                  value={titleSizeRem}
-                  min={2.4}
-                  max={8}
-                  step={0.05}
-                  displayValue={`${Number(titleSizeRem || 3.4).toFixed(2)}rem`}
-                  onChange={onTitleSizeRemChange}
-                />
-              </div>
-              <div className="admin-billboard-hud-heading-row">
-                <BillboardField label="Subtitle">
-                  <input type="text" value={String(subtitle || '')} onChange={(event) => onSubtitleChange?.(event.target.value)} onBlur={() => onSubtitleBlur?.()} />
-                </BillboardField>
-                <div className="admin-hud-editor-inline-control">
-                  <span>Subtitle color</span>
-                  <BillboardColors ariaLabel="Billboard subtitle color" options={subtitleColorOptions} value={subtitleColor} onChange={onSubtitleColorChange} />
-                </div>
-                <BillboardSlider
-                  label="Subtitle size"
-                  ariaLabel="Subtitle size"
-                  value={subtitleSizeRem}
-                  min={1}
-                  max={8}
-                  step={0.05}
-                  displayValue={`${Number(subtitleSizeRem || 1.18).toFixed(2)}rem`}
-                  onChange={onSubtitleSizeRemChange}
-                />
-              </div>
-            </div>
-            <div className="admin-billboard-hud-heading-settings">
-              <div className="admin-billboard-hud-heading-settings-box">
+                <div className="admin-billboard-hud-heading-settings-box admin-billboard-hud-heading-type-panel">
                 <BillboardSegment label="Title font" options={titleFontOptions} value={titleFontFamily} onChange={onTitleFontFamilyChange} />
                 <BillboardSegment label="Title alignment" options={justifyOptions} value={justify} onChange={onJustifyChange} />
                 <BillboardSegment
@@ -474,20 +611,6 @@ export default function BillboardHudEditorPanel({
                   value={titleFontWeight}
                   onChange={(nextValue) => onTitleFontWeightChange?.(Number(nextValue))}
                 />
-              </div>
-              <div className="admin-billboard-hud-heading-settings-box">
-                <BillboardSlider label="Leading" ariaLabel="Title line height" value={lineSpacing} min={0.85} max={1.25} step={0.01} displayValue={Number(lineSpacing || 1).toFixed(2)} onChange={onLineSpacingChange} />
-                <BillboardSlider
-                  label="Header gap"
-                  ariaLabel="Header gap"
-                  value={normalizeBillboardHeaderGap(headerGapRem) ?? 1.15}
-                  min={BILLBOARD_HEADER_GAP_MIN_REM}
-                  max={BILLBOARD_HEADER_GAP_MAX_REM}
-                  step={BILLBOARD_HEADER_GAP_STEP_REM}
-                  displayValue={`${(normalizeBillboardHeaderGap(headerGapRem) ?? 1.15).toFixed(2)}rem`}
-                  onChange={onHeaderGapRemChange}
-                />
-                <BillboardSlider label="Tracking" ariaLabel="Title tracking" value={titleLetterSpacingEm} min={-0.12} max={0.04} step={0.005} displayValue={`${Number(titleLetterSpacingEm || 0).toFixed(3)}em`} onChange={onTitleLetterSpacingEmChange} />
               </div>
             </div>
           </BillboardPanel>
@@ -527,8 +650,17 @@ export default function BillboardHudEditorPanel({
                   min={1}
                   max={4}
                   step={0.05}
-                  displayValue={`${normalizeBillboardLeadCopySizeRem(leadCopySizeRem).toFixed(2)}rem`}
+                  unit="rem"
                   onChange={onLeadCopySizeRemChange}
+                />
+                <BillboardSlider
+                  label="Lead copy line height"
+                  ariaLabel="Lead copy line height"
+                  value={normalizeBillboardLeadCopyLineHeight(leadCopyLineHeight)}
+                  min={0.9}
+                  max={2.2}
+                  step={0.05}
+                  onChange={onLeadCopyLineHeightChange}
                 />
                 <BillboardSegment label="Body alignment" options={bodyJustifyOptions} value={bodyJustify} onChange={onBodyJustifyChange} />
                 <BillboardWidthControl
@@ -549,6 +681,16 @@ export default function BillboardHudEditorPanel({
 
         {activeSection === 'buttons' ? (
           <section className="admin-billboard-hud-button-section" aria-label="Buttons settings">
+            <BillboardSlider
+              label="Space above buttons"
+              ariaLabel="Billboard button gap"
+              value={normalizeBillboardActionGap(actionGapRem) ?? 1}
+              min={BILLBOARD_ACTION_GAP_MIN_REM}
+              max={BILLBOARD_ACTION_GAP_MAX_REM}
+              step={BILLBOARD_ACTION_GAP_STEP_REM}
+              unit="rem"
+              onChange={onActionGapRemChange}
+            />
             <div className="admin-billboard-hud-reference-grid admin-billboard-hud-button-reference-grid">
               <section className="admin-billboard-hud-button-fields" aria-label="Button 1 controls">
                 <span className="admin-billboard-hud-button-field-label">Button 1 Label</span>
@@ -636,7 +778,7 @@ export default function BillboardHudEditorPanel({
                 min={BILLBOARD_PADDING_MIN_REM}
                 max={BILLBOARD_PADDING_MAX_REM}
                 step={BILLBOARD_PADDING_STEP_REM}
-                displayValue={`${normalizeBillboardPadding(paddingTopRem) ?? 4}rem`}
+                unit="rem"
                 onChange={onPaddingTopRemChange}
               />
               <BillboardSlider
@@ -647,7 +789,7 @@ export default function BillboardHudEditorPanel({
                 min={BILLBOARD_PADDING_MIN_REM}
                 max={BILLBOARD_PADDING_MAX_REM}
                 step={BILLBOARD_PADDING_STEP_REM}
-                displayValue={`${normalizeBillboardPadding(paddingBottomRem) ?? 4}rem`}
+                unit="rem"
                 onChange={onPaddingBottomRemChange}
               />
             </div>

@@ -192,7 +192,7 @@ describe('devContentAuthorityClient', () => {
       const rejection = expect(request).rejects.toMatchObject({
         code: 'content-admin-request-timeout',
       });
-      await vi.advanceTimersByTimeAsync(10_001);
+      await vi.advanceTimersByTimeAsync(30_001);
       await rejection;
     } finally {
       vi.useRealTimers();

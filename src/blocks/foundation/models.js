@@ -3,9 +3,9 @@ import {
   defineEditorSection,
   defineEditorSections,
   getEditorSectionsForSurface,
-} from './editorDescriptors';
-import { normalizeSplitLinkFieldSettings } from '../../lib/linkValue';
-import { SURFACE_BG_TONE_OPTIONS } from '../../lib/colorSystem';
+} from './editorDescriptors.js';
+import { normalizeSplitLinkFieldSettings } from '../../lib/linkValue.js';
+import { SURFACE_BG_TONE_OPTIONS } from '../../lib/colorSystem.js';
 
 export const BLOCK_KIND_VALUES = Object.freeze([
   'billboard',
@@ -122,14 +122,18 @@ function buildUnifiedBackgroundEditor(sections) {
         .filter((field) => !backgroundFieldIds.has(String(field?.id || '').trim())),
     }));
 
+  const backgroundSection = defineEditorSection({
+    id: BACKGROUND_SECTION_ID,
+    title: 'Background',
+    surfaces: ['hud', 'admin'],
+    fields: backgroundFields,
+  });
+  const backgroundIndex = Math.max(0, contentSections.length - 1);
+
   return [
-    ...contentSections,
-    defineEditorSection({
-      id: BACKGROUND_SECTION_ID,
-      title: 'Background',
-      surfaces: ['hud', 'admin'],
-      fields: backgroundFields,
-    }),
+    ...contentSections.slice(0, backgroundIndex),
+    backgroundSection,
+    ...contentSections.slice(backgroundIndex),
   ];
 }
 

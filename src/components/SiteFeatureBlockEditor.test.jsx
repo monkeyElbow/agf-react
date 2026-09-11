@@ -184,6 +184,32 @@ describe('SiteFeatureBlockEditor', () => {
     expect(screen.getByRole('radiogroup', { name: 'Card title color' })).toBeTruthy();
     expect(screen.getByRole('radiogroup', { name: 'Card body color' })).toBeTruthy();
     expect(screen.getByText('History Gallery cards')).toBeTruthy();
+    expect(screen.getByLabelText('Button text')).toBeTruthy();
+  });
+
+  it('writes History Gallery button text changes to the shared CTA setting', () => {
+    const onSettingChange = vi.fn();
+    render(
+      createElement(SiteFeatureBlockEditor, {
+        block: createBlock({
+          settings: {
+            featureId: 'about_history_feature',
+            buttonLabel: 'This is why we matter',
+          },
+        }),
+        onSettingChange,
+        routeOptions: [],
+      }),
+    );
+
+    const buttonTextInput = screen.getByLabelText('Button text');
+    fireEvent.change(buttonTextInput, { target: { value: 'Explore our impact' } });
+
+    act(() => {
+      vi.advanceTimersByTime(350);
+    });
+
+    expect(onSettingChange).toHaveBeenCalledWith('buttonLabel', 'Explore our impact');
   });
 
   it('keeps retirement panels on the panels page and exposes CTA target behavior', () => {

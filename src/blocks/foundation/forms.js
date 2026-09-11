@@ -1,4 +1,4 @@
-import { createBlockDefinition } from './models';
+import { createBlockDefinition } from './models.js';
 
 const SHARED_FORM_SUBMISSION_FIELD_IDS = Object.freeze([
   'salesforceUrl',

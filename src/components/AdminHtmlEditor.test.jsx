@@ -80,6 +80,54 @@ describe('AdminHtmlEditor', () => {
     expect(execCommand).toHaveBeenCalledWith('foreColor', false, '#faa31a');
   });
 
+  it('preserves the selected range when the color swatch receives a real mouse click', () => {
+    const execCommand = vi.fn();
+    document.execCommand = execCommand;
+    const { container } = render(createElement(AdminHtmlEditor, {
+      value: '<p>Newsletter copy</p>',
+      onChange: () => {},
+      compact: true,
+    }));
+    const surface = container.querySelector('.admin-html-editor-surface');
+    const textNode = surface.querySelector('p').firstChild;
+    const range = document.createRange();
+    range.setStart(textNode, 0);
+    range.setEnd(textNode, 5);
+    const selection = document.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+
+    const colorSwatch = screen.getByRole('radio', { name: 'Mango' });
+    fireEvent.mouseDown(colorSwatch);
+    selection.removeAllRanges();
+    fireEvent.click(colorSwatch);
+
+    expect(execCommand).toHaveBeenCalledWith('foreColor', false, '#faa31a');
+  });
+
+  it('falls back to a semantic class when foreColor is unavailable', () => {
+    const execCommand = vi.fn(() => false);
+    const onChange = vi.fn();
+    document.execCommand = execCommand;
+    const { container } = render(createElement(AdminHtmlEditor, {
+      value: '<p>Newsletter copy</p>',
+      onChange,
+      compact: true,
+    }));
+    const surface = container.querySelector('.admin-html-editor-surface');
+    const textNode = surface.querySelector('p').firstChild;
+    const range = document.createRange();
+    range.setStart(textNode, 0);
+    range.setEnd(textNode, 10);
+    const selection = document.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+
+    fireEvent.click(screen.getByRole('radio', { name: 'Mango' }));
+
+    expect(onChange).toHaveBeenLastCalledWith('<p><span class="is-mango">Newsletter</span> copy</p>');
+  });
+
   it('normalizes supported html color markup into semantic classes that survive runtime sanitizing', () => {
     expect(
       normalizeHtmlEditorSemanticColors('<p><span style="color: rgb(0, 173, 187);">Blue</span> <font color="#c4beb6">Sandstone</font> <font color="#f26660">Melon</font></p>'),

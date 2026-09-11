@@ -77,27 +77,28 @@ describe('admin editor control rounding', () => {
     expect(htmlEditorSource).toContain('is-compact is-icon-only is-circular admin-html-editor-color-group');
   });
 
-  it('keeps Request Form lead copy readable after compact field styling', () => {
+  it('keeps Request Form HTML lead copy readable after compact field styling', () => {
     const hudSource = readSource('../styles/front-hud.css');
     const compactTextareaRule = hudSource.indexOf(
       ".admin-hud-editor-shared-surface .admin-request-form-hud-editor\n  :is(.admin-front-hud-field > input[type='text']",
     );
     const leadCopyRule = hudSource.indexOf(
-      '.admin-hud-editor-shared-surface .admin-request-form-hud-editor .admin-request-form-lead-field > textarea',
+      '.admin-hud-editor-shared-surface .admin-request-form-hud-editor\n  .admin-request-form-lead-field > .admin-html-editor',
     );
 
     expect(compactTextareaRule).toBeGreaterThanOrEqual(0);
     expect(leadCopyRule).toBeGreaterThan(compactTextareaRule);
-    expect(hudSource.slice(leadCopyRule, leadCopyRule + 500)).toContain('font-size: var(--ag-font-size-body);');
-    expect(hudSource.slice(leadCopyRule, leadCopyRule + 500)).toContain('min-height: 7rem;');
+    expect(hudSource.slice(leadCopyRule, leadCopyRule + 700)).toContain('font-size: var(--ag-font-size-body);');
+    expect(hudSource.slice(leadCopyRule, leadCopyRule + 700)).toContain('min-height: 7rem;');
   });
 
-  it('keeps Request Form heading and lead content aligned with swatches in the side rail', () => {
+  it('keeps Request Form heading swatches below the heading and lead swatches in the HTML editor', () => {
     const hudSource = readSource('../styles/front-hud.css');
 
+    expect(hudSource).toContain('.admin-hud-editor-shared-surface .admin-request-form-content-grid {');
     expect(hudSource).toContain('.admin-hud-editor-shared-surface .admin-request-form-hud-editor .admin-color-text-editor {');
-    expect(hudSource).toContain('grid-template-columns: minmax(0, 1fr) minmax(9rem, 0.42fr);');
-    expect(hudSource).toContain('"editor swatches";');
+    expect(hudSource).toContain('grid-template-columns: minmax(0, 1fr);');
+    expect(hudSource).toContain('"editor"\n    "swatches";');
     expect(hudSource).toContain('.admin-hud-editor-shared-surface .admin-request-form-hud-editor .admin-color-text-controls-row {');
   });
 

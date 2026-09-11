@@ -18,15 +18,7 @@ import {
   toDynamicColumnsCountToken,
 } from '../../lib/dynamicColumns';
 import {
-  buildDynamicBillboardFromBlock,
   buildDynamicCtaPresentationClassName,
-  buildDynamicCtaFormFromBlock,
-  buildDynamicFeaturePanelFromBlock,
-  buildDynamicImpactStatFromBlock,
-  buildDynamicRequestFormFromBlock,
-  buildDynamicServicesGridFromBlock,
-  buildDynamicSiteFeatureFromBlock,
-  buildDynamicTopStripFromBlock,
   isExternalLinkHref,
   normalizeUniversalOutlineButtonClassName,
   shouldUseUniversalOutlineButtonLink,
@@ -38,6 +30,7 @@ import {
   normalizeSurfaceBgTone,
 } from '../../lib/colorSystem';
 import { normalizeBlockForRender } from '../../lib/blockPresentationContracts';
+import { buildCanonicalBlockRuntime } from '../../blocks/registry';
 import { composeManagedBlockOrder, getManagedBlockRenderKey } from '../../lib/managedBlockOrder';
 import {
   buildPresetFamilyRuntimeClassName,
@@ -73,7 +66,7 @@ import { setupInvestmentsGrowthRevealMotion } from '../../lib/investmentsGrowthR
 import { buildRuntimeAuthorityDescriptor, publishRuntimeAuthorityDescriptor } from '../../lib/runtimeAuthorityDescriptor';
 import { RUNTIME_BUILD_ID } from '../../lib/runtimeBuild';
 
-const ACTION_BUTTON_STYLE_SET = new Set(['blue', 'dark', 'outline']);
+const ACTION_BUTTON_STYLE_SET = new Set(['blue', 'dark', 'outline', 'ghost', 'white']);
 const DYNAMIC_COLUMNS_TYPE_SET = new Set(['text', 'photo', 'flow-step', 'support']);
 const DYNAMIC_COLUMNS_STYLE_SET = new Set(['retirement', 'legacy-highlight', 'loans-value']);
 const HOME_HERO_PRIMARY_LINE_SIZE_CSS = 'clamp(3.4rem, 11vw, 8rem)';
@@ -365,7 +358,7 @@ function renderTextWithStrong(source) {
 }
 
 function TopStripBlock({ block, resolveTo, ownership, hudAnchor }) {
-  const runtime = buildDynamicTopStripFromBlock(block);
+  const runtime = buildCanonicalBlockRuntime(block);
   if (!runtime) {
     return null;
   }
@@ -619,7 +612,7 @@ function HeroBlock({ block, resolveTo, heroHud, ownership, hudAnchor }) {
 }
 
 function ServicesGridBlock({ block, resolveTo, ownership, hudAnchor }) {
-  const runtime = buildDynamicServicesGridFromBlock(block);
+  const runtime = buildCanonicalBlockRuntime(block);
   if (!runtime) {
     return null;
   }
@@ -643,7 +636,11 @@ function ServicesGridBlock({ block, resolveTo, ownership, hudAnchor }) {
             const isExternal = isExternalLinkHref(cardTarget);
 
             return (
-              <article key={card.path || card.title} className={`home-native-card fade-up${card.featured ? ' is-featured' : ''}`}>
+              <article
+                key={card.path || card.title}
+                className={`home-native-card fade-up${card.featured ? ' is-featured' : ''}`}
+                style={{ '--home-services-card-padding-y': `${runtime.cardPaddingRem}rem` }}
+              >
                 {isExternal ? (
                   <a
                     href={cardTarget}
@@ -689,7 +686,7 @@ function ServicesGridBlock({ block, resolveTo, ownership, hudAnchor }) {
 }
 
 function ImpactStatBlock({ block, resolveTo, ownership, hudAnchor }) {
-  const runtime = buildDynamicImpactStatFromBlock(block);
+  const runtime = buildCanonicalBlockRuntime(block);
   if (!runtime) {
     return null;
   }
@@ -956,21 +953,71 @@ export function HomeDoTheMathBadge({ linkTarget = '/calculators' }) {
 
 export function BillboardBlock({
   block,
+  runtimeOverride = null,
   resolveTo,
   ownership,
   hudAnchor,
   extraSectionClassName = '',
+  backgroundEffects: backgroundEffectsOverride,
+  resolveDocumentLink: resolveDocumentLinkProp,
+  sectionId = '',
+  sectionRef,
+  sectionStyle: sectionStyleOverride,
+  sectionDataAttributes = {},
+  railClassName = 'ag-panel-rail',
+  railStyle: railStyleOverride,
+  titleTag = 'h2',
+  titleProps = {},
+  titleRenderer,
+  copyRef,
+  copyFadeRootMargin,
+  copyClassNameOverride = '',
+  beforeTitle = null,
+  justifyOverride = '',
+  subtitleBaseClassName = 'home-native-billboard-subtitle',
+  logoComponent: LogoComponent,
+  logoImage = '',
+  logoAlt = '',
+  logoText = '',
+  fineprint = null,
+  fineprintStyle,
+  bodyEditProps = {},
 }) {
-  const runtime = buildDynamicBillboardFromBlock(block);
+  const runtime = runtimeOverride || buildCanonicalBlockRuntime(block);
   if (!runtime) {
     return null;
   }
 
-  const actions = Array.isArray(runtime.actions)
-    ? runtime.actions.map((action) => buildBillboardAction(action, resolveTo)).filter(Boolean)
-    : [];
-  const sectionStyle = actions.length
-    ? { '--dynamic-billboard-padding-bottom': 'clamp(4.1rem, 8vw, 6.8rem)' }
+  const resolveDocumentLink = resolveDocumentLinkProp;
+
+  const runtimeActions = Array.isArray(runtime.actions)
+    ? runtime.actions
+    : (runtime.action ? [runtime.action] : []);
+  const actions = runtimeActions
+    .map((action) => buildBillboardAction(action, resolveTo, resolveDocumentLink)).filter(Boolean);
+  const usesRetirementDailyBillboard = String(runtime.sectionClassName || '').split(/\s+/).includes('retirement-daily-billboard');
+  const defaultActionPaddingBottom = usesRetirementDailyBillboard
+    ? 'clamp(6rem, 12vw, 9rem)'
+    : 'clamp(4.1rem, 8vw, 6.8rem)';
+  const hasPaddingTopOverride = runtime.paddingTopRem !== null
+    && runtime.paddingTopRem !== ''
+    && runtime.paddingTopRem !== undefined
+    && Number.isFinite(Number(runtime.paddingTopRem));
+  const hasPaddingBottomOverride = runtime.paddingBottomRem !== null
+    && runtime.paddingBottomRem !== ''
+    && runtime.paddingBottomRem !== undefined
+    && Number.isFinite(Number(runtime.paddingBottomRem));
+  const sectionStyle = actions.length || hasPaddingTopOverride || hasPaddingBottomOverride
+    ? {
+        ...(hasPaddingTopOverride ? { '--dynamic-billboard-padding-top': `${runtime.paddingTopRem}rem` } : {}),
+        ...((actions.length || hasPaddingBottomOverride)
+          ? {
+              '--dynamic-billboard-padding-bottom': hasPaddingBottomOverride
+                ? `${runtime.paddingBottomRem}rem`
+                : defaultActionPaddingBottom,
+            }
+          : {}),
+      }
     : undefined;
   const railStyle = runtime.contentMaxWidthPx
     ? { '--dynamic-billboard-max-width': `${runtime.contentMaxWidthPx}px` }
@@ -978,6 +1025,7 @@ export function BillboardBlock({
   const presetClassName = buildPresetFamilyRuntimeClassName('billboard', runtime.presetId || 'default');
   const sectionClassName = [
     'service-native-section',
+    'dynamic-billboard',
     'home-native-billboard',
     presetClassName,
     `is-bg-${normalizePanelBgTone(runtime.bgTone || 'grey')}`,
@@ -985,52 +1033,98 @@ export function BillboardBlock({
     runtime.sectionClassName || '',
     extraSectionClassName,
     runtime.backgroundEffects?.enabled ? 'has-block-background-effects' : '',
+    runtime.titleTrackingOverride ? 'has-title-tracking-override' : '',
     ownership?.className || '',
   ].filter(Boolean).join(' ');
-  const blockId = String(block?.id || '').trim();
+  const blockId = String(block?.id || runtime.blockId || '').trim();
   const blockPresetId = String(block?.presetId || '').trim();
   const isDoTheMathBillboard = (
     blockId === HOME_DO_THE_MATH_BLOCK_ID
     || blockPresetId === 'do-the-math'
     || String(runtime.sectionClassName || '').split(/\s+/).includes('retirement-do-the-math-billboard')
   );
-  const effectiveJustify = runtime.justify || 'center';
+  const effectiveJustify = justifyOverride || runtime.justify || 'center';
   const effectiveBodyJustify = runtime.bodyJustify || effectiveJustify;
   const bodyJustifyClassName = `is-body-justify-${effectiveBodyJustify}`;
   const bodyHeaderGapClassName = runtime.headerGapRem !== null && runtime.headerGapRem !== undefined
     ? 'is-dynamic-billboard-header-gap'
     : '';
+  const hasBillboardBody = Boolean(runtime.bodyHtml || runtime.body);
+  const actionHeaderGapClassName = !hasBillboardBody && bodyHeaderGapClassName
+    ? ` ${bodyHeaderGapClassName}`
+    : '';
+  const actionGapClassName = runtime.actionGapRem !== null && runtime.actionGapRem !== undefined
+    ? ' is-dynamic-billboard-action-gap'
+    : '';
+  const actionHeaderGapStyle = !hasBillboardBody && bodyHeaderGapClassName
+    ? { '--dynamic-billboard-header-gap': `${runtime.headerGapRem}rem` }
+    : {};
   const copyClassName = [
     'native-info-section-copy',
     `is-justify-${effectiveJustify}`,
-    runtime.copyClassName || '',
+    copyClassNameOverride || runtime.copyClassName || '',
+  ].filter(Boolean).join(' ');
+  const bodyCopyClassName = [
+    'billboard-body-copy',
+    runtime.bodyColorClassName || '',
+    runtime.bodyHtmlStyle ? 'is-dynamic-billboard-lead-copy-sized' : '',
+    bodyJustifyClassName,
+    bodyHeaderGapClassName,
   ].filter(Boolean).join(' ');
   const mathBadgeLinkTarget = actions[0]?.to || actions[0]?.href || '/calculators';
+  const TitleTag = titleTag === 'h1' ? 'h1' : 'h2';
+  const resolvedSectionStyle = {
+    ...(sectionStyle || {}),
+    ...(sectionStyleOverride || {}),
+  };
+  const resolvedRailStyle = {
+    ...(railStyle || {}),
+    ...(railStyleOverride || {}),
+  };
 
   return (
     <section
+      ref={sectionRef}
+      id={sectionId || undefined}
       className={sectionClassName}
       data-block-id={block?.id || undefined}
-      style={sectionStyle}
+      {...sectionDataAttributes}
+      style={Object.keys(resolvedSectionStyle).length ? resolvedSectionStyle : undefined}
     >
       <BlockSurfaceLayers
         ownership={ownership}
         hudAnchor={hudAnchor}
-        backgroundEffects={<BlockBackgroundEffects effects={runtime.backgroundEffects} />}
+        backgroundEffects={<BlockBackgroundEffects effects={backgroundEffectsOverride || runtime.backgroundEffects} />}
       />
-      <div className="ag-panel-rail" style={railStyle}>
-        <div className={copyClassName} style={runtime.copyStyle || undefined} data-fade-root-margin={runtime.copyFadeRootMargin || undefined}>
+      <div className={railClassName} style={Object.keys(resolvedRailStyle).length ? resolvedRailStyle : undefined}>
+        {LogoComponent ? (
+          <LogoComponent
+            className="native-info-section-logo"
+            decorative={!logoAlt}
+            title={logoAlt || 'Section logo'}
+          />
+        ) : null}
+        {logoImage ? <img src={logoImage} alt={logoAlt} className="native-info-section-logo" /> : null}
+        {!LogoComponent && !logoImage && logoText ? <p className="native-info-section-logo-text">{logoText}</p> : null}
+        <div ref={copyRef} className={copyClassName} style={runtime.copyStyle || undefined} data-fade-root-margin={copyFadeRootMargin ?? runtime.copyFadeRootMargin ?? undefined}>
+          {beforeTitle}
           {isDoTheMathBillboard ? <HomeDoTheMathBadge linkTarget={mathBadgeLinkTarget} /> : null}
           {runtime.title ? (
-            <h2 className={runtime.titleClassName || undefined} style={runtime.titleStyle}>
-              {runtime.titleHighlights?.length
-                ? renderHighlightedText(runtime.title, runtime.titleHighlights)
-                : runtime.title}
-            </h2>
+            <TitleTag
+              {...titleProps}
+              className={runtime.titleClassName || undefined}
+              style={runtime.titleStyle}
+            >
+              {typeof titleRenderer === 'function'
+                ? titleRenderer(runtime.title, runtime)
+                : runtime.titleHighlights?.length
+                  ? renderHighlightedText(runtime.title, runtime.titleHighlights)
+                  : runtime.title}
+            </TitleTag>
           ) : null}
           {runtime.subtitle ? (
             <p
-              className={['home-native-billboard-subtitle', runtime.subtitleClassName || ''].filter(Boolean).join(' ')}
+              className={[subtitleBaseClassName, runtime.subtitleClassName || ''].filter(Boolean).join(' ')}
               style={runtime.subtitleStyle || undefined}
             >
               {runtime.subtitle}
@@ -1042,20 +1136,25 @@ export function BillboardBlock({
               className={['native-info-rich-html', runtime.bodyColorClassName || '', runtime.bodyHtmlStyle ? 'is-dynamic-billboard-lead-copy-sized' : '', bodyJustifyClassName, bodyHeaderGapClassName].filter(Boolean).join(' ')}
               html={runtime.bodyHtml}
               style={runtime.bodyHtmlStyle || undefined}
+              {...bodyEditProps}
             />
           ) : null}
           {!runtime.bodyHtml && runtime.body ? (
             <div
               className={['native-info-rich-html', runtime.bodyColorClassName || '', runtime.bodyHtmlStyle ? 'is-dynamic-billboard-lead-copy-sized' : '', bodyJustifyClassName, bodyHeaderGapClassName].filter(Boolean).join(' ')}
               style={runtime.bodyHtmlStyle || undefined}
+              {...bodyEditProps}
             >
-              <p>{renderTextWithStrong(runtime.body)}</p>
+              <p className={bodyCopyClassName}>{renderTextWithStrong(runtime.body)}</p>
             </div>
           ) : null}
           {actions.length ? (
             <div
-              className={`service-native-action-row${effectiveJustify === 'center' ? ' is-centered' : ''}${effectiveJustify === 'right' ? ' is-right' : ''}${effectiveJustify === 'left' ? ' is-left' : ''}`}
-              style={buildBillboardActionRowStyle(effectiveJustify)}
+              className={`service-native-action-row${effectiveJustify === 'center' ? ' is-centered' : ''}${effectiveJustify === 'right' ? ' is-right' : ''}${effectiveJustify === 'left' ? ' is-left' : ''}${actionHeaderGapClassName}${actionGapClassName}`}
+              style={{
+                ...actionHeaderGapStyle,
+                ...buildBillboardActionRowStyle(effectiveJustify, runtime.actionGapRem),
+              }}
             >
               {actions.map((action) => (
                 <BillboardAction
@@ -1066,6 +1165,11 @@ export function BillboardBlock({
             </div>
           ) : null}
         </div>
+        {fineprint ? (
+          Array.isArray(fineprint)
+            ? fineprint.map((line, index) => <p key={`billboard-fineprint-${index + 1}`} className="service-native-note" style={fineprintStyle}>{renderTextWithStrong(line)}</p>)
+            : <p className="service-native-note" style={fineprintStyle}>{renderTextWithStrong(fineprint)}</p>
+        ) : null}
       </div>
     </section>
   );
@@ -1082,26 +1186,37 @@ function normalizeActionButtonTone(value, fallback = 'atlantean') {
 
 function toActionButtonClassName(style, tone) {
   const normalizedStyle = normalizeActionButtonStyle(style);
-  const defaultTone = normalizedStyle === 'dark' ? 'super-grey' : 'atlantean';
+  const defaultTone = normalizedStyle === 'white'
+    ? 'white'
+    : (normalizedStyle === 'dark' || normalizedStyle === 'ghost' ? 'super-grey' : 'atlantean');
   const normalizedTone = normalizedStyle === 'outline'
     ? normalizeActionButtonTone(tone, defaultTone)
     : defaultTone;
   return [
     normalizedStyle === 'dark' ? 'is-dark' : '',
+    normalizedStyle === 'white' ? 'is-tone-white' : '',
+    normalizedStyle === 'ghost' ? 'is-ghost' : '',
     normalizedStyle === 'outline' ? 'is-outline' : '',
     `is-tone-${normalizedTone}`,
   ].filter(Boolean).join(' ');
 }
 
-function buildBillboardAction(action, resolveTo) {
-  const label = String(action?.label || '').trim();
-  const rawTarget = String(action?.to || action?.href || '').trim();
+function buildBillboardAction(action, resolveTo, resolveDocumentLink) {
+  const document = action?.documentId && typeof resolveDocumentLink === 'function'
+    ? resolveDocumentLink(action.documentId)
+    : null;
+  const label = String(action?.label || document?.title || '').trim();
+  const rawTarget = String(action?.to || action?.href || document?.url || '').trim();
   if (!label) {
     return null;
   }
 
-  const isExternal = isExternalLinkHref(rawTarget);
-  const baseClassName = `service-native-btn ${toActionButtonClassName(action?.style, action?.tone)}`.trim();
+  const isExternal = Boolean(document?.external) || isExternalLinkHref(rawTarget);
+  const baseClassName = [
+    'service-native-btn',
+    action?.ghost ? 'is-ghost' : '',
+    toActionButtonClassName(action?.style, action?.tone),
+  ].filter(Boolean).join(' ');
   const className = shouldUseUniversalOutlineButtonLink({
     href: rawTarget,
     external: isExternal,
@@ -1178,15 +1293,25 @@ function BillboardAction({ item }) {
   );
 }
 
-function buildBillboardActionRowStyle(justify) {
+function buildBillboardActionRowStyle(justify, actionGapRem) {
   const token = String(justify || '').trim().toLowerCase();
+  const actionGap = Number(actionGapRem);
+  const hasActionGap = actionGapRem !== null
+    && actionGapRem !== undefined
+    && Number.isFinite(actionGap);
+  const style = hasActionGap
+    ? {
+        '--dynamic-billboard-action-gap': `${actionGap}rem`,
+        marginTop: `${actionGap}rem`,
+      }
+    : {};
   if (token === 'right') {
-    return { justifyContent: 'flex-end' };
+    return { ...style, justifyContent: 'flex-end' };
   }
   if (token === 'left') {
-    return { justifyContent: 'flex-start' };
+    return { ...style, justifyContent: 'flex-start' };
   }
-  return { justifyContent: 'center' };
+  return { ...style, justifyContent: 'center' };
 }
 
 function buildColumnsAction(label, url, style, tone, pageRef, resolveTo, useFamilyPresetCtaStyle = false) {
@@ -1293,7 +1418,7 @@ function CtaFormBlock({ block, ownership, hudAnchor }) {
     String(block.headingSuffix || block.heading || '').trim(),
   ].filter(Boolean).join(' ').trim();
   const runtime = useMemo(() => (
-    buildDynamicCtaFormFromBlock(
+    buildCanonicalBlockRuntime(
       {
         ...block,
         kind: block.kind || block.type || 'cta_form',
@@ -1335,6 +1460,7 @@ function CtaFormBlock({ block, ownership, hudAnchor }) {
   const successMessage = String(runtime.successMessage || '').trim() || 'Thanks. We will reach out soon.';
   const salesforceUrl = String(runtime.salesforceUrl || '').trim();
   const presentationClassName = buildDynamicCtaPresentationClassName(runtime);
+  const textTone = ['blue', 'grey'].includes(bgTone) ? 'white' : 'dark';
   const submitClassName = [
     toActionButtonClassName(runtime.submitStyle, runtime.submitTone),
     String(block.submitClassName || '').trim(),
@@ -1370,12 +1496,12 @@ function CtaFormBlock({ block, ownership, hudAnchor }) {
 
   return (
     <section
-      className={`service-native-section native-dynamic-cta is-bg-${bgTone}${sectionClassName ? ` ${sectionClassName}` : ''}${presentationClassName ? ` ${presentationClassName}` : ''}${ownership?.className || ''}`}
+      className={`service-native-section native-dynamic-cta is-bg-${bgTone} is-text-${textTone}${sectionClassName ? ` ${sectionClassName}` : ''}${presentationClassName ? ` ${presentationClassName}` : ''}${runtime.backgroundEffects?.enabled ? ' has-block-background-effects' : ''}${ownership?.className || ''}`}
       data-block-id={block?.id || undefined}
       data-cta-display-mode={runtime?.displayMode || 'default'}
       data-cta-trigger-mode={runtime?.triggerMode || 'default'}
     >
-      <BlockSurfaceLayers ownership={ownership} hudAnchor={hudAnchor} backgroundEffects={<BlockBackgroundEffects effects={getBlockBackgroundEffects(block)} />} />
+      <BlockSurfaceLayers ownership={ownership} hudAnchor={hudAnchor} backgroundEffects={<BlockBackgroundEffects effects={runtime.backgroundEffects} />} />
       <div className="ag-panel-rail">
         {resolvedTitle ? (
           <div className="native-info-section-copy">
@@ -1572,7 +1698,7 @@ function NewsletterBlock({ block, ownership, hudAnchor }) {
 }
 
 function SiteFeatureBlock({ block, resolveTo, ownership, hudAnchor }) {
-  const runtime = buildDynamicSiteFeatureFromBlock({
+  const runtime = buildCanonicalBlockRuntime({
     ...block,
     kind: block.kind || block.type || 'site_feature',
     mode: block.mode || 'dynamic',
@@ -1698,7 +1824,7 @@ function SiteFeatureBlock({ block, resolveTo, ownership, hudAnchor }) {
 }
 
 function FeaturePanelBlock({ block, resolveTo, ownership, hudAnchor }) {
-  const runtime = buildDynamicFeaturePanelFromBlock({
+  const runtime = buildCanonicalBlockRuntime({
     ...block,
     kind: block.kind || block.type || 'feature_panel',
     mode: block.mode || 'dynamic',
@@ -2147,7 +2273,7 @@ export function ColumnsBlock({
 }
 
 function RequestFormBlock({ block, ownership, hudAnchor }) {
-  const runtime = buildDynamicRequestFormFromBlock({
+  const runtime = buildCanonicalBlockRuntime({
     ...block,
     kind: block.kind || block.type || 'request_form',
     mode: block.mode || 'dynamic',
@@ -2159,11 +2285,11 @@ function RequestFormBlock({ block, ownership, hudAnchor }) {
   return (
     <section
       id={runtime.anchorId || undefined}
-      className={`service-native-section ${runtime.sectionClassName}${ownership?.className || ''}`}
+      className={`service-native-section ${runtime.sectionClassName}${runtime.backgroundEffects?.enabled ? ' has-block-background-effects' : ''}${ownership?.className || ''}`}
       style={runtime.sectionStyle}
       data-block-id={block?.id || undefined}
     >
-      <BlockSurfaceLayers ownership={ownership} hudAnchor={hudAnchor} backgroundEffects={<BlockBackgroundEffects effects={getBlockBackgroundEffects(block)} />} />
+      <BlockSurfaceLayers ownership={ownership} hudAnchor={hudAnchor} backgroundEffects={<BlockBackgroundEffects effects={runtime.backgroundEffects} />} />
       <div className="ag-panel-rail">
         <DynamicRequestFormSection
           config={{

@@ -15,7 +15,7 @@ describe('native CTA renderer guardrail', () => {
     const source = readSource('./NativeContentPage.jsx');
     const runtimeSource = readSource('../lib/dynamicPageBlocks.js');
 
-    expect(source).toContain('const runtime = buildDynamicCtaFormFromBlock(block);');
+    expect(source).toContain('const runtime = buildCanonicalBlockRuntime(block);');
     expect(runtimeSource).toContain('export function buildDynamicCtaFormFromBlock');
     expect(runtimeSource).toContain('const configuredFields = buildDynamicCtaFieldsFromSource(settings, fallbackSettings);');
     expect(source).toContain('{config?.title ? <h5>{config.title}</h5> : null}');
@@ -69,5 +69,24 @@ describe('native CTA renderer guardrail', () => {
     expect(cssSource).toContain('width: min(680px, 100%);');
     expect(cssSource).toContain('margin: clamp(1rem, 2vw, 1.5rem) 0 0;');
     expect(cssSource).toContain('border: 1px solid rgba(17, 53, 75, 0.14);');
+  });
+
+  it('keeps CTA surface backgrounds separate from the automatic default text tone', () => {
+    const rendererSource = readSource('../components/DynamicCtaSection.jsx');
+    const pageRendererSource = readSource('./blocks/PageBlocksRenderer.jsx');
+    const cssSource = readSource('../styles/service-native.css');
+
+    expect(rendererSource).toContain('native-dynamic-cta is-bg-${bgTone} is-text-${textTone}');
+    expect(pageRendererSource).toContain('native-dynamic-cta is-bg-${bgTone} is-text-${textTone}');
+    expect(cssSource).toContain('.service-native-section:is(.native-dynamic-cta, .test-dynamic-cta).is-text-white');
+    expect(cssSource).not.toContain(
+      '.service-native-section.native-dynamic-cta.is-bg-blue .native-info-section-copy > h2,',
+    );
+    expect(cssSource).not.toContain(
+      '.service-native-section.native-dynamic-cta.is-bg-blue,\n'
+        + '.service-native-section.test-dynamic-cta.is-bg-blue {\n'
+        + '  background: var(--ag-surface-blue-gradient);\n'
+        + '  color: #ffffff;',
+    );
   });
 });

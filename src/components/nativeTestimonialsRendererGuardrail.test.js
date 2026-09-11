@@ -15,10 +15,9 @@ describe('native testimonials renderer guardrail', () => {
     const source = readSource('./NativeContentPage.jsx');
     const compositionSource = readSource('../lib/managedPageComposition.js');
 
-    expect(source).toContain('buildDynamicTestimonialsFromBlock,');
-    expect(source).toContain('const runtime = buildDynamicTestimonialsFromBlock(block, {');
+    expect(source).toContain('const runtime = buildCanonicalBlockRuntime(block, {');
     expect(source).toContain('library: testimonialsLibrary,');
-    expect(source).not.toContain('const runtime = buildDynamicTestimonialsFromBlock(block, {\n    pathname,');
+    expect(source).not.toContain('const runtime = buildCanonicalBlockRuntime(block, {\n    pathname,');
     expect(source).toContain("const sectionClassBase = pathname === '/test' ? 'test-dynamic-testimonials' : 'native-dynamic-testimonials';");
     expect(source).toContain('function buildManagedBlockSection(block, {');
     expect(source).toContain("if (renderBlock.kind === 'testimonials') {");

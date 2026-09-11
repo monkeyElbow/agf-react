@@ -116,12 +116,12 @@ const PARITY_ASSERTIONS = {
     admin: () => {
       expect(screen.getByLabelText('Hero editor preview surface')).toBeTruthy();
       fireEvent.click(screen.getByRole('button', { name: 'Background' }));
-      expect(screen.getByRole('radiogroup', { name: /Hero background/i })).toBeTruthy();
+      expect(screen.getByRole('radiogroup', { name: /Background color/i })).toBeTruthy();
     },
     hud: () => {
       expect(screen.getByLabelText('Hero editor preview surface')).toBeTruthy();
       fireEvent.click(screen.getByRole('button', { name: 'Background' }));
-      expect(screen.getByRole('radiogroup', { name: /Hero background/i })).toBeTruthy();
+      expect(screen.getByRole('radiogroup', { name: /Background color/i })).toBeTruthy();
     },
   },
   hero_pie: {
@@ -174,11 +174,11 @@ const PARITY_ASSERTIONS = {
   },
   intro: {
     admin: () => {
-      expect(screen.getByRole('radiogroup', { name: /Intro background/i })).toBeTruthy();
+      expect(screen.getByRole('radiogroup', { name: /Background color/i })).toBeTruthy();
       expect(screen.getByText(/Core text/i)).toBeTruthy();
     },
     hud: () => {
-      expect(screen.getByRole('radiogroup', { name: /Intro background/i })).toBeTruthy();
+      expect(screen.getByRole('radiogroup', { name: /Background color/i })).toBeTruthy();
       expect(screen.getAllByText(/Base Body Tone|Core Color/i).length).toBeGreaterThan(0);
       fireEvent.click(screen.getByRole('button', { name: 'Actions' }));
       expect(screen.getAllByLabelText('Label').length).toBeGreaterThan(0);
@@ -188,12 +188,12 @@ const PARITY_ASSERTIONS = {
     admin: () => {
       expect(screen.getByRole('radiogroup', { name: /Billboard title color/i })).toBeTruthy();
       fireEvent.click(screen.getByRole('button', { name: 'Background' }));
-      expect(screen.getByRole('radiogroup', { name: /Billboard background/i })).toBeTruthy();
+      expect(screen.getByRole('radiogroup', { name: /Background color/i })).toBeTruthy();
     },
     hud: () => {
       expect(screen.getByRole('radiogroup', { name: /Billboard title color/i })).toBeTruthy();
       fireEvent.click(screen.getByRole('button', { name: 'Background' }));
-      expect(screen.getByRole('radiogroup', { name: /Billboard background/i })).toBeTruthy();
+      expect(screen.getByRole('radiogroup', { name: /Background color/i })).toBeTruthy();
     },
   },
   feature_panel: {
@@ -224,46 +224,46 @@ const PARITY_ASSERTIONS = {
   },
   card_grid: {
     admin: () => {
-      expect(screen.getByRole('radiogroup', { name: /Grid background/i })).toBeTruthy();
+      expect(screen.getByRole('radiogroup', { name: /Background color/i })).toBeTruthy();
       expect(screen.getByText('Card title color')).toBeTruthy();
     },
     hud: () => {
-      expect(screen.getByRole('radiogroup', { name: /Grid background/i })).toBeTruthy();
+      expect(screen.getByRole('radiogroup', { name: /Background color/i })).toBeTruthy();
       expect(screen.getByText('Card title color')).toBeTruthy();
     },
   },
   cta_form: {
     admin: () => {
       expect(screen.getByRole('radiogroup', { name: /CTA form heading color|CTA heading color/i })).toBeTruthy();
-      expect(screen.getByRole('radiogroup', { name: /CTA background/i })).toBeTruthy();
+      expect(screen.getByRole('radiogroup', { name: /Background color/i })).toBeTruthy();
       expect(screen.getByRole('toolbar', { name: 'Article body formatting' })).toBeTruthy();
     },
     hud: () => {
       expect(screen.getByRole('radiogroup', { name: /CTA form heading color|CTA heading color/i })).toBeTruthy();
-      expect(screen.getByRole('radiogroup', { name: /CTA background/i })).toBeTruthy();
+      expect(screen.getByRole('radiogroup', { name: /Background color/i })).toBeTruthy();
       expect(screen.getByRole('toolbar', { name: 'Article body formatting' })).toBeTruthy();
     },
   },
   request_form: {
     admin: () => {
       expect(screen.getByLabelText('Form heading text')).toBeTruthy();
-      expect(screen.getByRole('radiogroup', { name: /Background tone/i })).toBeTruthy();
+      expect(screen.getByRole('radiogroup', { name: /Background color/i })).toBeTruthy();
       expect(screen.getByRole('button', { name: /Step 1/i })).toBeTruthy();
     },
     hud: () => {
       expect(screen.getByLabelText('Form heading text')).toBeTruthy();
-      expect(screen.getByRole('radiogroup', { name: /Background tone/i })).toBeTruthy();
+      expect(screen.getByRole('radiogroup', { name: /Background color/i })).toBeTruthy();
       expect(screen.getByRole('button', { name: /Step 1/i })).toBeTruthy();
     },
   },
   columns: {
     admin: () => {
       expect(screen.getByRole('radiogroup', { name: /Columns heading color/i })).toBeTruthy();
-      expect(screen.getByRole('radiogroup', { name: /Columns background/i })).toBeTruthy();
+      expect(screen.getByRole('radiogroup', { name: /Background color/i })).toBeTruthy();
     },
     hud: () => {
       expect(screen.getByRole('radiogroup', { name: /Columns heading color/i })).toBeTruthy();
-      expect(screen.getByRole('radiogroup', { name: /Columns background/i })).toBeTruthy();
+      expect(screen.getByRole('radiogroup', { name: /Background color/i })).toBeTruthy();
     },
   },
   photo_column: {
@@ -334,12 +334,16 @@ const PARITY_ASSERTIONS = {
   },
   newsletter: {
     admin: () => {
-      expect(screen.getByRole('radiogroup', { name: /Newsletter background/i })).toBeTruthy();
+      expect(screen.getByRole('radiogroup', { name: /Background color/i })).toBeTruthy();
       expect(screen.getByText('Newsletter heading')).toBeTruthy();
     },
     hud: () => {
-      expect(screen.getByRole('radiogroup', { name: /Newsletter background/i })).toBeTruthy();
       expect(screen.getByText('Newsletter heading')).toBeTruthy();
+      const backgroundButton = screen.queryByRole('button', { name: 'Background' });
+      if (backgroundButton) {
+        fireEvent.click(backgroundButton);
+      }
+      expect(screen.getByRole('radiogroup', { name: /Background color/i })).toBeTruthy();
     },
   },
   rates: {
@@ -373,7 +377,7 @@ const PARITY_ASSERTIONS = {
       expect(screen.getByRole('radiogroup', { name: /Background color/i })).toBeTruthy();
     },
     hud: () => {
-      expect(screen.getByRole('radiogroup', { name: /Top strip background color/i })).toBeTruthy();
+      expect(screen.getByRole('radiogroup', { name: /Background color/i })).toBeTruthy();
       expect(screen.getByLabelText('Login Label')).toBeTruthy();
       expect(screen.getByLabelText('Rates URL / Path')).toBeTruthy();
     },
@@ -396,11 +400,11 @@ const PARITY_ASSERTIONS = {
   },
   grid: {
     admin: () => {
-      expect(screen.getByRole('radiogroup', { name: /Grid background/i })).toBeTruthy();
+      expect(screen.getByRole('radiogroup', { name: /Background color/i })).toBeTruthy();
       expect(screen.getByText('Card title color')).toBeTruthy();
     },
     hud: () => {
-      expect(screen.getByRole('radiogroup', { name: /Grid background/i })).toBeTruthy();
+      expect(screen.getByRole('radiogroup', { name: /Background color/i })).toBeTruthy();
       expect(screen.getByText('Card title color')).toBeTruthy();
     },
   },

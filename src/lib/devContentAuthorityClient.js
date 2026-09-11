@@ -3,13 +3,13 @@ import { getOrCreateDevIdentity } from './devIdentity';
 
 const DEV_CONTENT_AUTHORITY_BASE = '/__dev/content-admin';
 // The current dev snapshot is a large JSON document shared over the trusted
-// LAN. Five seconds is short enough to turn a slow but valid response into a
-// loading loop; save and publish timeouts remain intentionally tighter.
+// LAN. Publish responses include a verified route slice, so they need more
+// time than an ordinary draft write while still having a finite abort window.
 const SHARED_CONTENT_SNAPSHOT_TIMEOUT_MS = 15_000;
 const SHARED_DRAFT_SAVE_TIMEOUT_MS = 6000;
 const SHARED_DRAFT_SYNC_TIMEOUT_MS = 3000;
-const SHARED_PUBLISH_TIMEOUT_MS = 10_000;
-const SHARED_PUBLISH_STATUS_TIMEOUT_MS = 5000;
+const SHARED_PUBLISH_TIMEOUT_MS = 30_000;
+const SHARED_PUBLISH_STATUS_TIMEOUT_MS = 15_000;
 let contentAdminAuthPromise = null;
 let contentAdminAuthorityLost = false;
 
@@ -18,7 +18,11 @@ function cloneJson(value) {
 }
 
 export function isDevContentAuthorityEnabled() {
-  return Boolean(import.meta.env.DEV && import.meta.env.MODE !== 'test');
+  return Boolean(
+    import.meta.env.DEV
+    && import.meta.env.MODE !== 'test'
+    && (typeof window === 'undefined' || window.__AGF_CONTROL_AUDIT_READ_ONLY__ !== true),
+  );
 }
 
 async function parseJsonResponse(response, requestUrl) {

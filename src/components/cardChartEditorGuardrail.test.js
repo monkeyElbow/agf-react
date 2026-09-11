@@ -42,6 +42,9 @@ describe('Card Chart editor contracts', () => {
     expect(editor).toContain('backgroundEffectsJson={settings.backgroundEffectsJson}');
     expect(editor).toContain("onSettingChange('bgTone', normalizePanelBgTone(nextValue))");
     expect(renderer).toContain('is-bg-${runtime.bgTone}');
+
+    const hudSource = readSource('../styles/front-hud.css');
+    expect(hudSource).toContain('.admin-card-chart-hud-editor.is-section-background');
   });
 
   it('keeps Card Chart surface background variants owned by the shared block style', () => {

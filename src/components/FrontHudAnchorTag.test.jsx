@@ -52,6 +52,12 @@ describe('FrontHudAnchorTag', () => {
     expect(serviceNativeCss).toContain('padding: 2px 0.5rem;');
   });
 
+  it('keeps editor surfaces above page-level block name badges', () => {
+    expect(serviceNativeCss).toMatch(/\.admin-front-hud-tool\s*\{[\s\S]*?z-index: 2000;/);
+    expect(serviceNativeCss).toMatch(/\.admin-front-hud-dock\s*\{[\s\S]*?z-index: 2000;/);
+    expect(serviceNativeCss).toMatch(/\.admin-front-hud-page-workflow\.is-bar\s*\{[\s\S]*?z-index: 2001;/);
+  });
+
   it('keeps the shared dimming layer above lifted card-grid hovers', () => {
     expect(cardGridCss).toMatch(/\.service-native-card\.card1:hover\s*\{[\s\S]*?z-index: 10;/);
     expect(cardGridCss).toMatch(/\.service-native-card\.card3:hover\s*\{[\s\S]*?z-index: 10;/);

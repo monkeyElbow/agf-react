@@ -2891,6 +2891,19 @@ export function ContentAdminProvider({ children, initialState = null }) {
         return;
       }
 
+      // A route read may already be in flight when an editor takes over a
+      // block. Its response is then stale by definition: applying it after
+      // the takeover would put the previous owner back into the local HUD
+      // state and make the controls appear editable while silently ignoring
+      // their changes. Only reconcile a passive read if no mutation started
+      // while it was in flight.
+      const syncStartedMutationId = latestSharedMutationIdRef.current;
+      const canApplyPassiveSnapshot = () => (
+        !cancelled
+        && pendingSharedMutationCountRef.current === 0
+        && latestSharedMutationIdRef.current === syncStartedMutationId
+      );
+
       try {
         const scopedPath = isAdminContentRoute && allowBootstrap
           ? getAdminContentPath()
@@ -2901,7 +2914,7 @@ export function ContentAdminProvider({ children, initialState = null }) {
             if (
               routeSnapshot?.initialized
               && hasContentAdminSnapshotStateContent(routeSnapshot)
-              && !cancelled
+              && canApplyPassiveSnapshot()
             ) {
               applySharedBlockDraftSnapshot(routeSnapshot, scopedPath, {
                 mergeCollaborationOnlyWhenDirty: allowBootstrap ? false : mergeCollaborationWhenDirty,
@@ -2921,6 +2934,9 @@ export function ContentAdminProvider({ children, initialState = null }) {
           snapshot = await initializeSharedContentFromSeed(normalizeStoredConfig(null), currentActor);
         }
         if (!snapshot?.initialized || !hasContentAdminSnapshotStateContent(snapshot) || cancelled) {
+          return;
+        }
+        if (!canApplyPassiveSnapshot()) {
           return;
         }
         const nextUpdatedAt = Number(snapshot.updatedAt) || 0;

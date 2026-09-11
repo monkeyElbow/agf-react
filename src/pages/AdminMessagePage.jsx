@@ -385,19 +385,19 @@ export default function AdminMessagePage() {
               <div className="admin-boolean-pill" role="group" aria-label="Message link">
                 <button
                   type="button"
-                  className={`admin-boolean-pill-option${draftAnnouncement.linkEnabled ? ' is-active' : ''}`}
-                  onClick={() => setAnnouncementLinkEnabled(true)}
-                  disabled={isHydrating || isSaving}
-                >
-                  On
-                </button>
-                <button
-                  type="button"
                   className={`admin-boolean-pill-option${!draftAnnouncement.linkEnabled ? ' is-active' : ''}`}
                   onClick={() => setAnnouncementLinkEnabled(false)}
                   disabled={isHydrating || isSaving}
                 >
                   Off
+                </button>
+                <button
+                  type="button"
+                  className={`admin-boolean-pill-option${draftAnnouncement.linkEnabled ? ' is-active' : ''}`}
+                  onClick={() => setAnnouncementLinkEnabled(true)}
+                  disabled={isHydrating || isSaving}
+                >
+                  On
                 </button>
               </div>
             </div>

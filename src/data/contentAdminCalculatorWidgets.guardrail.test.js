@@ -135,9 +135,9 @@ function expectCalculatorIntroShape(entries) {
         'paddingBottomRem',
         'contentMaxWidthPx',
         'copyWrap',
+        ...(source === 'blueprint' ? ['bgTone', 'backgroundEffectsJson'] : []),
         'anchorId',
         'sectionClassName',
-        ...(source === 'blueprint' ? ['bgTone', 'backgroundEffectsJson'] : []),
       ];
       expect((block?.editableFields || []).map((field) => field.id), `${pathname} ${source} editable fields`).toEqual(expectedFields);
     }
@@ -171,9 +171,9 @@ function expectCalculatorWidgetShape(entries) {
         'paddingTopRem',
         'paddingBottomRem',
         'contentMaxWidthPx',
+        ...(source === 'blueprint' ? ['bgTone', 'backgroundEffectsJson'] : []),
         'anchorId',
         'sectionClassName',
-        ...(source === 'blueprint' ? ['bgTone', 'backgroundEffectsJson'] : []),
       ];
       expect((block?.editableFields || []).map((field) => field.id), `${pathname} ${source} editable fields`).toEqual(expectedFields);
     }

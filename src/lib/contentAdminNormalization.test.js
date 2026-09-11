@@ -438,6 +438,45 @@ describe('content-admin normalization preservation', () => {
     expect(Object.keys(normalized.pageHierarchy)).toEqual(['/test']);
   });
 
+  it('drops inert hero reveal actions that have no label or target', () => {
+    const normalized = normalizeInBoth(state([
+      block('hero', {
+        kind: 'hero',
+        settings: {
+          line1Text: 'Your investments.',
+          button1Action: 'open_cta_form',
+          button2Action: 'open_cta_form',
+          button1Style: 'dark',
+        },
+      }),
+    ]));
+
+    expect(normalized.blocksByPath['/test'][0].settings).toEqual({
+      line1Text: 'Your investments.',
+      button1Style: 'dark',
+    });
+  });
+
+  it('restores the canonical retirement feature identity on its managed route', () => {
+    const normalized = normalizeInBoth(state([], {
+      pageHierarchy: {
+        '/services/retirement': { path: '/services/retirement', title: 'Retirement' },
+      },
+      blocksByPath: {
+        '/services/retirement': [block('retirement_plan_feature', {
+          kind: 'site_feature',
+          settings: {
+            featureId: 'editorial_spotlight',
+            sectionClassName: 'retirement-plan-feature',
+          },
+        })],
+      },
+    }));
+
+    expect(normalized.blocksByPath['/services/retirement'][0].settings.featureId)
+      .toBe('retirement_plan_feature');
+  });
+
   it('preserves active edits through record reload normalization', () => {
     const record = {
       initialized: true,

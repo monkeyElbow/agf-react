@@ -42,13 +42,13 @@ describe('CtaHudEditorPanel', () => {
     });
 
     const cards = Array.from(container.querySelectorAll('.admin-cta-hud-editor-panels > section'));
-    expect(cards).toHaveLength(3);
-    expect(within(cards[1]).getByText('Message + Submit')).toBeTruthy();
-    expect(within(cards[1]).getByText('Lead Copy')).toBeTruthy();
-    expect(within(cards[1]).getByLabelText('Submit Label')).toBeTruthy();
-    expect(within(cards[1]).getByRole('group', { name: 'CTA submit style' })).toBeTruthy();
-    expect(within(cards[1]).getByText('Button Preview')).toBeTruthy();
-    expect(within(cards[2]).getByText('Form Fields')).toBeTruthy();
+    expect(cards).toHaveLength(4);
+    expect(within(cards[2]).getByText('Message + Submit')).toBeTruthy();
+    expect(within(cards[2]).getByText('Lead Copy')).toBeTruthy();
+    expect(within(cards[2]).getByLabelText('Submit Label')).toBeTruthy();
+    expect(within(cards[2]).getByRole('group', { name: 'CTA submit style' })).toBeTruthy();
+    expect(within(cards[2]).getByText('Button Preview')).toBeTruthy();
+    expect(within(cards[3]).getByText('Form Fields')).toBeTruthy();
   });
 
   it('exposes the CTA groups through the reference editor rail', () => {
@@ -56,6 +56,7 @@ describe('CtaHudEditorPanel', () => {
 
     expect(screen.getByRole('navigation', { name: 'CTA editor sections' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Heading' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Background' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Message + Submit' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Form Fields' })).toBeTruthy();
   });
@@ -134,7 +135,8 @@ describe('CtaHudEditorPanel', () => {
       onBgToneChange,
     };
     const view = renderPanel(props);
-    const backgroundPalette = screen.getByRole('radiogroup', { name: 'CTA background' });
+    fireEvent.click(screen.getByRole('button', { name: 'Background' }));
+    const backgroundPalette = screen.getByRole('radiogroup', { name: 'Background color' });
 
     fireEvent.click(within(backgroundPalette).getByRole('radio', { name: 'Blue' }));
     expect(onBgToneChange).toHaveBeenCalledWith('blue');
@@ -179,10 +181,12 @@ describe('CtaHudEditorPanel', () => {
     const headingControls = document.querySelector('.admin-cta-hud-heading-controls');
     expect(headingControls).toBeTruthy();
     expect(within(headingControls).getByRole('radiogroup', { name: 'CTA heading color' })).toBeTruthy();
-    expect(within(headingControls).getByRole('radiogroup', { name: 'CTA background' })).toBeTruthy();
+    expect(within(headingControls).queryByRole('radiogroup', { name: 'Background color' })).toBeNull();
     expect(within(headingControls).getByRole('button', { name: /“faith”/i })).toBeTruthy();
     expect(within(headingControls).getByRole('button', { name: 'Clear spans' })).toBeTruthy();
     expect(screen.getByText(/Highlight heading text first for span color/i)).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Background' }));
+    expect(screen.getByRole('radiogroup', { name: 'Background color' })).toBeTruthy();
   });
 
   it('routes sandstone swatch clicks to the selected CTA heading span instead of the core heading color', () => {

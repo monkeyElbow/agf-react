@@ -16,9 +16,9 @@ describe('services hero pie renderer guardrail', () => {
 
     expect(source).toContain("import '../styles/home-native.css';");
     expect(source).toContain("import '../styles/service-native.css';");
-    expect(source).toContain('buildDynamicHeroPieFromBlock,');
+    expect(source).toContain("import { buildCanonicalBlockRuntime } from '../blocks/registry';");
     expect(source).toContain('DEFAULT_SERVICE_HERO_PIE_SLICES,');
-    expect(source).toContain("buildDynamicHeroPieFromBlock(heroPieBlock || {");
+    expect(source).toContain("buildCanonicalBlockRuntime(heroPieBlock || {");
     expect(source).toContain("kind: 'hero_pie',");
     expect(source).toContain('const heroPieSlices = heroPieRuntime?.slices || [];');
   });
@@ -48,7 +48,7 @@ describe('services hero pie renderer guardrail', () => {
   it('renders the services overview billboard block through the existing intro shell', () => {
     const source = readSource('./ServicesPage.jsx');
 
-    expect(source).toContain('buildDynamicBillboardFromBlock,');
+    expect(source).toContain('buildCanonicalBlockRuntime(billboardIntroBlock);');
     expect(source).toContain("block?.id === 'intro'");
     expect(source).toContain("block?.kind === 'billboard'");
     expect(source).toContain('mapServicesBillboardToIntroRuntime');
