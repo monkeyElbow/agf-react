@@ -222,6 +222,9 @@ function buildBrowserAudit() {
     const blockFilter = new Set(requestedBlockIds);
     const controlFilter = new Set(requestedControlIds);
     const sleep = (duration) => new Promise((resolve) => setTimeout(resolve, duration));
+    const auditMotionStyle = document.createElement('style');
+    auditMotionStyle.textContent = '* { animation-play-state: paused !important; transition: none !important; }';
+    document.head.appendChild(auditMotionStyle);
     const authority = window.__AGF_CONTENT_RUNTIME_AUTHORITY__ || {};
     const authorityById = new Map(
       (Array.isArray(authority.blocks) ? authority.blocks : [])
@@ -250,6 +253,10 @@ function buildBrowserAudit() {
     };
     const getStyleSignature = (root) => {
       if (!root) return '';
+      // Ignore authored inline variables and style attributes. They can change
+      // when an editor stages a value even if no rendered descendant consumes
+      // that value; the audit must measure computed visual properties instead
+      // of allowing an inline-variable change to create a false green.
       const isHudOverlay = (node) => node !== root && Boolean(
         node.matches?.('[class*="admin-front-hud"], [class*="admin-hud"], [data-mobile-front-hud-selectable]')
         || node.closest?.('[class*="admin-front-hud"], [class*="admin-hud"], [data-mobile-front-hud-selectable]'),
@@ -262,13 +269,7 @@ function buildBrowserAudit() {
         const cleanNode = node.cloneNode(true);
         cleanNode.querySelectorAll?.('[class*="admin-front-hud"], [class*="admin-hud"], [data-mobile-front-hud-selectable]')
           .forEach((overlay) => overlay.remove());
-        const cssVars = {};
-        for (let index = 0; index < style.length; index += 1) {
-          const property = style[index];
-          if (property.startsWith('--')) {
-            cssVars[property] = style.getPropertyValue(property).trim();
-          }
-        }
+        cleanNode.querySelectorAll?.('[style]').forEach((styledNode) => styledNode.removeAttribute('style'));
         return {
           tag: node.tagName,
           className: String(node.className || ''),
@@ -280,7 +281,6 @@ function buildBrowserAudit() {
             value: node.getAttribute('value') || '',
             ariaChecked: node.getAttribute('aria-checked') || '',
             ariaPressed: node.getAttribute('aria-pressed') || '',
-            style: node.getAttribute('style') || '',
           },
           styles: {
             color: style.color,
@@ -300,9 +300,17 @@ function buildBrowserAudit() {
             gap: style.gap,
             gridTemplateColumns: style.gridTemplateColumns,
           },
-          cssVars,
         };
       }));
+    };
+    const getRenderedControlProof = (root, fieldId) => {
+      const proof = fieldId === 'cardPaddingRem'
+        ? { selector: '.service-native-card', property: 'padding' }
+        : null;
+      if (!proof) return '';
+      return JSON.stringify([...root.querySelectorAll(proof.selector)].map((node) => (
+        getComputedStyle(node).getPropertyValue(proof.property).trim()
+      )));
     };
     const pickControl = (field) => {
       // HTML editors contain a toolbar before the editable surface. Prefer the
@@ -583,6 +591,7 @@ function buildBrowserAudit() {
           }
           const currentControl = pickControl(currentField) || currentField;
           const before = getStyleSignature(section);
+          const beforeRenderedControlProof = getRenderedControlProof(section, fieldId);
           const mutation = mutateControl(currentControl, fieldId);
           if (!mutation) {
             report.skipped.push(`${blockId}/${fieldId}: control is disabled or has no alternate value`);
@@ -596,6 +605,7 @@ function buildBrowserAudit() {
           } = mutation;
           await sleep(waitMs);
           const after = getStyleSignature(section);
+          const afterRenderedControlProof = getRenderedControlProof(section, fieldId);
           const currentPanel = document.querySelector('.admin-front-hud-tool.is-panel-active') || panel;
           const refreshedField = fieldId.startsWith('aria:')
             ? findAriaControl(currentPanel, descriptor)
@@ -617,6 +627,8 @@ function buildBrowserAudit() {
           const afterControlState = readControlState(afterControl);
           if (beforeControlState === afterControlState) {
             report.failures.push(`${blockId}/${fieldId}: control did not retain its changed value (before=${JSON.stringify(beforeControlState)}, immediate=${JSON.stringify(immediateControlState)}, after=${JSON.stringify(afterControlState)}, target=${JSON.stringify(mutatedControlKey || mutatedControl?.outerHTML?.slice(0, 180) || '')}, afterHtml=${JSON.stringify(afterControl?.outerHTML?.slice(0, 220) || '')})`);
+          } else if (beforeRenderedControlProof && beforeRenderedControlProof === afterRenderedControlProof) {
+            report.failures.push(`${blockId}/${fieldId}: rendered ${fieldId} proof did not change (before=${beforeRenderedControlProof}, after=${afterRenderedControlProof})`);
           } else if (before === after) {
             report.visualReview.push(`${blockId}/${fieldId}: control changed and remained staged, but rendered block DOM/computed styles did not change`);
           } else {

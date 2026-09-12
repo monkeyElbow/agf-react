@@ -171,7 +171,7 @@ describe('insurance overview review polish guardrail', () => {
     const cssSource = readSource('../styles/service-native.css');
 
     expect(cssSource).toContain('.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).ministers-group-life-native-details .service-native-card {');
-    expect(cssSource).toContain('padding: clamp(1.35rem, 2.5vw, 1.95rem) clamp(1.5rem, 3vw, 2.2rem) clamp(2.5rem, 4.5vw, 3.4rem);');
+    expect(cssSource).toContain('padding: var(--dynamic-grid-card-padding, clamp(1.35rem, 2.5vw, 1.95rem));');
     expect(cssSource).toContain('.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).ministers-group-life-native-details .service-native-card > div:first-child {');
     expect(cssSource).toContain('justify-items: center;');
     expect(cssSource).toContain('padding-top: clamp(0.85rem, 1.6vw, 1.25rem);');

@@ -176,7 +176,7 @@ describe('native page content renderer guardrail', () => {
     expect(cssSource).toContain('.retirement-403b-native-benefits-cards .native-info-section-copy > h2 {');
     expect(cssSource).toContain('margin-bottom: clamp(2.3rem, 4.4vw, 3.2rem);');
     expect(cssSource).toContain('.retirement-403b-native-benefits-cards .service-native-card {');
-    expect(cssSource).toContain('--dynamic-grid-card-padding: clamp(2.1rem, 3.2vw, 3rem);');
+    expect(cssSource).toContain('padding: var(--dynamic-grid-card-padding, clamp(2.1rem, 3.2vw, 3rem));');
     expect(cssSource).toContain('justify-content: flex-start;');
     expect(cssSource).toContain('.retirement-403b-native-benefits-cards .service-native-card > div:first-child {');
     expect(cssSource).toContain('align-items: flex-start;');
@@ -267,7 +267,7 @@ describe('native page content renderer guardrail', () => {
     expect(cssSource).toContain('.native-info-page--life-quote .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).life-quote-native-types > .ag-panel-rail,');
     expect(cssSource).toContain('width: calc(100% - (var(--ag-panel-gutter) * 0.6));');
     expect(cssSource).toContain('.native-info-page--life-quote .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).life-quote-native-types .service-native-card {');
-    expect(cssSource).toContain('padding: clamp(1.9rem, 2.8vw, 2.7rem);');
+    expect(cssSource).toContain('padding: var(--dynamic-grid-card-padding, clamp(1.9rem, 2.8vw, 2.7rem));');
     expect(cssSource).toContain('.native-info-page--life-quote .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).life-quote-native-types .service-native-card h3 {');
     expect(cssSource).toContain('min-height: 0 !important;');
     expect(cssSource).toContain('font-size: clamp(1.72rem, 2.7vw, 2.28rem);');
@@ -287,7 +287,7 @@ describe('native page content renderer guardrail', () => {
     expect(cssSource).toContain('padding-top: clamp(2.4rem, 5vw, 4rem);');
     expect(cssSource).toContain('padding-bottom: clamp(2.4rem, 5vw, 4rem);');
     expect(cssSource).toContain('.native-info-page--group-life-quote .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).group-life-native-benefits .service-native-card {');
-    expect(cssSource).toContain('padding: clamp(1.9rem, 2.8vw, 2.7rem);');
+    expect(cssSource).toContain('padding: var(--dynamic-grid-card-padding, clamp(1.9rem, 2.8vw, 2.7rem));');
     expect(cssSource).toContain('.native-info-page--group-life-quote .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).group-life-native-benefits .service-native-card h3 {');
     expect(cssSource).toContain('min-height: 0 !important;');
     expect(cssSource).toContain('letter-spacing: var(--ag-letter-spacing-helv-heading);');

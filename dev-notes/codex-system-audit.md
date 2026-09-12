@@ -120,3 +120,64 @@ effects and publish acknowledgment paths, starting with one block family at a
 time. Prioritize controls whose editor field, canonical settings value, and
 rendered CSS variable are not all covered by the same test/probe. Keep each
 change isolated and preserve the route/ownership/HUD guardrails above.
+
+### 2026-09-12 — dynamic card-grid padding consumer audit
+
+Scope: Standard dynamic card-grid card-shell padding consumers and the browser
+audit's proof of rendered control effects across page-specific CSS layers.
+
+Checks:
+
+- Focused guardrails passed: 7 files / 107 tests.
+- Full suite passed: 323 Vitest files / 2,088 tests, plus the 2 rates-import
+  Node tests.
+- `npm run lint` passed.
+- Prior gates for this code state also passed: `npm run scan:system` and
+  `npm run build`.
+- Sequential browser probes passed for `trust_funding` on charitable trusts,
+  `benefits` on Careers, `rollover_options` on rollovers, and
+  `investment_strategy_options` on 403(b). Each changed the computed
+  `.service-native-card` padding under `cardPaddingRem` and cleared HUD focus
+  state after close.
+
+Findings and fixes:
+
+- Several page-specific card-grid rules wrote hardcoded `padding` values after
+  the shared dynamic-grid rule. The editor could retain a changed value while
+  the rendered card stayed unchanged. Standard dynamic card shells now consume
+  `var(--dynamic-grid-card-padding, fallback)` across the audited Careers,
+  403(b), retirement rollovers, insurance, planned-giving, and legacy-child
+  families. Structural certificate/IRA shells and intentional inner heading or
+  list padding remain isolated.
+- The browser audit previously treated changed inline CSS variables and style
+  attributes as rendered proof. It now removes those signals from the style
+  signature, freezes animation/transition timing, and uses a computed padding
+  proof for `cardPaddingRem`. The charitable-trust probe caught the hidden
+  override before the repair and passed after it.
+- Added source guardrails for the shared card-padding consumer contract and for
+  the audit's anti-false-green behavior. Updated affected style ownership
+  assertions to enforce the new contract.
+
+Verification:
+
+- The representative probes produced zero control failures and zero stale HUD
+  focus targets. The dense combined probe was intentionally not used as a
+  result because it included an invalid route/filter combination; corrected
+  sequential probes are the evidence recorded above.
+- `git diff --check` passed. The pre-existing dirty
+  `dev-data/content-admin-shared.json` remained untouched and unstaged.
+
+Unresolved risks:
+
+- The system scan still inventories 430 visual effects without independent
+  unit/runtime verification. This pass improved evidence quality for one
+  control family; it does not prove every visual effect.
+- Visual review, keyboard interaction, and publish acknowledgment remain
+  separate coverage areas. Some named structural card shells intentionally do
+  not follow generic scalar padding semantics and need a visual decision before
+  any further unification.
+
+Next weakest point: Apply the same computed-property proof to the canonical
+card surface controls—background tone, outline, shadow, and text tones—on one
+bounded block family, then inspect publish acknowledgment/error handling for
+that family.

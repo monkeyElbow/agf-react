@@ -159,7 +159,7 @@ describe('implementation-ownership.service-native style ownership', () => {
     const source = readSource('./service-native.css');
 
     expect(source).toContain('.native-info-page--legacy-giving .legacy-giving-types .service-native-card {');
-    expect(source).toContain('padding: clamp(1.8rem, 3vw, 2.6rem) clamp(2.2rem, 4vw, 3rem);');
+    expect(source).toContain('padding: var(--dynamic-grid-card-padding, clamp(1.8rem, 3vw, 2.6rem));');
     expect(source).toContain('.native-info-page--legacy-giving .service-native-section.native-dynamic-grid.legacy-giving-types .service-native-card:not(.investments-native-cert-card) {');
     expect(source).toContain('.native-info-page--legacy-giving .service-native-section.native-dynamic-grid.legacy-giving-types .service-native-card:not(.investments-native-cert-card) h3 {');
     expect(source).toContain('font-size: var(--dynamic-grid-card-title-size, clamp(1.55rem, 2.35vw, 1.9rem));');
@@ -214,8 +214,8 @@ describe('implementation-ownership.service-native style ownership', () => {
     expect(source).toContain('  .legacy-child-native-assets,');
     expect(source).toContain('  .legacy-child-native-cga-assets,');
     expect(source).toContain('  .legacy-child-native-trusts-funding');
-    expect(source).toContain('padding: clamp(2.4rem, 4.8vw, 3.6rem);');
-    expect(source).toContain('padding-bottom: clamp(3.6rem, 7.2vw, 5.4rem);');
+    expect(source).toContain('padding: var(--dynamic-grid-card-padding, clamp(2.4rem, 4.8vw, 3.6rem));');
+    expect(source).toContain('padding-bottom: calc(var(--dynamic-grid-card-padding, clamp(2.4rem, 4.8vw, 3.6rem)) * 1.5);');
     expect(source).toContain('.native-info-page--legacy-cga .service-native-section.native-dynamic-grid:is(');
   });
 

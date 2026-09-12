@@ -28,4 +28,34 @@ describe('native card shell style guardrail', () => {
     expect(source).toContain('.native-columns-copy .service-native-action-row {');
     expect(source).toContain('margin-top: var(--native-card-shell-action-gap);');
   });
+
+  it('keeps page-specific dynamic card shells connected to the shared padding control', () => {
+    const source = readSource('../styles/service-native.css');
+    const dynamicCardShellSelectors = [
+      '.native-info-page--careers .careers-native-benefits .service-native-card',
+      '.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-preset-investment-options .service-native-card',
+      '.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-preset-eligibility-cards .service-native-card',
+      '.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-preset-step-cards .service-native-card:not(.investments-native-cert-card):not(.retirement-account-card--certificate)',
+      '.native-info-page--retirement-rollovers .service-native-section.native-dynamic-grid.retirement-rollovers-native-options .service-native-card:not(.investments-native-cert-card)',
+      '.legacy-child-native-trusts-funding .service-native-card',
+    ];
+
+    dynamicCardShellSelectors.forEach((selector) => {
+      let searchStart = 0;
+      let hasSharedPaddingDeclaration = false;
+      let selectorStart = source.indexOf(`${selector} {`, searchStart);
+      while (selectorStart >= 0) {
+        const declarationEnd = source.indexOf('}', selectorStart);
+        const declarationBlock = source.slice(selectorStart, declarationEnd);
+        if (declarationBlock.includes('var(--dynamic-grid-card-padding')) {
+          hasSharedPaddingDeclaration = true;
+          break;
+        }
+        searchStart = declarationEnd + 1;
+        selectorStart = source.indexOf(`${selector} {`, searchStart);
+      }
+      expect(selectorStart, `${selector} should exist`).toBeGreaterThanOrEqual(0);
+      expect(hasSharedPaddingDeclaration, `${selector} should consume the shared card padding`).toBe(true);
+    });
+  });
 });
