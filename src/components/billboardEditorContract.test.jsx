@@ -115,6 +115,39 @@ describe('Billboard editor contract', () => {
     expect(JSON.parse(backgroundCall[1])).toMatchObject({ enabled: true });
   });
 
+  it('routes an unselected Body HTML color swatch to the base body color setting', () => {
+    const onSettingChange = vi.fn();
+    render(<BillboardBlockEditor block={billboardBlock()} onSettingChange={onSettingChange} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Copy' }));
+    fireEvent.click(within(screen.getByRole('radiogroup', { name: 'Text color' })).getByRole('radio', { name: 'Mango' }));
+
+    expect(onSettingChange).toHaveBeenCalledWith('bodyColorClassName', 'is-mango');
+  });
+
+  it('keeps Billboard action link options attached to the canonical link value', () => {
+    const onSettingChange = vi.fn();
+    render(<BillboardBlockEditor block={billboardBlock({
+      buttonLabel: 'Continue',
+      buttonLinkJson: JSON.stringify({
+        kind: 'external',
+        href: 'https://example.test/document.pdf',
+        openInNewWindow: false,
+      }),
+    })} onSettingChange={onSettingChange} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Buttons' }));
+    fireEvent.click(screen.getAllByRole('checkbox', { name: 'Open in new window' })[0]);
+
+    const linkCall = onSettingChange.mock.calls.find(([fieldId]) => fieldId === 'buttonLinkJson');
+    expect(linkCall).toBeTruthy();
+    expect(JSON.parse(linkCall[1])).toMatchObject({
+      kind: 'external',
+      href: 'https://example.test/document.pdf',
+      openInNewWindow: true,
+    });
+  });
+
   it('feeds the same canonical Billboard settings into the shared runtime builder', () => {
     const runtime = buildDynamicBillboardFromBlock(billboardBlock({
       titleClassName: 'is-atlantean',

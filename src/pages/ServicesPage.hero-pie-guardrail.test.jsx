@@ -69,4 +69,16 @@ describe('services hero pie renderer guardrail', () => {
     expect(cssSource).toContain('margin-left: 0;');
     expect(cssSource).toContain('margin-right: 0;');
   });
+
+  it('keeps every custom services block attached to the shared HUD focus state', () => {
+    const source = readSource('./ServicesPage.jsx');
+    const hudCssSource = readSource('../styles/front-hud.css');
+
+    expect(source).toContain("className={`services-pie-hero${getHudBlockStateClassName('hero_pie')}");
+    expect(source).toContain("className={`${servicesBreakdownRuntime.sectionClassName || 'services-native-grid-wrap services-breakdown-section'}${getHudBlockStateClassName('services_cards')}");
+    expect(source).toContain("className={`${servicesMattersRuntime.sectionClassName || 'services-native-matters'}${getHudBlockStateClassName('matters_band')}");
+    expect(source).toContain("className={`services-native-testimonials${getHudBlockStateClassName('testimonials')}");
+    expect(hudCssSource).toContain('.service-native-page :is(.services-pie-hero, .services-native-grid-wrap, .services-native-matters, .services-native-testimonials)');
+    expect(hudCssSource).toContain('.service-native-page.has-active-front-hud-panel\n  :is(.services-pie-hero, .services-native-grid-wrap, .services-native-matters, .services-native-testimonials):not(.is-hud-focus-target)::after');
+  });
 });

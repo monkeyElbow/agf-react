@@ -762,7 +762,7 @@ export default function ServicesPage() {
       <ManagedBlockOrder className="services-native-page-content" blocks={managedBlocks}>
       <section
         ref={heroPieSectionRef}
-        className={`services-pie-hero${getOwnershipVisualForBlockId('hero_pie').className || ''}`}
+        className={`services-pie-hero${getHudBlockStateClassName('hero_pie')}${getOwnershipVisualForBlockId('hero_pie').className || ''}`}
         data-block-id="hero_pie"
         style={{ ...activeSliceAccentStyle, ...managedBlockOrderStyle('hero_pie') }}
       >
@@ -916,7 +916,7 @@ export default function ServicesPage() {
     {servicesBreakdownRuntime ? (
       <section
         ref={servicesBreakdownSectionRef}
-        className={`${servicesBreakdownRuntime.sectionClassName || 'services-native-grid-wrap services-breakdown-section'}${getOwnershipVisualForBlockId('services_cards').className || ''}`}
+        className={`${servicesBreakdownRuntime.sectionClassName || 'services-native-grid-wrap services-breakdown-section'}${getHudBlockStateClassName('services_cards')}${getOwnershipVisualForBlockId('services_cards').className || ''}`}
         data-block-id="services_cards"
         style={{
           ...managedBlockOrderStyle('services_cards'),
@@ -1000,7 +1000,7 @@ export default function ServicesPage() {
     {servicesMattersRuntime ? (
       <section
         ref={servicesMattersSectionRef}
-        className={`${servicesMattersRuntime.sectionClassName || 'services-native-matters'}${getOwnershipVisualForBlockId('matters_band').className || ''}`}
+        className={`${servicesMattersRuntime.sectionClassName || 'services-native-matters'}${getHudBlockStateClassName('matters_band')}${getOwnershipVisualForBlockId('matters_band').className || ''}`}
         data-block-id="matters_band"
         style={managedBlockOrderStyle('matters_band')}
       >
@@ -1069,7 +1069,7 @@ export default function ServicesPage() {
         />
       </div>
 
-      <section ref={testimonialsSectionRef} className={`services-native-testimonials${getOwnershipVisualForBlockId('testimonials').className || ''}`} data-block-id="testimonials" style={managedBlockOrderStyle('testimonials')}>
+      <section ref={testimonialsSectionRef} className={`services-native-testimonials${getHudBlockStateClassName('testimonials')}${getOwnershipVisualForBlockId('testimonials').className || ''}`} data-block-id="testimonials" style={managedBlockOrderStyle('testimonials')}>
         <BlockSurfaceLayers ownership={getOwnershipVisualForBlockId('testimonials')} hudAnchor={renderHudAnchor('testimonials')} />
         <div className="ag-panel-rail">
           <div className="carousel-stack">

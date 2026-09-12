@@ -29,7 +29,9 @@ The browser audit:
 - enables the development HUD only in that profile;
 - opens the configured route set;
 - opens each rendered HUD block editor;
-- exercises safe controls while blocking content-authority writes;
+- exercises safe controls and permits draft-sync writes only inside its
+  disposable isolated fixture; external targets explicitly supplied with
+  `CONTROL_AUDIT_ALLOW_EXTERNAL=1` keep authority writes blocked;
 - compares the block's DOM attributes, text, inline values, CSS variables, and
   computed style signature;
 - exits with status 1 and lists the exact route, block, and setting when a
@@ -50,11 +52,17 @@ Useful options:
 ```bash
 npm run test:control-reachability:browser -- --paths=/services/loans --wait-ms=400
 npm run test:control-reachability:browser -- --paths=/services/loans --blocks=hero --wait-ms=400
+npm run test:control-reachability:browser -- --paths=/services/retirement/403b --blocks=investment_strategy_heading --controls="Header gap" --wait-ms=400
 BROWSER_BIN="/path/to/browser" npm run test:control-reachability:browser
 ```
+
+`--blocks` and `--controls` are exact filters. A requested block or control
+that is not rendered now fails the audit instead of producing a false green.
+Use the visible control label for custom HUD controls and the editor field ID
+for canonical field-grid controls.
 
 Blocks with no HUD anchor are reported as skipped coverage. A requested route
 that renders no block sections is a harness failure, so the audit cannot report
 a false green after testing zero blocks. Known non-block routes are excluded
-from the default route list. No browser-layer test should be interpreted as a
-publish or save operation.
+from the default route list. The isolated fixture is removed when the audit
+exits, so it cannot change the repository's shared content or publish anything.

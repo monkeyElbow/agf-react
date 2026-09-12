@@ -17,6 +17,7 @@ describe('BackgroundEditorPage', () => {
     );
 
     expect(screen.queryByText('Choose the base color for this block.')).toBeNull();
+    expect(container.querySelector('[data-editor-field-id="bgTone"]')).not.toBeNull();
     expect(container.querySelector('.admin-background-editor-page__surface > .admin-swatch-list.admin-standard-swatch-palette')).not.toBeNull();
     expect(container.querySelectorAll('.admin-background-editor-page__surface .admin-swatch-option')).toHaveLength(SURFACE_BG_TONE_OPTIONS.length);
     expect(container.querySelectorAll('.admin-background-light-card')).toHaveLength(3);

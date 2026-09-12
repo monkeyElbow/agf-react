@@ -194,7 +194,7 @@ export default function BackgroundLightsEditor({
     <section className={`admin-background-editor-page${className ? ` ${className}` : ''}`} aria-label="Background">
       <div className="admin-background-editor-page__layout">
         <div className="admin-background-editor-page__left">
-          <div className="admin-background-editor-page__surface">
+          <div className="admin-background-editor-page__surface" data-editor-field-id="bgTone">
             <strong>Background color</strong>
             {toneOptions.length ? (
               <ColorPalette

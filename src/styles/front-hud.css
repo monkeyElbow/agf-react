@@ -300,6 +300,49 @@
   box-shadow: none;
 }
 
+/* The Services overview predates the shared section class, but its custom
+   blocks still use the same HUD contract. Keep their focus layer identical so
+   opening one editor never leaves that block dimmed. */
+.service-native-page :is(.services-pie-hero, .services-native-grid-wrap, .services-native-matters, .services-native-testimonials) {
+  position: relative;
+  isolation: isolate;
+  z-index: 0;
+  transition: filter 2000ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.service-native-page :is(.services-pie-hero, .services-native-grid-wrap, .services-native-matters, .services-native-testimonials)::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
+  background: linear-gradient(160deg, rgba(11, 21, 33, 0.78) 0%, rgba(11, 21, 33, 0.92) 100%);
+  opacity: 0;
+  transition: opacity 2000ms cubic-bezier(0.22, 1, 0.36, 1), background-color 2000ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.service-native-page.has-active-front-hud-panel
+  :is(.services-pie-hero, .services-native-grid-wrap, .services-native-matters, .services-native-testimonials):not(.is-hud-focus-target)::after {
+  opacity: var(--ag-admin-front-hud-dim-strength, 0.42);
+}
+
+.service-native-page.has-active-front-hud-panel
+  :is(.services-pie-hero, .services-native-grid-wrap, .services-native-matters, .services-native-testimonials).is-hud-focus-target {
+  z-index: 4;
+  filter: none;
+  box-shadow: none;
+}
+
+.service-native-page.has-active-front-hud-panel
+  :is(.services-pie-hero, .services-native-grid-wrap, .services-native-matters, .services-native-testimonials).is-hud-focus-target::after {
+  opacity: 0;
+}
+
+.service-native-page:not(.has-active-front-hud-panel)
+  :is(.services-pie-hero, .services-native-grid-wrap, .services-native-matters, .services-native-testimonials)::after {
+  transition: none;
+}
+
 /* The active editor is always the one undimmed block. This explicit rule is
    required for a panel that was opened before another browser acquired the
    lock: the ownership color must never cover the editor or bypass Block Dim. */

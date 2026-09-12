@@ -7031,10 +7031,11 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
   const inferredCardCount = Array.from({ length: 8 }, (_, index) => index + 1)
     .filter((slot) => hasGridCardSettings(settings, slot))
     .pop() || 1;
+  const normalizedCardShadowSetting = String(settings.cardShadow ?? '').trim().toLowerCase();
   const layoutSettings = {
     ...settings,
     ...(!hasExplicitCardCount ? { cardCount: String(inferredCardCount) } : {}),
-    ...(!['true', 'false'].includes(String(settings.cardShadow || '').trim().toLowerCase())
+    ...(!['true', 'false'].includes(normalizedCardShadowSetting)
       ? {
           cardShadow: typeof presetDefinition?.defaults?.cardShadow === 'boolean'
             ? presetDefinition.defaults.cardShadow

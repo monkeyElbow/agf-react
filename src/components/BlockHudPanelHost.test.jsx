@@ -31,13 +31,14 @@ function IntroHudLocalDraftProbe({
   );
 }
 
-function CardGridSettingsProbe({ initialSettings, routeOptions = [], onSettingChange = () => {} }) {
+function CardGridSettingsProbe({ initialSettings, presetId = '', routeOptions = [], onSettingChange = () => {} }) {
   const [settings, setSettings] = useState(initialSettings);
   return createElement(BlockHudPanelHost, {
     block: {
       id: 'card-grid-settings-probe',
       kind: 'card_grid',
       mode: 'dynamic',
+      ...(presetId ? { presetId } : {}),
       settings,
     },
     routeOptions,
@@ -285,6 +286,25 @@ describe('BlockHudPanelHost', () => {
         cardStyle: 'card2',
         cardShadow: true,
         card1Title: 'Card one',
+      },
+      onSettingChange,
+    }));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Layout & typography' }));
+    const shadowGroup = screen.getByRole('group', { name: 'Card shadow' });
+    fireEvent.click(shadowGroup.querySelectorAll('button')[0]);
+
+    expect(onSettingChange).toHaveBeenCalledWith('cardShadow', false);
+    expect(shadowGroup.querySelectorAll('button')[0].classList.contains('is-active')).toBe(true);
+  });
+
+  it('allows a preset-default shadow to be explicitly turned off', () => {
+    const onSettingChange = vi.fn();
+    render(createElement(CardGridSettingsProbe, {
+      presetId: 'services-directory',
+      initialSettings: {
+        cardStyle: 'none',
+        card1Title: 'Service one',
       },
       onSettingChange,
     }));

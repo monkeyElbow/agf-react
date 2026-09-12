@@ -40,7 +40,14 @@ const blockFilter = new Set(
     .map((value) => value.trim())
     .filter(Boolean),
 );
+const controlFilter = new Set(
+  String(args.get('controls') || process.env.CONTROL_AUDIT_CONTROLS || '')
+    .split(',')
+    .map((value) => value.trim())
+    .filter(Boolean),
+);
 const waitAfterInputMs = Number(args.get('wait-ms') || process.env.CONTROL_AUDIT_WAIT_MS || 400);
+const cdpCommandTimeoutMs = Number(args.get('cdp-timeout-ms') || process.env.CONTROL_AUDIT_CDP_TIMEOUT_MS || 120000);
 
 function getBrowserPath() {
   const candidates = [
@@ -186,7 +193,20 @@ function connectWebSocket(url) {
       await ready;
       const id = ++nextId;
       return new Promise((resolve, reject) => {
-        pending.set(id, { resolve, reject });
+        const timeout = setTimeout(() => {
+          pending.delete(id);
+          reject(new Error(`CDP command timed out after ${cdpCommandTimeoutMs}ms: ${method}`));
+        }, cdpCommandTimeoutMs);
+        pending.set(id, {
+          resolve: (value) => {
+            clearTimeout(timeout);
+            resolve(value);
+          },
+          reject: (error) => {
+            clearTimeout(timeout);
+            reject(error);
+          },
+        });
         socket.send(JSON.stringify({ id, method, params }));
       });
     },
@@ -198,8 +218,9 @@ function connectWebSocket(url) {
 }
 
 function buildBrowserAudit() {
-  return async function auditCurrentPage(waitMs, requestedBlockIds = []) {
+  return async function auditCurrentPage(waitMs, requestedBlockIds = [], requestedControlIds = []) {
     const blockFilter = new Set(requestedBlockIds);
+    const controlFilter = new Set(requestedControlIds);
     const sleep = (duration) => new Promise((resolve) => setTimeout(resolve, duration));
     const authority = window.__AGF_CONTENT_RUNTIME_AUTHORITY__ || {};
     const authorityById = new Map(
@@ -211,10 +232,18 @@ function buildBrowserAudit() {
         .map((section) => [String(section.dataset.blockId || ''), section])
         .filter(([blockId]) => blockId),
     );
+    const matchedControlFilters = new Set();
+    const auditFailures = [];
     const waitForPanel = async () => {
-      for (let attempt = 0; attempt < 20; attempt += 1) {
+      for (let attempt = 0; attempt < 60; attempt += 1) {
         const panel = document.querySelector('.admin-front-hud-tool.is-panel-active');
-        if (panel) return panel;
+        if (panel) {
+          const editorReady = panel.querySelector(
+            '.admin-hud-editor-rail, [data-hud-editor-kind], [data-editor-field-id], .admin-front-hud-note',
+          );
+          const loading = panel.querySelector('.admin-front-hud-editor-loading');
+          if (editorReady && !loading) return panel;
+        }
         await sleep(50);
       }
       return null;
@@ -275,8 +304,22 @@ function buildBrowserAudit() {
         };
       }));
     };
-    const pickControl = (field) => field.querySelector(
-      'input[type="range"], select, input[type="checkbox"], input[type="radio"], textarea, input[type="text"], input[type="search"], [contenteditable="true"], button[role="radio"], button[aria-pressed], button.admin-boolean-pill-option, button.admin-color-swatch-btn, button.admin-highlight-swatch-btn',
+    const pickControl = (field) => {
+      // HTML editors contain a toolbar before the editable surface. Prefer the
+      // actual editor so a bodyHtml probe tests content wiring instead of
+      // accidentally clicking its first formatting swatch.
+      const editable = field.querySelector('[contenteditable="true"], textarea.admin-html-editor-source');
+      if (editable) return editable;
+      return field.querySelector(
+        'input[type="range"], select, input[type="checkbox"], input[type="radio"], textarea, input[type="text"], input[type="search"], button[role="radio"], button[aria-pressed], button.admin-boolean-pill-option, button.admin-color-swatch-btn, button.admin-highlight-swatch-btn',
+      );
+    };
+    const ariaControlSelector = 'input[type="range"], select, input[type="checkbox"], input[type="radio"], textarea, input[type="text"], input[type="search"], [contenteditable="true"]';
+    const findAriaControl = (root, descriptor) => (
+      [...root.querySelectorAll(ariaControlSelector)].filter(
+        (candidate) => isVisible(candidate) && candidate.getAttribute('aria-label') === descriptor.ariaLabel,
+      )[descriptor.ariaOccurrence]
+      || null
     );
     const isVisible = (element) => {
       const ownerPanel = element?.closest('.admin-hud-editor-panel');
@@ -285,6 +328,11 @@ function buildBrowserAudit() {
       }
       return Boolean(element?.getClientRects?.().length || element?.offsetParent || ownerPanel);
     };
+    const isDisabled = (element) => Boolean(
+      element?.disabled
+      || element?.matches?.(':disabled')
+      || element?.closest?.('fieldset[disabled]')
+    );
     const collectControlDescriptors = (panel) => {
       const descriptors = [];
       const seen = new Set();
@@ -292,20 +340,47 @@ function buildBrowserAudit() {
         if (!isVisible(field)) return;
         const fieldId = String(field.dataset.editorFieldId || '').trim();
         const control = pickControl(field);
-        if (!fieldId || !control || seen.has(fieldId)) return;
+        if (
+          !fieldId
+          || !control
+          || field.closest('.admin-hud-editor-rail')
+          || control.closest('.admin-hud-editor-rail')
+          || control.classList.contains('admin-hud-editor-rail-button')
+          || seen.has(fieldId)
+        ) return;
         seen.add(fieldId);
         descriptors.push({ id: fieldId, field, control });
       });
+      const ariaOccurrences = new Map();
       panel.querySelectorAll(
-        'input[type="range"], select, input[type="checkbox"], input[type="radio"], textarea, input[type="text"], input[type="search"], [contenteditable="true"]',
+        ariaControlSelector,
       ).forEach((control) => {
-        if (control.closest('[data-editor-field-id]') || !isVisible(control)) return;
+        if (
+          control.closest('[data-editor-field-id]')
+          || control.closest('.admin-hud-editor-rail')
+          || control.classList.contains('admin-hud-editor-rail-button')
+          || !isVisible(control)
+        ) return;
         const ariaLabel = String(control.getAttribute('aria-label') || '').trim();
-        if (!ariaLabel || seen.has(`aria:${ariaLabel}`)) return;
-        seen.add(`aria:${ariaLabel}`);
-        descriptors.push({ id: `aria:${ariaLabel}`, field: control.parentElement, control });
+        if (!ariaLabel) return;
+        const occurrence = ariaOccurrences.get(ariaLabel) || 0;
+        ariaOccurrences.set(ariaLabel, occurrence + 1);
+        const id = `aria:${ariaLabel}#${occurrence + 1}`;
+        if (seen.has(id)) return;
+        seen.add(id);
+        descriptors.push({
+          id,
+          field: control.parentElement,
+          control,
+          ariaLabel,
+          ariaOccurrence: occurrence,
+        });
       });
-      return descriptors;
+      return descriptors.sort((left, right) => {
+        const leftIsLinkToggle = /open in new window/i.test(left.ariaLabel || '');
+        const rightIsLinkToggle = /open in new window/i.test(right.ariaLabel || '');
+        return Number(rightIsLinkToggle) - Number(leftIsLinkToggle);
+      });
     };
     const dispatchValue = (element, value) => {
       const previousValue = String(element.value ?? '');
@@ -325,7 +400,7 @@ function buildBrowserAudit() {
       element.dispatchEvent(new Event('change', { bubbles: true }));
     };
     const mutateControl = (control, fieldId) => {
-      if (!control || control.disabled) return null;
+      if (!control || isDisabled(control)) return null;
       const initialState = readControlState(control);
       if (control.matches('input[type="range"]')) {
         const min = Number(control.min || 0);
@@ -354,36 +429,44 @@ function buildBrowserAudit() {
       if (control.matches('select')) {
         const options = [...control.options].filter((option) => !option.disabled);
         const next = options.find((option) => option.value !== control.value) || options[0];
-        if (!next) return null;
+        if (!next || next.value === control.value) return null;
         dispatchValue(control, next.value);
         return { control, beforeState: initialState };
       }
       if (control.matches('input[type="checkbox"], input[type="radio"]')) {
-        control.click();
+        const routeLinkControl = control.closest('.admin-route-link-control');
+        if (routeLinkControl) {
+          const hasDestination = [
+            ...routeLinkControl.querySelectorAll('input[type="text"], select'),
+          ].some((candidate) => String(candidate.value || '').trim());
+          if (!hasDestination) return null;
+        }
+        const desiredChecked = !control.checked;
+        const checkedSetter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'checked')?.set;
+        checkedSetter?.call(control, desiredChecked);
+        const reactPropsKey = Object.keys(control).find((key) => key.startsWith('__reactProps$'));
+        const reactOnChange = reactPropsKey ? control[reactPropsKey]?.onChange : null;
+        if (typeof reactOnChange === 'function') {
+          reactOnChange({ target: control, currentTarget: control });
+        } else {
+          control.dispatchEvent(new Event('input', { bubbles: true }));
+          control.dispatchEvent(new Event('change', { bubbles: true }));
+        }
         return { control, beforeState: initialState };
       }
       if (control.matches('button')) {
         const group = control.closest('[role="group"], [role="radiogroup"]') || control.parentElement;
         const candidate = [...(group?.querySelectorAll('button') || [])]
-          .find((button) => !button.disabled && button !== control && !button.classList.contains('is-active'));
+          .find((button) => !isDisabled(button) && button !== control && !button.classList.contains('is-active'));
         const target = candidate || control;
         const beforeState = readControlState(target);
         const controlKey = target.getAttribute('aria-label')
           || target.getAttribute('title')
           || String(target.textContent || '').trim();
-        const reactPropsKey = Object.keys(target).find((key) => key.startsWith('__reactProps$'));
-        const reactOnClick = reactPropsKey ? target[reactPropsKey]?.onClick : null;
-        if (typeof reactOnClick === 'function') {
-          reactOnClick({ target, currentTarget: target, preventDefault() {}, stopPropagation() {} });
-          // Boolean pills are intentionally idempotent (Off/On), so a native
-          // click fallback is safe and covers React builds that do not expose
-          // the delegated handler through the private props key.
-          if (target.classList.contains('admin-boolean-pill-option')) {
-            target.click();
-          }
-        } else {
-          target.click();
-        }
+        // Use the browser's native click path for button controls. This keeps
+        // event ordering identical to an admin click and avoids depending on
+        // React's private prop keys (which can be stale after a rerender).
+        target.click();
         return { control: target, beforeState, controlKey };
       }
       if (control.matches('[contenteditable="true"]')) {
@@ -472,14 +555,21 @@ function buildBrowserAudit() {
         const descriptors = collectControlDescriptors(panel);
         for (const descriptor of descriptors) {
           const { id: fieldId } = descriptor;
+          const matchingFilters = [...controlFilter].filter((filter) => (
+            filter === fieldId || filter === (descriptor.ariaLabel || '')
+          ));
+          if (matchingFilters.length) {
+            matchingFilters.forEach((filter) => matchedControlFilters.add(filter));
+          }
+          if (controlFilter.size && !matchingFilters.length) {
+            continue;
+          }
           if (testedControlIds.has(fieldId)) continue;
           testedControlIds.add(fieldId);
           report.controls += 1;
           const currentPanelBeforeMutation = document.querySelector('.admin-front-hud-tool.is-panel-active') || panel;
           const currentField = fieldId.startsWith('aria:')
-            ? [...currentPanelBeforeMutation.querySelectorAll('[aria-label]')].find((candidate) => (
-              `aria:${candidate.getAttribute('aria-label') || ''}` === fieldId
-            ))
+            ? findAriaControl(currentPanelBeforeMutation, descriptor)
             : currentPanelBeforeMutation.querySelector(`[data-editor-field-id="${CSS.escape(fieldId)}"]`);
           if (!currentField) {
             report.skipped.push(`${blockId}/${fieldId}: field was conditionally replaced or hidden by an earlier staged mutation`);
@@ -492,6 +582,7 @@ function buildBrowserAudit() {
             report.skipped.push(`${blockId}/${fieldId}: control is disabled or has no alternate value`);
             continue;
           }
+          const immediateControlState = readControlState(mutation.control);
           const {
             control: mutatedControl,
             beforeState: beforeControlState,
@@ -501,9 +592,7 @@ function buildBrowserAudit() {
           const after = getStyleSignature(section);
           const currentPanel = document.querySelector('.admin-front-hud-tool.is-panel-active') || panel;
           const refreshedField = fieldId.startsWith('aria:')
-            ? [...currentPanel.querySelectorAll('[aria-label]')].find((candidate) => (
-              `aria:${candidate.getAttribute('aria-label') || ''}` === fieldId
-            ))
+            ? findAriaControl(currentPanel, descriptor)
             : currentPanel.querySelector(`[data-editor-field-id="${CSS.escape(fieldId)}"]`);
           const refreshedButtons = refreshedField?.querySelectorAll?.('button') || [];
           const refreshedButton = mutatedControlKey
@@ -521,7 +610,7 @@ function buildBrowserAudit() {
           }
           const afterControlState = readControlState(afterControl);
           if (beforeControlState === afterControlState) {
-            report.failures.push(`${blockId}/${fieldId}: control did not retain its changed value (before=${JSON.stringify(beforeControlState)}, after=${JSON.stringify(afterControlState)}, target=${JSON.stringify(mutatedControlKey || mutatedControl?.outerHTML?.slice(0, 180) || '')}, afterHtml=${JSON.stringify(afterControl?.outerHTML?.slice(0, 220) || '')})`);
+            report.failures.push(`${blockId}/${fieldId}: control did not retain its changed value (before=${JSON.stringify(beforeControlState)}, immediate=${JSON.stringify(immediateControlState)}, after=${JSON.stringify(afterControlState)}, target=${JSON.stringify(mutatedControlKey || mutatedControl?.outerHTML?.slice(0, 180) || '')}, afterHtml=${JSON.stringify(afterControl?.outerHTML?.slice(0, 220) || '')})`);
           } else if (before === after) {
             report.visualReview.push(`${blockId}/${fieldId}: control changed and remained staged, but rendered block DOM/computed styles did not change`);
           } else {
@@ -535,9 +624,24 @@ function buildBrowserAudit() {
       reports.push(report);
     }
 
+    if (blockFilter.size) {
+      const renderedBlockIds = new Set(reports.map((report) => report.blockId));
+      const missingBlockIds = [...blockFilter].filter((blockId) => !renderedBlockIds.has(blockId));
+      if (missingBlockIds.length) {
+        auditFailures.push(`requested block filter matched no rendered block: ${missingBlockIds.join(', ')}`);
+      }
+    }
+    if (controlFilter.size) {
+      const missingControlFilters = [...controlFilter].filter((filter) => !matchedControlFilters.has(filter));
+      if (missingControlFilters.length) {
+        auditFailures.push(`requested control filter matched no rendered control: ${missingControlFilters.join(', ')}`);
+      }
+    }
+
     return {
       path: window.location.pathname,
       renderedBlocks: reports.length,
+      failures: auditFailures,
       reports,
     };
   };
@@ -610,7 +714,7 @@ async function main() {
           window.fetch = (input, init = {}) => {
             const requestUrl = typeof input === 'string' ? input : input?.url || '';
             const requestMethod = String(init?.method || input?.method || 'GET').toUpperCase();
-            if (requestMethod !== 'GET' && requestMethod !== 'HEAD' && requestUrl.includes('/__dev/content-admin')) {
+            if (${JSON.stringify(Boolean(requestedBaseUrl))} && requestMethod !== 'GET' && requestMethod !== 'HEAD' && requestUrl.includes('/__dev/content-admin')) {
               return Promise.reject(new Error('Browser control audit blocked a shared content-authority write.'));
             }
             return auditFetch(input, init);
@@ -628,10 +732,37 @@ async function main() {
       `,
     });
 
-    const auditExpression = `(${buildBrowserAudit().toString()})(${Math.max(50, waitAfterInputMs)}, ${JSON.stringify([...blockFilter])})`;
+    const auditExpression = `(${buildBrowserAudit().toString()})(${Math.max(50, waitAfterInputMs)}, ${JSON.stringify([...blockFilter])}, ${JSON.stringify([...controlFilter])})`;
     const reports = [];
     for (const pathname of paths) {
+      console.log(`[CONTROL BROWSER AUDIT] ${pathname}`);
       await pageConnection.command('Page.navigate', { url: `${baseUrl}${pathname}` });
+      // Page.navigate resolves before the new document owns the execution
+      // context. Wait for that context before touching localStorage or
+      // reloading; otherwise a fast route can silently keep the HUD disabled.
+      let documentReady = false;
+      for (let attempt = 0; attempt < 80 && !documentReady; attempt += 1) {
+        try {
+          documentReady = Boolean(await evaluate(pageConnection, `(
+            () => window.location.pathname === ${JSON.stringify(pathname)}
+              && document.readyState !== 'loading'
+          )()`));
+        } catch {
+          // The navigation may have replaced the execution context.
+        }
+        if (!documentReady) {
+          await new Promise((resolve) => setTimeout(resolve, 100));
+        }
+      }
+      if (!documentReady) {
+        reports.push({
+          path: pathname,
+          renderedBlocks: 0,
+          reports: [],
+          failures: [`navigation did not settle at ${pathname}`],
+        });
+        continue;
+      }
       // Set the preference again after navigation as a guard against the
       // application's first-run preference read racing the new-document hook.
       await evaluate(pageConnection, `(() => {
@@ -641,8 +772,12 @@ async function main() {
       await pageConnection.command('Page.reload', { ignoreCache: true });
       const readiness = await evaluate(pageConnection, `(
         async () => {
-            for (let attempt = 0; attempt < 80; attempt += 1) {
-            if (document.querySelector('[data-block-id]')) {
+          for (let attempt = 0; attempt < 80; attempt += 1) {
+            const hasBlocks = Boolean(document.querySelector('[data-block-id]'));
+            const hasHud = Boolean(
+              document.querySelector('.admin-front-hud-dock, .admin-front-hud-anchor'),
+            );
+            if (hasBlocks && hasHud) {
               return { ready: true };
             }
             await new Promise((resolve) => setTimeout(resolve, 100));
@@ -652,6 +787,8 @@ async function main() {
             url: window.location.href,
             title: document.title,
             appBooted: Boolean(window.__AGF_APP_BOOTED__),
+            hudDock: Boolean(document.querySelector('.admin-front-hud-dock')),
+            hudAnchors: document.querySelectorAll('.admin-front-hud-anchor').length,
             rootText: document.getElementById('root')?.innerText?.slice(0, 300) || '',
             rootHtml: document.getElementById('root')?.innerHTML?.slice(0, 300) || '',
           };
