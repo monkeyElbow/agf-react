@@ -3,6 +3,12 @@ import { describe, expect, it, vi } from 'vitest';
 import RouteLinkField from './RouteLinkField';
 
 describe('RouteLinkField', () => {
+  it('does not expose a standalone new-window flag without a link target', () => {
+    render(<RouteLinkField onRouteLinkChange={vi.fn()} />);
+
+    expect(screen.getByLabelText('Open in new window').disabled).toBe(true);
+  });
+
   it('makes an approved internal page the primary target and keeps URL override explicit', () => {
     const onRouteLinkChange = vi.fn();
 

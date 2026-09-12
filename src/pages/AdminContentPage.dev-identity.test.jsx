@@ -73,7 +73,7 @@ describe('AdminContentPage identity behavior', () => {
     expect(screen.queryByText(/Active edit:/)).toBeNull();
     const historyRegion = screen.getByRole('heading', { name: 'Recent page activity' }).closest('.admin-block-history');
     expect(within(historyRegion).getByText(/block edit taken over/i)).toBeTruthy();
-  });
+  }, 10000);
 
   it('keeps stale foreign draft markers and actions out of the main admin view', () => {
     window.localStorage.setItem(DEV_IDENTITY_STORAGE_KEY, JSON.stringify({

@@ -56,8 +56,9 @@ describe('block ownership overlay guardrail', () => {
     expect(homeRendererSource).toContain('<BlockSurfaceLayers ownership={ownership}');
     expect(loansSource).toContain("ownership={getOwnershipVisualForBlockId('cta_form')}");
     expect(servicesSource).toContain("ownership={getOwnershipVisualForBlockId('cta_form')}");
-    expect(investmentsSource).toContain("data-block-id=\"hero\"");
-    expect(retirementSource).toContain("data-block-id=\"billboard\"");
+    expect(investmentsSource).toContain("getOwnershipVisualForBlockId('hero')");
+    expect(retirementSource).toContain('<BillboardBlock');
+    expect(retirementSource).toContain("ownership={getOwnershipVisualForBlockId('billboard')}");
     expect(ctaSectionSource).toContain('data-block-id={dynamicCtaBlock?.id || \'cta_form\'}');
   });
 

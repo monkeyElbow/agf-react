@@ -1308,7 +1308,7 @@ describe('dynamic block control wiring', () => {
 
     render(<BillboardBlockEditor block={block} onSettingChange={onSettingChange} />);
 
-    fireEvent.change(screen.getByLabelText(/Line Height/i), { target: { value: '1.15' } });
+    fireEvent.change(screen.getByLabelText('Title line height'), { target: { value: '1.15' } });
 
     expect(onSettingChange).toHaveBeenCalledWith('lineSpacing', 1.15);
 

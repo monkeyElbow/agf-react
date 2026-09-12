@@ -58,6 +58,10 @@ export default function RouteLinkField({
     (routeRefValue && resolvePageRef(page) === String(routeRefValue).trim())
     || (!routeRefValue && page.path === String(value || '').trim())
   ));
+  const hasLinkTarget = Boolean(
+    selectedPage?.path
+    || /^(?:https?:\/\/|\/|#|mailto:|tel:)/i.test(String(value || '').trim()),
+  );
 
   const applyRoutePage = (page) => {
     if (!page?.path) {
@@ -172,6 +176,7 @@ export default function RouteLinkField({
             type="checkbox"
             aria-label={openInNewWindowLabel}
             checked={Boolean(openInNewWindowValue)}
+            disabled={!hasLinkTarget}
             onChange={(event) => onOpenInNewWindowChange?.(event.target.checked)}
           />
           <span>{openInNewWindowLabel}</span>

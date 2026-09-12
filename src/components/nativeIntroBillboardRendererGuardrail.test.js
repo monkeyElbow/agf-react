@@ -13,6 +13,7 @@ function readSource(relativePath) {
 describe('native intro and billboard renderer guardrail', () => {
   it('keeps native intro and billboard merge paths sourced from shared canonical runtimes', () => {
     const source = readSource('./NativeContentPage.jsx');
+    const sharedRendererSource = readSource('./blocks/PageBlocksRenderer.jsx');
     const runtimeSource = readSource('../lib/dynamicPageBlocks.js');
     const compositionSource = readSource('../lib/managedPageComposition.js');
 
@@ -33,8 +34,9 @@ describe('native intro and billboard renderer guardrail', () => {
     expect(source).toContain('.split(/\\s+/)');
     expect(source).toContain("const heroActionRowClass = buildActionRowClassName(heroActionJustify, 'center');");
     expect(source).toContain('className={buildActionRowClassName(introJustify, \'center\')}');
-    expect(source).toContain("className={`${buildActionRowClassName(sectionJustifyToken, 'left')}${dynamicBillboardActionHeaderGapClassName}`}");
-    expect(source).toContain("style={buildActionRowStyle(sectionJustifyToken, 'left')}");
+    expect(sharedRendererSource).toContain('function buildBillboardActionRowStyle(justify, actionGapRem) {');
+    expect(sharedRendererSource).toContain('className={`service-native-action-row${effectiveJustify === \'center\' ? \' is-centered\' : \'\'}');
+    expect(sharedRendererSource).toContain('...buildBillboardActionRowStyle(effectiveJustify, runtime.actionGapRem)');
     expect(source).toContain('function buildManagedBlockSection(block, {');
     expect(source).toContain("if (renderBlock.kind === 'billboard') {");
     expect(source).toContain('buildNativeBillboardSection(renderBlock, { includeTestClassName: isTestPage });');
@@ -144,49 +146,28 @@ describe('native intro and billboard renderer guardrail', () => {
     const loansSource = readSource('../pages/LoansPage.jsx');
     const retirementSource = readSource('../pages/RetirementPage.jsx');
     const servicesSource = readSource('../pages/ServicesPage.jsx');
+    const sharedRendererSource = readSource('./blocks/PageBlocksRenderer.jsx');
     const cssSource = readSource('../styles/service-native.css');
 
-    expect(loansSource).toContain("className={`service-native-section dynamic-billboard loans-native-vision-fuel is-bg-${resolvedVisionFuel.bgTone || 'white'} is-text-${resolvedVisionFuel.textTone || 'dark'}");
-    expect(loansSource).toContain('{resolvedVisionFuel ? (');
-    expect(loansSource).toContain("`is-justify-${resolvedVisionFuel?.justify || 'center'}`");
-    expect(loansSource).toContain('const visionFuelContentMaxWidthPx = Number(resolvedVisionFuel?.contentMaxWidthPx);');
+    expect(loansSource).toContain('<BillboardBlock');
+    expect(loansSource).toContain('block={visionFuelBlock}');
+    expect(loansSource).toContain('extraSectionClassName={`loans-native-vision-fuel${getHudBlockStateClassName(\'vision_fuel\')}`}');
     expect(loansSource).not.toContain('fallbackVisionFuel');
-    expect(loansSource).toContain('Number.isFinite(visionFuelContentMaxWidthPx) && visionFuelContentMaxWidthPx > 0');
-    expect(loansSource).toContain('{visionFuelSubtitle ? (');
-    expect(loansSource).toContain(') : visionFuelBody ? (');
-    expect(loansSource).toContain('visionFuelAction && visionFuelButtonLabel && visionFuelButtonHref');
-    expect(loansSource).toContain('resolvedVisionFuel?.bodyColorClassName || \'\'');
-    expect(loansSource).toContain('loanOptionsBillboard.bodyColorClassName');
     expect(cssSource).toContain('.loans-native-vision-fuel > .ag-panel-rail {');
-    expect(cssSource).toContain('.service-native-section.dynamic-billboard .native-info-section-copy {');
-    expect(cssSource).toContain('.service-native-section.dynamic-billboard > .ag-panel-rail {');
-    expect(cssSource).toContain('width: min(100%, var(--dynamic-billboard-copy-max-width, 68rem));');
-    expect(cssSource).toContain('justify-items: stretch;');
-    expect(cssSource).toContain('.service-native-section.dynamic-billboard .native-info-section-copy.is-justify-left,');
-    expect(cssSource).toContain('justify-self: start;');
-    expect(cssSource).toContain('.service-native-section.dynamic-billboard .native-info-section-copy.is-justify-right,');
-    expect(cssSource).toContain('justify-self: end;');
-    expect(cssSource).toContain('.service-native-section.dynamic-billboard .native-info-section-copy > :is(h2, h3, p, .native-info-rich-html, .native-info-link-list, .service-native-action-row),');
-    expect(cssSource).toContain('width: min(var(--dynamic-billboard-body-max-width, 760px), 100%);');
-    expect(loansSource).toContain('renderHighlightedText(visionFuelTitle, resolvedVisionFuel.titleHighlights)');
-    expect(loansSource).toContain("className={['native-info-section-subtitle', resolvedVisionFuel.subtitleClassName || ''].filter(Boolean).join(' ')}");
-    expect(loansSource).toContain('style={resolvedVisionFuel.subtitleStyle || undefined}');
+    expect(sharedRendererSource).toContain('export function BillboardBlock');
+    expect(sharedRendererSource).toContain('buildCanonicalBlockRuntime(block)');
+    expect(sharedRendererSource).toContain('data-block-id={block?.id || undefined}');
+    expect(sharedRendererSource).toContain('runtime.subtitle ?');
+    expect(sharedRendererSource).toContain('runtime.actionGapRem');
     expect(cssSource).toContain('.loans-native-vision-fuel .native-info-section-subtitle {');
     expect(cssSource).toContain('--dynamic-billboard-copy-max-width: 44rem;');
     expect(cssSource).toContain('--dynamic-billboard-body-max-width: 36ch;');
     expect(cssSource).not.toContain('.loans-native-vision-fuel .loans-native-vision-fuel-title,');
 
-    expect(retirementSource).toContain("className={`service-native-section dynamic-billboard retirement-everyday is-bg-${renderedBillboard.bgTone || 'white'} is-text-${renderedBillboard.textTone || 'dark'}");
-    expect(retirementSource).toContain("className={`service-native-section dynamic-billboard retirement-everyday retirement-rollover-billboard is-bg-${renderedRolloverBillboard.bgTone || 'white'} is-text-${renderedRolloverBillboard.textTone || 'dark'}");
-    expect(retirementSource).toContain('{renderedBillboard.subtitle ? (');
-    expect(retirementSource).toContain(') : renderedBillboard.body ? (');
-    expect(retirementSource).toContain('{renderedRolloverBillboard.subtitle ? (');
-    expect(retirementSource).toContain(') : renderedRolloverBillboard.body ? (');
-    expect(retirementSource).toContain('renderedBillboard.bodyColorClassName || \'\'');
-    expect(retirementSource).toContain('renderedRolloverBillboard.bodyColorClassName || \'\'');
-    expect(retirementSource).toContain('retirementDoTheMathRuntime.bodyColorClassName');
-    expect(retirementSource).toContain("renderedBillboard.action?.label && (renderedBillboard.action?.to || renderedBillboard.action?.href)");
-    expect(retirementSource).toContain("renderedRolloverBillboard.action?.label && (renderedRolloverBillboard.action?.to || renderedRolloverBillboard.action?.href)");
+    expect(retirementSource).toContain('<BillboardBlock');
+    expect(retirementSource).toContain("ownership={getOwnershipVisualForBlockId('rollover_billboard')}");
+    expect(retirementSource).toContain("ownership={getOwnershipVisualForBlockId('billboard')}");
+    expect(retirementSource).not.toContain('fallbackRolloverBillboard');
 
     expect(servicesSource).toContain('bodyColorClassName: runtime.bodyColorClassName');
     expect(servicesSource).toContain('resolvedIntro.bodyColorClassName');

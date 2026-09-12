@@ -529,14 +529,20 @@ function buildBrowserAudit() {
       report.kind = panel.querySelector('[data-hud-editor-kind]')?.dataset.hudEditorKind || report.kind;
       const pageRoot = document.querySelector('.service-native-page, .home-native-page');
       const renderedSection = document.querySelector(`[data-block-id="${CSS.escape(blockId)}"]`);
+      // Some legacy page renderers use a data-block wrapper around the actual
+      // service section. Inspect that inner section for HUD overlay styles so
+      // a content animation on the wrapper is not mistaken for dimming.
+      const hudSection = renderedSection?.matches?.('.service-native-hero, .service-native-intro, .service-native-section')
+        ? renderedSection
+        : renderedSection?.querySelector?.('.service-native-hero, .service-native-intro, .service-native-section');
       report.hudPresentation = {
         pageClass: String(pageRoot?.className || ''),
-        sectionClass: String(renderedSection?.className || ''),
+        sectionClass: String(hudSection?.className || renderedSection?.className || ''),
         dimStrength: pageRoot ? getComputedStyle(pageRoot).getPropertyValue('--ag-admin-front-hud-dim-strength').trim() : '',
-        sectionOverlayOpacity: renderedSection ? getComputedStyle(renderedSection, '::after').opacity : '',
+        sectionOverlayOpacity: hudSection ? getComputedStyle(hudSection, '::after').opacity : '',
       };
-      if (pageRoot?.classList.contains('service-native-page') && renderedSection) {
-        if (!renderedSection.classList.contains('is-hud-focus-target')) {
+      if (pageRoot?.classList.contains('service-native-page') && hudSection) {
+        if (!hudSection.classList.contains('is-hud-focus-target')) {
           report.failures.push(`${blockId}/hudFocus: active service block did not receive is-hud-focus-target`);
         }
         if (Number(report.hudPresentation.sectionOverlayOpacity) > 0.001) {
@@ -621,6 +627,19 @@ function buildBrowserAudit() {
       const closeButton = panel.querySelector('.admin-front-hud-tool-close');
       closeButton?.click();
       await sleep(50);
+      const pageAfterClose = document.querySelector('.service-native-page, .home-native-page, .loans-native-page, .rates-page');
+      const staleFocusTargets = pageAfterClose
+        ? pageAfterClose.querySelectorAll('.is-hud-focus-target, .is-hud-dimmed').length
+        : 0;
+      const staleActivePanel = Boolean(document.querySelector('.admin-front-hud-tool.is-panel-active'));
+      report.hudAfterClose = {
+        hasActivePanel: staleActivePanel,
+        staleFocusTargets,
+        pageHasActiveHudClass: Boolean(pageAfterClose?.classList.contains('has-active-front-hud-panel')),
+      };
+      if (staleActivePanel || staleFocusTargets || report.hudAfterClose.pageHasActiveHudClass) {
+        report.failures.push(`${blockId}/hudClose: HUD state remained active after closing the editor (${JSON.stringify(report.hudAfterClose)})`);
+      }
       reports.push(report);
     }
 

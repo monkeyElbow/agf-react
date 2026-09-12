@@ -1710,7 +1710,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
     const billboardSection = billboardHeading.closest('section');
     const billboardRail = billboardSection?.querySelector('.ag-panel-rail');
     const billboardCopy = billboardSection?.querySelector('.native-info-section-copy');
-    const billboardSubtitle = billboardCopy?.querySelector('h3');
+    const billboardSubtitle = billboardCopy?.querySelector('.native-info-section-subtitle');
 
     expect(billboardSection?.getAttribute('style') || '').toContain('--dynamic-billboard-padding-top: 5.25rem');
     expect(billboardSection?.getAttribute('style') || '').toContain('--dynamic-billboard-padding-bottom: 6.5rem');
