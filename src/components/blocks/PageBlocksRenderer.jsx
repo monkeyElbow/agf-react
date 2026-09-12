@@ -357,7 +357,7 @@ function renderTextWithStrong(source) {
   });
 }
 
-function TopStripBlock({ block, resolveTo, ownership, hudAnchor }) {
+function TopStripBlock({ block, resolveTo, ownership, hudAnchor, sectionHudClassName = '' }) {
   const runtime = buildCanonicalBlockRuntime(block);
   if (!runtime) {
     return null;
@@ -375,7 +375,7 @@ function TopStripBlock({ block, resolveTo, ownership, hudAnchor }) {
 
   return (
     <section
-      className={`${stripClassName}${ownership?.className || ''}`}
+      className={`${stripClassName}${sectionHudClassName}${ownership?.className || ''}`}
       data-block-id={block?.id || undefined}
       style={{ '--strip-font-size': `${runtime.sectionFontSizeRem}rem`, '--strip-item-gap': `${runtime.itemGapRem}rem` }}
     >
@@ -407,7 +407,7 @@ function TopStripBlock({ block, resolveTo, ownership, hudAnchor }) {
   );
 }
 
-function HeroBlock({ block, resolveTo, heroHud, ownership, hudAnchor }) {
+function HeroBlock({ block, resolveTo, heroHud, ownership, hudAnchor, sectionHudClassName = '' }) {
   const source = getBlockSettingsSource(block);
   const legacyLine1Text = [String(source.eyebrowPrefix || '').trim(), String(source.highlight || '').trim()]
     .filter(Boolean)
@@ -524,7 +524,7 @@ function HeroBlock({ block, resolveTo, heroHud, ownership, hudAnchor }) {
   return (
     <section
       ref={heroHud?.sectionRef || undefined}
-      className={`${heroClassName}${ownership?.className || ''}`}
+      className={`${heroClassName}${sectionHudClassName}${ownership?.className || ''}`}
       data-block-id={block?.id || undefined}
     >
       <BlockSurfaceLayers ownership={ownership} hudAnchor={hudAnchor} backgroundEffects={<BlockBackgroundEffects effects={getBlockBackgroundEffects(block)} />} />
@@ -611,7 +611,7 @@ function HeroBlock({ block, resolveTo, heroHud, ownership, hudAnchor }) {
   );
 }
 
-function ServicesGridBlock({ block, resolveTo, ownership, hudAnchor }) {
+function ServicesGridBlock({ block, resolveTo, ownership, hudAnchor, sectionHudClassName = '' }) {
   const runtime = buildCanonicalBlockRuntime(block);
   if (!runtime) {
     return null;
@@ -619,7 +619,7 @@ function ServicesGridBlock({ block, resolveTo, ownership, hudAnchor }) {
 
   return (
     <section
-      className={`home-native-services${ownership?.className || ''}`}
+      className={`home-native-services${sectionHudClassName}${ownership?.className || ''}`}
       data-block-id={block.id || 'services_grid'}
       style={{
         '--home-services-heading-size': `${runtime.headingSizeRem}rem`,
@@ -685,14 +685,14 @@ function ServicesGridBlock({ block, resolveTo, ownership, hudAnchor }) {
   );
 }
 
-function ImpactStatBlock({ block, resolveTo, ownership, hudAnchor }) {
+function ImpactStatBlock({ block, resolveTo, ownership, hudAnchor, sectionHudClassName = '' }) {
   const runtime = buildCanonicalBlockRuntime(block);
   if (!runtime) {
     return null;
   }
 
   return (
-    <section className={`home-native-impact${ownership?.className || ''}`} data-block-id={block.id || 'impact_stat'}>
+    <section className={`home-native-impact${sectionHudClassName}${ownership?.className || ''}`} data-block-id={block.id || 'impact_stat'}>
       <BlockSurfaceLayers ownership={ownership} hudAnchor={hudAnchor} backgroundEffects={<BlockBackgroundEffects effects={getBlockBackgroundEffects(block)} />} />
       <HomeImpactStoryFeature
         headline={`${runtime.titlePrefix} ${runtime.highlight}.`}
@@ -957,6 +957,7 @@ export function BillboardBlock({
   resolveTo,
   ownership,
   hudAnchor,
+  sectionHudClassName = '',
   extraSectionClassName = '',
   backgroundEffects: backgroundEffectsOverride,
   resolveDocumentLink: resolveDocumentLinkProp,
@@ -1032,6 +1033,7 @@ export function BillboardBlock({
     `is-text-${normalizePanelTextTone(runtime.textTone, 'white')}`,
     runtime.sectionClassName || '',
     extraSectionClassName,
+    sectionHudClassName,
     runtime.backgroundEffects?.enabled ? 'has-block-background-effects' : '',
     runtime.titleTrackingOverride ? 'has-title-tracking-override' : '',
     ownership?.className || '',
@@ -1405,7 +1407,7 @@ function buildLegacyHomeCtaFields(block) {
   ];
 }
 
-function CtaFormBlock({ block, ownership, hudAnchor }) {
+function CtaFormBlock({ block, ownership, hudAnchor, sectionHudClassName = '' }) {
   const [values, setValues] = useState({});
   const [submitted, setSubmitted] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -1496,7 +1498,7 @@ function CtaFormBlock({ block, ownership, hudAnchor }) {
 
   return (
     <section
-      className={`service-native-section native-dynamic-cta is-bg-${bgTone} is-text-${textTone}${sectionClassName ? ` ${sectionClassName}` : ''}${presentationClassName ? ` ${presentationClassName}` : ''}${runtime.backgroundEffects?.enabled ? ' has-block-background-effects' : ''}${ownership?.className || ''}`}
+      className={`service-native-section native-dynamic-cta is-bg-${bgTone} is-text-${textTone}${sectionClassName ? ` ${sectionClassName}` : ''}${presentationClassName ? ` ${presentationClassName}` : ''}${runtime.backgroundEffects?.enabled ? ' has-block-background-effects' : ''}${sectionHudClassName}${ownership?.className || ''}`}
       data-block-id={block?.id || undefined}
       data-cta-display-mode={runtime?.displayMode || 'default'}
       data-cta-trigger-mode={runtime?.triggerMode || 'default'}
@@ -1656,7 +1658,7 @@ function CtaFormBlock({ block, ownership, hudAnchor }) {
   );
 }
 
-function NewsletterBlock({ block, ownership, hudAnchor }) {
+function NewsletterBlock({ block, ownership, hudAnchor, sectionHudClassName = '' }) {
   const source = getBlockSettingsSource(block);
   const bgTone = normalizePanelBgTone(source.bgTone);
   const textTone = normalizePanelTextTone(
@@ -1674,7 +1676,7 @@ function NewsletterBlock({ block, ownership, hudAnchor }) {
   const body = String(source.body || '').trim();
 
   return (
-    <section className={`home-native-newsletter is-bg-${bgTone} is-text-${textTone}${ownership?.className || ''}`} data-block-id={block?.id || undefined}>
+    <section className={`home-native-newsletter is-bg-${bgTone} is-text-${textTone}${sectionHudClassName}${ownership?.className || ''}`} data-block-id={block?.id || undefined}>
       <BlockSurfaceLayers ownership={ownership} hudAnchor={hudAnchor} backgroundEffects={<BlockBackgroundEffects effects={getBlockBackgroundEffects(block)} />} />
       <div className="ag-panel-rail">
         <h2 className={titleClassName || undefined}>
@@ -1697,7 +1699,7 @@ function NewsletterBlock({ block, ownership, hudAnchor }) {
   );
 }
 
-function SiteFeatureBlock({ block, resolveTo, ownership, hudAnchor }) {
+function SiteFeatureBlock({ block, resolveTo, ownership, hudAnchor, sectionHudClassName = '' }) {
   const runtime = buildCanonicalBlockRuntime({
     ...block,
     kind: block.kind || block.type || 'site_feature',
@@ -1720,7 +1722,7 @@ function SiteFeatureBlock({ block, resolveTo, ownership, hudAnchor }) {
 
   if (runtime.runtimeKey === 'home_impact_story') {
     return (
-      <section className={`home-native-impact home-impact-story${ownership?.className || ''}`} data-block-id={block?.id || undefined}>
+      <section className={`home-native-impact home-impact-story${sectionHudClassName}${ownership?.className || ''}`} data-block-id={block?.id || undefined}>
         <BlockSurfaceLayers ownership={ownership} hudAnchor={hudAnchor} backgroundEffects={<BlockBackgroundEffects effects={getBlockBackgroundEffects(block)} />} />
         <HomeImpactStoryFeature
           headline={runtime.title}
@@ -1735,7 +1737,7 @@ function SiteFeatureBlock({ block, resolveTo, ownership, hudAnchor }) {
 
   if (runtime.runtimeKey === 'home_services_feature_animation') {
     return (
-      <section className={`home-services-feature${ownership?.className || ''}`} data-block-id={block?.id || undefined}>
+      <section className={`home-services-feature${sectionHudClassName}${ownership?.className || ''}`} data-block-id={block?.id || undefined}>
         <BlockSurfaceLayers ownership={ownership} hudAnchor={hudAnchor} backgroundEffects={<BlockBackgroundEffects effects={getBlockBackgroundEffects(block)} />} />
         <HomeServicesFeatureAnimation
           headline={runtime.title}
@@ -1749,7 +1751,7 @@ function SiteFeatureBlock({ block, resolveTo, ownership, hudAnchor }) {
 
   if (runtime.runtimeKey === 'legacy_giving_stewardship_story') {
     return (
-      <section className={`service-native-section legacy-giving-stewardship legacy-stewardship-story${ownership?.className || ''}`} data-block-id={block?.id || undefined}>
+      <section className={`service-native-section legacy-giving-stewardship legacy-stewardship-story${sectionHudClassName}${ownership?.className || ''}`} data-block-id={block?.id || undefined}>
         <BlockSurfaceLayers ownership={ownership} hudAnchor={hudAnchor} backgroundEffects={<BlockBackgroundEffects effects={getBlockBackgroundEffects(block)} />} />
         <LegacyGivingStewardshipStoryFeature
           headline={runtime.title}
@@ -1763,7 +1765,7 @@ function SiteFeatureBlock({ block, resolveTo, ownership, hudAnchor }) {
 
   if (runtime.runtimeKey === 'impact_proof_story') {
     return (
-      <section className={`service-native-section impact-native-stats impact-proof-story${ownership?.className || ''}`} data-block-id={block?.id || undefined}>
+      <section className={`service-native-section impact-native-stats impact-proof-story${sectionHudClassName}${ownership?.className || ''}`} data-block-id={block?.id || undefined}>
         <BlockSurfaceLayers ownership={ownership} hudAnchor={hudAnchor} backgroundEffects={<BlockBackgroundEffects effects={getBlockBackgroundEffects(block)} />} />
         <ImpactProofStoryFeature
           intro={runtime.featureIntro || undefined}
@@ -1785,12 +1787,13 @@ function SiteFeatureBlock({ block, resolveTo, ownership, hudAnchor }) {
         resolveTo={resolveTo}
         ownership={ownership}
         hudAnchor={hudAnchor}
+        sectionHudClassName={sectionHudClassName}
       />
     );
   }
 
   return (
-    <section className={`service-native-section service-native-article-teaser is-article-feature native-dynamic-site-feature${runtime.sectionClassName ? ` ${runtime.sectionClassName}` : ''}${ownership?.className || ''}`} data-block-id={block?.id || undefined}>
+    <section className={`service-native-section service-native-article-teaser is-article-feature native-dynamic-site-feature${runtime.sectionClassName ? ` ${runtime.sectionClassName}` : ''}${sectionHudClassName}${ownership?.className || ''}`} data-block-id={block?.id || undefined}>
       <BlockSurfaceLayers ownership={ownership} hudAnchor={hudAnchor} backgroundEffects={<BlockBackgroundEffects effects={getBlockBackgroundEffects(block)} />} />
       <div className="ag-panel-rail-wide">
         <div className="service-native-dark-feature">
@@ -1823,7 +1826,7 @@ function SiteFeatureBlock({ block, resolveTo, ownership, hudAnchor }) {
   );
 }
 
-function FeaturePanelBlock({ block, resolveTo, ownership, hudAnchor }) {
+function FeaturePanelBlock({ block, resolveTo, ownership, hudAnchor, sectionHudClassName = '' }) {
   const runtime = buildCanonicalBlockRuntime({
     ...block,
     kind: block.kind || block.type || 'feature_panel',
@@ -1846,7 +1849,7 @@ function FeaturePanelBlock({ block, resolveTo, ownership, hudAnchor }) {
     : null;
 
   return (
-    <section className={`service-native-section service-native-feature-panel native-dynamic-feature-panel${runtime.sectionClassName ? ` ${runtime.sectionClassName}` : ''}${ownership?.className || ''}`} data-block-id={block?.id || undefined}>
+    <section className={`service-native-section service-native-feature-panel native-dynamic-feature-panel${runtime.sectionClassName ? ` ${runtime.sectionClassName}` : ''}${sectionHudClassName}${ownership?.className || ''}`} data-block-id={block?.id || undefined}>
       <BlockSurfaceLayers ownership={ownership} hudAnchor={hudAnchor} backgroundEffects={<BlockBackgroundEffects effects={getBlockBackgroundEffects(block)} />} />
       <div className="ag-panel-rail-wide">
         <div className="service-native-dark-feature">
@@ -1891,6 +1894,7 @@ export function ColumnsBlock({
   resolveTo,
   ownership,
   hudAnchor,
+  sectionHudClassName = '',
   sectionId = '',
   extraSectionClassName = '',
 }) {
@@ -2057,6 +2061,7 @@ export function ColumnsBlock({
           presetRuntimeClassName,
           sectionClassName,
           String(extraSectionClassName || '').trim(),
+          sectionHudClassName,
           String(ownership?.className || '').trim(),
         ].filter(Boolean).join(' ')}
         data-block-id={dynamicBlock?.id || undefined}
@@ -2272,7 +2277,7 @@ export function ColumnsBlock({
   );
 }
 
-function RequestFormBlock({ block, ownership, hudAnchor }) {
+function RequestFormBlock({ block, ownership, hudAnchor, sectionHudClassName = '' }) {
   const runtime = buildCanonicalBlockRuntime({
     ...block,
     kind: block.kind || block.type || 'request_form',
@@ -2285,7 +2290,7 @@ function RequestFormBlock({ block, ownership, hudAnchor }) {
   return (
     <section
       id={runtime.anchorId || undefined}
-      className={`service-native-section ${runtime.sectionClassName}${runtime.backgroundEffects?.enabled ? ' has-block-background-effects' : ''}${ownership?.className || ''}`}
+      className={`service-native-section ${runtime.sectionClassName}${runtime.backgroundEffects?.enabled ? ' has-block-background-effects' : ''}${sectionHudClassName}${ownership?.className || ''}`}
       style={runtime.sectionStyle}
       data-block-id={block?.id || undefined}
     >
@@ -2398,6 +2403,11 @@ export default function PageBlocksRenderer({
           return null;
         }
         const hudAnchor = resolveHudAnchor(renderBlock);
+        const blockId = String(renderBlock?.id || '').trim();
+        const blockHudPanel = blockId ? hudAnchorsByBlockId?.[blockId] : null;
+        const sectionHudClassName = !hudDockCollapsed && activeHudPanelId && blockHudPanel?.panelId
+          ? (blockHudPanel.panelId === activeHudPanelId ? ' is-hud-focus-target' : ' is-hud-dimmed')
+          : '';
         const ownership = ownershipEnabled
           ? getBlockOwnershipVisual(
             getBlockCollaboration(ownershipPathname, renderBlock?.id),
@@ -2417,6 +2427,7 @@ export default function PageBlocksRenderer({
             resolveTo={resolveTo}
             heroHud={blockKind === 'hero' ? heroHud : null}
             hudAnchor={hudAnchor}
+            sectionHudClassName={sectionHudClassName}
             ownership={blockOwnership}
           />
         );

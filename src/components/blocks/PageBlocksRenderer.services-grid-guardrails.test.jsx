@@ -84,8 +84,8 @@ describe('home services grid renderer guardrail', () => {
     expect(source).toContain("from '../../lib/dynamicPageBlocks';");
     expect(source).toContain('const runtime = buildCanonicalBlockRuntime(block);');
     expect(source).not.toContain("kind: 'services_grid',");
-    expect(source).toContain('function ServicesGridBlock({ block, resolveTo, ownership, hudAnchor }) {');
-    expect(source).toContain("className={`home-native-services${ownership?.className || ''}`}");
+    expect(source).toContain('function ServicesGridBlock({ block, resolveTo, ownership, hudAnchor, sectionHudClassName = \'\' }) {');
+    expect(source).toContain("className={`home-native-services${sectionHudClassName}${ownership?.className || ''}`}");
     expect(source).toContain("style={{ '--home-services-card-padding-y': `${runtime.cardPaddingRem}rem` }}");
     expect(source).toContain('<BlockSurfaceLayers ownership={ownership}');
     expect(source).toContain("const Renderer = blockRenderers[blockKind];");

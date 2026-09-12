@@ -6369,15 +6369,23 @@ export function SiteFeatureBlockEditor({ block, onSettingChange, routeOptions = 
     fieldById.get('titleTone'),
     fieldById.get('bodyTone'),
   ].filter((field) => field && allowedFieldIds.has(field.id));
-  const [draftValues, setDraftValues] = useState(() => readEditorLocalDrafts(settings, SITE_FEATURE_LOCAL_DRAFT_FIELD_IDS));
+  const [draftValues, setDraftValues] = useState(() => {
+    const nextDrafts = readEditorLocalDrafts(settings, SITE_FEATURE_LOCAL_DRAFT_FIELD_IDS);
+    nextDrafts.buttonUrl = resolveCanonicalRouteLinkEditableHref(settings, 'buttonUrl', 'buttonPageRef');
+    return nextDrafts;
+  });
   const [dirtyFieldIds, setDirtyFieldIds] = useState([]);
   const commitTimersRef = useRef(new Map());
   const protectedDraftValuesRef = useRef(new Map());
   const latestSourceRevisionRef = useRef(normalizeEditorDraftRevision(effectiveSourceRevision));
-  const externalDraftValues = useMemo(
-    () => readEditorLocalDrafts(settings, SITE_FEATURE_LOCAL_DRAFT_FIELD_IDS),
-    [settings],
-  );
+  const externalDraftValues = useMemo(() => {
+    const nextDrafts = readEditorLocalDrafts(settings, SITE_FEATURE_LOCAL_DRAFT_FIELD_IDS);
+    // Site features migrated to canonical links do not carry the legacy
+    // buttonUrl field. Keep the editor's buffered URL draft aligned with the
+    // same canonical source used by the renderer and checkbox state.
+    nextDrafts.buttonUrl = resolveCanonicalRouteLinkEditableHref(settings, 'buttonUrl', 'buttonPageRef');
+    return nextDrafts;
+  }, [settings]);
 
   useEffect(() => () => {
     commitTimersRef.current.forEach((timerId) => window.clearTimeout(timerId));

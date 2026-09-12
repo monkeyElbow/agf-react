@@ -88,6 +88,24 @@ describe('PageBlocksRenderer ownership visibility', () => {
     expect(container.querySelector('.admin-front-hud-anchor-icon-image')?.getAttribute('src')).toBe('/icons/hero.svg');
   });
 
+  it('applies the shared HUD focus state to the active block', () => {
+    const { container } = renderRenderer({
+      hudAnchorsByBlockId: {
+        hero: {
+          panelId: 'hero-main',
+          label: 'Hero',
+          anchorSelector: '[data-block-id="hero"]',
+        },
+      },
+      activeHudPanelId: 'hero-main',
+      hudDockCollapsed: false,
+      onHudAnchorClick: vi.fn(),
+    });
+
+    expect(container.querySelector('[data-block-id="hero"]')?.className).toContain('is-hud-focus-target');
+    expect(container.querySelector('[data-block-id="hero"]')?.className).not.toContain('is-hud-dimmed');
+  });
+
   it('uses the shared mango dimming layer for hidden blocks while keeping the block visible to HUD authors', () => {
     const { container } = renderRenderer({
       ownershipEnabled: true,

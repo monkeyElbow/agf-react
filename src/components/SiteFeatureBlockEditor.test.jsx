@@ -97,6 +97,30 @@ describe('SiteFeatureBlockEditor', () => {
     expect(onSettingChange).not.toHaveBeenCalledWith('buttonPageRef', '/forms');
   });
 
+  it('loads canonical CTA links into the shared editor controls', () => {
+    render(
+      createElement(SiteFeatureBlockEditor, {
+        block: createBlock({
+          settings: {
+            buttonUrl: '',
+            buttonPageRef: '',
+            buttonLinkJson: JSON.stringify({
+              kind: 'external',
+              href: 'https://secure.agfinancial.org/',
+              openInNewWindow: true,
+            }),
+          },
+        }),
+        onSettingChange: vi.fn(),
+        routeOptions: [],
+      }),
+    );
+
+    expect(screen.getByLabelText('CTA URL / Path override').value).toBe('https://secure.agfinancial.org/');
+    expect(screen.getByLabelText('Open CTA in new window').checked).toBe(true);
+    expect(screen.getByLabelText('Open CTA in new window').disabled).toBe(false);
+  });
+
   it('exposes the home impact story metrics as a repeatable collection', () => {
     render(
       createElement(SiteFeatureBlockEditor, {
