@@ -25,7 +25,7 @@ describe('dynamic grid contrast guardrail', () => {
     expect(runtimeSource).toContain('Background and card-title color are separate authored controls.');
     expect(runtimeSource).toContain('const bodyTone = normalizeGridToneToken(');
 
-    expect(editorSource).toContain('const titleToneField = titleToneFieldBase;');
+    expect(editorSource).toContain('const titleToneField = cardTitlesAreHidden ? null : titleToneFieldBase;');
     expect(editorSource).toContain('const bodyToneField = bodyToneFieldBase;');
     expect(editorSource).toContain("onSettingChange('bgTone', nextBgTone);");
     expect(editorSource).not.toContain("onSettingChange('titleTone', getGridSafeToneForBg(settings.titleTone, nextBgTone");

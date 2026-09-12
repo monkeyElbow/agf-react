@@ -1951,6 +1951,8 @@ describe('dynamic block control wiring', () => {
 
   it('keeps grid title/body tone palettes authored on light backgrounds', () => {
     const block = getDynamicBlock('card_grid');
+    block.settings.cardStyle = 'card1';
+    block.settings.sectionClassName = '';
     block.settings.bgTone = 'white';
     block.settings.titleTone = 'white';
     block.settings.bodyTone = 'white';
@@ -1969,6 +1971,8 @@ describe('dynamic block control wiring', () => {
 
   it('keeps grid title/body tone palettes authored on dark backgrounds', () => {
     const block = getDynamicBlock('card_grid');
+    block.settings.cardStyle = 'card1';
+    block.settings.sectionClassName = '';
     block.settings.bgTone = 'blue';
     block.settings.titleTone = 'super-grey';
     block.settings.bodyTone = 'super-grey';

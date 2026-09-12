@@ -677,6 +677,13 @@ describe('editor parity coverage', () => {
     EDITOR_PARITY_TYPES.forEach((editorType) => {
       const kind = SAMPLE_KIND_BY_EDITOR_TYPE[editorType];
       const block = getDynamicBlock(kind);
+      // The first seeded card_grid is the planned-giving centered presentation,
+      // which intentionally hides card titles. Use the flexible card-grid
+      // shape for the parity contract that checks title-tone controls.
+      if (kind === 'card_grid') {
+        block.settings.cardStyle = 'card1';
+        block.settings.sectionClassName = '';
+      }
       const contract = EDITOR_PARITY_CONTRACT[editorType];
       const assertions = PARITY_ASSERTIONS[editorType];
 

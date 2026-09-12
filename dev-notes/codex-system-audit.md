@@ -181,3 +181,63 @@ Next weakest point: Apply the same computed-property proof to the canonical
 card surface controls—background tone, outline, shadow, and text tones—on one
 bounded block family, then inspect publish acknowledgment/error handling for
 that family.
+
+### 2026-09-12 — card appearance computed-property audit
+
+Scope: Dynamic card-grid background, outline, shadow, and text-tone controls.
+The contract audited was `control → setting key → renderer/CSS variable →
+target selector → exact computed property`.
+
+Checks:
+
+- The browser audit now maps `bgTone` to `.service-native-section` computed
+  `background`, outline controls to `.service-native-card` computed `border`,
+  `border-color`, and `border-width`, shadow controls to computed
+  `box-shadow`, and text tones to computed `color` on card `h3` and `p`/`li`
+  targets. Inline variables and style attributes are not accepted as proof.
+- Sequential representative browser probes passed 17 appearance control
+  changes across charitable trusts, charitable gift annuities, Careers, and
+  403(b), including trust funding background/shadow/body tone, trust
+  differences title/body tone, CGA body tone, Careers and 403(b) background,
+  shadow, title/body tone, strategy outline tone/width, and shadow opacity.
+- Every browser probe also verified the HUD close state had no active panel,
+  stale focus target, or page-level active-HUD class.
+- `npm run lint`, `npm run scan:system`, and `npm run build` passed.
+- Full suite passed: 323 Vitest files / 2,092 tests, plus the 2 rates-import
+  Node tests. `git diff --check` passed.
+
+Findings and fixes:
+
+- The computed-proof harness had been querying the wrong property spelling for
+  border and shadow, and background proofs missed sections where the root was
+  itself the target. The mapping now uses CSS property names and root-aware
+  target selection.
+- Page-specific legacy card CSS overrode shared body/title variables in trust,
+  CGA, Careers, life/group-life, generosity, and rollover card families. Those
+  consumers now use the shared dynamic-grid body/title variables with explicit
+  route fallbacks.
+- Legacy alternating title selectors could mask an intentional title swatch.
+  The shared renderer now carries an explicit title-tone override class and a
+  final shared rule, while default authored highlight accents remain intact.
+- Changing outline tone or width now explicitly enables the outline, so a
+  value cannot be saved into an inactive Default outline mode.
+- Presentations whose card titles are intentionally hidden no longer expose an
+  unprovable card-title color control. Parity tests use a visible-title sample
+  for the generic card-grid contract.
+- Added guardrails for computed appearance mappings, shared text-tone
+  consumers, outline activation, and hidden-title editor parity.
+
+Unresolved risks:
+
+- The system scan still inventories 430 visual effects without independent
+  unit/runtime verification. This pass proves the bounded card appearance
+  family, not every visual effect.
+- Visual regression, keyboard/a11y smoke, and publish acknowledgment/error
+  paths remain separate gates. Some ownership-blocked routes were not probed;
+  no product failure was inferred from those routes.
+- The pre-existing `dev-data/content-admin-shared.json` remained untouched
+  and unstaged.
+
+Next weakest point: Audit publish acknowledgment and error handling for the
+same card-appearance controls, then take one bounded background-lights/motion
+family and prove its pseudo-element or layer-level computed effects.

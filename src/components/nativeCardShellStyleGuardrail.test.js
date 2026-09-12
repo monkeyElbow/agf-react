@@ -58,4 +58,29 @@ describe('native card shell style guardrail', () => {
       expect(hasSharedPaddingDeclaration, `${selector} should consume the shared card padding`).toBe(true);
     });
   });
+
+  it('does not expose card-title color when a card-grid presentation intentionally hides card titles', () => {
+    const editorSource = readSource('./block-editors/migratedBlockEditors.jsx');
+
+    expect(editorSource).toContain('const cardTitlesAreHidden = normalizeGridCardStyleToken(settings.cardStyle) === \'planned-giving-centered\'');
+    expect(editorSource).toContain('const titleToneField = cardTitlesAreHidden ? null : titleToneFieldBase;');
+    expect(editorSource).toContain("sectionClassTokens.includes('legacy-child-native-assets')");
+  });
+
+  it('keeps page-specific card copy attached to the shared text-tone variables', () => {
+    const source = readSource('../styles/service-native.css');
+
+    expect(source).toContain('color: var(--dynamic-grid-body-color, var(--ag-color-super-grey));');
+    expect(source).toContain('color: var(--dynamic-grid-body-color, rgba(65, 64, 66, 0.84));');
+    expect(source).toContain('color: var(--dynamic-grid-alt-title-one, var(--dynamic-grid-card-title-color, var(--ag-color-atlantean)));');
+    expect(source).toContain('color: var(--dynamic-grid-card-title-color, #fff) !important;');
+    expect(source).toContain('.is-title-tone-override .service-native-card h3');
+  });
+
+  it('activates the explicit outline contract when an admin changes its tone or width', () => {
+    const editorSource = readSource('./block-editors/migratedBlockEditors.jsx');
+
+    expect(editorSource).toContain("if (['cardOutlineTone', 'cardOutlineWidth'].includes(fieldId)) {");
+    expect(editorSource).toContain("onSettingChange('cardOutline', true);");
+  });
 });

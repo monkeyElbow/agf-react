@@ -6977,6 +6977,9 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
     || String(settings.sectionClassName || '').split(/\s+/).includes('legacy-giving-types')
     || String(settings.sectionClassName || '').split(/\s+/).includes('legacy-child-native-trusts-differences')
     || normalizeGridCardStyleToken(settings.cardStyle) === 'planned-giving-centered';
+  const sectionClassTokens = String(settings.sectionClassName || '').split(/\s+/).filter(Boolean);
+  const cardTitlesAreHidden = normalizeGridCardStyleToken(settings.cardStyle) === 'planned-giving-centered'
+    || sectionClassTokens.includes('legacy-child-native-assets');
   const hasCardBulletContent = Array.from({ length: 8 }, (_, index) => index + 1).some((slot) => (
     parseGridBulletList(settings[`card${slot}ListJson`]).some(Boolean)
     || /<li\b/i.test(String(settings[`card${slot}Body`] || settings[`card${slot}BodyHtml`] || ''))
@@ -7010,8 +7013,8 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
     : null;
   const gridBgTone = normalizeGridBgTone(settings.bgTone);
   // Color controls are authored independently. Changing the section surface
-  // must not hide or rewrite the title/body color choices.
-  const titleToneField = titleToneFieldBase;
+  // must not hide or rewrite any visible title/body color choices.
+  const titleToneField = cardTitlesAreHidden ? null : titleToneFieldBase;
   const bodyToneField = bodyToneFieldBase;
   const cardStyleField = useMemo(() => {
     if (!cardStyleFieldBase) {
@@ -7236,7 +7239,7 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
     // Default preserves the selected card skin's natural outline. Once an
     // admin adjusts border width, make that intent explicit so the value is
     // immediately visible instead of silently remaining in Default mode.
-    if (fieldId === 'cardOutlineWidth') {
+    if (['cardOutlineTone', 'cardOutlineWidth'].includes(fieldId)) {
       onSettingChange('cardOutline', true);
     }
     onSettingChange(fieldId, nextValue);

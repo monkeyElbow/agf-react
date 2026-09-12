@@ -14,4 +14,15 @@ describe('editor browser audit guardrails', () => {
     expect(source).not.toContain("style: node.getAttribute('style') || ''");
     expect(source).not.toContain('const cssVars = {}');
   });
+
+  it('maps card appearance controls to computed properties on their intended targets', () => {
+    expect(source).toContain("bgTone: [{ selector: '.service-native-section', property: 'background', includeRoot: true }]");
+    expect(source).toContain("cardOutline: [{ selector: '.service-native-card', property: 'border' }]");
+    expect(source).toContain("cardOutlineTone: [{ selector: '.service-native-card', property: 'border-color' }]");
+    expect(source).toContain("cardOutlineWidth: [{ selector: '.service-native-card', property: 'border-width' }]");
+    expect(source).toContain("cardShadow: [{ selector: '.service-native-card', property: 'box-shadow' }]");
+    expect(source).toContain("cardShadowOpacity: [{ selector: '.service-native-card', property: 'box-shadow' }]");
+    expect(source).toContain("titleTone: [{ selector: '.service-native-card h3', property: 'color' }]");
+    expect(source).toContain("bodyTone: [{ selector: '.service-native-card :is(p, li)', property: 'color' }]");
+  });
 });

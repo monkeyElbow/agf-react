@@ -303,14 +303,32 @@ function buildBrowserAudit() {
         };
       }));
     };
+    const renderedControlProofs = Object.freeze({
+      bgTone: [{ selector: '.service-native-section', property: 'background', includeRoot: true }],
+      cardOutline: [{ selector: '.service-native-card', property: 'border' }],
+      cardOutlineTone: [{ selector: '.service-native-card', property: 'border-color' }],
+      cardOutlineWidth: [{ selector: '.service-native-card', property: 'border-width' }],
+      cardShadow: [{ selector: '.service-native-card', property: 'box-shadow' }],
+      cardShadowOpacity: [{ selector: '.service-native-card', property: 'box-shadow' }],
+      titleTone: [{ selector: '.service-native-card h3', property: 'color' }],
+      bodyTone: [{ selector: '.service-native-card :is(p, li)', property: 'color' }],
+      cardPaddingRem: [{ selector: '.service-native-card', property: 'padding' }],
+    });
     const getRenderedControlProof = (root, fieldId) => {
-      const proof = fieldId === 'cardPaddingRem'
-        ? { selector: '.service-native-card', property: 'padding' }
-        : null;
-      if (!proof) return '';
-      return JSON.stringify([...root.querySelectorAll(proof.selector)].map((node) => (
-        getComputedStyle(node).getPropertyValue(proof.property).trim()
-      )));
+      const proofs = renderedControlProofs[fieldId];
+      if (!root || !Array.isArray(proofs)) return '';
+      return JSON.stringify(proofs.map(({ selector, property, includeRoot }) => {
+        const nodes = includeRoot
+          ? [root, ...root.querySelectorAll(selector)].filter((node, index) => (
+            (index === 0 || node !== root) && (index === 0 ? root.matches?.(selector) : true)
+          ))
+          : [...root.querySelectorAll(selector)];
+        return {
+          selector,
+          property,
+          values: nodes.map((node) => getComputedStyle(node).getPropertyValue(property).trim()),
+        };
+      }).filter(({ values }) => values.length));
     };
     const pickControl = (field) => {
       // HTML editors contain a toolbar before the editable surface. Prefer the

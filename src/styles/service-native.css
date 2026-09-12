@@ -9480,7 +9480,7 @@
 
 .native-info-page--life-quote .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).life-quote-native-types .service-native-card p {
   margin-top: 0;
-  color: var(--ag-color-super-grey);
+  color: var(--dynamic-grid-body-color, var(--ag-color-super-grey));
   text-align: left;
   /* These descriptions are lead copy, not card fine print. Keep the route
      on the same readable scale as the shared intro lead text. */
@@ -9489,15 +9489,15 @@
 }
 
 .native-info-page--life-quote .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).life-quote-native-types .service-native-card:nth-child(1) h3 {
-  color: var(--ag-color-atlantean);
+  color: var(--dynamic-grid-alt-title-one, var(--dynamic-grid-card-title-color, var(--ag-color-atlantean)));
 }
 
 .native-info-page--life-quote .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).life-quote-native-types .service-native-card:nth-child(2) h3 {
-  color: var(--ag-color-mango);
+  color: var(--dynamic-grid-alt-title-two, var(--dynamic-grid-card-title-color, var(--ag-color-mango)));
 }
 
 .native-info-page--life-quote .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).life-quote-native-types .service-native-card:nth-child(3) h3 {
-  color: var(--ag-color-sand-dark);
+  color: var(--dynamic-grid-alt-title-three, var(--dynamic-grid-card-title-color, var(--ag-color-sand-dark)));
 }
 
 /* The quote form is the page's primary next step. The old 1.6rem seed
@@ -9955,22 +9955,22 @@
 
 .native-info-page--group-life-quote .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).group-life-native-benefits .service-native-card p {
   margin-top: 0;
-  color: var(--ag-color-super-grey);
+  color: var(--dynamic-grid-body-color, var(--ag-color-super-grey));
   text-align: left;
   font-size: clamp(1.12rem, 1.75vw, 1.28rem);
   line-height: 1.48;
 }
 
 .native-info-page--group-life-quote .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).group-life-native-benefits .service-native-card:nth-child(1) h3 {
-  color: var(--ag-color-atlantean);
+  color: var(--dynamic-grid-alt-title-one, var(--dynamic-grid-card-title-color, var(--ag-color-atlantean)));
 }
 
 .native-info-page--group-life-quote .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).group-life-native-benefits .service-native-card:nth-child(2) h3 {
-  color: var(--ag-color-mango);
+  color: var(--dynamic-grid-alt-title-two, var(--dynamic-grid-card-title-color, var(--ag-color-mango)));
 }
 
 .native-info-page--group-life-quote .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).group-life-native-benefits .service-native-card:nth-child(3) h3 {
-  color: var(--ag-color-sand-dark);
+  color: var(--dynamic-grid-alt-title-three, var(--dynamic-grid-card-title-color, var(--ag-color-sand-dark)));
 }
 
 .native-info-page--group-life-quote .group-life-native-benefits > :is(.ag-panel-rail, .native-info-full-bleed) > .service-native-action-row {
@@ -13989,20 +13989,20 @@ p.impact-proof-story-proof-body {
 }
 
 .native-info-page--careers .careers-native-benefits .service-native-card:nth-child(3n + 1) h3 {
-  color: var(--ag-color-atlantean);
+  color: var(--dynamic-grid-alt-title-one, var(--dynamic-grid-card-title-color, var(--ag-color-atlantean)));
 }
 
 .native-info-page--careers .careers-native-benefits .service-native-card:nth-child(3n + 2) h3 {
-  color: var(--ag-color-mango);
+  color: var(--dynamic-grid-alt-title-two, var(--dynamic-grid-card-title-color, var(--ag-color-mango)));
 }
 
 .native-info-page--careers .careers-native-benefits .service-native-card:nth-child(3n + 3) h3 {
-  color: var(--ag-color-super-grey);
+  color: var(--dynamic-grid-alt-title-three, var(--dynamic-grid-card-title-color, var(--ag-color-super-grey)));
 }
 
 .native-info-page--careers .careers-native-benefits .service-native-card p {
   margin-top: 0.75rem;
-  color: var(--ag-color-super-grey);
+  color: var(--dynamic-grid-body-color, var(--ag-color-super-grey));
   line-height: 1.55;
 }
 
@@ -17698,29 +17698,29 @@ p.impact-proof-story-proof-body {
 }
 
 .legacy-child-native-trusts-differences .trusts-difference-title--funding {
-  color: var(--ag-color-atlantean);
+  color: var(--dynamic-grid-card-title-color, var(--ag-color-atlantean));
 }
 
 .legacy-child-native-trusts-differences .trusts-difference-title--crt {
-  color: var(--ag-color-atlantean);
+  color: var(--dynamic-grid-card-title-color, var(--ag-color-atlantean));
 }
 
 .legacy-child-native-trusts-differences .trusts-difference-title--clt {
-  color: var(--ag-color-mango);
+  color: var(--dynamic-grid-card-title-color, var(--ag-color-mango));
 }
 
 .legacy-child-native-trusts-differences.native-dynamic-grid .service-native-card:nth-child(1) h3 {
-  color: var(--ag-color-atlantean);
+  color: var(--dynamic-grid-alt-title-one, var(--dynamic-grid-card-title-color, var(--ag-color-atlantean)));
 }
 
 .legacy-child-native-trusts-differences.native-dynamic-grid .service-native-card:nth-child(2) h3 {
-  color: var(--ag-color-mango);
+  color: var(--dynamic-grid-alt-title-two, var(--dynamic-grid-card-title-color, var(--ag-color-mango)));
 }
 
 .legacy-child-native-trusts-differences .service-native-card p,
 .legacy-child-native-trusts-differences .service-native-card-bullet-list {
   max-width: 34ch;
-  color: var(--ag-color-super-grey);
+  color: var(--dynamic-grid-body-color, var(--ag-color-super-grey));
   font-size: clamp(1.28rem, 1.95vw, 1.48rem);
   line-height: 1.68;
 }
@@ -17739,6 +17739,7 @@ p.impact-proof-story-proof-body {
 .service-native-section.native-dynamic-grid.legacy-child-native-trusts-differences .service-native-card .service-native-card-bullet-list li {
   font-size: var(--planned-giving-bullet-size, clamp(1.28rem, 1.95vw, 1.48rem));
   line-height: var(--planned-giving-bullet-line-height, 1.68);
+  color: var(--dynamic-grid-body-color, var(--ag-color-super-grey));
 }
 
 .legacy-child-native-trusts-differences .service-native-card-bullet-list li + li {
@@ -17785,7 +17786,7 @@ p.impact-proof-story-proof-body {
 
 .legacy-child-native-trusts-funding .service-native-card p {
   margin: 0 0 clamp(0.9rem, 1.8vw, 1.2rem);
-  color: rgba(65, 64, 66, 0.84);
+  color: var(--dynamic-grid-body-color, rgba(65, 64, 66, 0.84));
   font-size: clamp(1rem, 1.6vw, 1.15rem);
   font-weight: 600;
   line-height: 1.55;
@@ -17801,11 +17802,13 @@ p.impact-proof-story-proof-body {
 .legacy-child-native-trusts-funding .service-native-card-bullet-list li {
   font-size: var(--planned-giving-bullet-size, clamp(1.1rem, 2vw, 1.35rem));
   line-height: var(--planned-giving-bullet-line-height, 1.32);
+  color: var(--dynamic-grid-body-color, var(--ag-color-super-grey));
 }
 
 .service-native-section.native-dynamic-grid.legacy-child-native-trusts-funding .service-native-card-bullet-list li {
   font-size: var(--planned-giving-bullet-size, clamp(1.1rem, 2vw, 1.35rem));
   line-height: var(--planned-giving-bullet-line-height, 1.32);
+  color: var(--dynamic-grid-body-color, var(--ag-color-super-grey));
 }
 
 .legacy-child-native-trusts-funding .service-native-card-bullet-list li + li {
@@ -18573,12 +18576,13 @@ p.impact-proof-story-proof-body {
   margin: 0;
   padding-left: 1.4rem;
   text-align: left;
-  color: var(--ag-color-super-grey);
+  color: var(--dynamic-grid-body-color, var(--ag-color-super-grey));
 }
 
 .native-info-page--legacy-generosity-fund .legacy-child-native-generosity-assets .service-native-card-bullet-list li {
   font-size: var(--planned-giving-bullet-size, clamp(1.1rem, 2vw, 1.35rem));
   line-height: var(--planned-giving-bullet-line-height, 1.32);
+  color: var(--dynamic-grid-body-color, var(--ag-color-super-grey));
 }
 
 .native-info-page--legacy-generosity-fund .legacy-child-native-generosity-assets .service-native-card-bullet-list li + li {
@@ -18933,9 +18937,12 @@ p.impact-proof-story-proof-body {
   background: linear-gradient(145deg, rgba(65, 64, 66, 1) 0%, rgba(32, 34, 40, 1) 100%);
 }
 
-.native-info-page--retirement-rollovers .service-native-section.native-dynamic-grid.retirement-rollovers-native-options .service-native-card:not(.investments-native-cert-card) h3,
+.native-info-page--retirement-rollovers .service-native-section.native-dynamic-grid.retirement-rollovers-native-options .service-native-card:not(.investments-native-cert-card) h3 {
+  color: var(--dynamic-grid-card-title-color, #fff) !important;
+}
+
 .native-info-page--retirement-rollovers .service-native-section.native-dynamic-grid.retirement-rollovers-native-options .service-native-card:not(.investments-native-cert-card) > div > p {
-  color: #fff !important;
+  color: var(--dynamic-grid-body-color, #fff) !important;
 }
 
 .native-info-page--retirement-rollovers .service-native-section.native-dynamic-grid.retirement-rollovers-native-options .service-native-card:not(.investments-native-cert-card) h3 {
@@ -20924,7 +20931,7 @@ p.impact-proof-story-proof-body {
   display: block;
   margin: 0;
   padding-left: 1.4rem;
-  color: var(--ag-color-super-grey);
+  color: var(--dynamic-grid-body-color, var(--ag-color-super-grey));
 }
 
 .native-info-page--legacy-cga .legacy-child-native-cga-assets .service-native-card-rich-body > ul li {
@@ -20948,7 +20955,7 @@ p.impact-proof-story-proof-body {
 
 .native-info-page--legacy-cga .legacy-child-native-cga-assets .service-native-card-rich-body p {
   margin: clamp(1.75rem, 3vw, 2.25rem) 1.4rem 0;
-  color: var(--ag-color-super-grey);
+  color: var(--dynamic-grid-body-color, var(--ag-color-super-grey));
   font-size: clamp(1.1rem, 2vw, 1.35rem);
   line-height: 1.55;
 }
@@ -23454,4 +23461,12 @@ p.impact-proof-story-proof-body {
 :is(.loans-native-option-question-wrap, .retirement-do-the-math-billboard, .services-native-page [data-block-id="intro"], .services-native-page [data-block-id="matters_band"]) :is(.native-info-rich-html.is-white, p.is-white),
 :is(.loans-native-option-question-wrap, .retirement-do-the-math-billboard, .services-native-page [data-block-id="intro"], .services-native-page [data-block-id="matters_band"]) .native-info-rich-html.is-white :is(h1, h2, h3, h4, h5, h6, p, li, blockquote) {
   color: #ffffff !important;
+}
+
+/* An explicit card-title swatch is a deliberate override. Keep this shared
+   contract after route-specific card rules so authored alternating selectors
+   cannot mask the admin choice. */
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-title-tone-override .service-native-card h3,
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-title-tone-override .service-native-card h3 mark {
+  color: var(--dynamic-grid-card-title-color) !important;
 }

@@ -51,10 +51,11 @@ describe('retirement rollovers review polish guardrail', () => {
     expect(cssSource).toContain('margin-top: 1.8rem;');
     expect(cssSource).toContain('.native-info-page--retirement-rollovers .service-native-section.native-dynamic-grid.retirement-rollovers-native-options .service-native-card:not(.investments-native-cert-card) {');
     expect(cssSource).toContain('padding: var(--dynamic-grid-card-padding, clamp(2.7rem, 4.8vw, 4.2rem));');
-    expect(cssSource).toContain('.native-info-page--retirement-rollovers .service-native-section.native-dynamic-grid.retirement-rollovers-native-options .service-native-card:not(.investments-native-cert-card) h3,');
-    expect(cssSource).toContain('color: #fff !important;');
+    expect(cssSource).toContain('.native-info-page--retirement-rollovers .service-native-section.native-dynamic-grid.retirement-rollovers-native-options .service-native-card:not(.investments-native-cert-card) h3 {');
+    expect(cssSource).toContain('color: var(--dynamic-grid-card-title-color, #fff) !important;');
     expect(cssSource).toContain('font-size: clamp(2.3rem, 4.8vw, 3.5rem) !important;');
     expect(cssSource).toContain('.native-info-page--retirement-rollovers .service-native-section.native-dynamic-grid.retirement-rollovers-native-options .service-native-card:not(.investments-native-cert-card) > div > p {');
+    expect(cssSource).toContain('color: var(--dynamic-grid-body-color, #fff) !important;');
     expect(cssSource).toContain('padding-bottom: clamp(5.5rem, 9vw, 7rem);');
     expect(cssSource).toContain('background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(247, 251, 252, 0.98) 100%);');
     expect(cssSource).toContain('box-shadow: 0 18px 36px rgba(12, 42, 61, 0.08);');

@@ -1344,6 +1344,7 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
     cardShadow,
     cardShadowOpacity,
     titleTone,
+    titleToneOverride,
     bodyTone,
     subheadTone,
     cardPaddingRem,
@@ -1530,7 +1531,7 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
           }
         : {}),
     },
-    className: `${sectionClassBase}${sectionClassName ? ` ${sectionClassName}` : ''}${numberedStepCardsClassName ? ` ${numberedStepCardsClassName}` : ''}${isPlannedGivingBulletGrid ? ' is-planned-giving-bullet-grid' : ''}${hasControlledBulletTypography ? ' is-card-grid-bullet-controlled' : ''}${Number.isFinite(Number(cardTitleLineHeight)) ? ' is-card-title-line-height-controlled' : ''}${Number.isFinite(Number(subheadSizeRem)) ? ' is-subhead-sized' : ''}${cardHoverScale === true ? ' is-card-hover-scale' : ''}${cardHoverScale === false ? ' is-card-hover-scale-disabled' : ''}${cardOutline === true ? ' is-card-outline' : ''}${cardOutline === false ? ' is-card-outline-off' : ''}${cardOutlineTone ? ` is-card-outline-${cardOutlineTone}` : ' is-card-outline-default'}${cardShadow === true ? ' is-card-shadow' : ''}${cardShadow === false ? ' is-card-shadow-off' : ''} is-bg-${bgTone} is-width-${contentWidth} is-title-${titleTone} is-body-${bodyTone} is-subhead-${subheadTone} ${presetRuntimeClassName} is-card-grid-style-${cardStyle}${cardStyle === 'none' ? ' is-card-none' : ''}`,
+    className: `${sectionClassBase}${sectionClassName ? ` ${sectionClassName}` : ''}${numberedStepCardsClassName ? ` ${numberedStepCardsClassName}` : ''}${isPlannedGivingBulletGrid ? ' is-planned-giving-bullet-grid' : ''}${hasControlledBulletTypography ? ' is-card-grid-bullet-controlled' : ''}${Number.isFinite(Number(cardTitleLineHeight)) ? ' is-card-title-line-height-controlled' : ''}${Number.isFinite(Number(subheadSizeRem)) ? ' is-subhead-sized' : ''}${cardHoverScale === true ? ' is-card-hover-scale' : ''}${cardHoverScale === false ? ' is-card-hover-scale-disabled' : ''}${cardOutline === true ? ' is-card-outline' : ''}${cardOutline === false ? ' is-card-outline-off' : ''}${cardOutlineTone ? ` is-card-outline-${cardOutlineTone}` : ' is-card-outline-default'}${cardShadow === true ? ' is-card-shadow' : ''}${cardShadow === false ? ' is-card-shadow-off' : ''} is-bg-${bgTone} is-width-${contentWidth} is-title-${titleTone}${titleToneOverride ? ' is-title-tone-override' : ''} is-body-${bodyTone} is-subhead-${subheadTone} ${presetRuntimeClassName} is-card-grid-style-${cardStyle}${cardStyle === 'none' ? ' is-card-none' : ''}`,
   };
 }
 

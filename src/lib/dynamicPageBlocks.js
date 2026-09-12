@@ -2680,6 +2680,8 @@ export function buildDynamicGridFromBlock(block) {
   const titleTone = normalizeGridToneToken(
     settings.titleTone ?? presetDefinition?.defaults?.titleTone,
   );
+  const titleToneOverride = settings.titleToneOverride === true
+    || String(settings.titleToneOverride || '').trim().toLowerCase() === 'true';
   const bodyTone = normalizeGridToneToken(
     settings.bodyTone ?? presetDefinition?.defaults?.bodyTone,
   );
@@ -2774,9 +2776,7 @@ export function buildDynamicGridFromBlock(block) {
       // Per-card highlights are intentional authored content (including many
       // legacy page accents), so they must remain visible rather than being
       // mistaken for stale values whenever the grid has a default title tone.
-      const titleToneOverrideIsActive = settings.titleToneOverride === true
-        || String(settings.titleToneOverride || '').trim().toLowerCase() === 'true';
-      const cardTitleHighlights = titleToneOverrideIsActive && !cardTitleClassName
+      const cardTitleHighlights = titleToneOverride && !cardTitleClassName
         ? []
         : parseTextHighlights(settings[`card${slot}TitleHighlightsJson`]);
       const cardBodySource = String(settings[`card${slot}Body`] || '').trim();
@@ -2913,6 +2913,7 @@ export function buildDynamicGridFromBlock(block) {
     cardShadow,
     cardShadowOpacity,
     titleTone,
+    titleToneOverride,
     bodyTone,
     subheadTone,
     cardPaddingRem,

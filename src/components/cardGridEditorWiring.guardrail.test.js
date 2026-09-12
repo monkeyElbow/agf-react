@@ -216,7 +216,7 @@ describe('card-grid editor wiring', () => {
     expect(editorSource).toContain("const cardOutlineToneField = !cardOutlineIsOff && cardOutlineToneFieldBase");
     expect(editorSource).toContain("const cardOutlineWidthField = !cardOutlineIsOff && cardOutlineWidthFieldBase");
     expect(editorSource).toContain('const handleGridLayoutChange = (fieldId, nextValue) =>');
-    expect(editorSource).toContain("if (fieldId === 'cardOutlineWidth')");
+    expect(editorSource).toContain("if (['cardOutlineTone', 'cardOutlineWidth'].includes(fieldId))");
     expect(editorSource).toContain("onSettingChange('cardOutline', true)");
     expect(editorSource).toContain('onSettingChange={handleGridLayoutChange}');
     const adminCssSource = readFileSync(path.resolve(__dirname, '../styles/admin.css'), 'utf8');
