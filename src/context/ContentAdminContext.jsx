@@ -5201,6 +5201,7 @@ export function ContentAdminProvider({ children, initialState = null }) {
             updatedAt: snapshot?.updatedAt,
           });
           setLastSharedPublishResult(verificationFailure);
+          setSharedPublishStatus(PUBLISH_STATUS.PUBLISH_FAILED);
           return {
             ok: false,
             reason: 'block-publish-verification-failed',

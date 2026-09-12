@@ -184,7 +184,7 @@ export default function BackgroundLightsEditor({
   };
   const toggleEnabled = (enabled) => {
     const lights = editorLights.map((light) => ({ ...light }));
-    if (enabled && !effects.lights.length) {
+    if (enabled && !lights.some((light) => light.enabled !== false)) {
       lights[0] = { ...createDefaultBackgroundLight(0), enabled: true };
     }
     commit({ ...effects, enabled, lights });
@@ -218,7 +218,7 @@ export default function BackgroundLightsEditor({
 
         <div className="admin-background-editor-page__right">
           <div className="admin-background-editor-page__controls">
-            <div className="admin-background-editor-page__setting">
+            <div className="admin-background-editor-page__setting" data-editor-field-id="backgroundEffectsJson">
               <strong>Background lights</strong>
               <div className="admin-boolean-pill" role="group" aria-label="Enable background lights">
                 <button type="button" className={`admin-boolean-pill-option${!effects.enabled ? ' is-active' : ''}`} onClick={() => toggleEnabled(false)}>Off</button>

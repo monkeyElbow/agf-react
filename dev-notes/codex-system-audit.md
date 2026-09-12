@@ -241,3 +241,56 @@ Unresolved risks:
 Next weakest point: Audit publish acknowledgment and error handling for the
 same card-appearance controls, then take one bounded background-lights/motion
 family and prove its pseudo-element or layer-level computed effects.
+
+### 2026-09-12 — publish settlement and background-layer audit
+
+Scope: Block-level live-publish verification settlement and the canonical
+background-lights editor/rendering path, using the About intro as one bounded
+enabled-light and motion sample.
+
+Checks:
+
+- Focused background/editor/audit guardrails passed: 3 files / 8 tests.
+- Operator publish smoke suite passed: 18 tests, including a mismatched live
+  block response.
+- Browser probes passed sequentially for the global background-lights toggle
+  and Light 1 motion style. They changed computed `display` on
+  `.block-background-effects` and computed `animation-name` on
+  `.block-background-light`, respectively. HUD close cleanup also passed.
+- `npm run lint`, `npm run scan:system`, and `npm run build` passed. The build
+  retained only existing chunk-size and dynamic-import advisories.
+- Full suite passed: 323 Vitest files / 2,094 tests, plus the 2 rates-import
+  Node tests. `git diff --check` passed.
+
+Findings and fixes:
+
+- Turning global background lights On only created a light when the saved
+  array was empty. A saved array containing only disabled slots therefore
+  produced an On state with no rendered layer. The canonical editor now
+  reactivates a default first light whenever no slot is active, with a
+  regression test.
+- The Background lights setting now has a stable `backgroundEffectsJson`
+  field identity, so browser audits can reach the global control after
+  opening the canonical Background panel.
+- The browser audit now proves the actual background layer display state and
+  layer animation name for the bounded motion family, not merely the editor
+  control or inline CSS variables.
+- If a block publish endpoint returns a live block different from the block
+  requested, the shared publish context now records `PUBLISH_FAILED` as well
+  as the verification error. The operator cannot remain stuck in
+  `PUBLISHING`; a regression test covers this exact mismatch.
+
+Unresolved risks:
+
+- The system scan still inventories 430 visual effects without independent
+  unit/runtime verification. This pass proves one canonical background
+  family sample, not every route's light configuration.
+- Timeout/unknown publish paths are covered for page publishing; block
+  timeout and committed-status permutations still deserve their own bounded
+  operator cases.
+- The pre-existing `dev-data/content-admin-shared.json` remained untouched
+  and unstaged.
+
+Next weakest point: Extend the layer-level background proof to one route with
+cropping and one route with directional/ambient motion, then audit block-level
+publish timeout reconciliation before broadening the browser matrix.

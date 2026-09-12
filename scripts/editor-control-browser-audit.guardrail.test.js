@@ -24,5 +24,7 @@ describe('editor browser audit guardrails', () => {
     expect(source).toContain("cardShadowOpacity: [{ selector: '.service-native-card', property: 'box-shadow' }]");
     expect(source).toContain("titleTone: [{ selector: '.service-native-card h3', property: 'color' }]");
     expect(source).toContain("bodyTone: [{ selector: '.service-native-card :is(p, li)', property: 'color' }]");
+    expect(source).toContain("backgroundEffectsJson: [{ selector: '.block-background-effects', property: 'display' }]");
+    expect(source).toContain("'aria:Light 1 motion style#1': [{ selector: '.block-background-light', property: 'animation-name' }]");
   });
 });

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import BackgroundEditorPage from './BackgroundEditorPage';
 import { SURFACE_BG_TONE_OPTIONS } from '../lib/colorSystem';
@@ -37,5 +37,26 @@ describe('BackgroundEditorPage', () => {
     );
 
     expect(container.querySelector('.admin-background-editor-page__surface > .admin-swatch-list[aria-label="Background color"]')).not.toBeNull();
+  });
+
+  it('reactivates a light when turning on a saved effect with no active slots', () => {
+    const onBackgroundEffectsChange = vi.fn();
+    render(
+      <BackgroundEditorPage
+        backgroundTone="white"
+        backgroundToneOptions={SURFACE_BG_TONE_OPTIONS}
+        backgroundEffectsJson={JSON.stringify({
+          enabled: false,
+          lights: [{ id: 'light-1', enabled: false, tone: 'blue' }],
+        })}
+        onBackgroundEffectsChange={onBackgroundEffectsChange}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('group', { name: 'Enable background lights' }).querySelector('button:last-child'));
+
+    const nextEffects = JSON.parse(onBackgroundEffectsChange.mock.calls[0][0]);
+    expect(nextEffects.enabled).toBe(true);
+    expect(nextEffects.lights[0].enabled).toBe(true);
   });
 });

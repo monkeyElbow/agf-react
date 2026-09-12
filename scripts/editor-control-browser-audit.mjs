@@ -313,6 +313,8 @@ function buildBrowserAudit() {
       titleTone: [{ selector: '.service-native-card h3', property: 'color' }],
       bodyTone: [{ selector: '.service-native-card :is(p, li)', property: 'color' }],
       cardPaddingRem: [{ selector: '.service-native-card', property: 'padding' }],
+      backgroundEffectsJson: [{ selector: '.block-background-effects', property: 'display' }],
+      'aria:Light 1 motion style#1': [{ selector: '.block-background-light', property: 'animation-name' }],
     });
     const getRenderedControlProof = (root, fieldId) => {
       const proofs = renderedControlProofs[fieldId];
@@ -551,6 +553,18 @@ function buildBrowserAudit() {
         report.failures.push(`${blockId}/<panel>: HUD editor panel did not open`);
         reports.push(report);
         continue;
+      }
+      const backgroundControlRequested = controlFilter.has('backgroundEffectsJson')
+        || [...controlFilter].some((filter) => filter.startsWith('aria:Light ') && filter.includes(' motion style#'));
+      if (backgroundControlRequested) {
+        const backgroundButton = [...panel.querySelectorAll('button')].find((button) => (
+          String(button.textContent || '').trim() === 'Background'
+          || String(button.getAttribute('aria-label') || '').trim() === 'Background'
+        ));
+        if (backgroundButton) {
+          backgroundButton.click();
+          await waitForPanel();
+        }
       }
       report.kind = panel.querySelector('[data-hud-editor-kind]')?.dataset.hudEditorKind || report.kind;
       const pageRoot = document.querySelector('.service-native-page, .home-native-page');

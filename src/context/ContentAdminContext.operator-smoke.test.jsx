@@ -12,6 +12,7 @@ const authorityMocks = vi.hoisted(() => ({
   fetchSharedPageRevisionHistory: vi.fn(),
   fetchSharedPublishStatus: vi.fn(),
   initializeSharedContentFromSeed: vi.fn(),
+  publishSharedBlock: vi.fn(),
   publishSharedPage: vi.fn(),
   promoteSharedContentToSeed: vi.fn(),
   releaseSharedBlockLock: vi.fn(),
@@ -228,6 +229,15 @@ function OperatorProbe() {
         }}
       >
         Publish page
+      </button>
+      <button
+        type="button"
+        onClick={async () => {
+          const nextResult = await admin.publishSharedBlockNow(PAGE_PATH, 'hero', 'Operator smoke block publish');
+          setResult(nextResult?.ok ? 'block-published' : nextResult?.reason);
+        }}
+      >
+        Publish hero block
       </button>
       <button
         type="button"
@@ -1146,6 +1156,31 @@ describe('ContentAdminContext operator smoke and recovery', () => {
     });
     expect(screen.getByTestId('hero-text').textContent).toBe('Route draft hero');
     expect(screen.getByTestId('publish-count').textContent).toBe('0');
+  });
+
+  it('marks a block publish verification mismatch as failed instead of leaving publishing active', async () => {
+    const initialState = buildState();
+    const mismatchedPublishedBlock = clone(initialState.blocksByPath[PAGE_PATH][0]);
+    mismatchedPublishedBlock.settings.line1Text = 'Different live block';
+    authorityMocks.publishSharedBlock.mockImplementation((_pathname, _blockId, _actor, _summary, _expectedBlock, options = {}) => Promise.resolve({
+      ok: true,
+      operationId: options.operationId,
+      pathname: PAGE_PATH,
+      scope: 'block',
+      blockId: 'hero',
+      publishedBlock: mismatchedPublishedBlock,
+      updatedAt: 1710000020500,
+      publishResult: { didPublish: true, status: 'published' },
+    }));
+
+    renderOperatorProvider(initialState, initialState);
+    fireEvent.click(screen.getByRole('button', { name: 'Publish hero block' }));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('action-result').textContent).toBe('block-publish-verification-failed');
+      expect(screen.getByTestId('shared-publish-status').textContent).toBe('PUBLISH_FAILED');
+    });
+    expect(screen.getByTestId('publish-result').textContent).toBe('block-publish-verification-failed');
   });
 
   it('verifies a timed-out publish and reconciles the committed route without retrying', async () => {
