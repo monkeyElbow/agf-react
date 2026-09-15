@@ -77,6 +77,15 @@ describe('card-grid editor wiring', () => {
     expect(editorSource).toContain("const isSubheadJustify = field.id === 'subtitleJustify';");
   });
 
+  it('exposes card gutter as a separate spacing control', () => {
+    expect(definitionSource).toContain("id: 'cardGapRem'");
+    expect(definitionSource).toContain("label: 'Card gutter'");
+    expect(editorSource).toContain("fieldById.get('cardGapRem')");
+    expect(readFileSync(path.resolve(__dirname, '../lib/dynamicPageBlocks.js'), 'utf8')).toContain('cardGapRem');
+    expect(readFileSync(path.resolve(__dirname, '../components/NativeContentPage.jsx'), 'utf8')).toContain("'--dynamic-grid-card-gap'");
+    expect(readFileSync(path.resolve(__dirname, '../styles/service-native.css'), 'utf8')).toContain('gap: var(--dynamic-grid-card-gap, var(--native-card-family-gap));');
+  });
+
   it('exposes header width and separates header-to-subhead from post-subhead spacing', () => {
     expect(definitionSource).toContain("id: 'headerWidthPercent'");
     expect(definitionSource).toContain("label: 'Header width (%)'");
@@ -201,7 +210,7 @@ describe('card-grid editor wiring', () => {
     expect(definitionSource).toContain("value: 'alternating'");
     expect(definitionSource).toContain("id: 'cardOutlineWidth'");
     expect(definitionSource).toContain("label: 'Border width'");
-    expect(editorSource).toContain("field.id !== 'cardOutlineTone'");
+    expect(editorSource).toContain('const cardOutlineToneField = !cardOutlineIsOff && cardOutlineToneFieldBase');
     expect(definitionSource).toContain("id: 'cardShadow'");
     expect(definitionSource).toContain("label: 'Card shadow'");
     expect(definitionSource).toContain("id: 'cardShadowOpacity'");

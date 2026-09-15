@@ -736,6 +736,7 @@ describe('buildDynamicBillboardFromBlock', () => {
         titleHighlightsJson: '[{"text":"move","className":"mango"}]',
         subtitle: 'Let us help.',
         subtitleClassName: 'mango',
+        subtitleHighlightsJson: '[{"start":0,"end":5,"className":"is-atlantean","text":"Let us"}]',
         subtitleDisplay: 'headline',
         subtitleSizeRem: 3.4,
         bodyHtml: '<p>Shared billboard body.</p>',
@@ -777,8 +778,9 @@ describe('buildDynamicBillboardFromBlock', () => {
       titleHighlights: [{ text: 'move', className: 'is-mango' }],
       subtitle: 'Let us help.',
       subtitleClassName: 'is-mango',
+      subtitleHighlights: [{ start: 0, end: 5, className: 'is-atlantean', text: 'Let us' }],
       bodyHtml: '<p>Shared billboard body.</p>',
-      body: 'Fallback body line.',
+      body: '',
       bgTone: 'blue',
       textTone: 'white',
       justify: 'right',
@@ -863,6 +865,82 @@ describe('buildDynamicBillboardFromBlock', () => {
     expect(splitRuntime?.subtitleStyle?.letterSpacing).toBe('0.01em');
     expect(splitRuntime?.titleTrackingOverride).toBe(true);
     expect(splitRuntime?.subtitleTrackingOverride).toBe(true);
+  });
+
+  it('routes subtitle tracking to the rendered supporting subtitle', () => {
+    const runtime = buildDynamicBillboardFromBlock({
+      kind: 'billboard',
+      mode: 'dynamic',
+      settings: {
+        title: 'Supporting title',
+        subtitle: 'Supporting subtitle',
+        subtitleDisplay: 'supporting',
+        subtitleTrackingEm: -0.08,
+      },
+    });
+
+    expect(runtime?.subtitleStyle?.letterSpacing).toBe('-0.08em');
+  });
+
+  it('does not render the seeded Billboard body placeholder as content', () => {
+    const runtime = buildDynamicBillboardFromBlock({
+      kind: 'billboard',
+      mode: 'dynamic',
+      settings: {
+        title: 'New Billboard',
+        subtitle: 'Supporting subtitle',
+        bodyHtml: '<p> Add supporting copy here. </p>',
+      },
+    });
+
+    expect(runtime?.bodyHtml).toBe('');
+  });
+
+  it('uses legacy plain body only when no meaningful HTML source exists', () => {
+    const runtime = buildDynamicBillboardFromBlock({
+      kind: 'billboard',
+      mode: 'dynamic',
+      settings: {
+        title: 'Legacy billboard',
+        body: 'Legacy plain copy.',
+        bodyHtml: '',
+      },
+    });
+
+    expect(runtime).toMatchObject({ body: 'Legacy plain copy.', bodyHtml: '', bodySource: 'legacy' });
+  });
+
+  it('keeps an explicitly empty HTML body empty even when legacy text remains for recovery', () => {
+    const runtime = buildDynamicBillboardFromBlock({
+      kind: 'billboard',
+      mode: 'dynamic',
+      settings: {
+        title: 'Cleared billboard',
+        body: 'Keep this only as recovery data.',
+        bodyHtml: '<p><br></p>',
+        bodySource: 'html',
+      },
+    });
+
+    expect(runtime).toMatchObject({ body: '', bodyHtml: '', bodySource: 'html' });
+  });
+
+  it('treats meaningful HTML as authoritative and preserves conflicting legacy text', () => {
+    const runtime = buildDynamicBillboardFromBlock({
+      kind: 'billboard',
+      mode: 'dynamic',
+      settings: {
+        title: 'Rich billboard',
+        body: 'Legacy conflicting copy.',
+        bodyHtml: '<p><span class="is-mango">Rich</span> copy.</p>',
+      },
+    });
+
+    expect(runtime).toMatchObject({
+      body: '',
+      bodyHtml: '<p><span class="is-mango">Rich</span> copy.</p>',
+      bodySource: 'html',
+    });
   });
 
   it('uses the content rail as the billboard title boundary for legacy narrow settings', () => {
@@ -2538,6 +2616,7 @@ describe('buildDynamicGridFromBlock', () => {
         titleTone: 'white',
         bodyTone: 'white',
         cardPaddingRem: 2.2,
+        cardGapRem: 2.25,
         cardTitleSizeRem: 1.5,
         cardTitleLineHeight: 1.1,
         cardTitleJustify: 'right',
@@ -2573,6 +2652,7 @@ describe('buildDynamicGridFromBlock', () => {
       titleTone: 'white',
       bodyTone: 'white',
       cardPaddingRem: 2.2,
+      cardGapRem: 2.25,
       cardTitleSizeRem: 1.5,
       cardTitleLineHeight: 1.1,
       cardTitleJustify: 'right',

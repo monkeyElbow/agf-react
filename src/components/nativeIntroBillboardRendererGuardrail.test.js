@@ -79,6 +79,17 @@ describe('native intro and billboard renderer guardrail', () => {
     expect(cssSource).toContain(`${selector}.is-white`);
   });
 
+  it('keeps explicit rich Billboard body colors ahead of the section text tone', () => {
+    const cssSource = readSource('../styles/service-native.css');
+    const bodyColorSelector = '.service-native-section:is(.dynamic-billboard, .test-dynamic-billboard) .native-info-rich-html.is-mango';
+    const directBodySelector = '.native-info-rich-html.is-mango > :is(h1, h2, h3, h4, h5, h6, p, li, a)';
+
+    expect(cssSource).toContain(`${bodyColorSelector},`);
+    expect(cssSource).toContain(`${directBodySelector}:not(.is-atlantean, .is-mango, .is-melon, .is-sandstone, .is-super-grey, .is-white) {`);
+    expect(cssSource).toContain('color: var(--ag-color-mango) !important;');
+    expect(cssSource).toContain('color: #ffffff !important;');
+  });
+
   it('keeps billboard background swatches separate from the explicit text-tone swatch', () => {
     const cssSource = readSource('../styles/service-native.css');
     const homeCssSource = readSource('../styles/home-native.css');

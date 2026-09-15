@@ -35,6 +35,12 @@ describe('careers route review polish guardrail', () => {
     expect(cssSource).not.toContain('transform: scale(1.2);');
   });
 
+  it('contains transformed mobile descendants so the Careers page cannot pan sideways on iPad', () => {
+    const cssSource = readSource('../styles/service-native.css');
+
+    expect(cssSource).toContain('@media (max-width: 980px) {\n  .service-native-page {\n    /* Safari/iPad can still include transformed descendants in the horizontal\n       pan range when this is `clip`. Hide that range at the page shell so the\n       menu and all sections stay locked to the viewport. */\n    overflow-x: hidden;');
+  });
+
   it('keeps the careers benefits-to-ready background progress and observed enter reveals wired in source', () => {
     const cssSource = readSource('../styles/service-native.css');
     const contentSource = readSource('../data/nativePageContent.js');

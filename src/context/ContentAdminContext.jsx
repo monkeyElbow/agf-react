@@ -184,6 +184,42 @@ function describeAuthorityFailure(error, fallbackError) {
   };
 }
 
+function isAuthoritativelySavedBlock(snapshot, pathname, blockId, expectedBlock, actor) {
+  const state = snapshot?.state;
+  const authoritativeBlock = state?.blocksByPath?.[pathname]
+    ?.find((block) => String(block?.id || '').trim() === blockId) || null;
+  const savedBy = state?.collaborationByPath?.[pathname]?.blocks?.[blockId]?.savedBy;
+  // Route snapshots use the same compact representation as the authority
+  // response. Dynamic registry blocks intentionally omit editor-only
+  // editableFields, so compare the durable representation rather than making
+  // a successful save look unverifiable because of that transport omission.
+  const comparableExpectedBlock = authoritativeBlock && expectedBlock
+    && !Object.prototype.hasOwnProperty.call(authoritativeBlock, 'editableFields')
+    && Object.prototype.hasOwnProperty.call(expectedBlock, 'editableFields')
+    ? Object.fromEntries(Object.entries(expectedBlock).filter(([key]) => key !== 'editableFields'))
+    : expectedBlock;
+  const hasSameDurableBlockContent = authoritativeBlock && expectedBlock
+    && String(authoritativeBlock.id || '').trim() === String(expectedBlock.id || '').trim()
+    && String(authoritativeBlock.kind || '').trim() === String(expectedBlock.kind || '').trim()
+    && ['mode', 'name'].every((key) => (
+      !Object.prototype.hasOwnProperty.call(authoritativeBlock, key)
+      || authoritativeBlock[key] === expectedBlock[key]
+    ))
+    && Object.keys(authoritativeBlock.settings || {}).length > 0
+    && Object.entries(authoritativeBlock.settings || {}).every(([key, value]) => (
+      blockSnapshotEquals(value, expectedBlock.settings?.[key])
+    ));
+  return Boolean(
+    authoritativeBlock
+    && (
+      blockSnapshotEquals(authoritativeBlock, comparableExpectedBlock)
+      || hasSameDurableBlockContent
+    )
+    && String(savedBy?.userId || '').trim()
+    && String(savedBy.userId).trim() === String(actor?.userId || '').trim(),
+  );
+}
+
 function isSharedAuthorityCircuitOpen() {
   return typeof isDevContentAuthorityCircuitOpen === 'function'
     && isDevContentAuthorityCircuitOpen();
@@ -4608,6 +4644,18 @@ export function ContentAdminProvider({ children, initialState = null }) {
         return { ok: false, reason: 'block-not-found' };
       }
 
+      // A newly inserted block is persisted by the route-draft endpoint so
+      // its position and the surrounding page remain atomic. The block
+      // endpoint intentionally cannot create inventory, which used to make
+      // the HUD's otherwise valid "Save block draft" action fail with
+      // `block-not-found` during the short window before the queued route
+      // save completed. Reuse the route save path for the new-block case.
+      const publishedBlock = publishedSharedAuthoringStateRef.current.blocksByPath?.[normalizedPath]
+        ?.find((block) => String(block?.id || '').trim() === normalizedBlockId) || null;
+      if (!publishedBlock) {
+        return saveSharedDraftNow(summary, normalizedPath);
+      }
+
       const mutationId = latestSharedMutationIdRef.current + 1;
       latestSharedMutationIdRef.current = mutationId;
       bumpPendingSharedMutationCount(1, { lastQueuedAt: Date.now() });
@@ -4643,14 +4691,42 @@ export function ContentAdminProvider({ children, initialState = null }) {
         // A request can fail locally after the authority has committed it (for
         // example, a timeout). Re-read collaboration metadata before returning
         // failure so one browser cannot keep an optimistic saved-by badge that
-        // other browsers will never see. Keep the local authoring content here;
-        // the save still reports failure until the original request is known to
-        // have completed.
-        await refreshSharedStateAfterFailedMutation({
+        // other browsers will never see. If the route proves that this exact
+        // block was durably saved by this actor, turn the transport timeout
+        // into a successful save instead of making the operator retry a write
+        // that already committed.
+        const authoritativeSnapshot = await refreshSharedStateAfterFailedMutation({
           scopedPath: normalizedPath,
           mutationId,
           mergeCollaborationOnlyWhenDirty: true,
         });
+        if (
+          error?.code === 'content-admin-request-timeout'
+          && isAuthoritativelySavedBlock(
+            authoritativeSnapshot,
+            normalizedPath,
+            normalizedBlockId,
+            currentBlock,
+            currentActor,
+          )
+        ) {
+          const verifiedSaveResult = normalizeSharedSaveResult({
+            didSave: true,
+            status: 'saved',
+            changedPaths: [normalizedPath],
+            savedPaths: [normalizedPath],
+            savedBlockIdsByPath: { [normalizedPath]: [normalizedBlockId] },
+            updatedAt: authoritativeSnapshot.updatedAt,
+          });
+          setLastSharedSaveResult(verifiedSaveResult);
+          setSharedPublishStatus(PUBLISH_STATUS.DRAFT_SYNCED);
+          return {
+            ok: true,
+            reason: '',
+            snapshot: authoritativeSnapshot,
+            saveResult: verifiedSaveResult,
+          };
+        }
         const failed = {
           ...authorityFailure,
           status: 'failed',
@@ -5093,6 +5169,10 @@ export function ContentAdminProvider({ children, initialState = null }) {
     };
 
     const publishSharedBlockNow = async (pathname, blockId, summary = '') => {
+      // This coordinator is a hard scope boundary: callers editing one block
+      // must always reach the block endpoint. The authority endpoint handles
+      // insertion, deletion, and reorder placement while preserving every
+      // other draft on the page.
       const normalizedPath = String(pathname || '').trim();
       const normalizedBlockId = String(blockId || '').trim();
       if (!sharedAuthorityEnabled) {
@@ -5115,19 +5195,6 @@ export function ContentAdminProvider({ children, initialState = null }) {
         stateRef.current,
         bufferedBlockSettingEditsRef.current,
       );
-      const currentComparableAuthoringState = toComparableAuthoringState(currentAuthoringState);
-      const publishPageSummary = summarizeComparableAuthoringPageChanges(
-        currentComparableAuthoringState,
-        publishedSharedAuthoringStateRef.current,
-        normalizedPath,
-      );
-      // Block content and page order have different ownership boundaries. If
-      // the selected block is part of an order change, publish the route so
-      // the order can go live without attempting to overwrite another
-      // admin's content draft through the block endpoint.
-      if (publishPageSummary.hasOrderChanges) {
-        return publishSharedPageNow(normalizedPath, summary);
-      }
       let expectedBlock = currentAuthoringState.blocksByPath?.[normalizedPath]
         ?.find((block) => String(block?.id || '').trim() === normalizedBlockId) || null;
       let expectedDraftRevision = '';

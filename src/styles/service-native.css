@@ -1,5 +1,9 @@
 .service-native-page {
   background: #ffffff;
+  /* Route-owned Services blocks include full-bleed and animated descendants.
+     Keep any intentional bleed inside this page so an off-screen descendant
+     cannot move the page centerline or expose the next block at the edge. */
+  overflow-x: clip;
 }
 
 .service-native-hero {
@@ -2979,7 +2983,7 @@
 .loans-native-options-grid {
   margin-top: var(--dynamic-grid-header-cards-space, var(--loans-native-options-copy-gap));
   grid-template-columns: repeat(var(--dynamic-grid-columns, 4), minmax(0, 1fr));
-  gap: clamp(1rem, 2vw, 1.35rem);
+  gap: var(--dynamic-grid-card-gap, clamp(1rem, 2vw, 1.35rem));
 }
 
 .loans-native-option-card {
@@ -4610,7 +4614,10 @@
 
 .fade-out {
   opacity: var(--scroll-opacity, 1);
-  transition: opacity 140ms linear, filter 220ms ease;
+  /* Opacity is scrubbed from scroll in requestAnimationFrame. A transition
+     makes Safari chase stale targets during momentum scrolling and can make
+     the billboard jitter as it exits. Keep the filter cue eased separately. */
+  transition: filter 220ms ease;
   will-change: opacity, filter;
 }
 
@@ -4677,6 +4684,27 @@
   font-size: clamp(3.38rem, 7.65vw, 5.8rem);
   letter-spacing: -0.04em;
   line-height: 0.98;
+}
+
+/* Safari can size a centered grid item to its intrinsic content width on an
+   iPad-sized viewport. Give the Services lead copy an explicit centered track
+   so its text stays on the page centerline without changing desktop or the
+   intentional left/right alignment modes. */
+@media (min-width: 768px) and (max-width: 1099px) {
+  .services-native-page .services-native-intro.service-native-intro.dynamic-intro .service-native-intro-copy.is-justify-center > :is(p, .native-info-rich-html) {
+    width: min(100%, 74ch);
+    max-width: 100%;
+    margin-inline: auto;
+    justify-self: center;
+    text-align: center;
+  }
+
+  .services-native-page .services-native-intro.service-native-intro.dynamic-intro .service-native-intro-copy.is-justify-center > .native-info-rich-html p {
+    width: 100%;
+    max-width: none;
+    margin-inline: 0;
+    text-align: center;
+  }
 }
 
 @media (max-width: 767px) {
@@ -5435,6 +5463,40 @@
   color: var(--ag-color-atlantean-dark);
 }
 
+/* Billboard body color is an explicit setting, not the section's text tone.
+   Keep this late in the stylesheet so the tone selected for the surrounding
+   billboard cannot repaint the authored body copy. Direct body elements use
+   the base color; nested semantic spans remain independently colored. */
+.service-native-section:is(.dynamic-billboard, .test-dynamic-billboard) .native-info-rich-html.is-atlantean,
+.service-native-section:is(.dynamic-billboard, .test-dynamic-billboard) .native-info-rich-html.is-atlantean > :is(h1, h2, h3, h4, h5, h6, p, li, a):not(.is-atlantean, .is-mango, .is-melon, .is-sandstone, .is-super-grey, .is-white) {
+  color: var(--ag-color-atlantean) !important;
+}
+
+.service-native-section:is(.dynamic-billboard, .test-dynamic-billboard) .native-info-rich-html.is-mango,
+.service-native-section:is(.dynamic-billboard, .test-dynamic-billboard) .native-info-rich-html.is-mango > :is(h1, h2, h3, h4, h5, h6, p, li, a):not(.is-atlantean, .is-mango, .is-melon, .is-sandstone, .is-super-grey, .is-white) {
+  color: var(--ag-color-mango) !important;
+}
+
+.service-native-section:is(.dynamic-billboard, .test-dynamic-billboard) .native-info-rich-html.is-melon,
+.service-native-section:is(.dynamic-billboard, .test-dynamic-billboard) .native-info-rich-html.is-melon > :is(h1, h2, h3, h4, h5, h6, p, li, a):not(.is-atlantean, .is-mango, .is-melon, .is-sandstone, .is-super-grey, .is-white) {
+  color: var(--ag-color-melon) !important;
+}
+
+.service-native-section:is(.dynamic-billboard, .test-dynamic-billboard) .native-info-rich-html.is-sandstone,
+.service-native-section:is(.dynamic-billboard, .test-dynamic-billboard) .native-info-rich-html.is-sandstone > :is(h1, h2, h3, h4, h5, h6, p, li, a):not(.is-atlantean, .is-mango, .is-melon, .is-sandstone, .is-super-grey, .is-white) {
+  color: var(--ag-color-sandstone) !important;
+}
+
+.service-native-section:is(.dynamic-billboard, .test-dynamic-billboard) .native-info-rich-html.is-super-grey,
+.service-native-section:is(.dynamic-billboard, .test-dynamic-billboard) .native-info-rich-html.is-super-grey > :is(h1, h2, h3, h4, h5, h6, p, li, a):not(.is-atlantean, .is-mango, .is-melon, .is-sandstone, .is-super-grey, .is-white) {
+  color: var(--ag-color-super-grey) !important;
+}
+
+.service-native-section:is(.dynamic-billboard, .test-dynamic-billboard) .native-info-rich-html.is-white,
+.service-native-section:is(.dynamic-billboard, .test-dynamic-billboard) .native-info-rich-html.is-white > :is(h1, h2, h3, h4, h5, h6, p, li, a):not(.is-atlantean, .is-mango, .is-melon, .is-sandstone, .is-super-grey, .is-white) {
+  color: #ffffff !important;
+}
+
 .service-native-section.dynamic-billboard .native-info-section-copy > h2.is-atlantean,
 .service-native-section.dynamic-billboard .native-info-section-copy > h2 mark.is-atlantean {
   color: var(--ag-color-atlantean);
@@ -6120,7 +6182,7 @@
 .service-native-section.native-dynamic-grid .service-native-grid,
 .service-native-section.test-dynamic-grid .service-native-grid {
   margin-top: var(--dynamic-grid-header-cards-space, clamp(1.15rem, 2.5vw, 1.8rem));
-  gap: var(--native-card-family-gap);
+  gap: var(--dynamic-grid-card-gap, var(--native-card-family-gap));
 }
 
 .service-native-section.native-dynamic-grid .service-native-card:not(.investments-native-cert-card):not(.retirement-account-card--certificate),
@@ -8714,7 +8776,7 @@
 .native-info-page--legacy-giving .legacy-giving-types .service-native-grid {
   margin-top: 0;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: clamp(1rem, 1.8vw, 1.6rem);
+  gap: var(--dynamic-grid-card-gap, clamp(1rem, 1.8vw, 1.6rem));
 }
 
 .native-info-page--legacy-giving .legacy-giving-types .service-native-card {
@@ -9437,7 +9499,7 @@
 
 .native-info-page--life-quote .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).life-quote-native-types .service-native-grid {
   margin-top: 0;
-  gap: clamp(1.2rem, 2.2vw, 1.8rem);
+  gap: var(--dynamic-grid-card-gap, clamp(1.2rem, 2.2vw, 1.8rem));
 }
 
 .native-info-page--life-quote .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).life-quote-native-types .service-native-card {
@@ -9670,7 +9732,7 @@
 
 .native-info-page--group-life-quote .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).group-life-native-benefits .service-native-grid {
   margin-top: 0;
-  gap: clamp(1.2rem, 2.2vw, 1.8rem);
+  gap: var(--dynamic-grid-card-gap, clamp(1.2rem, 2.2vw, 1.8rem));
 }
 
 .native-info-page--group-life-quote .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).group-life-native-benefits .service-native-card {
@@ -10103,7 +10165,7 @@
   margin-top: 0;
   width: 100%;
   margin-inline: auto;
-  gap: clamp(1rem, 2.2vw, 1.6rem);
+  gap: var(--dynamic-grid-card-gap, clamp(1rem, 2.2vw, 1.6rem));
 }
 
 /* Insurance coverage is a named card family. Match the dynamic-grid shell
@@ -10149,9 +10211,9 @@
   min-height: var(--insurance-coverage-card-cap-height);
   margin: 0;
   padding:
-    clamp(1rem, 2.2vw, 1.4rem)
-    clamp(2rem, 4vw, 2.65rem)
-    clamp(0.85rem, 1.8vw, 1.25rem);
+    var(--dynamic-grid-card-padding, clamp(1rem, 2.2vw, 1.4rem))
+    var(--dynamic-grid-card-padding, clamp(2rem, 4vw, 2.65rem))
+    var(--dynamic-grid-card-padding, clamp(0.85rem, 1.8vw, 1.25rem));
   color: #ffffff;
   background: var(--insurance-coverage-card-cap-bg);
   border-radius: 16px 16px 0 0;
@@ -10172,13 +10234,16 @@
 }
 
 .native-info-page--insurance .insurance-native-quote {
-  padding-top: clamp(2.45rem, 4.8vw, 3.6rem);
-  padding-bottom: clamp(4rem, 7.2vw, 5.7rem);
+  padding-top: var(--dynamic-billboard-padding-top, clamp(2.45rem, 4.8vw, 3.6rem));
+  padding-bottom: var(--dynamic-billboard-padding-bottom, clamp(4rem, 7.2vw, 5.7rem));
 }
 
 .native-info-page--insurance .insurance-native-coverage .service-native-card p {
   margin: 0;
-  padding: clamp(1.35rem, 2.8vw, 1.75rem) clamp(2rem, 4vw, 2.65rem) 0;
+  padding:
+    var(--dynamic-grid-card-padding, clamp(1.35rem, 2.8vw, 1.75rem))
+    var(--dynamic-grid-card-padding, clamp(2rem, 4vw, 2.65rem))
+    0;
   color: var(--ag-color-super-grey);
   font-size: clamp(1.08rem, 1.5vw, 1.2rem);
   line-height: 1.58;
@@ -10200,9 +10265,9 @@
 .native-info-page--insurance .insurance-native-coverage .service-native-card .service-native-action-row:last-child {
   width: 100%;
   padding:
-    clamp(1.3rem, 2.7vw, 1.75rem)
-    clamp(2rem, 4vw, 2.65rem)
-    clamp(2.4rem, 5vw, 3.1rem);
+    var(--dynamic-grid-card-padding, clamp(1.3rem, 2.7vw, 1.75rem))
+    var(--dynamic-grid-card-padding, clamp(2rem, 4vw, 2.65rem))
+    var(--dynamic-grid-card-padding, clamp(2.4rem, 5vw, 3.1rem));
 }
 
 .native-info-page--insurance .insurance-native-coverage > .ag-panel-rail > .service-native-action-row {
@@ -10379,7 +10444,7 @@
 
 .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).ministers-group-life-native-details .service-native-grid,
 .native-info-page--ministers-group-life-plan .ministers-group-life-native-support .service-native-grid {
-  gap: clamp(1rem, 2.2vw, 1.4rem);
+  gap: var(--dynamic-grid-card-gap, clamp(1rem, 2.2vw, 1.4rem));
 }
 
 .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).ministers-group-life-native-details .service-native-card {
@@ -10777,7 +10842,10 @@
 
 @media (max-width: 980px) {
   .service-native-page {
-    overflow-x: clip;
+    /* Safari/iPad can still include transformed descendants in the horizontal
+       pan range when this is `clip`. Hide that range at the page shell so the
+       menu and all sections stay locked to the viewport. */
+    overflow-x: hidden;
   }
 
   .native-info-page--insurance .insurance-native-coverage > .ag-panel-rail > .service-native-action-row {
@@ -11700,7 +11768,7 @@
 
 .native-info-page--insurance-pc .insurance-pc-native-resources .service-native-grid {
   margin-top: 0;
-  gap: clamp(1rem, 2.1vw, 1.6rem);
+  gap: var(--dynamic-grid-card-gap, clamp(1rem, 2.1vw, 1.6rem));
 }
 
 /* P&C resource cards: one calm, generous surface modeled on the reference
@@ -12527,9 +12595,9 @@
   opacity: var(--impact-proof-copy-opacity);
   transform: translate3d(0, var(--impact-proof-copy-shift-y), 0) scale(var(--impact-proof-copy-scale));
   transform-origin: var(--impact-proof-transform-origin, left center);
-  transition:
-    transform 260ms cubic-bezier(0.2, 0.8, 0.2, 1),
-    opacity 220ms linear;
+  /* Scroll writes these values every animation frame. Interpolating each new
+     target makes Safari/iPad momentum exits visibly oscillate. */
+  transition: none;
   will-change: transform, opacity;
 }
 
@@ -12718,9 +12786,7 @@ p.impact-proof-story-proof-body {
   opacity: var(--impact-proof-action-opacity);
   transform: translate3d(0, var(--impact-proof-action-shift-y), 0) scale(var(--impact-proof-action-scale));
   transform-origin: var(--impact-proof-transform-origin, left center);
-  transition:
-    transform 260ms cubic-bezier(0.2, 0.8, 0.2, 1),
-    opacity 220ms linear;
+  transition: none;
   will-change: transform, opacity;
 }
 
@@ -14383,7 +14449,7 @@ p.impact-proof-story-proof-body {
   border-radius: 16px;
   box-shadow: 0 8px 18px rgba(16, 43, 64, 0.06);
   overflow: hidden;
-  padding: 0;
+  padding: var(--dynamic-grid-card-padding, var(--native-card-shell-padding));
   min-height: 100%;
   backdrop-filter: blur(10px) saturate(120%);
   -webkit-backdrop-filter: blur(10px) saturate(120%);
@@ -14399,11 +14465,8 @@ p.impact-proof-story-proof-body {
 .native-info-page--retirement-iras .service-native-section.native-dynamic-grid.retirement-child-native-ira-types .service-native-card:not(.investments-native-cert-card) h3 {
   display: block;
   min-height: 0;
-  margin: 0;
-  padding:
-    clamp(1.8rem, 3.4vw, 2.3rem)
-    clamp(2.4rem, 5.2vw, 3.1rem)
-    clamp(0.34rem, 0.85vw, 0.5rem);
+  margin: 0 0 var(--dynamic-grid-card-title-body-space, 1rem);
+  padding: 0;
   background: transparent;
   font-family: var(--ag-font-heading);
   letter-spacing: var(--ag-letter-spacing-avenir-heading);
@@ -14429,10 +14492,7 @@ p.impact-proof-story-proof-body {
 .native-info-page--retirement-iras .service-native-section.native-dynamic-grid.retirement-child-native-ira-types .service-native-card:not(.investments-native-cert-card) > div > p {
   flex: 1 1 auto;
   margin: 0;
-  padding:
-    clamp(0.95rem, 2vw, 1.2rem)
-    clamp(2.4rem, 5.2vw, 3.1rem)
-    clamp(3.2rem, 5.6vw, 4.4rem);
+  padding: 0;
   background: transparent;
   color: var(--ag-color-super-grey) !important;
   font-size: clamp(1.2rem, 1.8vw, 1.38rem);

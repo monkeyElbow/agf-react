@@ -50,63 +50,75 @@ describe('BillboardHudEditorPanel reference layout', () => {
     expect(heading.querySelector('.admin-billboard-hud-heading-workbench')).toBeTruthy();
     expect(heading.querySelector('.admin-billboard-hud-heading-slider-panel')).toBeTruthy();
     expect(heading.querySelector('.admin-billboard-hud-heading-type-panel')).toBeTruthy();
+    expect(heading.querySelector('.admin-billboard-hud-heading-controls-box')).toBeTruthy();
+    expect(heading.querySelector('.admin-billboard-hud-heading-title-panel')).toBeTruthy();
+    expect(heading.querySelector('.admin-billboard-hud-heading-subtitle-panel')).toBeTruthy();
   });
 
-  it('shows marked title spans and allows removing one or resetting all title colors', () => {
-    const onTitleHighlightsChange = vi.fn();
-    const onTitleColorChange = vi.fn();
-    const title = 'Give once, forever.';
-    const titleHighlightsJson = JSON.stringify([
-      { start: 0, end: 4, className: 'is-mango', text: 'Give' },
-    ]);
-
+  it('shows compact marked-span indicators without adding a status row', () => {
     render(
       <BillboardHudEditorPanel
-        title={title}
-        titleColor="is-atlantean"
-        titleHighlightsJson={titleHighlightsJson}
-        titleColorOptions={[
-          { value: 'is-atlantean', label: 'Atlantean', swatch: '#007f86' },
-          { value: 'is-mango', label: 'Mango', swatch: '#f4b41a' },
-        ]}
-        onTitleHighlightsChange={onTitleHighlightsChange}
-        onTitleColorChange={onTitleColorChange}
+        title="Give once, forever."
+        titleHighlightsJson='[{"start":0,"end":4,"className":"is-mango"}]'
+        titleColorOptions={[{ value: 'is-mango', label: 'Mango', swatch: '#f4b41a' }]}
       />,
     );
 
-    expect(screen.getByText('1 marked span')).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'Remove marked span Give' }));
-    expect(onTitleHighlightsChange).toHaveBeenCalledWith('');
-
-    fireEvent.click(screen.getByRole('button', { name: 'Reset title colors' }));
-    expect(onTitleColorChange).toHaveBeenCalledWith('');
-    expect(onTitleHighlightsChange).toHaveBeenCalledWith('');
+    expect(screen.queryByText('1 marked span')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Remove marked span Give' })).toBeNull();
+    expect(screen.getByText('Give')).toBeTruthy();
+    expect(screen.getByTitle('Title marked text: Give')).toBeTruthy();
+    expect(screen.getByRole('radiogroup', { name: 'Billboard title color' })).toBeTruthy();
   });
 
-  it('only shows the clear swatch for a selected title span', () => {
+  it('uses the same clear swatch for title core color and selected title spans', () => {
     const title = 'Give once, forever.';
     const titleSelection = { start: 0, end: 4, text: 'Give' };
+    const onTitleColorChange = vi.fn();
+    const onTitleHighlightsChange = vi.fn();
     const onTitleSelectionColorChange = vi.fn();
     const titleColorOptions = [
       { value: 'is-atlantean', label: 'Atlantean', swatch: '#007f86' },
-      { value: '', label: 'Clear', shortLabel: 'Clear', hideSwatch: true },
+      { value: '', label: 'Clear', shortLabel: 'Clear', hideSwatch: true, isClear: true },
     ];
 
     const { rerender } = render(
       <BillboardHudEditorPanel
         title={title}
         titleColorOptions={titleColorOptions}
+        onTitleColorChange={onTitleColorChange}
+        onTitleHighlightsChange={onTitleHighlightsChange}
       />,
     );
 
     const titlePalette = screen.getByRole('radiogroup', { name: 'Billboard title color' });
-    expect(within(titlePalette).queryByRole('radio', { name: 'Clear' })).toBeNull();
+    expect(within(titlePalette).queryByRole('radio', { name: 'Clear title color' })).toBeNull();
+
+    rerender(
+      <BillboardHudEditorPanel
+        title={title}
+        titleHighlightsJson='[{"start":0,"end":4,"className":"is-mango"}]'
+        titleColorOptions={titleColorOptions}
+        onTitleColorChange={onTitleColorChange}
+        onTitleHighlightsChange={onTitleHighlightsChange}
+      />,
+    );
+
+    const markedTitlePalette = screen.getByRole('radiogroup', { name: 'Billboard title color' });
+    const clearTitleColor = within(markedTitlePalette).getByRole('radio', { name: 'Clear title color' });
+    expect(clearTitleColor.className).toContain('is-clear');
+    fireEvent.click(clearTitleColor);
+    expect(onTitleColorChange).toHaveBeenCalledWith('');
+    expect(onTitleHighlightsChange).toHaveBeenCalledWith('');
 
     rerender(
       <BillboardHudEditorPanel
         title={title}
         titleSelection={titleSelection}
+        titleHighlightsJson='[{"start":0,"end":4,"className":"is-mango"}]'
         titleColorOptions={titleColorOptions}
+        onTitleColorChange={onTitleColorChange}
+        onTitleHighlightsChange={onTitleHighlightsChange}
         onTitleSelectionColorChange={onTitleSelectionColorChange}
       />,
     );
@@ -115,8 +127,72 @@ describe('BillboardHudEditorPanel reference layout', () => {
     const clearSelectedSpan = within(selectedTitlePalette)
       .getByRole('radio', { name: 'Clear selected span' });
     expect(clearSelectedSpan).toBeTruthy();
+    expect(clearSelectedSpan.className).toContain('is-clear');
     fireEvent.click(clearSelectedSpan);
-    expect(onTitleSelectionColorChange).toHaveBeenCalledWith('');
+    expect(onTitleSelectionColorChange).toHaveBeenCalledWith('', titleSelection);
+  });
+
+  it('uses the shared clear swatch for subtitle color', () => {
+    const onSubtitleColorChange = vi.fn();
+    render(
+      <BillboardHudEditorPanel
+        subtitle="Supporting copy"
+        subtitleColor="is-mango"
+        subtitleHighlightsJson='[{"start":0,"end":10,"className":"is-mango"}]'
+        subtitleColorOptions={[
+          { value: 'is-mango', label: 'Mango', swatch: '#f4b41a' },
+          { value: '', label: 'Clear', shortLabel: 'Clear', hideSwatch: true, isClear: true },
+        ]}
+        onSubtitleColorChange={onSubtitleColorChange}
+      />,
+    );
+
+    const subtitlePalette = screen.getByRole('radiogroup', { name: 'Billboard subtitle color' });
+    const clearSubtitleColor = within(subtitlePalette).getByRole('radio', { name: 'Clear subtitle color' });
+    expect(clearSubtitleColor.className).toContain('is-clear');
+    fireEvent.click(clearSubtitleColor);
+    expect(onSubtitleColorChange.mock.calls[0]?.[0]).toBe('');
+  });
+
+  it('uses the live input selection so core colors and span colors target the right thing', () => {
+    const onTitleColorChange = vi.fn();
+    const onTitleSelectionColorChange = vi.fn();
+    const titleInputRef = { current: null };
+    const titleColorOptions = [
+      { value: 'is-atlantean', label: 'Atlantean', swatch: '#007f86' },
+      { value: 'is-mango', label: 'Mango', swatch: '#f4b41a' },
+      { value: '', label: 'Clear', shortLabel: 'Clear', isClear: true },
+    ];
+
+    render(
+      <BillboardHudEditorPanel
+        title="Give once, forever."
+        titleInputRef={titleInputRef}
+        titleSelection={{ start: 0, end: 4, text: 'Give' }}
+        titleHighlightsJson='[{"start":0,"end":4,"className":"is-mango"}]'
+        titleColorOptions={titleColorOptions}
+        onTitleColorChange={onTitleColorChange}
+        onTitleSelectionColorChange={onTitleSelectionColorChange}
+      />,
+    );
+
+    const titleInput = screen.getByRole('textbox', { name: 'Title' });
+    titleInput.focus();
+    titleInput.setSelectionRange(5, 5);
+    fireEvent.click(within(screen.getByRole('radiogroup', { name: 'Billboard title color' }))
+      .getByRole('radio', { name: 'Mango' }));
+    expect(onTitleColorChange).toHaveBeenCalledWith('is-mango');
+    expect(onTitleSelectionColorChange).not.toHaveBeenCalled();
+
+    titleInput.setSelectionRange(0, 4);
+    fireEvent.click(within(screen.getByRole('radiogroup', { name: 'Billboard title color' }))
+      .getByRole('radio', { name: 'Clear selected span' }));
+    expect(onTitleSelectionColorChange).toHaveBeenCalledWith('', {
+      start: 0,
+      end: 4,
+      text: 'Give',
+    });
+    expect(onTitleColorChange).toHaveBeenCalledTimes(1);
   });
 
   it('shows only labeled buttons at public size, with hover behavior and new-window controls', () => {
@@ -169,7 +245,7 @@ describe('BillboardHudEditorPanel reference layout', () => {
     expect(screen.getByRole('region', { name: 'Button preview' }).tagName).toBe('SECTION');
   });
 
-  it('uses the rich HTML editor for billboard body HTML', () => {
+  it('uses one rich body-copy editor with Visual and HTML modes', () => {
     const onBodyHtmlChange = vi.fn();
     const onBodyHtmlBlur = vi.fn();
     render(
@@ -184,12 +260,29 @@ describe('BillboardHudEditorPanel reference layout', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Copy' }));
 
-    expect(screen.getByText('Body HTML')).toBeTruthy();
+    expect(screen.getByText('Body copy')).toBeTruthy();
     expect(screen.getByRole('toolbar', { name: 'Article body formatting' })).toBeTruthy();
     expect(screen.queryByRole('group', { name: 'Text alignment' })).toBeNull();
-    expect(screen.getByRole('textbox', { name: 'Body HTML' }).tagName).toBe('DIV');
+    expect(screen.getByRole('tablist', { name: 'Billboard body copy editor mode' })).toBeTruthy();
+    const inlineControls = screen.getByRole('toolbar', { name: 'Article body formatting' }).closest('.admin-html-editor-controls.is-inline');
+    expect(inlineControls).toBeTruthy();
+    expect(inlineControls?.querySelector('[role="tablist"]')).toBeTruthy();
+    expect(screen.getByRole('tab', { name: 'Visual' }).getAttribute('aria-selected')).toBe('true');
+    expect(screen.getByRole('tab', { name: 'HTML' }).getAttribute('aria-selected')).toBe('false');
+    expect(screen.getByRole('textbox', { name: 'Billboard body copy' }).tagName).toBe('DIV');
     expect(screen.getByTitle('Bold')).toBeTruthy();
     expect(screen.getByTitle('Italic')).toBeTruthy();
+    expect(screen.queryByTitle('Heading 2')).toBeNull();
+    expect(screen.queryByTitle('Heading 3')).toBeNull();
+    expect(screen.queryByTitle('Paragraph')).toBeNull();
+    expect(screen.queryByTitle('Bulleted list')).toBeNull();
+    expect(screen.queryByTitle('Numbered list')).toBeNull();
+    expect(screen.queryByTitle('Quote')).toBeNull();
+    expect(screen.queryByTitle('Divider')).toBeNull();
+    fireEvent.click(screen.getByRole('tab', { name: 'HTML' }));
+    expect(screen.getByRole('textbox', { name: 'Billboard body copy' }).tagName).toBe('TEXTAREA');
+    fireEvent.click(screen.getByRole('tab', { name: 'Visual' }));
+    expect(screen.getByRole('textbox', { name: 'Billboard body copy' }).tagName).toBe('DIV');
   });
 
   it('separates title alignment from body alignment and body width on the Copy page', () => {
@@ -274,7 +367,7 @@ describe('BillboardHudEditorPanel reference layout', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Copy' }));
 
-    const editor = screen.getByRole('textbox', { name: 'Body HTML' });
+    const editor = screen.getByRole('textbox', { name: 'Billboard body copy' });
     const editorShell = editor.closest('.admin-billboard-hud-copy-editor');
     expect(editorShell?.classList.contains('is-bg-blue')).toBe(true);
     expect(editorShell?.classList.contains('is-white')).toBe(true);
@@ -300,6 +393,26 @@ describe('BillboardHudEditorPanel reference layout', () => {
 
     fireEvent.click(screen.getByRole('button', { name: '600' }));
     expect(onTitleFontWeightChange).toHaveBeenCalledWith(600);
+  });
+
+  it('hides presentation-locked heading controls instead of exposing no-op controls', () => {
+    render(
+      <BillboardHudEditorPanel
+        titleSizeRem={4}
+        titleFontFamily="helv"
+        titleFontWeight={700}
+        justify="center"
+        showTitleSize={false}
+        showTitleFont={false}
+        showTitleAlignment={false}
+        showTitleWeight={false}
+      />,
+    );
+
+    expect(screen.queryByRole('slider', { name: 'Title size' })).toBeNull();
+    expect(screen.queryByText('Title font')).toBeNull();
+    expect(screen.queryByText('Title alignment')).toBeNull();
+    expect(screen.queryByText('Title weight')).toBeNull();
   });
 
   it('provides a separate header gap slider from title leading', () => {

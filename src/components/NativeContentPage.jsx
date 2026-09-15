@@ -1085,6 +1085,7 @@ function buildNativeBillboardSection(block, { includeTestClassName = false } = {
     titleHighlights: Array.isArray(runtime.titleHighlights) ? runtime.titleHighlights : [],
     subtitle: runtime.subtitle || undefined,
     subtitleClassName: runtime.subtitleClassName || undefined,
+    subtitleHighlights: Array.isArray(runtime.subtitleHighlights) ? runtime.subtitleHighlights : [],
     subtitleStyle: runtime.subtitleStyle || undefined,
     html: normalizeHtmlContent(runtime.bodyHtml),
     htmlClassName: [
@@ -1348,6 +1349,7 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
     bodyTone,
     subheadTone,
     cardPaddingRem,
+    cardGapRem,
     cardTitleSizeRem,
     cardTitleLineHeight,
     cardTitleJustify,
@@ -1493,6 +1495,7 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
       ...(Number.isFinite(Number(paddingTopRem)) ? { paddingTop: `${paddingTopRem}rem` } : {}),
       ...(Number.isFinite(Number(paddingBottomRem)) ? { paddingBottom: `${paddingBottomRem}rem` } : {}),
       '--dynamic-grid-card-padding': `${cardPaddingRem}rem`,
+      '--dynamic-grid-card-gap': `${cardGapRem}rem`,
       '--dynamic-grid-card-title-size': `${cardTitleSizeRem}rem`,
       '--dynamic-grid-card-title-justify': cardTitleJustify,
       '--dynamic-grid-card-title-justify-content': cardTitleJustify === 'left'
@@ -6670,6 +6673,7 @@ export default function NativeContentPage({ page }) {
               railStyle={section.railStyle}
               titleTag={SectionTitleTag}
               subtitleBaseClassName="native-info-section-subtitle"
+              actionRenderer={(action, key) => <Action key={key} item={action} />}
               logoComponent={SectionLogoComponent}
               logoImage={section.logoImage}
               logoAlt={section.logoAlt}
@@ -7234,6 +7238,7 @@ export default function NativeContentPage({ page }) {
                             section.headerGapRem !== null && section.headerGapRem !== undefined ? 'is-dynamic-billboard-header-gap' : '',
                           ].filter(Boolean).join(' ')
                         : undefined}
+                      style={isDynamicBillboardSection ? (section.htmlStyle || undefined) : undefined}
                     >
                       {renderTextWithStrong(paragraph)}
                     </p>

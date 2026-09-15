@@ -35,6 +35,7 @@ import {
 } from '../lib/heroHudRanges';
 import {
   BUTTON_TONE_OPTIONS,
+  CLEAR_TEXT_COLOR_OPTION,
   HERO_TEXT_COLOR_OPTIONS,
   PANEL_TEXT_TONE_OPTIONS,
   SURFACE_BG_TONE_OPTIONS,
@@ -769,9 +770,10 @@ function ColorTextSelectionEditor({
 
   const activeValue = hasSelection ? selectedRangeColor : extractHeroLineColorToken(normalizedLineClass);
   const hasSpanDetails = highlights.length > 0;
-  const resolvedSwatchOptions = useResetForClear
-    ? (Array.isArray(swatchOptions) ? swatchOptions.filter((option) => option.value !== '') : [])
-    : (Array.isArray(swatchOptions) ? swatchOptions : []);
+  const resolvedSwatchOptions = [
+    ...(Array.isArray(swatchOptions) ? swatchOptions : []).filter((option) => option?.isClear !== true),
+    ...(highlights.length ? [CLEAR_TEXT_COLOR_OPTION] : []),
+  ];
 
   const textInput = (
     <textarea
@@ -940,7 +942,7 @@ function ColorTextSelectionEditor({
             value={activeValue}
             preventMouseDown
             onChange={(nextValue) => applySwatch(nextValue)}
-            getOptionClassName={(option, state) => `${state.active ? ' is-active' : ''}${option.value === '' ? ' is-clear' : ''}`}
+            getOptionClassName={(_option, state) => `${state.active ? ' is-active' : ''}`}
             getOptionShortLabel={(option) => option.shortLabel || option.label}
             hideSwatchForOption={(option) => Boolean(option.hideSwatch)}
           />
@@ -1265,7 +1267,7 @@ function renderFieldControl(field, value, onChange, settings, onSettingChange, r
         getOptionClassName={(option, state) => {
           const optionToken = String(option.value || '').trim().toLowerCase();
           const isWhiteTone = optionToken === 'white';
-          return `${usesBgPaletteStyle ? ' admin-bg-swatch-option' : ''}${state.active ? ' is-active' : ''}${isWhiteTone ? ' is-white-tone' : ''}${option.value === '' ? ' is-clear' : ''}`;
+          return `${usesBgPaletteStyle ? ' admin-bg-swatch-option' : ''}${state.active ? ' is-active' : ''}${isWhiteTone ? ' is-white-tone' : ''}`;
         }}
         getOptionShortLabel={(option) => (useCompactPalette ? (option.shortLabel || option.label) : option.label)}
         hideSwatchForOption={(option) => Boolean(option.hideSwatch)}

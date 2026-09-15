@@ -79,6 +79,7 @@ export default function ColorPalette({
           buttonBaseClassName,
           active ? 'is-active' : '',
           disabled ? 'is-disabled' : '',
+          option?.isClear ? 'is-clear' : '',
           extraClassName || '',
         ].filter(Boolean).join(' ');
 

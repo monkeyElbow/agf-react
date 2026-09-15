@@ -41,6 +41,7 @@ let mockLastSharedSaveResult = {
   updatedAt: Date.now() - 120_000,
 };
 let mockLastSharedPublishResult = null;
+let mockSharedPublishStatus = '';
 let mockSharedSyncStatus = {
   isPending: true,
   pendingMutationCount: 1,
@@ -69,6 +70,7 @@ vi.mock('../context/ContentAdminContextCore', () => ({
     getPageWorkflowActivity: () => mockWorkflowActivity,
     lastSharedSaveResult: mockLastSharedSaveResult,
     lastSharedPublishResult: mockLastSharedPublishResult,
+    sharedPublishStatus: mockSharedPublishStatus,
     sharedSyncStatus: mockSharedSyncStatus,
     hasPendingExternalDrafts: () => mockHasPendingExternalDrafts,
     saveSharedDraftNow: mockSaveSharedDraftNow,
@@ -98,6 +100,7 @@ describe('FrontHudPageWorkflow', () => {
   beforeEach(() => {
     mockDirty = true;
     mockChangeSummary = {
+      changedBlockIds: ['hero', 'cta_form'],
       changedBlockCount: 2,
       hasOrderChanges: false,
       hasPageMetaChanges: true,
@@ -119,6 +122,7 @@ describe('FrontHudPageWorkflow', () => {
       updatedAt: Date.now() - 120_000,
     };
     mockLastSharedPublishResult = null;
+    mockSharedPublishStatus = '';
     mockSharedSyncStatus = {
       isPending: true,
       pendingMutationCount: 1,
@@ -173,7 +177,7 @@ describe('FrontHudPageWorkflow', () => {
     expect(screen.getByText('Make live publishes 2 blocks, page details')).toBeTruthy();
     expect(screen.getByText('Page details changed')).toBeTruthy();
     expect(screen.getByText('Draft sync pending')).toBeTruthy();
-    expect(screen.getByText('Live site has not been updated by Make live')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Make live' }).title).toBe('Live site unchanged until Make live.');
     expect(screen.getAllByText('Saving draft to shared content...').length).toBe(2);
     expect(screen.getByRole('button', { name: 'Save all page drafts' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Make live' }).disabled).toBe(false);
@@ -214,6 +218,88 @@ describe('FrontHudPageWorkflow', () => {
       expect(screen.getByText(/Draft saved/)).toBeTruthy();
     });
     expect(screen.getByRole('button', { name: 'Save all page drafts' }).textContent).toBe('Save all page drafts');
+  });
+
+  it('does not report an unrun live publish as a block draft save problem', async () => {
+    const view = render(
+      <FrontHudPageWorkflow
+        pathname="/services/loans"
+        blockId="hero"
+        placement="dock-inline"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save block draft' }));
+
+    await waitFor(() => {
+      expect(mockSaveSharedBlockDraftNow).toHaveBeenCalledWith('/services/loans', 'hero', 'HUD block draft save');
+    });
+    mockSharedPublishStatus = 'SAVING_DRAFT';
+    view.rerender(
+      <FrontHudPageWorkflow
+        pathname="/services/loans"
+        blockId="hero"
+        placement="dock-inline"
+      />,
+    );
+    expect(screen.queryByText('Saving draft before live publish...')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Make live' }).title).toBe('Live site unchanged until Make live.');
+    expect(screen.queryByText('No live publish has been run for this draft yet.')).toBeNull();
+    expect(mockPublishSharedBlockNow).not.toHaveBeenCalled();
+  });
+
+  it('disables block draft save after the saved draft catches up without disabling Make live', async () => {
+    mockDirty = false;
+    mockChangeSummary = {
+      changedBlockIds: ['hero'],
+      changedBlockCount: 1,
+      hasOrderChanges: false,
+      hasPageMetaChanges: false,
+      hasUnsavedChanges: true,
+    };
+    mockPublishSummary = {
+      changedBlockIds: ['hero'],
+      changedBlockCount: 1,
+      hasOrderChanges: false,
+      hasPageMetaChanges: false,
+      hasUnsavedChanges: true,
+    };
+    mockSharedSyncStatus = {
+      ...mockSharedSyncStatus,
+      isPending: false,
+      hasQueuedDraftSync: false,
+    };
+    mockSaveSharedBlockDraftNow.mockImplementation(async () => {
+      mockChangeSummary = {
+        changedBlockIds: [],
+        changedBlockCount: 0,
+        hasOrderChanges: false,
+        hasPageMetaChanges: false,
+        hasUnsavedChanges: false,
+      };
+      return { ok: true, saveResult: { status: 'saved', updatedAt: Date.now() } };
+    });
+
+    render(
+      <FrontHudPageWorkflow
+        pathname="/services/loans"
+        blockId="hero"
+        placement="dock-inline"
+      />,
+    );
+
+    const saveButton = screen.getByRole('button', { name: 'Save block draft' });
+    expect(saveButton.disabled).toBe(false);
+    fireEvent.click(saveButton);
+
+    await waitFor(() => {
+      expect(mockSaveSharedBlockDraftNow).toHaveBeenCalledWith('/services/loans', 'hero', 'HUD block draft save');
+    });
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Save block draft' }).disabled).toBe(true);
+    });
+    expect(screen.getByRole('button', { name: 'Make live' }).disabled).toBe(false);
+    expect(mockPublishSharedBlockNow).not.toHaveBeenCalled();
   });
 
   it('blocks block-level Make live after a draft save timeout until saving succeeds', async () => {
@@ -295,9 +381,57 @@ describe('FrontHudPageWorkflow', () => {
     });
   });
 
+  it('keeps a newly added block publishable when the page diff is briefly missing its id', async () => {
+    mockDirty = false;
+    mockChangeSummary = {
+      changedBlockCount: 0,
+      hasOrderChanges: false,
+      hasPageMetaChanges: false,
+      hasUnsavedChanges: false,
+    };
+    mockPublishSummary = {
+      changedBlockCount: 0,
+      changedBlockIds: [],
+      hasOrderChanges: false,
+      hasPageMetaChanges: false,
+      hasUnsavedChanges: false,
+    };
+    mockSharedSyncStatus = {
+      ...mockSharedSyncStatus,
+      isPending: false,
+      hasQueuedDraftSync: false,
+    };
+    mockWorkflowActivity = {
+      hasCurrentActorDraft: false,
+      hasCurrentActorUnsavedSave: true,
+      currentActorUnsavedSaveBlockIds: ['billboard_2'],
+      hasOtherActorDraft: false,
+    };
+    mockGetBlockCollaboration.mockReturnValue({ isNewBlock: true });
+
+    render(
+      <FrontHudPageWorkflow
+        pathname="/test"
+        blockId="billboard_2"
+        placement="dock-inline"
+      />,
+    );
+
+    expect(screen.getByRole('button', { name: 'Save block draft' }).disabled).toBe(false);
+    const makeLiveButton = screen.getByRole('button', { name: 'Make live' });
+    expect(makeLiveButton.disabled).toBe(false);
+
+    fireEvent.click(makeLiveButton);
+
+    await waitFor(() => {
+      expect(mockPublishSharedBlockNow).toHaveBeenCalledWith('/test', 'billboard_2', 'HUD block publish');
+    });
+  });
+
   it('does not let an unrelated page draft hide the active block save action', () => {
     mockDirty = false;
     mockChangeSummary = {
+      changedBlockIds: ['hero'],
       changedBlockCount: 1,
       hasOrderChanges: false,
       hasPageMetaChanges: false,
@@ -1002,7 +1136,7 @@ describe('FrontHudPageWorkflow', () => {
     expect(screen.getByRole('button', { name: 'Take over draft' })).toBeTruthy();
   });
 
-  it('publishes the page when a selected block carries the page order change', async () => {
+  it('publishes only the selected block when it carries a page order change', async () => {
     mockDirty = false;
     mockPublishSummary = {
       changedBlockCount: 0,
@@ -1030,8 +1164,9 @@ describe('FrontHudPageWorkflow', () => {
     fireEvent.click(makeLiveButton);
 
     await waitFor(() => {
-      expect(mockPublishSharedPageNow).toHaveBeenCalledWith('/test', 'HUD page order publish');
+      expect(mockPublishSharedBlockNow).toHaveBeenCalledWith('/test', 'hero', 'HUD block publish');
     });
+    expect(mockPublishSharedPageNow).not.toHaveBeenCalled();
   });
 
   it('keeps a saved block publishable when ownership metadata is incomplete and another draft is unrelated', async () => {

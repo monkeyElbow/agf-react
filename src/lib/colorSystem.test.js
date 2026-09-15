@@ -59,7 +59,7 @@ describe('color system helpers', () => {
       'is-super-grey',
       'is-white',
     ]);
-    expect(HERO_TEXT_COLOR_OPTIONS.at(-1)).toMatchObject({ value: '', hideSwatch: true });
+    expect(HERO_TEXT_COLOR_OPTIONS.at(-1)).toMatchObject({ value: '', hideSwatch: true, isClear: true });
     expect(HERO_TEXT_COLOR_OPTIONS[0]).toMatchObject({ value: 'is-atlantean', label: 'Blue' });
     expect(SURFACE_BG_TONE_OPTIONS.map((option) => option.value)).toEqual(['white', 'sand', 'blue', 'grey']);
     expect(PANEL_TEXT_TONE_OPTIONS.map((option) => option.value)).toEqual(['dark', 'white', 'blue']);

@@ -1676,6 +1676,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
           settings: {
             title: 'Need more room?',
             bodyHtml: '<p>Shared billboard body.</p>',
+            titleFontFamily: 'heading',
             bgTone: 'blue',
             textTone: 'white',
             justify: 'right',
@@ -1715,7 +1716,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
     expect(billboardSection?.getAttribute('style') || '').toContain('--dynamic-billboard-padding-top: 5.25rem');
     expect(billboardSection?.getAttribute('style') || '').toContain('--dynamic-billboard-padding-bottom: 6.5rem');
     expect(billboardRail?.getAttribute('style') || '').toContain('--dynamic-billboard-max-width: 1100px');
-    expect(billboardHeading.style.fontWeight).toBe('900');
+    expect(billboardHeading.style.fontWeight).toBe('800');
     expect(billboardCopy?.className).toContain('is-justify-right');
     expect(billboardSubtitle).toBeTruthy();
   });

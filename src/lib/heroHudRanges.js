@@ -322,13 +322,27 @@ export function remapHighlightsJsonForTextChange(rawHighlightsJson, prevText, ne
 }
 
 export function applySelectionColor(rawHighlightsJson, lineText, start, end, className) {
-  const normalizedClass = normalizeHeroColorToken(className);
   const sourceText = String(lineText || '');
-  if (!normalizedClass || !Number.isInteger(start) || !Number.isInteger(end) || end <= start) {
+  if (!Number.isInteger(start) || !Number.isInteger(end) || end <= start) {
     return String(rawHighlightsJson || '');
   }
 
   const current = parseHeroRangeHighlights(rawHighlightsJson, sourceText);
+  const normalizedClass = normalizeHeroColorToken(className);
+  if (!normalizedClass) {
+    const clearedRanges = current.flatMap((range) => {
+      if (range.end <= start || range.start >= end) {
+        return [range];
+      }
+
+      return [
+        range.start < start ? { ...range, end: start } : null,
+        range.end > end ? { ...range, start: end } : null,
+      ].filter(Boolean);
+    });
+    return serializeHeroRangeHighlights(clearedRanges, sourceText);
+  }
+
   const nextRanges = current.filter((range) => (
     Math.max(range.start, start) >= Math.min(range.end, end)
   ));

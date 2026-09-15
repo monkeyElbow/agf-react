@@ -1025,9 +1025,10 @@ export default function ServicesPage() {
               as="div"
               className={`native-info-rich-html${servicesMattersRuntime.bodyColorClassName ? ` ${servicesMattersRuntime.bodyColorClassName}` : ''}`}
               html={servicesMattersRuntime.bodyHtml}
+              style={servicesMattersRuntime.bodyHtmlStyle || undefined}
             />
           ) : servicesMattersRuntime.body ? (
-            <p className={servicesMattersRuntime.bodyColorClassName || undefined}>{servicesMattersRuntime.body}</p>
+            <p className={servicesMattersRuntime.bodyColorClassName || undefined} style={servicesMattersRuntime.bodyHtmlStyle || undefined}>{servicesMattersRuntime.body}</p>
           ) : null}
           {servicesMattersRuntime.action ? (
             <div className="service-native-action-row is-centered">

@@ -1,4 +1,4 @@
-import { createElement } from 'react';
+import { createElement, useState } from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import AdminHtmlEditor, { HTML_EDITOR_COLOR_SWATCHES, normalizeHtmlEditorSemanticColors, normalizeHtmlEditorTextSizes } from './AdminHtmlEditor';
@@ -52,6 +52,54 @@ describe('AdminHtmlEditor', () => {
 
     expect(onBaseColorChange).toHaveBeenCalledWith('is-mango');
     expect(execCommand).not.toHaveBeenCalledWith('foreColor', false, '#faa31a');
+  });
+
+  it('reflects the selected base color on the editable surface', () => {
+    const { container } = render(createElement(AdminHtmlEditor, {
+      value: '<p>Newsletter copy</p>',
+      onChange: () => {},
+      baseColorClassName: 'is-white',
+      compact: true,
+    }));
+
+    expect(container.querySelector('.admin-html-editor')?.classList.contains('is-white')).toBe(true);
+    expect(container.querySelector('.admin-html-editor-surface')).toBeTruthy();
+  });
+
+  it('can hide block-format controls for editors with an owning title control', () => {
+    render(createElement(AdminHtmlEditor, {
+      value: '<p>Billboard body copy</p>',
+      onChange: () => {},
+      showBlockFormatControls: false,
+      compact: true,
+    }));
+
+    expect(screen.queryByTitle('Heading 2')).toBeNull();
+    expect(screen.queryByTitle('Heading 3')).toBeNull();
+    expect(screen.queryByTitle('Paragraph')).toBeNull();
+    expect(screen.getByTitle('Bold')).toBeTruthy();
+  });
+
+  it('preserves rich markup when switching between Visual and HTML modes', () => {
+    function ControlledEditor() {
+      const [value, setValue] = useState('<p><span class="is-mango">Marked</span> copy.</p>');
+      return createElement(AdminHtmlEditor, {
+        value,
+        onChange: setValue,
+        showModeTabs: true,
+        showFooterToggle: false,
+        compact: true,
+      });
+    }
+
+    render(createElement(ControlledEditor));
+    fireEvent.click(screen.getByRole('tab', { name: 'HTML' }));
+    const source = screen.getByRole('textbox', { name: 'HTML content' });
+    fireEvent.change(source, { target: { value: '<p><span class="is-mango">Marked</span> edited.</p>' } });
+    fireEvent.click(screen.getByRole('tab', { name: 'Visual' }));
+
+    expect(screen.getByRole('textbox', { name: 'HTML content' }).innerHTML)
+      .toBe('<p><span class="is-mango">Marked</span> edited.</p>');
   });
 
   it('keeps applying inline color when body text is selected', () => {

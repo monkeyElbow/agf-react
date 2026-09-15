@@ -187,13 +187,17 @@ export default function FrontHudPageWorkflow({
   const { revealToken = 0, setEnabled: setFrontHudEnabled = null } = useFrontHud() || {};
   const normalizedPath = String(pathname || '').trim();
   const normalizedBlockId = String(blockId || '').trim();
+  const contextBlockCollaboration = normalizedPath && normalizedBlockId
+    ? getBlockCollaboration(normalizedPath, normalizedBlockId)
+    : null;
   const contextOwnership = normalizedPath && normalizedBlockId
-    ? getBlockOwnershipVisual(
-      getBlockCollaboration(normalizedPath, normalizedBlockId),
-      devIdentity?.userId,
-    )
+    ? getBlockOwnershipVisual(contextBlockCollaboration, devIdentity?.userId)
     : null;
   const resolvedOwnership = ownership || contextOwnership;
+  const isNewBlock = Boolean(
+    contextBlockCollaboration?.isNewBlock
+    || resolvedOwnership?.isNewBlock,
+  );
   const resolvedOwnershipAction = typeof onOwnershipAction === 'function'
     ? onOwnershipAction
     : normalizedPath && normalizedBlockId && typeof setActiveBlockLock === 'function'
@@ -238,12 +242,6 @@ export default function FrontHudPageWorkflow({
   const publishSummary = normalizedPath
     ? (getPagePublishSummary(normalizedPath) || {})
     : {};
-  const hasBlockOrderChange = Boolean(
-    normalizedBlockId
-    && !publishSummary?.isDeletionOnlyOrderChange
-    && Array.isArray(publishSummary?.orderChangedBlockIds)
-    && publishSummary.orderChangedBlockIds.includes(normalizedBlockId),
-  );
   const workflowActivity = normalizedPath
     ? (getPageWorkflowActivity(normalizedPath) || {})
     : {};
@@ -267,6 +265,12 @@ export default function FrontHudPageWorkflow({
   const syncPending = Boolean(sharedSyncStatus?.isPending);
   const hasPublishChanges = Boolean(publishSummary?.hasUnsavedChanges);
   const hasQueuedDraftSync = Boolean(sharedSyncStatus?.hasQueuedDraftSync);
+  const isLivePublishInProgress = isPublishing && [
+    PUBLISH_STATUS.SAVING_DRAFT,
+    PUBLISH_STATUS.PUBLISHING,
+    PUBLISH_STATUS.VERIFYING,
+    PUBLISH_STATUS.STATUS_UNKNOWN,
+  ].includes(sharedPublishStatus);
   const isSharedWorkflowBusy = sharedPublishStatus === PUBLISH_STATUS.SAVING_DRAFT
     || sharedPublishStatus === PUBLISH_STATUS.PUBLISHING
     || sharedPublishStatus === PUBLISH_STATUS.VERIFYING
@@ -321,7 +325,7 @@ export default function FrontHudPageWorkflow({
 
   const saveFeedbackLabel = sharedSyncFailureLabel
     ? sharedSyncFailureLabel
-    : blockDraftSaveFailed && !hasBlockOrderChange
+    : blockDraftSaveFailed && normalizedBlockId
       ? `${saveError || 'Draft save failed'}; save again before Make live`
     : saveError
     ? saveError
@@ -352,13 +356,13 @@ export default function FrontHudPageWorkflow({
           : 'Live content is current.';
   const publishFeedbackLabel = publishError
     ? publishError
-    : sharedPublishStatus === PUBLISH_STATUS.SAVING_DRAFT
+    : isPublishing && sharedPublishStatus === PUBLISH_STATUS.SAVING_DRAFT
       ? 'Saving draft before live publish...'
-    : sharedPublishStatus === 'STATUS_UNKNOWN'
+    : isPublishing && sharedPublishStatus === PUBLISH_STATUS.STATUS_UNKNOWN
       ? 'Publish status unknown; verifying before retrying'
-    : sharedPublishStatus === 'VERIFYING'
+    : isPublishing && sharedPublishStatus === PUBLISH_STATUS.VERIFYING
       ? 'Verifying live publish...'
-    : sharedPublishStatus === 'PUBLISHING'
+    : isPublishing && sharedPublishStatus === PUBLISH_STATUS.PUBLISHING
       ? 'Publishing live content...'
     : pathPublishResult?.status === 'failed'
       ? 'Live publish failed; draft content was preserved'
@@ -372,19 +376,14 @@ export default function FrontHudPageWorkflow({
         ? 'Already live'
         : pathPublishResult?.error
           ? `Last publish failed${pathPublishResult.updatedAt ? ` ${formatRelativeTime(pathPublishResult.updatedAt)}` : ''}`
-          : pathPublishResult?.updatedAt
+      : pathPublishResult?.updatedAt
             ? 'Live publish complete'
-            : 'Live site has not been updated by Make live';
+          : hasUnpublishedChanges
+            ? 'Live site unchanged until Make live.'
+            : 'Live content is current.';
   const shouldShowPublishFeedback = Boolean(
     publishError
-    || [
-      PUBLISH_STATUS.SAVING_DRAFT,
-      PUBLISH_STATUS.PUBLISHING,
-      PUBLISH_STATUS.VERIFYING,
-      PUBLISH_STATUS.STATUS_UNKNOWN,
-      PUBLISH_STATUS.LIVE_CONFIRMED,
-      PUBLISH_STATUS.PUBLISH_FAILED,
-    ].includes(sharedPublishStatus)
+    || isLivePublishInProgress
     || ['published', 'partially-published', 'blocked', 'failed', 'already-live'].includes(pathPublishResult?.status)
   );
   const compactWorkflowFeedbackLabel = shouldShowPublishFeedback
@@ -530,13 +529,20 @@ export default function FrontHudPageWorkflow({
   ].filter(Boolean);
   const activityItems = [saveActivityLabel, publishActivityLabel, syncActivityLabel].filter(Boolean);
   const hasBlockPublishChanges = normalizedBlockId
-    ? hasBlockDraft || publishSummary?.orderChangedBlockIds?.includes(normalizedBlockId)
+    ? hasBlockDraft
+      || isNewBlock
+      || publishSummary?.orderChangedBlockIds?.includes(normalizedBlockId)
     : hasPublishChanges;
   const hasUnsavedOwnershipMetadata = normalizedBlockId
     ? Boolean(workflowActivity?.currentActorUnsavedSaveBlockIds?.includes(normalizedBlockId))
     : Boolean(workflowActivity?.hasCurrentActorUnsavedSave);
   const hasBlockSaveChanges = normalizedBlockId
-    ? hasBlockDraft || hasPendingExternalDraftOnBlock || hasUnsavedOwnershipMetadata
+    ? Boolean(
+      changeSummary?.changedBlockIds?.includes(normalizedBlockId)
+      || changeSummary?.orderChangedBlockIds?.includes(normalizedBlockId)
+      || hasPendingExternalDraftOnBlock
+      || hasUnsavedOwnershipMetadata
+    )
     : pageDirty || hasPendingExternalDraftsOnPage || hasUnsavedOwnershipMetadata;
   const canSaveDraft = showDraftActions
     && !isSaving
@@ -567,15 +573,13 @@ export default function FrontHudPageWorkflow({
     && !isPublishing
     && !isDiscarding
     && !isSharedWorkflowBusy
-    && (!(normalizedBlockId && blockDraftSaveFailed) || hasBlockOrderChange)
-    && (!publishBlockedByOtherDraft || canPartiallyPublishPage || hasBlockOrderChange)
+    && !(normalizedBlockId && blockDraftSaveFailed)
+    && (!publishBlockedByOtherDraft || canPartiallyPublishPage)
     && (normalizedBlockId
       ? hasBlockPublishChanges || hasPendingExternalDraftOnBlock
       : pageDirty || hasPublishChanges || hasPendingExternalDraftsOnPage);
-  const makeLiveTitle = blockDraftSaveFailed && !hasBlockOrderChange
+  const makeLiveTitle = normalizedBlockId && blockDraftSaveFailed
     ? 'Save block draft must succeed before this block can be made live.'
-    : hasBlockOrderChange
-    ? 'Make this page order change live; another admin’s block content will remain draft.'
     : publishBlockedByOtherDraft
     ? canPartiallyPublishPage
       ? `Make live will publish ${publishablePageBlockIds.length} eligible block${publishablePageBlockIds.length === 1 ? '' : 's'}; ${workflowActivity.otherActorBlockCount || 1} other-admin block${workflowActivity.otherActorBlockCount === 1 ? '' : 's'} will remain draft.`
@@ -674,10 +678,10 @@ export default function FrontHudPageWorkflow({
     setPublishError('');
     setIsPublishing(true);
     try {
+      // A block editor's Make live action is never allowed to widen into a
+      // page publish. The page bar is the only page-wide publish entry point.
       const result = normalizedBlockId
-        ? hasBlockOrderChange
-          ? await publishSharedPageNow(normalizedPath, 'HUD page order publish')
-          : await publishSharedBlockNow(normalizedPath, normalizedBlockId, 'HUD block publish')
+        ? await publishSharedBlockNow(normalizedPath, normalizedBlockId, 'HUD block publish')
         : await publishSharedPageNow(normalizedPath, '');
       if (result?.ok === false) {
         if (normalizedBlockId && (
@@ -698,9 +702,6 @@ export default function FrontHudPageWorkflow({
         } else {
           setPublishError('Live publish failed');
         }
-      } else if (hasBlockOrderChange) {
-        setBlockDraftSaveFailed(false);
-        setSaveError('');
       }
     } catch {
       setPublishError('Live publish failed');

@@ -6,7 +6,12 @@ const DEV_CONTENT_AUTHORITY_BASE = '/__dev/content-admin';
 // LAN. Publish responses include a verified route slice, so they need more
 // time than an ordinary draft write while still having a finite abort window.
 const SHARED_CONTENT_SNAPSHOT_TIMEOUT_MS = 15_000;
-const SHARED_DRAFT_SAVE_TIMEOUT_MS = 6000;
+// A block save persists the shared record before it can return its scoped
+// snapshot. The record is intentionally durable on disk, and the dev server
+// can also be serializing a large snapshot for another tab at the same time.
+// Six seconds was short enough to report false failures while the authority
+// was still committing the draft.
+const SHARED_DRAFT_SAVE_TIMEOUT_MS = 15_000;
 const SHARED_DRAFT_SYNC_TIMEOUT_MS = 3000;
 const SHARED_PUBLISH_TIMEOUT_MS = 30_000;
 const SHARED_PUBLISH_STATUS_TIMEOUT_MS = 15_000;
@@ -112,14 +117,18 @@ async function sendJson(pathname, options = {}) {
   if (contentAdminAuthorityLost) {
     throw createAuthorityLostError(requestUrl);
   }
-  const controller = timeoutMs > 0 && typeof AbortController === 'function'
-    ? new AbortController()
-    : null;
-  const timeoutId = controller
-    ? setTimeout(() => controller.abort(), timeoutMs)
-    : null;
-  try {
-    for (let attempt = 0; attempt < 2; attempt += 1) {
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    // Give every network attempt its own budget. In particular, the first
+    // 401 challenge may require an interactive login; that login must not
+    // consume the timer for the authenticated request that follows it.
+    const controller = timeoutMs > 0 && typeof AbortController === 'function'
+      ? new AbortController()
+      : null;
+    const timeoutId = controller
+      ? setTimeout(() => controller.abort(), timeoutMs)
+      : null;
+    let retryAfterAuthentication = false;
+    try {
       const response = await fetch(requestUrl, {
         ...requestOptions,
         credentials: 'same-origin',
@@ -134,31 +143,37 @@ async function sendJson(pathname, options = {}) {
         },
       });
       if (response.status === 401 && attempt === 0) {
-        await authenticateDevContentAuthority(readRequestActor(requestOptions));
-        continue;
+        retryAfterAuthentication = true;
+      } else {
+        return await parseJsonResponse(response, requestUrl);
       }
-      return await parseJsonResponse(response, requestUrl);
-    }
-    throw new Error('Content authority authentication retry failed.');
-  } catch (error) {
-    if (isAuthorityLossError(error)) {
-      contentAdminAuthorityLost = true;
-      if (error.code !== 'content-admin-authority-lost') {
-        error.code = 'content-admin-authority-lost';
+    } catch (error) {
+      if (isAuthorityLossError(error)) {
+        contentAdminAuthorityLost = true;
+        if (error.code !== 'content-admin-authority-lost') {
+          error.code = 'content-admin-authority-lost';
+        }
+      }
+      if (controller?.signal.aborted) {
+        const timeoutError = new Error(timeoutMessage);
+        timeoutError.code = 'content-admin-request-timeout';
+        timeoutError.endpoint = requestUrl;
+        throw timeoutError;
+      }
+      throw error;
+    } finally {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
       }
     }
-    if (controller?.signal.aborted) {
-      const timeoutError = new Error(timeoutMessage);
-      timeoutError.code = 'content-admin-request-timeout';
-      timeoutError.endpoint = requestUrl;
-      throw timeoutError;
-    }
-    throw error;
-  } finally {
-    if (timeoutId) {
-      clearTimeout(timeoutId);
+
+    if (retryAfterAuthentication) {
+      await authenticateDevContentAuthority(readRequestActor(requestOptions));
+      continue;
     }
   }
+
+  throw new Error('Content authority authentication retry failed.');
 }
 
 const contentAdminDraftCoordinator = createContentAdminDraftCoordinator({

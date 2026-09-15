@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import ColorPalette from './ColorPalette';
+import { CLEAR_TEXT_COLOR_OPTION } from '../lib/colorSystem';
 
 export default function TextHighlightColorControls({
   label,
@@ -25,13 +26,17 @@ export default function TextHighlightColorControls({
   spanDetailsLabel = 'Show span details',
 }) {
   const safeRanges = Array.isArray(highlightRanges) ? highlightRanges : [];
+  const paletteOptions = [
+    ...(Array.isArray(options) ? options : []).filter((option) => option?.isClear !== true),
+    ...(safeRanges.length ? [CLEAR_TEXT_COLOR_OPTION] : []),
+  ];
   const resolvedSwatchClassName = swatchClassName || (paletteVariant === 'hud' ? 'is-compact is-icon-only' : '');
   const palette = (
     <ColorPalette
       variant={paletteVariant}
       className={`${paletteClassName}${resolvedSwatchClassName ? ` ${resolvedSwatchClassName}` : ''}`.trim()}
       ariaLabel={ariaLabel}
-      options={options}
+      options={paletteOptions}
       value={value}
       preventMouseDown
       getOptionLabel={getOptionLabel}

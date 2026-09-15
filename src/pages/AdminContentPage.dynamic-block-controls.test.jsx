@@ -1383,7 +1383,7 @@ describe('dynamic block control wiring', () => {
       );
 
       fireEvent.click(screen.getByRole('button', { name: 'Copy' }));
-      const bodyInput = screen.getByRole('textbox', { name: 'Body HTML' });
+      const bodyInput = screen.getByRole('textbox', { name: 'Billboard body copy' });
       bodyInput.innerHTML = '<p>Alpha ravo</p>';
       fireEvent.input(bodyInput);
 
@@ -1402,7 +1402,7 @@ describe('dynamic block control wiring', () => {
         />,
       );
 
-      expect(screen.getByRole('textbox', { name: 'Body HTML' }).innerHTML).toBe('<p>Alpha ravo</p>');
+      expect(screen.getByRole('textbox', { name: 'Billboard body copy' }).innerHTML).toBe('<p>Alpha ravo</p>');
 
       rerender(
         <BillboardBlockEditor
@@ -1411,7 +1411,7 @@ describe('dynamic block control wiring', () => {
         />,
       );
 
-      expect(screen.getByRole('textbox', { name: 'Body HTML' }).innerHTML).toBe('<p>Alpha ravo</p>');
+      expect(screen.getByRole('textbox', { name: 'Billboard body copy' }).innerHTML).toBe('<p>Alpha ravo</p>');
     } finally {
       vi.runOnlyPendingTimers();
       vi.useRealTimers();
@@ -1426,7 +1426,7 @@ describe('dynamic block control wiring', () => {
     render(<BillboardBlockEditor block={block} onSettingChange={onSettingChange} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Copy' }));
-    const bodyInput = screen.getByRole('textbox', { name: 'Body HTML' });
+    const bodyInput = screen.getByRole('textbox', { name: 'Billboard body copy' });
     bodyInput.innerHTML = '<p>Alph bravo</p>';
     fireEvent.input(bodyInput);
     fireEvent.blur(bodyInput);
@@ -1443,16 +1443,15 @@ describe('dynamic block control wiring', () => {
       render(<BillboardBlockEditor block={getDynamicBlock('billboard')} onSettingChange={onSettingChange} />);
 
       fireEvent.click(screen.getByRole('button', { name: 'Copy' }));
-      const bodyInput = screen.getByLabelText('Lead copy');
-      fireEvent.change(bodyInput, {
-        target: { value: 'Draft billboard lead copy' },
-      });
+      const bodyInput = screen.getByRole('textbox', { name: 'Billboard body copy' });
+      bodyInput.innerHTML = '<p>Draft billboard lead copy</p>';
+      fireEvent.input(bodyInput);
 
-      expect(onSettingChange).not.toHaveBeenCalledWith('body', 'Draft billboard lead copy');
+      expect(onSettingChange).not.toHaveBeenCalledWith('bodyHtml', '<p>Draft billboard lead copy</p>');
 
       fireEvent.blur(bodyInput);
 
-      expect(onSettingChange).toHaveBeenCalledWith('body', 'Draft billboard lead copy');
+      expect(onSettingChange).toHaveBeenCalledWith('bodyHtml', '<p>Draft billboard lead copy</p>');
     } finally {
       vi.runOnlyPendingTimers();
       vi.useRealTimers();
@@ -1501,6 +1500,50 @@ describe('dynamic block control wiring', () => {
       '[{"start":7,"end":11,"className":"is-super-grey","text":"fuel"}]',
     );
     expect(onSettingChange).not.toHaveBeenCalledWith('titleClassName', 'is-super-grey');
+  });
+
+  it('clears a selected Billboard title span and clears the title core color with the same swatch', () => {
+    const block = getDynamicBlock('billboard');
+    block.settings.title = 'Vision fuel';
+    block.settings.titleClassName = 'is-white';
+    block.settings.titleHighlightsJson = '[{"start":7,"end":11,"className":"is-mango"}]';
+    const onSettingChange = vi.fn();
+
+    render(<BillboardBlockEditor block={block} onSettingChange={onSettingChange} />);
+
+    const titleInput = screen.getByLabelText('Title');
+    titleInput.focus();
+    titleInput.setSelectionRange(7, 11);
+    fireEvent.select(titleInput);
+
+    fireEvent.click(
+      within(screen.getByRole('radiogroup', { name: 'Billboard title color' }))
+        .getByRole('radio', { name: 'Clear selected span' }),
+    );
+
+    expect(onSettingChange).toHaveBeenCalledWith('titleHighlightsJson', '');
+
+    titleInput.setSelectionRange(0, 0);
+    fireEvent.select(titleInput);
+    fireEvent.click(
+      within(screen.getByRole('radiogroup', { name: 'Billboard title color' }))
+        .getByRole('radio', { name: 'Clear title color' }),
+    );
+
+    expect(onSettingChange).toHaveBeenCalledWith('titleClassName', '');
+    expect(onSettingChange).toHaveBeenCalledWith('titleHighlightsJson', '');
+  });
+
+  it('writes Billboard title weight as an immediate numeric setting', () => {
+    const onSettingChange = vi.fn();
+
+    const block = getDynamicBlock('billboard');
+    block.settings.titleFontFamily = 'heading';
+    render(<BillboardBlockEditor block={block} onSettingChange={onSettingChange} />);
+
+    fireEvent.click(within(screen.getByRole('group', { name: 'Title weight' })).getByRole('button', { name: '800' }));
+
+    expect(onSettingChange).toHaveBeenCalledWith('titleFontWeight', 800);
   });
 
   it('keeps billboard button links on the buffered route-sync path', () => {

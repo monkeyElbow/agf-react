@@ -1,8 +1,10 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
+import { useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { getBlockEditorSections, getEditableFieldsForKind } from '../blocks/registry';
 import { buildDynamicBillboardFromBlock } from '../lib/dynamicPageBlocks';
 import { normalizeBlockPresentation } from '../lib/blockPresentationContracts';
+import { EDITOR_DRAFT_FLUSH_EVENT } from '../lib/contentAdminTiming';
 import {
   BillboardBlockEditor,
   getMigratedBlockEditorComponent,
@@ -14,6 +16,7 @@ const BILLBOARD_CORE_SETTING_KEYS = [
   'titleHighlightsJson',
   'subtitle',
   'subtitleClassName',
+  'subtitleHighlightsJson',
   'subtitleSizeRem',
   'titleFontFamily',
   'titleFontWeight',
@@ -54,6 +57,19 @@ function billboardBlock(settings = {}) {
   };
 }
 
+function StatefulBillboardEditor({ initialSettings = {}, onSettingChange = null }) {
+  const [settings, setSettings] = useState(initialSettings);
+  return (
+    <BillboardBlockEditor
+      block={billboardBlock(settings)}
+      onSettingChange={(fieldId, value) => {
+        onSettingChange?.(fieldId, value);
+        setSettings((current) => ({ ...current, [fieldId]: value }));
+      }}
+    />
+  );
+}
+
 describe('Billboard editor contract', () => {
   it('uses one canonical section and setting-key contract for Admin and HUD', () => {
     const adminSections = getBlockEditorSections('billboard', 'admin');
@@ -88,6 +104,140 @@ describe('Billboard editor contract', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Buttons' }));
     fireEvent.change(screen.getByRole('slider', { name: 'Billboard button gap' }), { target: { value: '2.35' } });
     expect(onSettingChange).toHaveBeenCalledWith('actionGapRem', 2.35);
+  });
+
+  it('loads legacy plain copy into the shared body editor without migrating on open', () => {
+    const onSettingChange = vi.fn();
+    render(<BillboardBlockEditor
+      block={billboardBlock({ bodyHtml: '', body: 'Nathan changed this copy.\nSecond line.' })}
+      onSettingChange={onSettingChange}
+    />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Copy' }));
+    const editor = screen.getByRole('textbox', { name: 'Billboard body copy' });
+
+    expect(editor.innerHTML).toContain('Nathan changed this copy.');
+    expect(editor.innerHTML).toContain('<br>');
+    expect(onSettingChange).not.toHaveBeenCalledWith('bodySource', 'html');
+  });
+
+  it('makes HTML authoritative on explicit edit while retaining legacy body for recovery', () => {
+    const onSettingChange = vi.fn();
+    render(<BillboardBlockEditor
+      block={billboardBlock({ bodyHtml: '', body: 'Legacy recovery copy.' })}
+      onSettingChange={onSettingChange}
+    />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Copy' }));
+    const editor = screen.getByRole('textbox', { name: 'Billboard body copy' });
+    editor.innerHTML = '<p>Edited <strong>body</strong>.</p>';
+    fireEvent.input(editor);
+    fireEvent.blur(editor);
+
+    expect(onSettingChange).toHaveBeenCalledWith('bodySource', 'html');
+    expect(onSettingChange).not.toHaveBeenCalledWith('body', '');
+  });
+
+  it('flushes unsaved body typing when Save draft requests editor drafts', () => {
+    const onSettingChange = vi.fn();
+    render(<BillboardBlockEditor
+      block={billboardBlock({ bodyHtml: '<p>Original body.</p>' })}
+      onSettingChange={onSettingChange}
+    />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Copy' }));
+    const editor = screen.getByRole('textbox', { name: 'Billboard body copy' });
+    editor.innerHTML = '<p>Unsaved body before Save draft.</p>';
+    fireEvent.input(editor);
+    fireEvent.click(screen.getByRole('tab', { name: 'HTML' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Visual' }));
+    window.dispatchEvent(new Event(EDITOR_DRAFT_FLUSH_EVENT));
+
+    expect(onSettingChange).toHaveBeenCalledWith('bodyHtml', '<p>Unsaved body before Save draft.</p>');
+  });
+
+  it('keeps an explicitly cleared body empty instead of resurrecting legacy copy', () => {
+    const onSettingChange = vi.fn();
+    render(<BillboardBlockEditor
+      block={billboardBlock({ bodyHtml: '', body: 'Legacy recovery copy.' })}
+      onSettingChange={onSettingChange}
+    />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Copy' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'HTML' }));
+    const editor = screen.getByRole('textbox', { name: 'Billboard body copy' });
+    fireEvent.change(editor, { target: { value: '' } });
+    fireEvent.blur(editor);
+
+    expect(onSettingChange).toHaveBeenCalledWith('bodySource', 'html');
+    expect(onSettingChange).toHaveBeenCalledWith('bodyHtml', '');
+    expect(buildDynamicBillboardFromBlock(billboardBlock({
+      body: 'Legacy recovery copy.',
+      bodyHtml: '',
+      bodySource: 'html',
+    }))?.body).toBe('');
+  });
+
+  it('switches Billboard weight choices to the selected font family', () => {
+    const onSettingChange = vi.fn();
+    render(<StatefulBillboardEditor
+      initialSettings={{
+        titleFontFamily: 'heading',
+        titleFontWeight: 800,
+      }}
+      onSettingChange={onSettingChange}
+    />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Heading' }));
+    expect(screen.getByRole('button', { name: '800' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Helvetica Neue' }));
+
+    expect(onSettingChange).toHaveBeenCalledWith('titleFontFamily', 'helv');
+    expect(onSettingChange).toHaveBeenCalledWith('titleFontWeight', 700);
+    expect(screen.queryByRole('button', { name: '600' })).toBeNull();
+    expect(screen.queryByRole('button', { name: '900' })).toBeNull();
+  });
+
+  it('reflects the selected title span color in the title palette', () => {
+    const block = billboardBlock({
+      title: 'Vision fuel',
+      titleClassName: 'is-white',
+      titleHighlightsJson: '[{"start":7,"end":11,"className":"is-mango","text":"fuel"}]',
+    });
+
+    render(<BillboardBlockEditor block={block} onSettingChange={vi.fn()} />);
+
+    const titleInput = screen.getByLabelText('Title');
+    titleInput.focus();
+    titleInput.setSelectionRange(7, 11);
+    fireEvent.select(titleInput);
+
+    const titlePalette = screen.getByRole('radiogroup', { name: 'Billboard title color' });
+    expect(within(titlePalette).getByRole('radio', { name: 'Mango' }).getAttribute('aria-checked')).toBe('true');
+    expect(within(titlePalette).getByRole('radio', { name: 'White' }).getAttribute('aria-checked')).toBe('false');
+  });
+
+  it('applies a color to the selected Billboard subtitle span', () => {
+    const onSettingChange = vi.fn();
+    render(<BillboardBlockEditor block={billboardBlock({
+      subtitle: 'Supporting copy',
+      subtitleClassName: 'is-white',
+    })} onSettingChange={onSettingChange} />);
+
+    const subtitleInput = screen.getByLabelText('Subtitle');
+    subtitleInput.focus();
+    subtitleInput.setSelectionRange(0, 10);
+    fireEvent.select(subtitleInput);
+    fireEvent.click(
+      within(screen.getByRole('radiogroup', { name: 'Billboard subtitle color' }))
+        .getByRole('radio', { name: 'Mango' }),
+    );
+
+    expect(onSettingChange).toHaveBeenCalledWith(
+      'subtitleHighlightsJson',
+      '[{"start":0,"end":10,"className":"is-mango","text":"Supporting"}]',
+    );
+    expect(onSettingChange).not.toHaveBeenCalledWith('subtitleClassName', 'is-mango');
   });
 
   it('keeps Billboard actions and background controls attached to canonical settings', () => {

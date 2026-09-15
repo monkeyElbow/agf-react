@@ -42,6 +42,7 @@ describe('planned giving stewardship story layout guardrail', () => {
     expect(cssSource).toContain('.legacy-stewardship-story-static-beats li {');
     expect(cssSource).toContain('border-top: 0;');
     expect(cssSource).toContain('font-size: clamp(1.55rem, 2.8vw, 2.35rem);');
+    expect(cssSource).toMatch(/\.fade-out \{[\s\S]*?transition: filter 220ms ease;/);
     expect(cssSource).toContain('align-items: stretch;');
     expect(cssSource).toContain('min-height: 100vh;');
     expect(cssSource).toContain('justify-content: center;');

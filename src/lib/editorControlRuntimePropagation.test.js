@@ -24,7 +24,7 @@ describe('editor control runtime propagation', () => {
       buttonLinkJson: JSON.stringify({ kind: 'internal', to: '/published' }),
       bgTone: 'blue',
       justify: 'center',
-      titleFontFamily: 'helv',
+      titleFontFamily: 'heading',
       titleFontWeight: 700,
       contentMaxWidthPx: 920,
     });
@@ -45,7 +45,7 @@ describe('editor control runtime propagation', () => {
 
     expect(draftRuntime.title).toBe('Draft title');
     expect(draftRuntime.bgTone).toBe('grey');
-    expect(draftRuntime.titleStyle.fontWeight).toBe(900);
+    expect(draftRuntime.titleStyle.fontWeight).toBe(800);
     expect(draftRuntime.contentMaxWidthPx).toBe(1120);
     expect(draftRuntime.actions[0].to).toBe('/published');
   });

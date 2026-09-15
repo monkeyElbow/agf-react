@@ -1886,7 +1886,10 @@
   align-content: start;
   overflow: hidden;
   opacity: var(--ag-admin-hud-panel-opacity-base);
-  z-index: 70;
+  /* A docked editor must stay above page dimmers and uncropped light bridges.
+     The parent block may intentionally relinquish its stacking context so a
+     light can cross into the next block; this surface cannot do that. */
+  z-index: 2000;
   transition:
     opacity 560ms cubic-bezier(0.22, 1, 0.36, 1),
     background-color 560ms cubic-bezier(0.22, 1, 0.36, 1),
@@ -4061,6 +4064,39 @@
 
 .admin-front-hud-swatch-row.hud-standard-swatch-palette .admin-front-hud-swatch-fill {
   border-radius: 50%;
+}
+
+/* Clear is a palette option, not a second control style. Keep the same
+   centered X treatment anywhere a HUD text palette exposes it. */
+.admin-front-hud-swatch.is-clear {
+  position: relative;
+  padding: 0;
+  border-radius: 50%;
+  border-color: rgba(var(--ag-admin-hud-accent-rgb), 0.28);
+  background: transparent;
+  color: var(--ag-admin-hud-control-text);
+  font-size: 1.08rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.admin-front-hud-swatch.is-clear .admin-front-hud-swatch-fill {
+  display: none;
+}
+
+.admin-front-hud-swatch.is-clear::before {
+  content: '×';
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  line-height: 1;
+}
+
+.admin-front-hud-swatch.is-clear:hover,
+.admin-front-hud-swatch.is-clear:focus-visible {
+  border-color: var(--ag-admin-hud-accent);
+  background: rgba(var(--ag-admin-hud-accent-soft-rgb), 0.12);
 }
 
 .admin-front-hud-swatch.is-active {
@@ -6539,6 +6575,7 @@
 }
 
 .admin-hud-editor-inline-control > span,
+.admin-billboard-hud-heading-color-meta > span:first-child,
 .admin-billboard-hud-reference-panel .admin-front-hud-field > span,
 .admin-billboard-hud-reference-panel .admin-front-hud-range > span,
 .admin-billboard-hud-reference-panel .admin-front-hud-hero-line-label {
@@ -6809,6 +6846,64 @@
   min-width: 0;
 }
 
+.admin-billboard-hud-heading-color-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.28rem;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.admin-billboard-hud-heading-color-meta > span:first-child {
+  flex: 0 0 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-billboard-hud-heading-marked-spans {
+  display: flex;
+  flex: 1 1 auto;
+  gap: 0.2rem;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  white-space: nowrap;
+}
+
+.admin-billboard-hud-heading-marked-spans::-webkit-scrollbar {
+  display: none;
+}
+
+.admin-billboard-hud-heading-marked-span {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  gap: 0.16rem;
+  max-width: 8rem;
+  padding: 0.1rem 0.26rem;
+  border: 1px solid rgba(var(--ag-admin-hud-accent-rgb), 0.2);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.42);
+  color: var(--ag-admin-hud-control-text);
+  font-size: 0.56rem;
+  line-height: 1;
+}
+
+.admin-billboard-hud-heading-marked-span > span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-billboard-hud-heading-marked-span-swatch {
+  width: 0.52rem;
+  height: 0.52rem;
+  flex: 0 0 auto;
+  border: 1px solid rgba(0, 0, 0, 0.16);
+  border-radius: 50%;
+}
+
 .admin-billboard-hud-heading-settings {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -6926,122 +7021,54 @@
   }
 }
 
-/* Heading page 1: keep copy and type controls in the left column, with every
-   heading slider in the right column. */
+/* Heading page 1: keep copy at 50%, then give the right half a shared type
+   surface above separate title and subtitle control surfaces. */
 .admin-billboard-hud-reference-panel.is-heading-panel .admin-billboard-hud-heading-workbench {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  grid-template-rows: auto auto;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: start;
   gap: var(--ag-hud-editor-space-3);
 }
 
-.admin-billboard-hud-reference-panel.is-heading-panel .admin-billboard-hud-heading-workbench .admin-billboard-hud-heading-copy-box {
+.admin-billboard-hud-reference-panel.is-heading-panel .admin-billboard-hud-heading-copy-box {
   grid-column: 1;
   grid-row: 1;
   padding: var(--ag-hud-editor-panel-padding);
 }
 
-.admin-billboard-hud-reference-panel.is-heading-panel .admin-billboard-hud-heading-workbench .admin-billboard-hud-heading-slider-panel {
+.admin-billboard-hud-reference-panel.is-heading-panel .admin-billboard-hud-heading-controls-box {
   grid-column: 2;
   grid-row: 1 / span 2;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  align-content: start;
-  align-items: end;
-  gap: var(--ag-hud-editor-row-gap);
-  padding: var(--ag-hud-editor-panel-padding);
+  gap: var(--ag-hud-editor-space-3);
+  min-width: 0;
 }
 
-.admin-billboard-hud-reference-panel.is-heading-panel .admin-billboard-hud-heading-workbench .admin-billboard-hud-heading-type-panel {
-  grid-column: 1;
-  grid-row: 2;
+.admin-billboard-hud-reference-panel.is-heading-panel .admin-billboard-hud-heading-type-panel {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
   align-items: end;
   gap: var(--ag-hud-editor-row-gap);
   padding: var(--ag-hud-editor-panel-padding);
-  border-top: 1px solid rgba(var(--ag-admin-hud-accent-rgb), 0.18);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.admin-billboard-hud-reference-panel.is-heading-panel .admin-billboard-hud-heading-slider-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--ag-hud-editor-space-3);
+  min-width: 0;
+}
+
+.admin-billboard-hud-reference-panel.is-heading-panel .admin-billboard-hud-heading-slider-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: var(--ag-hud-editor-row-gap);
+  padding: var(--ag-hud-editor-panel-padding);
 }
 
 .admin-billboard-hud-reference-panel.is-heading-panel .admin-billboard-hud-heading-row {
   grid-template-columns: minmax(0, 1fr) minmax(7rem, 0.72fr);
-}
-
-.admin-billboard-title-color-state {
-  display: grid;
-  gap: 0.28rem;
-  min-width: 0;
-  padding-top: 0.18rem;
-  color: var(--ag-admin-hud-control-muted);
-  font-size: 0.58rem;
-}
-
-.admin-billboard-title-color-state-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-}
-
-.admin-billboard-title-color-reset {
-  flex: 0 0 auto;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: var(--ag-admin-hud-control-text);
-  font: inherit;
-  text-decoration: underline;
-  text-underline-offset: 0.12em;
-  cursor: pointer;
-}
-
-.admin-billboard-title-color-reset:disabled {
-  opacity: 0.42;
-  cursor: default;
-  text-decoration: none;
-}
-
-.admin-billboard-title-color-state-help {
-  opacity: 0.78;
-}
-
-.admin-billboard-title-color-badges {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem;
-}
-
-.admin-billboard-title-color-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.26rem;
-  min-width: 0;
-  padding: 0.18rem 0.34rem;
-  border: 1px solid rgba(var(--ag-admin-hud-accent-rgb), 0.2);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.42);
-  color: var(--ag-admin-hud-control-text);
-  font: inherit;
-  cursor: pointer;
-}
-
-.admin-billboard-title-color-badge.is-selected {
-  border-color: var(--ag-admin-hud-accent);
-  box-shadow: 0 0 0 1px rgba(var(--ag-admin-hud-accent-rgb), 0.24);
-}
-
-.admin-billboard-title-color-badge-swatch {
-  width: 0.7rem;
-  height: 0.7rem;
-  flex: 0 0 auto;
-  border: 1px solid rgba(0, 0, 0, 0.16);
-  border-radius: 50%;
-}
-
-.admin-billboard-title-color-badge-range {
-  opacity: 0.62;
-  font-variant-numeric: tabular-nums;
 }
 
 @media (max-width: 680px) {
@@ -7050,15 +7077,14 @@
     grid-template-rows: auto;
   }
 
-  .admin-billboard-hud-reference-panel.is-heading-panel .admin-billboard-hud-heading-workbench .admin-billboard-hud-heading-copy-box,
-  .admin-billboard-hud-reference-panel.is-heading-panel .admin-billboard-hud-heading-workbench .admin-billboard-hud-heading-slider-panel,
-  .admin-billboard-hud-reference-panel.is-heading-panel .admin-billboard-hud-heading-workbench .admin-billboard-hud-heading-type-panel {
+  .admin-billboard-hud-reference-panel.is-heading-panel .admin-billboard-hud-heading-copy-box,
+  .admin-billboard-hud-reference-panel.is-heading-panel .admin-billboard-hud-heading-controls-box {
     grid-column: 1;
     grid-row: auto;
   }
 
-  .admin-billboard-hud-reference-panel.is-heading-panel .admin-billboard-hud-heading-workbench .admin-billboard-hud-heading-slider-panel,
-  .admin-billboard-hud-reference-panel.is-heading-panel .admin-billboard-hud-heading-workbench .admin-billboard-hud-heading-type-panel {
+  .admin-billboard-hud-reference-panel.is-heading-panel .admin-billboard-hud-heading-type-panel,
+  .admin-billboard-hud-reference-panel.is-heading-panel .admin-billboard-hud-heading-slider-columns {
     grid-template-columns: minmax(0, 1fr);
   }
 
@@ -9957,25 +9983,6 @@
   .admin-card-outline-swatch-list {
   flex-wrap: nowrap;
   min-width: max-content;
-}
-
-.admin-hud-editor-shared-surface
-  .admin-front-hud-swatch-row.admin-card-outline-swatch-list
-  .admin-front-hud-swatch.is-clear {
-  width: auto;
-  min-width: 0;
-  height: auto;
-  min-height: 24px;
-  padding: 0.22rem 0.42rem;
-  border-radius: 999px;
-  font-size: 0.69rem;
-  line-height: 1;
-}
-
-.admin-hud-editor-shared-surface
-  .admin-front-hud-swatch-row.admin-card-outline-swatch-list
-  .admin-front-hud-swatch.is-clear::after {
-  content: 'Default';
 }
 
 .admin-hud-editor-shared-surface .admin-card-grid-hud-group

@@ -263,18 +263,26 @@ export default function AdminHtmlEditor({
   style,
   onBaseColorChange,
   showAlignmentControls = true,
+  showBlockFormatControls = true,
+  showModeTabs = false,
+  toolbarPreset = 'full',
+  mode = null,
+  onModeChange,
 }) {
   const editorRef = useRef(null);
   const savedSelectionRangeRef = useRef(null);
   const [sourceMode, setSourceMode] = useState(false);
   const [selectedColorId, setSelectedColorId] = useState(HTML_EDITOR_COLOR_SWATCHES[0]?.id || '');
+  const isControlledMode = mode === 'visual' || mode === 'html';
+  const isSourceMode = isControlledMode ? mode === 'html' : sourceMode;
+  const usesInlineBasicToolbar = toolbarPreset === 'inline-basic';
   const htmlValue = useMemo(
     () => ensureHtml(normalizeHtmlEditorFormatting(value)),
     [value],
   );
 
   useEffect(() => {
-    if (sourceMode || !editorRef.current) {
+    if (isSourceMode || !editorRef.current) {
       return;
     }
     if (
@@ -288,7 +296,7 @@ export default function AdminHtmlEditor({
     if (current !== htmlValue) {
       editorRef.current.innerHTML = htmlValue;
     }
-  }, [htmlValue, sourceMode]);
+  }, [htmlValue, isSourceMode]);
 
   useEffect(() => {
     const nextBaseColor = HTML_EDITOR_COLOR_SWATCHES.find((swatch) => (
@@ -381,6 +389,14 @@ export default function AdminHtmlEditor({
     applyCommand('createLink', url.trim());
   }
 
+  function setEditorMode(nextMode) {
+    const nextSourceMode = nextMode === 'html';
+    if (!isControlledMode) {
+      setSourceMode(nextSourceMode);
+    }
+    onModeChange?.(nextSourceMode ? 'html' : 'visual');
+  }
+
   function preserveSelection(event) {
     // Keep focus/selection in the editable surface when clicking toolbar controls.
     captureSelection();
@@ -415,9 +431,32 @@ export default function AdminHtmlEditor({
 
   return (
     <div
-      className={`admin-html-editor${compact ? ' is-compact' : ''}${baseColorClassName ? ` ${baseColorClassName}` : ''}${className ? ` ${className}` : ''}`}
+      className={`admin-html-editor${compact ? ' is-compact' : ''}${usesInlineBasicToolbar ? ' is-inline-basic-toolbar' : ''}${baseColorClassName ? ` ${baseColorClassName}` : ''}${className ? ` ${className}` : ''}`}
       style={style}
     >
+      <div className={`admin-html-editor-controls${usesInlineBasicToolbar ? ' is-inline' : ''}`}>
+      {showModeTabs ? (
+        <div className="admin-html-editor-mode-tabs" role="tablist" aria-label={`${ariaLabel} editor mode`}>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={!isSourceMode}
+            className={!isSourceMode ? 'is-active' : ''}
+            onClick={() => setEditorMode('visual')}
+          >
+            Visual
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={isSourceMode}
+            className={isSourceMode ? 'is-active' : ''}
+            onClick={() => setEditorMode('html')}
+          >
+            HTML
+          </button>
+        </div>
+      ) : null}
       <div className="admin-html-editor-toolbar" role="toolbar" aria-label="Article body formatting">
         <button type="button" onMouseDown={preserveSelection} onClick={() => applyCommand('bold')} title="Bold"><strong>B</strong></button>
         <button type="button" onMouseDown={preserveSelection} onClick={() => applyCommand('italic')} title="Italic"><em>I</em></button>
@@ -452,19 +491,30 @@ export default function AdminHtmlEditor({
             <button type="button" onMouseDown={preserveSelection} onClick={() => applyCommand('justifyRight')} title="Align right">Right</button>
           </div>
         ) : null}
-        <button type="button" onMouseDown={preserveSelection} onClick={() => applyCommand('formatBlock', 'h2')} title="Heading 2">H2</button>
-        <button type="button" onMouseDown={preserveSelection} onClick={() => applyCommand('formatBlock', 'h3')} title="Heading 3">H3</button>
-        <button type="button" onMouseDown={preserveSelection} onClick={() => applyCommand('formatBlock', 'p')} title="Paragraph">P</button>
-        <button type="button" onMouseDown={preserveSelection} onClick={() => applyCommand('insertUnorderedList')} title="Bulleted list">• List</button>
-        <button type="button" onMouseDown={preserveSelection} onClick={() => applyCommand('insertOrderedList')} title="Numbered list">1. List</button>
-        <button type="button" onMouseDown={preserveSelection} onClick={() => applyCommand('formatBlock', 'blockquote')} title="Quote">Quote</button>
+        {showBlockFormatControls ? (
+          <>
+            <button type="button" onMouseDown={preserveSelection} onClick={() => applyCommand('formatBlock', 'h2')} title="Heading 2">H2</button>
+            <button type="button" onMouseDown={preserveSelection} onClick={() => applyCommand('formatBlock', 'h3')} title="Heading 3">H3</button>
+            <button type="button" onMouseDown={preserveSelection} onClick={() => applyCommand('formatBlock', 'p')} title="Paragraph">P</button>
+          </>
+        ) : null}
+        {!usesInlineBasicToolbar ? (
+          <>
+            <button type="button" onMouseDown={preserveSelection} onClick={() => applyCommand('insertUnorderedList')} title="Bulleted list">• List</button>
+            <button type="button" onMouseDown={preserveSelection} onClick={() => applyCommand('insertOrderedList')} title="Numbered list">1. List</button>
+            <button type="button" onMouseDown={preserveSelection} onClick={() => applyCommand('formatBlock', 'blockquote')} title="Quote">Quote</button>
+          </>
+        ) : null}
         <button type="button" onMouseDown={preserveSelection} onClick={onSetLink} title="Add link">Link</button>
         <button type="button" onMouseDown={preserveSelection} onClick={() => applyCommand('unlink')} title="Remove link">Unlink</button>
-        <button type="button" onMouseDown={preserveSelection} onClick={() => applyCommand('insertHorizontalRule')} title="Divider">Divider</button>
+        {!usesInlineBasicToolbar ? (
+          <button type="button" onMouseDown={preserveSelection} onClick={() => applyCommand('insertHorizontalRule')} title="Divider">Divider</button>
+        ) : null}
         <button type="button" onMouseDown={preserveSelection} onClick={() => applyCommand('removeFormat')} title="Clear inline formatting">Clear</button>
       </div>
+      </div>
 
-      {sourceMode ? (
+      {isSourceMode ? (
         <textarea
           className="admin-html-editor-source"
           aria-label={ariaLabel}
@@ -490,14 +540,14 @@ export default function AdminHtmlEditor({
         />
       )}
 
-      {showFooterToggle ? (
+      {showFooterToggle && !showModeTabs ? (
         <div className="admin-html-editor-footer">
           <button
             type="button"
             className="action-btn action-btn-outline"
-            onClick={() => setSourceMode((current) => !current)}
+            onClick={() => setEditorMode(isSourceMode ? 'visual' : 'html')}
           >
-            {sourceMode ? 'Back to visual editor' : 'View HTML (advanced)'}
+            {isSourceMode ? 'Back to visual editor' : 'View HTML (advanced)'}
           </button>
         </div>
       ) : null}

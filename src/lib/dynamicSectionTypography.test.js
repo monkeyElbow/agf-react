@@ -5,6 +5,8 @@ import {
   buildBillboardTitleStyle,
   normalizeBillboardLeadCopySizeRem,
   normalizeBillboardLeadCopyLineHeight,
+  normalizeBillboardTitleFontWeight,
+  getBillboardTitleWeightOptions,
   normalizeBillboardSubtitleSizeRem,
   getIntroExtraLineDefaults,
   normalizeIntroExtraLineHeight,
@@ -44,6 +46,13 @@ describe('dynamicSectionTypography', () => {
     expect(normalizeBillboardSubtitleSizeRem(undefined)).toBe(1.18);
     expect(normalizeBillboardSubtitleSizeRem(1.36)).toBe(1.36);
     expect(normalizeBillboardSubtitleSizeRem(0.2)).toBe(1);
+  });
+
+  it('offers only the licensed weights for each billboard title family', () => {
+    expect(getBillboardTitleWeightOptions('helv')).toEqual([400, 500, 700]);
+    expect(getBillboardTitleWeightOptions('heading')).toEqual([400, 500, 600, 700, 800]);
+    expect(normalizeBillboardTitleFontWeight(800, 'helv')).toBe(700);
+    expect(normalizeBillboardTitleFontWeight(900, 'heading')).toBe(800);
   });
 
   it('normalizes and builds the shared billboard lead-copy size style', () => {
@@ -91,6 +100,18 @@ describe('dynamicSectionTypography', () => {
     })).toEqual({
       color: 'var(--ag-color-mango)',
       fontSize: 'clamp(calc(1.42rem * 0.68), 5vw, 1.42rem)',
+      letterSpacing: '-0.015em',
+    });
+  });
+
+  it('applies subtitle tracking to supporting subtitle styles', () => {
+    expect(buildBillboardSubtitleStyle({
+      subtitleDisplay: 'supporting',
+      subtitleSizeRem: 1.42,
+      subtitleLetterSpacingEm: -0.08,
+    })).toEqual({
+      fontSize: 'clamp(calc(1.42rem * 0.68), 5vw, 1.42rem)',
+      letterSpacing: '-0.08em',
     });
   });
 });

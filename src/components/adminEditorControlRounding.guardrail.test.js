@@ -144,6 +144,15 @@ describe('admin editor control rounding', () => {
 
     expect(hudSource).toContain('.admin-front-hud-swatch-row.hud-standard-swatch-palette .admin-front-hud-swatch {');
     expect(hudSource).toContain('.admin-front-hud-swatch-row.hud-standard-swatch-palette .admin-front-hud-swatch-fill {');
+    expect(hudSource).toContain('.admin-front-hud-swatch.is-clear::before {');
+    expect(hudSource).toContain("content: '×';");
+  });
+
+  it('keeps the shared X treatment on compact admin swatches', () => {
+    const adminSource = readSource('../styles/admin.css');
+
+    expect(adminSource).toContain('.admin-swatch-list.is-icon-only .admin-swatch-option.is-clear::before {');
+    expect(adminSource).toContain('.admin-swatch-list.is-icon-only .admin-swatch-option.is-clear:hover,');
   });
 
   it('keeps block ownership badge copy readable independently of identity color', () => {

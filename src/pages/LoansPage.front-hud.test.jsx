@@ -216,6 +216,7 @@ describe('LoansPage front HUD', () => {
     expect(firstCardTitle).toBeTruthy();
 
     const cases = [
+      ['Card padding', '2', '--dynamic-grid-card-padding', '2rem'],
       ['Card title line height', '1.1', '--dynamic-grid-card-title-line-height', '1.1'],
       ['Title-to-body space', '2', '--dynamic-grid-card-title-body-space', '2rem'],
       ['Card body line height', '1.8', '--dynamic-grid-card-body-line-height', '1.8'],

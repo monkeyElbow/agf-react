@@ -1,5 +1,51 @@
 import { serializeLinkValue } from './linkValue';
 
+export const BILLBOARD_BODY_PLACEHOLDER_TEXT = 'Add supporting copy here.';
+export const BILLBOARD_BODY_SOURCE_HTML = 'html';
+export const BILLBOARD_BODY_SOURCE_LEGACY = 'legacy';
+const BILLBOARD_BODY_PLACEHOLDER_HTML = `<p>${BILLBOARD_BODY_PLACEHOLDER_TEXT}</p>`
+  .replace(/\s+/g, '')
+  .toLowerCase();
+
+export function isBillboardBodyPlaceholderHtml(value) {
+  return String(value || '')
+    .trim()
+    .replace(/\s+/g, '')
+    .toLowerCase() === BILLBOARD_BODY_PLACEHOLDER_HTML;
+}
+
+export function isBillboardBodyHtmlEmpty(value) {
+  const normalized = String(value || '')
+    .trim()
+    .replace(/>\s+</g, '><')
+    .replace(/\s+/g, '')
+    .toLowerCase();
+  return !normalized || [
+    '<p></p>',
+    '<p><br></p>',
+    '<p><br/></p>',
+    '<p><br /></p>',
+    '<p>&nbsp;</p>',
+  ].includes(normalized);
+}
+
+/**
+ * Existing Billboard blocks may have plain copy in `body` and no HTML body.
+ * Resolve that legacy shape without writing a migration during render.
+ */
+export function resolveBillboardBodySource(settings = {}) {
+  const explicitSource = String(settings.bodySource || '').trim().toLowerCase();
+  if (explicitSource === BILLBOARD_BODY_SOURCE_HTML) {
+    return BILLBOARD_BODY_SOURCE_HTML;
+  }
+  if (explicitSource === BILLBOARD_BODY_SOURCE_LEGACY) {
+    return BILLBOARD_BODY_SOURCE_LEGACY;
+  }
+  return isBillboardBodyHtmlEmpty(settings.bodyHtml)
+    ? BILLBOARD_BODY_SOURCE_LEGACY
+    : BILLBOARD_BODY_SOURCE_HTML;
+}
+
 const BILLBOARD_PRESET_DEFINITIONS = Object.freeze([
   Object.freeze({
     id: 'default',
@@ -11,7 +57,8 @@ const BILLBOARD_PRESET_DEFINITIONS = Object.freeze([
       titleClassName: '',
       titleHighlightsJson: '',
       subtitle: '',
-      bodyHtml: '<p>Add supporting copy here.</p>',
+      subtitleHighlightsJson: '',
+      bodyHtml: '',
       body: '',
       bgTone: 'blue',
       textTone: 'white',

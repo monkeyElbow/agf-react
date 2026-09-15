@@ -83,6 +83,14 @@ export const SEMANTIC_TEXT_COLOR_OPTIONS = Object.freeze([
   Object.freeze({ value: 'is-white', label: 'White', swatch: TOKEN_SWATCHS.white }),
 ]);
 
+export const CLEAR_TEXT_COLOR_OPTION = Object.freeze({
+  value: '',
+  label: 'Clear marked spans',
+  shortLabel: 'Clear marked spans',
+  hideSwatch: true,
+  isClear: true,
+});
+
 export const SEMANTIC_TEXT_COLOR_OPTIONS_WITH_DEFAULT = Object.freeze([
   Object.freeze({ value: '', label: 'Default', swatch: TOKEN_SWATCHS.default }),
   ...SEMANTIC_TEXT_COLOR_OPTIONS,
@@ -90,7 +98,7 @@ export const SEMANTIC_TEXT_COLOR_OPTIONS_WITH_DEFAULT = Object.freeze([
 
 export const HERO_TEXT_COLOR_OPTIONS = Object.freeze([
   ...SEMANTIC_TEXT_COLOR_OPTIONS,
-  Object.freeze({ value: '', label: 'Clear', shortLabel: 'Clear', hideSwatch: true }),
+  CLEAR_TEXT_COLOR_OPTION,
 ]);
 
 export const SURFACE_BG_TONE_OPTIONS = Object.freeze([

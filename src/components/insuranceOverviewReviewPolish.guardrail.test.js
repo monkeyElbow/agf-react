@@ -53,7 +53,8 @@ describe('insurance overview review polish guardrail', () => {
     expect(cssSource).toContain('display: none;');
     expect(cssSource).toContain('.native-info-page--insurance .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).insurance-native-coverage .service-native-card > div:first-child {');
     expect(cssSource).toContain('.native-info-page--insurance .insurance-native-coverage .service-native-card p {');
-    expect(cssSource).toContain('padding: clamp(1.35rem, 2.8vw, 1.75rem) clamp(2rem, 4vw, 2.65rem) 0;');
+    expect(cssSource).toContain('var(--dynamic-grid-card-padding, clamp(1.35rem, 2.8vw, 1.75rem))');
+    expect(cssSource).toContain('var(--dynamic-grid-card-padding, clamp(2rem, 4vw, 2.65rem))');
     expect(cssSource).toContain('color: var(--ag-color-super-grey);');
     expect(cssSource).toContain('font-size: clamp(1.08rem, 1.5vw, 1.2rem);');
     expect(cssSource).toContain('.native-info-page--insurance .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).insurance-native-coverage .service-native-card h3 {');
@@ -65,7 +66,7 @@ describe('insurance overview review polish guardrail', () => {
     expect(cssSource).toContain('text-align: left;');
     expect(cssSource).toContain('font-weight: 700;');
     expect(cssSource).toContain('font-size: clamp(2.35rem, 3.6vw, 2.95rem);');
-    expect(cssSource).toContain('clamp(0.85rem, 1.8vw, 1.25rem);');
+    expect(cssSource).toContain('var(--dynamic-grid-card-padding, clamp(0.85rem, 1.8vw, 1.25rem));');
     expect(cssSource).toContain('.native-info-page--insurance .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).insurance-native-coverage .service-native-card h3 mark,');
     expect(cssSource).toContain('color: #ffffff !important;');
     expect(cssSource).toContain('.native-info-page--insurance .insurance-native-coverage > .ag-panel-rail > .service-native-action-row {');
@@ -78,7 +79,7 @@ describe('insurance overview review polish guardrail', () => {
     expect(cssSource).toContain('.native-info-page--insurance .insurance-native-coverage > .ag-panel-rail > .service-native-action-row .service-native-btn.is-outline,');
     expect(cssSource).toContain('--btn-hover-bg: transparent;');
     expect(cssSource).toContain('.native-info-page--insurance .insurance-native-coverage .service-native-card .service-native-action-row:last-child {');
-    expect(cssSource).toContain('clamp(2rem, 4vw, 2.65rem)');
+    expect(cssSource).toContain('var(--dynamic-grid-card-padding, clamp(2rem, 4vw, 2.65rem))');
     expect(cssSource).toContain('.native-info-page--insurance .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).insurance-native-coverage .service-native-card:nth-child(1) {');
     expect(cssSource).toContain('--insurance-coverage-card-cap-bg: linear-gradient(135deg, var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%);');
     expect(cssSource).toContain('.native-info-page--insurance .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).insurance-native-coverage .service-native-card:nth-child(2) {');
@@ -95,6 +96,8 @@ describe('insurance overview review polish guardrail', () => {
     expect(cssSource).toContain('.impact-proof-story-proof.is-tone-mango {');
     expect(cssSource).toContain('.impact-proof-story-proof.is-tone-super-grey {');
     expect(cssSource).toContain('.native-info-page--insurance .insurance-native-quote h2 {');
+    expect(cssSource).toContain('padding-top: var(--dynamic-billboard-padding-top, clamp(2.45rem, 4.8vw, 3.6rem));');
+    expect(cssSource).toContain('padding-bottom: var(--dynamic-billboard-padding-bottom, clamp(4rem, 7.2vw, 5.7rem));');
     expect(cssSource).toContain('.native-info-page--insurance .insurance-native-coverage .native-info-section-copy > h2 {');
     expect(cssSource).toContain('font-size: clamp(3.25rem, 6.4vw, 4.625rem);');
     expect(cssSource).toContain('letter-spacing: -2.5px;');

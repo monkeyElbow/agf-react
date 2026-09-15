@@ -78,6 +78,7 @@ import {
   normalizeBillboardTitleFontWeight,
   normalizeBillboardTitleLetterSpacingEm,
   normalizeBillboardTitleSizeRem,
+  getBillboardTitleWeightOptions,
   getIntroExtraLineDefaults,
   normalizeIntroLineSpacing,
 } from '../../lib/dynamicSectionTypography';
@@ -109,7 +110,14 @@ import {
 import { isNumberedStepCardsSection } from '../../lib/numberedStepCardsContract';
 import { buildCardGridIntroHtml } from '../../lib/cardGridIntro';
 import {
+  BILLBOARD_BODY_SOURCE_HTML,
+  isBillboardBodyHtmlEmpty,
+  isBillboardBodyPlaceholderHtml,
+  resolveBillboardBodySource,
+} from '../../lib/billboardPresets';
+import {
   BUTTON_TONE_OPTIONS as SHARED_BUTTON_TONE_OPTIONS,
+  CLEAR_TEXT_COLOR_OPTION,
   HERO_TEXT_COLOR_OPTIONS,
   PANEL_TEXT_TONE_OPTIONS,
   SURFACE_BG_TONE_OPTIONS,
@@ -144,6 +152,7 @@ import {
   getPageContentEditorHtml,
   hasLegacyPageContentSource,
 } from '../../lib/pageContentEditorHtml';
+import { getBlockPresentationLockedFieldIds } from '../../lib/blockPresentationContracts';
 import {
   createProtectedEditorDraft,
   isOlderEditorDraftRevision,
@@ -2630,9 +2639,7 @@ function renderFieldControl(field, value, onChange, settings, onSettingChange, r
         getOptionClassName={(option, state) => {
           const optionToken = String(option.value || '').trim().toLowerCase();
           const isWhiteTone = optionToken === 'white';
-          const isClearOption = option.value === ''
-            && (field.id !== 'cardOutlineTone' || option.hideSwatch === true);
-          return `${usesBgPaletteStyle ? ' admin-bg-swatch-option' : ''}${state.active ? ' is-active' : ''}${isWhiteTone ? ' is-white-tone' : ''}${isClearOption ? ' is-clear' : ''}`;
+          return `${usesBgPaletteStyle ? ' admin-bg-swatch-option' : ''}${state.active ? ' is-active' : ''}${isWhiteTone ? ' is-white-tone' : ''}`;
         }}
         getOptionShortLabel={(option) => (useCompactPalette ? (option.shortLabel || option.label) : option.label)}
         hideSwatchForOption={(option) => Boolean(option.hideSwatch)}
@@ -2854,7 +2861,7 @@ function toEditorHtml(value, fallbackText = '') {
       .replaceAll('&', '&amp;')
       .replaceAll('<', '&lt;')
       .replaceAll('>', '&gt;');
-    return `<p>${escaped}</p>`;
+    return `<p>${escaped.replace(/\r\n?|\n/g, '<br>')}</p>`;
   }
   const text = String(fallbackText || '').trim();
   if (!text) {
@@ -2864,7 +2871,7 @@ function toEditorHtml(value, fallbackText = '') {
     .replaceAll('&', '&amp;')
     .replaceAll('<', '&lt;')
     .replaceAll('>', '&gt;');
-  return `<p>${escaped}</p>`;
+  return `<p>${escaped.replace(/\r\n?|\n/g, '<br>')}</p>`;
 }
 
 export function EditorButtonPreview({ buttons, backgroundTone = 'white' }) {
@@ -4309,9 +4316,10 @@ function ColorTextSelectionEditor({
   const previewContent = value
     ? renderPreviewHighlightedText(value, highlights)
     : (showPlaceholderInPreview ? <span className="admin-color-text-placeholder">{placeholder || 'Preview'}</span> : null);
-  const resolvedSwatchOptions = useResetForClear
-    ? (Array.isArray(swatchOptions) ? swatchOptions.filter((option) => option.value !== '') : [])
-    : (Array.isArray(swatchOptions) ? swatchOptions : []);
+  const resolvedSwatchOptions = [
+    ...(Array.isArray(swatchOptions) ? swatchOptions : []).filter((option) => option?.isClear !== true),
+    ...(highlights.length ? [CLEAR_TEXT_COLOR_OPTION] : []),
+  ];
   const PreviewTag = previewTagName;
 
   const textInput = (
@@ -4483,7 +4491,7 @@ function ColorTextSelectionEditor({
               value={activeValue}
               preventMouseDown
               onChange={(nextValue) => applySwatch(nextValue)}
-              getOptionClassName={(option, state) => `${state.active ? ' is-active' : ''}${option.value === '' ? ' is-clear' : ''}`}
+              getOptionClassName={(_option, state) => `${state.active ? ' is-active' : ''}`}
               getOptionShortLabel={(option) => option.shortLabel || option.label}
               hideSwatchForOption={(option) => Boolean(option.hideSwatch)}
             />
@@ -5393,12 +5401,14 @@ export function BillboardBlockEditor({ block, onSettingChange, routeOptions = []
   const settings = block.settings || {};
   const billboardDraftSettings = useMemo(() => ({
     ...settings,
+    bodyHtml: isBillboardBodyPlaceholderHtml(settings.bodyHtml) ? '' : settings.bodyHtml,
     buttonUrl: resolveSplitRouteLinkEditableHref(settings, 'buttonUrl', 'buttonPageRef'),
     button2Url: resolveSplitRouteLinkEditableHref(settings, 'button2Url', 'button2PageRef'),
   }), [settings]);
   const effectiveBillboardSettings = billboardDraftSettings;
   const allFields = resolveEditorFields(block.kind, 'admin', block.editableFields);
   const fieldById = new Map(allFields.map((field) => [field.id, field]));
+  const lockedFieldIds = getBlockPresentationLockedFieldIds(block);
   const bgToneField = fieldById.get('bgTone') || null;
   const justifyField = fieldById.get('justify') || null;
   const bodyJustifyField = fieldById.get('bodyJustify') || null;
@@ -5430,6 +5440,7 @@ export function BillboardBlockEditor({ block, onSettingChange, routeOptions = []
     effectiveBillboardSettings.titleFontWeight,
     billboardTitleFontFamily,
   );
+  const billboardTitleWeightOptions = getBillboardTitleWeightOptions(billboardTitleFontFamily);
   const billboardTitleSizeRem = normalizeBillboardTitleSizeRem(effectiveBillboardSettings.titleSizeRem);
   const legacyBillboardLetterSpacingEm = effectiveBillboardSettings.titleLetterSpacingEm;
   const billboardTitleTrackingEm = normalizeBillboardTitleLetterSpacingEm(
@@ -5445,7 +5456,13 @@ export function BillboardBlockEditor({ block, onSettingChange, routeOptions = []
   const billboardLeadCopyLineHeight = normalizeBillboardLeadCopyLineHeight(effectiveBillboardSettings.leadCopyLineHeight);
   const billboardTextTone = normalizePanelTextTone(effectiveBillboardSettings.textTone, 'white');
   const billboardTitleInputRef = useRef(null);
+  const billboardSubtitleInputRef = useRef(null);
   const [billboardTitleSelection, setBillboardTitleSelection] = useState({
+    start: 0,
+    end: 0,
+    text: '',
+  });
+  const [billboardSubtitleSelection, setBillboardSubtitleSelection] = useState({
     start: 0,
     end: 0,
     text: '',
@@ -5467,6 +5484,14 @@ export function BillboardBlockEditor({ block, onSettingChange, routeOptions = []
     routeOptions,
     sourceRevision,
   });
+  const billboardBodySource = resolveBillboardBodySource({
+    ...effectiveBillboardSettings,
+    body: draftValues.body,
+    bodyHtml: draftValues.bodyHtml,
+  });
+  const billboardBodyEditorHtml = billboardBodySource === BILLBOARD_BODY_SOURCE_HTML
+    ? String(draftValues.bodyHtml || '')
+    : toEditorHtml('', draftValues.body);
 
   const captureBillboardTitleSelection = () => {
     const input = billboardTitleInputRef.current;
@@ -5483,6 +5508,43 @@ export function BillboardBlockEditor({ block, onSettingChange, routeOptions = []
     const text = String(input.value || '').slice(start, end);
     setBillboardTitleSelection({ start, end, text });
   };
+  const billboardTitleHighlights = parseHeroRangeHighlights(
+    effectiveBillboardSettings.titleHighlightsJson,
+    String(draftValues.title || ''),
+  );
+  const billboardSelectedTitleColor = billboardTitleSelection.text
+    ? resolveSelectionRangeColor(
+      billboardTitleHighlights,
+      billboardTitleSelection.start,
+      billboardTitleSelection.end,
+    )
+    : '';
+  const captureBillboardSubtitleSelection = () => {
+    const input = billboardSubtitleInputRef.current;
+    if (!input) {
+      return;
+    }
+    const rawStart = Number(input.selectionStart);
+    const rawEnd = Number(input.selectionEnd);
+    if (!Number.isInteger(rawStart) || !Number.isInteger(rawEnd)) {
+      return;
+    }
+    const start = Math.max(0, Math.min(rawStart, rawEnd));
+    const end = Math.max(start, Math.max(rawStart, rawEnd));
+    const text = String(input.value || '').slice(start, end);
+    setBillboardSubtitleSelection({ start, end, text });
+  };
+  const billboardSubtitleHighlights = parseHeroRangeHighlights(
+    effectiveBillboardSettings.subtitleHighlightsJson,
+    String(draftValues.subtitle || ''),
+  );
+  const billboardSelectedSubtitleColor = billboardSubtitleSelection.text
+    ? resolveSelectionRangeColor(
+      billboardSubtitleHighlights,
+      billboardSubtitleSelection.start,
+      billboardSubtitleSelection.end,
+    )
+    : '';
 
   return (
     <BillboardHudEditorPanel
@@ -5493,23 +5555,55 @@ export function BillboardBlockEditor({ block, onSettingChange, routeOptions = []
       }}
       onTitleBlur={() => commitDraftOnBlur('title')}
       subtitle={String(draftValues.subtitle || '')}
-      onSubtitleChange={(nextValue) => updateDraftField('subtitle', nextValue)}
+      onSubtitleChange={(nextValue) => {
+        const previousSubtitle = String(draftValues.subtitle || '');
+        updateDraftField('subtitle', nextValue);
+        const nextHighlightsJson = remapHighlightsJsonForTextChange(
+          effectiveBillboardSettings.subtitleHighlightsJson,
+          previousSubtitle,
+          nextValue,
+        );
+        if (nextHighlightsJson !== String(effectiveBillboardSettings.subtitleHighlightsJson || '')) {
+          onSettingChange('subtitleHighlightsJson', nextHighlightsJson);
+        }
+        setBillboardSubtitleSelection({ start: 0, end: 0, text: '' });
+      }}
       onSubtitleBlur={() => commitDraftOnBlur('subtitle')}
-      subtitleColor={extractHeroLineColorToken(String(effectiveBillboardSettings.subtitleClassName || '').trim())}
+      subtitleInputRef={billboardSubtitleInputRef}
+      onSubtitleSelectionCapture={captureBillboardSubtitleSelection}
+      subtitleSelection={billboardSubtitleSelection}
+      subtitleColor={extractHeroLineColorToken(
+        billboardSelectedSubtitleColor || String(effectiveBillboardSettings.subtitleClassName || '').trim(),
+      )}
       onSubtitleColorChange={(nextValue) => onSettingChange(
         'subtitleClassName',
         replaceHeroLineColorClass(String(effectiveBillboardSettings.subtitleClassName || '').trim(), nextValue),
       )}
+      onSubtitleSelectionColorChange={(nextValue, selectedSubtitle = billboardSubtitleSelection) => {
+        const currentSubtitle = String(draftValues.subtitle || '');
+        const result = applyTextColorSelection({
+          text: currentSubtitle,
+          lineClassName: String(effectiveBillboardSettings.subtitleClassName || '').trim(),
+          highlightsJson: effectiveBillboardSettings.subtitleHighlightsJson,
+          selection: selectedSubtitle,
+          colorValue: nextValue,
+        });
+        if (result.target !== 'selection') {
+          return;
+        }
+        onSettingChange('subtitleHighlightsJson', result.highlightsJson);
+      }}
+      subtitleHighlightsJson={effectiveBillboardSettings.subtitleHighlightsJson}
+      onSubtitleHighlightsChange={(nextValue) => onSettingChange('subtitleHighlightsJson', nextValue)}
       subtitleColorOptions={HERO_SWATCH_OPTIONS}
       subtitleSizeRem={billboardSubtitleSizeRem}
       onSubtitleSizeRemChange={(nextValue) => onSettingChange('subtitleSizeRem', Number(nextValue))}
-      body={String(draftValues.body || '')}
-      onBodyChange={(nextValue) => updateDraftField('body', nextValue)}
-      onBodyBlur={() => commitDraftOnBlur('body')}
       titleInputRef={billboardTitleInputRef}
       onTitleSelectionCapture={captureBillboardTitleSelection}
       titleSelection={billboardTitleSelection}
-      titleColor={extractHeroLineColorToken(String(effectiveBillboardSettings.titleClassName || '').trim())}
+      titleColor={extractHeroLineColorToken(
+        billboardSelectedTitleColor || String(effectiveBillboardSettings.titleClassName || '').trim(),
+      )}
       onTitleColorChange={(nextValue) => onSettingChange(
         'titleClassName',
         applyTextColorSelection({
@@ -5540,8 +5634,13 @@ export function BillboardBlockEditor({ block, onSettingChange, routeOptions = []
       titleHighlightsJson={effectiveBillboardSettings.titleHighlightsJson}
       onTitleHighlightsChange={(nextValue) => onSettingChange('titleHighlightsJson', nextValue)}
       titleColorOptions={HERO_SWATCH_OPTIONS}
-      bodyHtml={String(draftValues.bodyHtml || '')}
-      onBodyHtmlChange={(nextValue) => updateDraftField('bodyHtml', nextValue)}
+      bodyHtml={billboardBodyEditorHtml}
+      onBodyHtmlChange={(nextValue) => {
+        updateDraftField('bodyHtml', isBillboardBodyHtmlEmpty(nextValue) ? '' : nextValue);
+        if (String(effectiveBillboardSettings.bodySource || '').trim().toLowerCase() !== BILLBOARD_BODY_SOURCE_HTML) {
+          onSettingChange('bodySource', BILLBOARD_BODY_SOURCE_HTML);
+        }
+      }}
       onBodyHtmlBlur={() => commitDraftOnBlur('bodyHtml')}
       bodyJustify={billboardBodyJustify}
       onBodyJustifyChange={(nextValue) => onSettingChange('bodyJustify', nextValue)}
@@ -5564,14 +5663,26 @@ export function BillboardBlockEditor({ block, onSettingChange, routeOptions = []
       onJustifyChange={(nextValue) => onSettingChange('justify', nextValue)}
       justifyOptions={billboardJustifyOptions}
       titleFontFamily={billboardTitleFontFamily}
-      onTitleFontFamilyChange={(nextValue) => onSettingChange('titleFontFamily', nextValue)}
+      onTitleFontFamilyChange={(nextValue) => {
+        const nextFontFamily = normalizeBillboardTitleFontFamily(nextValue);
+        onSettingChange('titleFontFamily', nextFontFamily);
+        const currentRawWeight = Number(effectiveBillboardSettings.titleFontWeight);
+        const nextWeight = normalizeBillboardTitleFontWeight(currentRawWeight, nextFontFamily);
+        if (!Number.isFinite(currentRawWeight) || nextWeight !== currentRawWeight) {
+          onSettingChange('titleFontWeight', nextWeight);
+        }
+      }}
+      showTitleSize={!lockedFieldIds.has('titleSizeRem')}
+      showTitleFont={!lockedFieldIds.has('titleFontFamily')}
+      showTitleAlignment={!lockedFieldIds.has('justify')}
+      showTitleWeight={!lockedFieldIds.has('titleFontWeight')}
       titleFontOptions={[
         { value: 'heading', label: 'Avenir' },
         { value: 'helv', label: 'Helvetica Neue' },
       ]}
       titleFontWeight={billboardTitleFontWeight}
       onTitleFontWeightChange={(nextValue) => onSettingChange('titleFontWeight', Number(nextValue))}
-      titleWeightOptions={[600, 700, 800, 900]}
+      titleWeightOptions={billboardTitleWeightOptions}
       lineSpacing={billboardLineSpacing}
       onLineSpacingChange={(nextValue) => onSettingChange('lineSpacing', Number(nextValue))}
       headerGapRem={billboardHeaderGapRem}
@@ -6720,6 +6831,7 @@ export function ServicesGridBlockEditor({ block, onSettingChange, routeOptions =
     fieldById.get('headingSizeRem'),
     fieldById.get('cardTitleSizeRem'),
     fieldById.get('cardPaddingRem'),
+    fieldById.get('cardGapRem'),
     fieldById.get('browseLabel'),
     getPromotedRouteLinkField(fieldById, 'browsePath', 'browsePageRef'),
   ].filter(Boolean);
@@ -7161,6 +7273,7 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
     fieldById.get('cardBodyJustify'),
     fieldById.get('cardTitleBodySpaceRem'),
     fieldById.get('cardPaddingRem'),
+    fieldById.get('cardGapRem'),
     fieldById.get('fineprintSizeRem'),
     ...(isNumberedStepCardsGrid ? [fieldById.get('numberPositionPercent')] : []),
   ].filter(Boolean);
@@ -7196,7 +7309,7 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
     ['columns', 'cardCount', 'cardOutlineTone', 'cardOutlineWidth', 'cardHoverScale'],
   ]);
   const typographyFieldColumns = buildFieldColumns(cardGridTypographyFields, [
-    ['titleTone', 'cardTitleSizeRem', 'cardBodySizeRem', 'cardTitleJustify', 'cardBodyJustify', 'cardPaddingRem'],
+    ['titleTone', 'cardTitleSizeRem', 'cardBodySizeRem', 'cardTitleJustify', 'cardBodyJustify', 'cardPaddingRem', 'cardGapRem'],
     ['bodyTone', 'cardTitleLineHeight', 'cardTitleBodySpaceRem', 'cardBodyLineHeight', 'fineprintSizeRem'],
   ]);
   const editorSections = appendHudBlockOptionsSection([

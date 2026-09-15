@@ -964,6 +964,7 @@ describe('HeroHudEditorPanel', () => {
     expect(screen.queryByRole('button', { name: 'Show span details' })).toBeNull();
     expect(screen.queryByRole('button', { name: /Go to .*spans/ })).toBeNull();
     expect(screen.queryByRole('button', { name: /Line 1 \(1 spans\)/ })).toBeNull();
+    expect(screen.getByRole('radio', { name: /Clear marked spans/ })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Clear spans' })).toBeTruthy();
   });
 
@@ -984,6 +985,7 @@ describe('HeroHudEditorPanel', () => {
 
     expect(screen.getByLabelText('Hero color controls')).toBeTruthy();
     expect(screen.getByLabelText('Line 2 color controls')).toBeTruthy();
+    expect(screen.queryByRole('radio', { name: /Clear marked spans/ })).toBeNull();
 
     rerender(createElement(HeroHudEditorPanel, {
       lines: [

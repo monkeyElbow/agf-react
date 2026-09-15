@@ -29,4 +29,19 @@ describe('ColorPalette standard palette contract', () => {
 
     expect(screen.getByRole('radiogroup', { name: 'Admin colors' }).className).toContain(STANDARD_ADMIN_PALETTE_CLASS);
   });
+
+  it('marks explicit clear options for the shared X treatment without treating defaults as clear', () => {
+    render(ColorPalette({
+      variant: 'hud',
+      ariaLabel: 'Text colors',
+      options: [
+        { value: '', label: 'Default', swatch: '#fff' },
+        { value: '', label: 'Clear marked spans', hideSwatch: true, isClear: true },
+      ],
+    }));
+
+    const palette = screen.getByRole('radiogroup', { name: 'Text colors' });
+    expect(palette.querySelectorAll('.is-clear')).toHaveLength(1);
+    expect(palette.querySelector('.is-clear')?.getAttribute('aria-label')).toBe('Clear marked spans');
+  });
 });

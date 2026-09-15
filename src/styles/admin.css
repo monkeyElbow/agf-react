@@ -62,13 +62,19 @@
 }
 
 .admin-swatch-list.is-icon-only .admin-swatch-option.is-clear {
-  width: auto;
-  min-width: 0;
-  height: auto;
+  position: relative;
+  width: 24px;
+  min-width: 24px;
+  height: 24px;
   min-height: 24px;
-  padding: var(--admin-swatch-clear-padding);
-  border-radius: 999px;
-  gap: var(--admin-swatch-clear-gap);
+  padding: 0;
+  border-radius: 50%;
+  gap: 0;
+  border-color: rgba(0, 138, 171, 0.28);
+  background: transparent;
+  color: var(--ag-color-super-grey);
+  font-size: 1.08rem;
+  font-weight: 800;
   line-height: 1;
 }
 
@@ -77,11 +83,22 @@
 }
 
 .admin-swatch-list.is-icon-only .admin-swatch-option.is-clear > span:last-child {
-  display: inline;
-  font-size: 0.69rem;
+  display: none;
+}
+
+.admin-swatch-list.is-icon-only .admin-swatch-option.is-clear::before {
+  content: '×';
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
   line-height: 1;
-  font-weight: 700;
-  letter-spacing: 0;
+}
+
+.admin-swatch-list.is-icon-only .admin-swatch-option.is-clear:hover,
+.admin-swatch-list.is-icon-only .admin-swatch-option.is-clear:focus-visible {
+  border-color: rgba(0, 138, 171, 0.98);
+  background: rgba(38, 181, 212, 0.12);
 }
 
 .admin-swatch-list.is-icon-only .admin-swatch-option:not(.is-clear):hover,
@@ -3526,6 +3543,75 @@
   overflow: hidden;
 }
 
+.admin-html-editor-mode-tabs {
+  display: inline-flex;
+  gap: 0.2rem;
+  margin: 0.5rem 0.65rem 0;
+  padding: 0.18rem;
+  border: 1px solid #d5e0e7;
+  border-radius: 999px;
+  background: #f2f7fa;
+}
+
+.admin-html-editor-mode-tabs button {
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #657681;
+  padding: 0.3rem 0.72rem;
+  font: inherit;
+  font-size: 0.74rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.admin-html-editor-mode-tabs button:hover,
+.admin-html-editor-mode-tabs button:focus-visible {
+  color: var(--ag-color-atlantean-dark);
+  outline: none;
+}
+
+.admin-html-editor-mode-tabs button.is-active {
+  background: #ffffff;
+  color: var(--ag-color-atlantean-dark);
+  box-shadow: 0 1px 3px rgba(65, 64, 66, 0.14);
+}
+
+/* One compact control strip for small, focused rich-text surfaces. The strip
+ * scrolls horizontally on narrow panels rather than wrapping controls into
+ * extra rows and pushing the actual editor down. */
+.admin-html-editor-controls.is-inline {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+  overflow-x: auto;
+  padding: 0.42rem 0.5rem;
+  border-bottom: 1px solid #e2e8ee;
+  background: #f7fbff;
+  scrollbar-width: thin;
+}
+
+.admin-html-editor-controls.is-inline .admin-html-editor-mode-tabs {
+  flex: 0 0 auto;
+  margin: 0;
+}
+
+.admin-html-editor-controls.is-inline .admin-html-editor-toolbar {
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
+  gap: 0.28rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.admin-html-editor-controls.is-inline .admin-html-editor-toolbar button,
+.admin-html-editor-controls.is-inline .admin-html-editor-color-group {
+  flex: 0 0 auto;
+}
+
 .admin-html-editor-toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -3617,6 +3703,33 @@
 
 .admin-html-editor-surface {
   outline: none;
+}
+
+/* Base HTML-editor color belongs to the editable surface. Descendant
+ * semantic spans still win with their own color, matching the public rich
+ * text renderer. */
+.admin-html-editor.is-atlantean .admin-html-editor-surface {
+  color: var(--ag-color-atlantean);
+}
+
+.admin-html-editor.is-mango .admin-html-editor-surface {
+  color: var(--ag-color-mango);
+}
+
+.admin-html-editor.is-melon .admin-html-editor-surface {
+  color: var(--ag-color-melon);
+}
+
+.admin-html-editor.is-sandstone .admin-html-editor-surface {
+  color: var(--ag-color-sandstone);
+}
+
+.admin-html-editor.is-super-grey .admin-html-editor-surface {
+  color: var(--ag-color-super-grey);
+}
+
+.admin-html-editor.is-white .admin-html-editor-surface {
+  color: #ffffff;
 }
 
 .admin-html-editor-surface:empty::before {
@@ -5544,7 +5657,7 @@
 }
 
 .admin-hero-inline-swatch-list .admin-swatch-option.is-clear {
-  margin-left: auto;
+  margin-left: 0;
 }
 
 .admin-hero-inline-swatch-list .admin-swatch-option.is-clear .admin-swatch-chip {
@@ -8770,7 +8883,7 @@
 }
 
 .admin-color-text-swatch-list .admin-swatch-option.is-clear {
-  margin-left: auto;
+  margin-left: 0;
 }
 
 .admin-testimonials-editor {

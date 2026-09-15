@@ -101,6 +101,14 @@ async function startIsolatedDevServer() {
   const revisionDirectory = path.join(fixtureDirectory, 'content-admin-revisions');
   const authorityLockFile = path.join(fixtureDirectory, 'content-admin-authority.lock');
   fs.copyFileSync(path.join(repoRoot, 'dev-data/content-admin-shared.json'), persistenceFile);
+  if (args.get('clear-fixture-locks') === 'true') {
+    // Clear ownership only in this disposable copy. Never touch the source snapshot.
+    const fixtureSnapshot = JSON.parse(fs.readFileSync(persistenceFile, 'utf8'));
+    for (const state of [fixtureSnapshot.state, fixtureSnapshot.baseSnapshot]) {
+      if (state) state.collaborationByPath = {};
+    }
+    fs.writeFileSync(persistenceFile, JSON.stringify(fixtureSnapshot));
+  }
   fs.copyFileSync(path.join(repoRoot, 'dev-data/content-admin-seed-baseline.json'), seedBaselineFile);
   fs.copyFileSync(path.join(repoRoot, 'dev-data/disclosures-shared.json'), disclosuresFile);
   fs.mkdirSync(revisionDirectory);
@@ -312,10 +320,26 @@ function buildBrowserAudit() {
       cardShadowOpacity: [{ selector: '.service-native-card', property: 'box-shadow' }],
       titleTone: [{ selector: '.service-native-card h3', property: 'color' }],
       bodyTone: [{ selector: '.service-native-card :is(p, li)', property: 'color' }],
-      cardPaddingRem: [{ selector: '.service-native-card', property: 'padding' }],
+      // Flush-topper cards apply padding inside the shell so the cap stays edge-to-edge.
+      cardPaddingRem: [{ selector: '.service-native-card, .insurance-native-coverage .service-native-card :is(h3, p, .service-native-action-row)', property: 'padding' }],
+      cardGapRem: [{ selector: '.service-native-grid', property: 'gap' }],
+      cardTitleBodySpaceRem: [{ selector: '.service-native-card h3', property: 'margin-bottom' }],
       backgroundEffectsJson: [{ selector: '.block-background-effects', property: 'display' }],
       'aria:Light 1 motion style#1': [{ selector: '.block-background-light', property: 'animation-name' }],
     });
+    const getIraCardSpacing = (root) => {
+      if (!root?.matches('.retirement-child-native-ira-types')) return [];
+      return [...root.querySelectorAll('.service-native-card')].map((card) => {
+        const title = card.querySelector('h3');
+        // The flow wrapper uses display: contents and has no measurable box.
+        const body = card.querySelector('.service-native-card-flow > :first-child');
+        const style = getComputedStyle(card);
+        return {
+          padding: ['Top', 'Right', 'Bottom', 'Left'].map((side) => parseFloat(style[`padding${side}`])),
+          titleBodyGap: title && body ? body.getBoundingClientRect().top - title.getBoundingClientRect().bottom : null,
+        };
+      });
+    };
     const getRenderedControlProof = (root, fieldId) => {
       const proofs = renderedControlProofs[fieldId];
       if (!root || !Array.isArray(proofs)) return '';
@@ -624,6 +648,7 @@ function buildBrowserAudit() {
           const currentControl = pickControl(currentField) || currentField;
           const before = getStyleSignature(section);
           const beforeRenderedControlProof = getRenderedControlProof(section, fieldId);
+          const beforeIraSpacing = getIraCardSpacing(section);
           const mutation = mutateControl(currentControl, fieldId);
           if (!mutation) {
             report.skipped.push(`${blockId}/${fieldId}: control is disabled or has no alternate value`);
@@ -657,6 +682,19 @@ function buildBrowserAudit() {
             continue;
           }
           const afterControlState = readControlState(afterControl);
+          if (fieldId === 'cardPaddingRem' && beforeIraSpacing.length) {
+            const expectedPadding = Number(afterControl.value) * parseFloat(getComputedStyle(document.documentElement).fontSize);
+            const afterIraSpacing = getIraCardSpacing(section);
+            const wrongSpacing = afterIraSpacing.some((card, index) => (
+              card.padding.some((side) => Math.abs(side - expectedPadding) > 0.1)
+              || card.titleBodyGap === null
+              || Math.abs(card.titleBodyGap - beforeIraSpacing[index].titleBodyGap) > 0.5
+            ));
+            if (wrongSpacing) {
+              report.failures.push(`${blockId}/${fieldId}: card padding must inset all four shell edges without changing title/body gap (before=${JSON.stringify(beforeIraSpacing)}, after=${JSON.stringify(afterIraSpacing)}, expectedPadding=${expectedPadding})`);
+              continue;
+            }
+          }
           if (beforeControlState === afterControlState) {
             report.failures.push(`${blockId}/${fieldId}: control did not retain its changed value (before=${JSON.stringify(beforeControlState)}, immediate=${JSON.stringify(immediateControlState)}, after=${JSON.stringify(afterControlState)}, target=${JSON.stringify(mutatedControlKey || mutatedControl?.outerHTML?.slice(0, 180) || '')}, afterHtml=${JSON.stringify(afterControl?.outerHTML?.slice(0, 220) || '')})`);
           } else if (beforeRenderedControlProof && beforeRenderedControlProof === afterRenderedControlProof) {

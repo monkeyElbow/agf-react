@@ -976,6 +976,7 @@ export function BillboardBlock({
   beforeTitle = null,
   justifyOverride = '',
   subtitleBaseClassName = 'home-native-billboard-subtitle',
+  actionRenderer = null,
   logoComponent: LogoComponent,
   logoImage = '',
   logoAlt = '',
@@ -996,6 +997,7 @@ export function BillboardBlock({
     : (runtime.action ? [runtime.action] : []);
   const actions = runtimeActions
     .map((action) => buildBillboardAction(action, resolveTo, resolveDocumentLink)).filter(Boolean);
+  const resolvedFineprint = fineprint == null ? runtime.fineprint : fineprint;
   const usesRetirementDailyBillboard = String(runtime.sectionClassName || '').split(/\s+/).includes('retirement-daily-billboard');
   const defaultActionPaddingBottom = usesRetirementDailyBillboard
     ? 'clamp(6rem, 12vw, 9rem)'
@@ -1087,7 +1089,7 @@ export function BillboardBlock({
   return (
     <section
       ref={sectionRef}
-      id={sectionId || undefined}
+      id={sectionId || runtime.anchorId || undefined}
       className={sectionClassName}
       data-block-id={block?.id || undefined}
       {...sectionDataAttributes}
@@ -1129,7 +1131,9 @@ export function BillboardBlock({
               className={[subtitleBaseClassName, runtime.subtitleClassName || ''].filter(Boolean).join(' ')}
               style={runtime.subtitleStyle || undefined}
             >
-              {runtime.subtitle}
+              {runtime.subtitleHighlights?.length
+                ? renderHighlightedText(runtime.subtitle, runtime.subtitleHighlights)
+                : runtime.subtitle}
             </p>
           ) : null}
           {runtime.bodyHtml ? (
@@ -1147,7 +1151,7 @@ export function BillboardBlock({
               style={runtime.bodyHtmlStyle || undefined}
               {...bodyEditProps}
             >
-              <p className={bodyCopyClassName}>{renderTextWithStrong(runtime.body)}</p>
+              <p className={bodyCopyClassName} style={runtime.bodyHtmlStyle || undefined}>{renderTextWithStrong(runtime.body)}</p>
             </div>
           ) : null}
           {actions.length ? (
@@ -1158,19 +1162,20 @@ export function BillboardBlock({
                 ...buildBillboardActionRowStyle(effectiveJustify, runtime.actionGapRem),
               }}
             >
-              {actions.map((action) => (
-                <BillboardAction
-                  key={`${action.href || action.to || action.label}-${action.label}`}
-                  item={action}
-                />
-              ))}
+              {actions.map((action) => {
+                const key = `${action.href || action.to || action.label}-${action.label}`;
+                if (typeof actionRenderer === 'function' && action.action) {
+                  return actionRenderer(action, key);
+                }
+                return <BillboardAction key={key} item={action} />;
+              })}
             </div>
           ) : null}
         </div>
-        {fineprint ? (
-          Array.isArray(fineprint)
-            ? fineprint.map((line, index) => <p key={`billboard-fineprint-${index + 1}`} className="service-native-note" style={fineprintStyle}>{renderTextWithStrong(line)}</p>)
-            : <p className="service-native-note" style={fineprintStyle}>{renderTextWithStrong(fineprint)}</p>
+        {resolvedFineprint ? (
+          Array.isArray(resolvedFineprint)
+            ? resolvedFineprint.map((line, index) => <p key={`billboard-fineprint-${index + 1}`} className="service-native-note" style={fineprintStyle}>{renderTextWithStrong(line)}</p>)
+            : <p className="service-native-note" style={fineprintStyle}>{renderTextWithStrong(resolvedFineprint)}</p>
         ) : null}
       </div>
     </section>
@@ -1232,6 +1237,11 @@ function buildBillboardAction(action, resolveTo, resolveDocumentLink) {
       label,
       className: `${baseClassName} is-static`,
       openInNewWindow: false,
+      action: action?.action || '',
+      targetAnchorId: action?.targetAnchorId || '',
+      targetBlockId: action?.targetBlockId || '',
+      style: action?.style || '',
+      tone: action?.tone || '',
     };
   }
 
@@ -1241,6 +1251,11 @@ function buildBillboardAction(action, resolveTo, resolveDocumentLink) {
       href: rawTarget,
       className,
       openInNewWindow: Boolean(action?.openInNewWindow),
+      action: action?.action || '',
+      targetAnchorId: action?.targetAnchorId || '',
+      targetBlockId: action?.targetBlockId || '',
+      style: action?.style || '',
+      tone: action?.tone || '',
     };
   }
 
@@ -1249,6 +1264,11 @@ function buildBillboardAction(action, resolveTo, resolveDocumentLink) {
     to: resolveTo(rawTarget, rawTarget || '/'),
     className,
     openInNewWindow: Boolean(action?.openInNewWindow),
+    action: action?.action || '',
+    targetAnchorId: action?.targetAnchorId || '',
+    targetBlockId: action?.targetBlockId || '',
+    style: action?.style || '',
+    tone: action?.tone || '',
   };
 }
 

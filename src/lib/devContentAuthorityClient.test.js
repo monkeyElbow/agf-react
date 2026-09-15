@@ -215,9 +215,32 @@ describe('devContentAuthorityClient', () => {
       const routeRejection = expect(routeSave).rejects.toMatchObject({
         code: 'content-admin-request-timeout',
       });
-      await vi.advanceTimersByTimeAsync(6001);
+      await vi.advanceTimersByTimeAsync(15_001);
       await pageRejection;
       await routeRejection;
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('uses the durable draft-save budget for an explicit block save', async () => {
+    vi.useFakeTimers();
+    const fetchMock = vi.fn().mockImplementation((_url, request) => new Promise((_resolve, reject) => {
+      request.signal.addEventListener('abort', () => reject(new Error('aborted')));
+    }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    try {
+      const blockSave = saveSharedBlockDraft('/test', 'billboard', {
+        id: 'billboard',
+        kind: 'billboard',
+      }, { userId: 'dev-taylor' });
+      const rejection = expect(blockSave).rejects.toMatchObject({
+        code: 'content-admin-request-timeout',
+        endpoint: '/__dev/content-admin/save-block-draft',
+      });
+      await vi.advanceTimersByTimeAsync(15_001);
+      await rejection;
     } finally {
       vi.useRealTimers();
     }

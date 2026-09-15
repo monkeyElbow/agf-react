@@ -1141,11 +1141,10 @@
   box-shadow:
     0 44px 98px rgba(7, 19, 27, var(--home-services-panel-shadow-opacity)),
     0 18px 34px rgba(7, 19, 27, calc(var(--home-services-panel-shadow-opacity) * 0.62));
-  transition:
-    opacity 240ms cubic-bezier(0.18, 0.82, 0.2, 1),
-    transform 240ms cubic-bezier(0.18, 0.82, 0.2, 1),
-    box-shadow 240ms cubic-bezier(0.18, 0.82, 0.2, 1),
-    z-index 0ms linear;
+  /* These values are scrubbed from scroll in requestAnimationFrame. A CSS
+     transition here chases stale targets during iPad momentum scrolling and
+     makes the panel jitter as it exits the viewport. */
+  transition: none;
   will-change: opacity, transform, box-shadow;
 }
 
@@ -3951,6 +3950,16 @@ p.home-services-feature-panel-body {
   padding: clamp(4.5rem, 9vw, 7.2rem) 0 clamp(4.8rem, 9.45vw, 7.5rem);
 }
 
+.services-native-matters > .ag-panel-rail {
+  display: grid;
+  width: min(var(--dynamic-billboard-max-width, 1216px), calc(100% - (var(--ag-panel-gutter) * 2)));
+  max-width: 100%;
+  min-width: 0;
+  margin-inline: auto;
+  justify-items: center;
+  text-align: center;
+}
+
 .services-native-matters h2 {
   margin: 0;
   color: #ffffff;
@@ -3976,6 +3985,32 @@ p.home-services-feature-panel-body {
   font-size: clamp(1.18rem, 2.2vw, 1.5rem);
   line-height: 1.5;
   text-align: center;
+}
+
+/* The Services Matters block is rendered by the route-owned Services shell,
+   not the shared BillboardBlock. Keep the rich-text node and its paragraph on
+   the same center track so a browser cannot center the heading/button while
+   sizing the body from its intrinsic text width. */
+.services-native-matters > .ag-panel-rail > .native-info-rich-html {
+  width: min(100%, 62ch);
+  max-width: 100%;
+  min-width: 0;
+  margin-inline: auto;
+  justify-self: center;
+  text-align: center;
+}
+
+.services-native-matters > .ag-panel-rail > .native-info-rich-html > p {
+  width: 100%;
+  max-width: none;
+  margin-inline: 0;
+  text-align: center;
+}
+
+.services-native-matters > .ag-panel-rail > .service-native-action-row {
+  width: 100%;
+  margin-inline: auto;
+  justify-content: center;
 }
 
 .services-native-testimonials {

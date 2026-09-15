@@ -90,6 +90,12 @@ const sections = [
         options: BILLBOARD_TITLE_TONE_OPTIONS,
       }),
       defineEditorField({
+        id: 'subtitleHighlightsJson',
+        label: 'Billboard subtitle highlights',
+        type: 'highlight_list',
+        options: BILLBOARD_TITLE_TONE_OPTIONS.filter((option) => option.value),
+      }),
+      defineEditorField({
         id: 'subtitleDisplay',
         label: 'Subtitle style',
         type: 'select',
@@ -119,7 +125,7 @@ const sections = [
       defineEditorField({ id: 'titleSizeRem', label: 'Billboard heading size (rem)', type: 'number', min: 2.4, max: 8, step: 0.05 }),
       defineEditorField({ id: 'titleTrackingEm', label: 'Billboard title tracking (em)', type: 'number', min: -0.12, max: 0.04, step: 0.005 }),
       defineEditorField({ id: 'subtitleTrackingEm', label: 'Billboard subtitle tracking (em)', type: 'number', min: -0.12, max: 0.04, step: 0.005 }),
-      defineEditorField({ id: 'bodyHtml', label: 'Billboard body HTML', type: 'html' }),
+      defineEditorField({ id: 'bodyHtml', label: 'Billboard body copy', type: 'html' }),
       defineEditorField({
         id: 'bodyJustify',
         label: 'Billboard body alignment',
@@ -134,7 +140,7 @@ const sections = [
       defineEditorField({ id: 'leadCopySizeRem', label: 'Lead copy size (rem)', type: 'range', min: 1, max: 4, step: 0.05, defaultValue: 1.65, suffix: 'rem' }),
       defineEditorField({ id: 'leadCopyLineHeight', label: 'Lead copy line height', type: 'range', min: 0.9, max: 2.2, step: 0.05, defaultValue: 1.55 }),
       defineEditorField({ id: 'bodyColorClassName', label: 'Body color', type: 'swatch', options: BILLBOARD_TITLE_TONE_OPTIONS }),
-      defineEditorField({ id: 'body', label: 'Fallback body text', type: 'textarea', rows: 3 }),
+      defineEditorField({ id: 'body', label: 'Legacy body recovery text', type: 'textarea', rows: 3 }),
       defineEditorField({ id: 'fineprint', label: 'Fineprint', type: 'textarea', rows: 4 }),
       defineEditorField({ id: 'fineprintDisclosureId', label: 'Fineprint disclosure ID', type: 'text' }),
       defineEditorField({

@@ -8,6 +8,7 @@ import {
 } from './HudEditorShell';
 import {
   BUTTON_TONE_OPTIONS as SHARED_BUTTON_TONE_OPTIONS,
+  CLEAR_TEXT_COLOR_OPTION,
   SEMANTIC_TEXT_COLOR_OPTIONS_WITH_DEFAULT,
   SURFACE_BG_TONE_OPTIONS,
 } from '../lib/colorSystem';
@@ -187,7 +188,10 @@ function ColumnsTextSpanEditor({
             variant="hud"
             className="is-compact is-icon-only"
             ariaLabel={`${label} selection color`}
-            options={textColorOptions.filter((option) => option.value)}
+            options={[
+              ...textColorOptions.filter((option) => option.value),
+              ...(highlights.length ? [CLEAR_TEXT_COLOR_OPTION] : []),
+            ]}
             value={activeSelectionColorValue}
             preventMouseDown
             onOptionMouseDown={() => captureSelection(inputRef, setSelection)}

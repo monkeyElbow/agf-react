@@ -30,4 +30,18 @@ describe('shared text color selection contract', () => {
     expect(result.lineClassName).toBe('is-white');
     expect(result.highlightsJson).toContain('is-mango');
   });
+
+  it('clears a selected title range without changing the base color', () => {
+    const result = applyTextColorSelection({
+      text: 'Every trip is a step of faith.',
+      lineClassName: 'is-super-grey',
+      highlightsJson: '[{"start":24,"end":29,"className":"is-atlantean"}]',
+      selection: { start: 24, end: 29 },
+      colorValue: '',
+    });
+
+    expect(result.target).toBe('selection');
+    expect(result.lineClassName).toBe('is-super-grey');
+    expect(result.highlightsJson).toBe('');
+  });
 });

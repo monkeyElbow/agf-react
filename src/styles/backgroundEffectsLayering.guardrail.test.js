@@ -26,6 +26,9 @@ describe('background effects layering', () => {
     expect(frontHudSource).toContain(
       '.service-native-page:has(.block-background-effects.is-uncropped) :is(.service-native-hero, .service-native-intro, .service-native-section) {\n  isolation: auto;\n  z-index: auto;',
     );
+    expect(frontHudSource).toMatch(
+      /\.is-front-hud-docked \.admin-front-hud-tool\.is-docked \{[\s\S]*?z-index: 2000;/,
+    );
     expect(frontHudSource).toContain(
       '.service-native-page:has(.block-background-effects.is-uncropped) :is(.service-native-hero, .service-native-intro, .service-native-section) > :is(.ag-panel-rail, .ag-panel-rail-wide),',
     );

@@ -10,6 +10,7 @@ import {
 import { HeroInlineLiveEditor, renderHeroRangesAsNodes } from './HeroHudEditorShared';
 import {
   BUTTON_TONE_OPTIONS,
+  CLEAR_TEXT_COLOR_OPTION,
   SEMANTIC_TEXT_COLOR_OPTIONS,
   SURFACE_BG_TONE_OPTIONS,
 } from '../lib/colorSystem';
@@ -113,6 +114,9 @@ export default function CtaHudEditorPanel({
   const activeTitleColorValue = hasTitleSelection
     ? resolveSelectionRangeColor(titleHighlights, titleSelectionStart, titleSelectionEnd)
     : String(titleColor || autoTitleColorValue);
+  const titleColorOptions = titleHighlights.length
+    ? [...SEMANTIC_TEXT_COLOR_OPTIONS, CLEAR_TEXT_COLOR_OPTION]
+    : SEMANTIC_TEXT_COLOR_OPTIONS;
   const fieldList = useMemo(() => (Array.isArray(fields) ? fields : []).filter(Boolean), [fields]);
   const submitLabelDraftFields = useMemo(() => ([
     {
@@ -288,12 +292,16 @@ export default function CtaHudEditorPanel({
                 variant="hud"
                 className="is-compact is-icon-only"
                 ariaLabel="CTA heading color"
-                options={SEMANTIC_TEXT_COLOR_OPTIONS}
+                options={titleColorOptions}
                 value={activeTitleColorValue}
                 preventMouseDown
                 onChange={(nextValue) => {
                   if (hasTitleSelection) {
                     onApplySelectionColor?.(nextValue, titleSelection);
+                    return;
+                  }
+                  if (nextValue === '' && titleHighlights.length) {
+                    onClearTitleSpans?.();
                     return;
                   }
                   onTitleColorChange?.(nextValue === autoTitleColorValue ? '' : nextValue);

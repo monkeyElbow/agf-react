@@ -131,11 +131,10 @@ describe('HomePage columns HUD', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Copy' }));
     await waitFor(() => {
-      expect(screen.getByRole('textbox', { name: 'Body HTML' }).innerHTML).toContain('Housing intro body');
-      expect(screen.getByRole('textbox', { name: 'Lead copy' }).value).toBe('');
+      expect(screen.getByRole('textbox', { name: 'Billboard body copy' }).innerHTML).toContain('Housing intro body');
     });
 
-    const bodyEditor = screen.getByRole('textbox', { name: 'Body HTML' });
+    const bodyEditor = screen.getByRole('textbox', { name: 'Billboard body copy' });
     bodyEditor.innerHTML = '<p>Updated intro body</p>';
     fireEvent.input(bodyEditor);
     fireEvent.blur(bodyEditor);

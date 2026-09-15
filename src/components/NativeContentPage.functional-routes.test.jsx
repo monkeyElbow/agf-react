@@ -1556,6 +1556,9 @@ describe('NativeContentPage functional routes', () => {
       'clamp(calc(2.35rem * 0.68), 2.1vw, 2.35rem)',
     );
     expect(joyBody?.className).toContain('is-dynamic-billboard-lead-copy-sized');
+    expect(joyBody?.style.getPropertyValue('--dynamic-billboard-lead-copy-size')).toBe(
+      'clamp(calc(2.35rem * 0.68), 2.1vw, 2.35rem)',
+    );
   });
 
   it('renders the planned giving hero and intro through explicit managed blocks without changing the current copy', () => {
@@ -1686,7 +1689,16 @@ describe('NativeContentPage functional routes', () => {
   it('renders the planned giving types section through the managed card grid without changing its current design shell', () => {
     mockBlocksByPath = {
       '/services/planned-giving': (contentBlockBlueprintsByPath['/services/planned-giving'] || [])
-        .filter((block) => block?.mode === 'dynamic'),
+        .filter((block) => block?.mode === 'dynamic')
+        .map((block) => block?.id === 'giving_options'
+          ? {
+              ...block,
+              settings: {
+                ...(block.settings || {}),
+                cardGapRem: 2.2,
+              },
+            }
+          : block),
     };
 
     render(
@@ -1711,6 +1723,7 @@ describe('NativeContentPage functional routes', () => {
     expect(givingOptionsSection?.getAttribute('data-block-id')).toBe('giving_options');
     expect(givingOptionsSection?.className).toContain('legacy-giving-types');
     expect(givingOptionsSection?.className).toContain('native-dynamic-grid');
+    expect(givingOptionsSection?.getAttribute('style')).toContain('--dynamic-grid-card-gap: 2.2rem');
     expect(givingOptionsSection?.textContent).toContain('This is legacy planning and charitable giving made easy.');
     expect(givingOptionsSection?.querySelector('mark.is-atlantean')?.textContent).toBe('made easy');
     expect(productCards.length).toBeGreaterThan(0);

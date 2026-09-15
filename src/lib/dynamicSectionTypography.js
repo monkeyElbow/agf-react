@@ -13,6 +13,15 @@ export const DEFAULT_BILLBOARD_SUBTITLE_SIZE_REM = 1.18;
 export const DEFAULT_BILLBOARD_LEAD_COPY_SIZE_REM = 1.65;
 export const DEFAULT_BILLBOARD_LEAD_COPY_LINE_HEIGHT = 1.55;
 
+// The licensed Typekit faces do not share the same weight map. Helvetica Neue
+// LT Pro exposes 400/500/700; Avenir Next World exposes 400/500/600/700/800.
+// Keeping the editor options aligned with those faces prevents 600/800/900
+// from all resolving to the same Helvetica 700 face.
+const BILLBOARD_TITLE_WEIGHT_OPTIONS = Object.freeze({
+  heading: Object.freeze([400, 500, 600, 700, 800]),
+  helv: Object.freeze([400, 500, 700]),
+});
+
 export function normalizeIntroLineSpacing(value, fallback = DEFAULT_INTRO_LINE_SPACING) {
   const numeric = Number(value);
   if (!Number.isFinite(numeric)) {
@@ -73,6 +82,11 @@ export function normalizeBillboardTitleFontFamily(value) {
   return ['heading', 'helv'].includes(token) ? token : 'heading';
 }
 
+export function getBillboardTitleWeightOptions(fontFamily = 'heading') {
+  const normalizedFontFamily = normalizeBillboardTitleFontFamily(fontFamily);
+  return BILLBOARD_TITLE_WEIGHT_OPTIONS[normalizedFontFamily] || BILLBOARD_TITLE_WEIGHT_OPTIONS.heading;
+}
+
 export function normalizeBillboardTitleSizeRem(value, fallback = DEFAULT_BILLBOARD_TITLE_SIZE_REM) {
   const numeric = Number(value);
   if (!Number.isFinite(numeric)) {
@@ -86,12 +100,17 @@ export function normalizeBillboardTitleFontWeight(
   fontFamily = 'heading',
   fallback = fontFamily === 'helv' ? 700 : DEFAULT_BILLBOARD_TITLE_FONT_WEIGHT,
 ) {
+  const supportedWeights = getBillboardTitleWeightOptions(fontFamily);
   const numeric = Number(value);
   if (!Number.isFinite(numeric)) {
-    return fallback;
+    return supportedWeights.reduce((closest, weight) => (
+      Math.abs(weight - Number(fallback)) < Math.abs(closest - Number(fallback)) ? weight : closest
+    ), supportedWeights[0]);
   }
   const rounded = Math.round(numeric / 100) * 100;
-  return Math.max(400, Math.min(900, rounded));
+  return supportedWeights.reduce((closest, weight) => (
+    Math.abs(weight - rounded) < Math.abs(closest - rounded) ? weight : closest
+  ), supportedWeights[0]);
 }
 
 export function normalizeBillboardTitleLetterSpacingEm(
@@ -198,8 +217,13 @@ export function buildBillboardSubtitleStyle({
         letterSpacing: `${normalizedLetterSpacing}em`,
       }
       : {}),
-    ...(normalizedDisplay !== 'headline' && normalizedSubtitleSizeRem
-      ? { fontSize: `clamp(calc(${normalizedSubtitleSizeRem}rem * 0.68), 5vw, ${normalizedSubtitleSizeRem}rem)` }
+    ...(normalizedDisplay !== 'headline'
+      ? {
+        ...(normalizedSubtitleSizeRem
+          ? { fontSize: `clamp(calc(${normalizedSubtitleSizeRem}rem * 0.68), 5vw, ${normalizedSubtitleSizeRem}rem)` }
+          : {}),
+        letterSpacing: `${normalizedLetterSpacing}em`,
+      }
       : {}),
   };
 }

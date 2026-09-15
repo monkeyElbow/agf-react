@@ -1,3 +1,5 @@
+import { SEMANTIC_TEXT_COLOR_HEX_VALUES } from './colorSystem';
+
 const ALLOWED_TAGS = new Set([
   'a',
   'b',
@@ -42,6 +44,65 @@ const TAG_ALLOWED_ATTRIBUTES = {
   a: new Set(['href', 'target', 'rel']),
 };
 
+function normalizeCssColorValue(value) {
+  const raw = String(value || '').trim().toLowerCase();
+  if (!raw) {
+    return '';
+  }
+  if (raw === 'white') {
+    return '#ffffff';
+  }
+  const shortHexMatch = raw.match(/^#([0-9a-f]{3})$/i);
+  if (shortHexMatch) {
+    return `#${shortHexMatch[1].split('').map((token) => `${token}${token}`).join('')}`;
+  }
+  const longHexMatch = raw.match(/^#([0-9a-f]{6})$/i);
+  if (longHexMatch) {
+    return `#${longHexMatch[1]}`;
+  }
+  const rgbMatch = raw.match(/^rgba?\(([^)]+)\)$/i);
+  if (!rgbMatch) {
+    return raw.replace(/\s+/g, '');
+  }
+  const channels = rgbMatch[1]
+    .split(',')
+    .slice(0, 3)
+    .map((part) => Math.max(0, Math.min(255, Number.parseInt(part, 10))));
+  if (channels.length !== 3 || channels.some((channel) => Number.isNaN(channel))) {
+    return raw.replace(/\s+/g, '');
+  }
+  return `#${channels.map((channel) => channel.toString(16).padStart(2, '0')).join('')}`;
+}
+
+const SEMANTIC_COLOR_CLASS_BY_CSS_VALUE = new Map(
+  Object.entries(SEMANTIC_TEXT_COLOR_HEX_VALUES)
+    .map(([className, color]) => [normalizeCssColorValue(color), className]),
+);
+
+function extractColorDeclaration(styleValue) {
+  const declaration = String(styleValue || '')
+    .split(';')
+    .map((part) => part.trim())
+    .find((part) => part.toLowerCase().startsWith('color:'));
+  return declaration ? declaration.slice(declaration.indexOf(':') + 1).trim() : '';
+}
+
+function applySemanticColorClass(node, className) {
+  if (!className) {
+    return;
+  }
+  const classes = String(node.getAttribute('class') || '')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .filter((token) => !Object.prototype.hasOwnProperty.call(SEMANTIC_TEXT_COLOR_HEX_VALUES, token));
+  node.setAttribute('class', Array.from(new Set([...classes, className])).join(' '));
+}
+
+function semanticColorClassForValue(value) {
+  return SEMANTIC_COLOR_CLASS_BY_CSS_VALUE.get(normalizeCssColorValue(value)) || '';
+}
+
 function sanitizeClassName(value) {
   return String(value || '')
     .trim()
@@ -82,6 +143,19 @@ function sanitizeElement(node, document) {
       node.remove();
       return;
     }
+    const legacyColorClassName = tagName === 'font'
+      ? semanticColorClassForValue(node.getAttribute('color') || extractColorDeclaration(node.getAttribute('style')))
+      : '';
+    if (legacyColorClassName) {
+      const replacement = document.createElement('span');
+      applySemanticColorClass(replacement, legacyColorClassName);
+      while (node.firstChild) {
+        replacement.appendChild(node.firstChild);
+      }
+      parent.replaceChild(replacement, node);
+      sanitizeElement(replacement, document);
+      return;
+    }
     while (node.firstChild) {
       parent.insertBefore(node.firstChild, node);
     }
@@ -89,9 +163,22 @@ function sanitizeElement(node, document) {
     return;
   }
 
+  let semanticColorClassName = '';
   Array.from(node.attributes).forEach((attribute) => {
     const name = String(attribute.name || '').toLowerCase();
-    if (name.startsWith('on') || name === 'style') {
+    if (name.startsWith('on')) {
+      node.removeAttribute(attribute.name);
+      return;
+    }
+
+    if (name === 'style') {
+      semanticColorClassName = semanticColorClassForValue(extractColorDeclaration(attribute.value)) || semanticColorClassName;
+      node.removeAttribute(attribute.name);
+      return;
+    }
+
+    if (name === 'color') {
+      semanticColorClassName = semanticColorClassForValue(attribute.value) || semanticColorClassName;
       node.removeAttribute(attribute.name);
       return;
     }
@@ -136,6 +223,7 @@ function sanitizeElement(node, document) {
       }
     }
   });
+  applySemanticColorClass(node, semanticColorClassName);
 
   if (tagName === 'a') {
     const href = node.getAttribute('href');

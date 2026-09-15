@@ -70,6 +70,7 @@ describe('home services feature alignment guardrail', () => {
     expect(cssSource).toContain('filter: none;');
     expect(cssSource).toContain('.home-services-feature-shell.is-preview-white-cards .home-services-feature-panel-gradient-layer,');
     expect(cssSource).toContain('opacity: var(--home-services-panel-opacity);');
+    expect(cssSource).toMatch(/\.home-services-feature-panel \{[\s\S]*?transition: none;/);
     expect(cssSource).not.toContain('--home-services-panel-bg:');
     expect(componentSource).toContain('const HOME_SERVICES_PANEL_PALETTES = Object.freeze([');
     expect(componentSource).toContain('const HOME_SERVICES_PALETTE_HANDOFF_CURVES = Object.freeze({');

@@ -59,6 +59,10 @@ describe('impact proof story layout guardrail', () => {
     expect(cssSource).toContain('--impact-proof-content-max-width: min(100%, 78rem);');
     expect(cssSource).toContain('position: relative;');
     expect(cssSource).toContain('z-index: 1;');
+    expect(cssSource).toContain('.impact-proof-story-proof-copy {');
+    expect(cssSource).toMatch(/\.impact-proof-story-proof-copy \{[\s\S]*?transition: none;/);
+    expect(cssSource).toContain('.impact-proof-story-proof-action {');
+    expect(cssSource).toMatch(/\.impact-proof-story-proof-action \{[\s\S]*?transition: none;/);
     expect(cssSource).toContain('width: min(46rem, 100%);');
     expect(cssSource).toContain('max-width: 100%;');
     expect(cssSource).toContain('font-size: clamp(47px, 11vw, 65px);');

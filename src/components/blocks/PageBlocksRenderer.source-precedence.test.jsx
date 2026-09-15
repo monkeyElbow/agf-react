@@ -13,7 +13,7 @@ vi.mock('../../context/ContentAdminContextCore', async () => {
   };
 });
 
-import PageBlocksRenderer from './PageBlocksRenderer';
+import PageBlocksRenderer, { BillboardBlock } from './PageBlocksRenderer';
 
 function renderBlocks(blocks) {
   return render(
@@ -24,6 +24,44 @@ function renderBlocks(blocks) {
 }
 
 describe('PageBlocksRenderer source precedence', () => {
+  it('preserves Billboard CTA reveal metadata for the page action renderer', () => {
+    const actionRenderer = vi.fn((action, key) => (
+      <button key={key} type="button" data-action={action.action} data-target={action.targetBlockId}>
+        {action.label}
+      </button>
+    ));
+
+    render(
+      <MemoryRouter>
+        <BillboardBlock
+          block={{
+            id: 'billboard',
+            kind: 'billboard',
+            mode: 'dynamic',
+            settings: {
+              title: 'Ready to talk?',
+              buttonLabel: 'Open the form',
+              buttonAction: 'open_cta_form',
+              buttonTargetBlockId: 'contact_form',
+              buttonStyle: 'outline',
+              buttonTone: 'mango',
+            },
+          }}
+          resolveTo={(value) => value}
+          actionRenderer={actionRenderer}
+        />
+      </MemoryRouter>,
+    );
+
+    expect(actionRenderer).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole('button', { name: 'Open the form' })).toMatchObject({
+      dataset: {
+        action: 'open_cta_form',
+        target: 'contact_form',
+      },
+    });
+  });
+
   it('renders canonical nested title and body instead of stale top-level aliases', () => {
     renderBlocks([{
       id: 'billboard',
@@ -60,6 +98,40 @@ describe('PageBlocksRenderer source precedence', () => {
     }]);
 
     expect(container.querySelector('.native-info-rich-html')?.className).toContain('is-atlantean');
+  });
+
+  it('renders saved Billboard subtitle highlight ranges', () => {
+    const { container } = renderBlocks([{
+      id: 'billboard',
+      kind: 'billboard',
+      mode: 'dynamic',
+      settings: {
+        title: 'Edited title',
+        subtitle: 'Supporting copy',
+        subtitleHighlightsJson: '[{"start":0,"end":10,"className":"is-mango","text":"Supporting"}]',
+      },
+    }]);
+
+    const subtitle = container.querySelector('.home-native-billboard-subtitle');
+    expect(subtitle?.querySelector('mark')?.className).toContain('is-mango');
+    expect(subtitle?.querySelector('mark')?.textContent).toBe('Supporting');
+  });
+
+  it('keeps Billboard anchors and fineprint on the direct renderer path', () => {
+    const { container } = renderBlocks([{
+      id: 'billboard',
+      kind: 'billboard',
+      mode: 'dynamic',
+      settings: {
+        title: 'Read the details',
+        anchorId: 'billboard-details',
+        fineprint: 'Terms and conditions apply.',
+      },
+    }]);
+
+    const section = container.querySelector('[data-block-id="billboard"]');
+    expect(section?.id).toBe('billboard-details');
+    expect(screen.getByText('Terms and conditions apply.')).toBeTruthy();
   });
 
   it('preserves intentional empty canonical values and does not emit starter copy', () => {

@@ -179,7 +179,7 @@ describe('BlockHudPanelHost', () => {
       '.admin-card-grid-hud-page--layout .admin-card-grid-hud-group--typography .admin-card-grid-hud-fields',
     )].map((list) => [...list.children].map((field) => field.getAttribute('data-editor-field-id')));
     expect(typographyFieldsByColumn).toEqual([
-      ['titleTone', 'cardTitleSizeRem', 'cardBodySizeRem', 'cardTitleJustify', 'cardBodyJustify', 'cardPaddingRem'],
+      ['titleTone', 'cardTitleSizeRem', 'cardBodySizeRem', 'cardTitleJustify', 'cardBodyJustify', 'cardPaddingRem', 'cardGapRem'],
       ['bodyTone', 'cardTitleLineHeight', 'cardTitleBodySpaceRem', 'cardBodyLineHeight', 'fineprintSizeRem'],
     ]);
     const titleSizeNumber = document.querySelector(
@@ -352,6 +352,39 @@ describe('BlockHudPanelHost', () => {
     });
 
     expect(onSettingChange).toHaveBeenCalledWith('cardPaddingRem', 1.9);
+  });
+
+  it('writes card gutter independently from card padding', () => {
+    const onSettingChange = vi.fn();
+    render(createElement(CardGridSettingsProbe, {
+      initialSettings: {
+        cardStyle: 'none',
+        cardPaddingRem: 1.35,
+        cardGapRem: 1.15,
+        card1Title: 'Card one',
+      },
+      onSettingChange,
+    }));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Layout & typography' }));
+    fireEvent.change(screen.getByRole('slider', { name: 'Card gutter' }), {
+      target: { value: '2.1' },
+    });
+
+    expect(onSettingChange).toHaveBeenCalledWith('cardGapRem', 2.1);
+  });
+
+  it('uses the runtime default for card padding when the setting is missing', () => {
+    render(createElement(CardGridSettingsProbe, {
+      initialSettings: {
+        cardStyle: 'none',
+        card1Title: 'Card one',
+      },
+    }));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Layout & typography' }));
+
+    expect(screen.getByRole('spinbutton', { name: 'Card padding value' }).value).toBe('1.35');
   });
 
   it('keeps card setting writes bound to the selected slot with six cards', () => {
@@ -1305,7 +1338,7 @@ describe('BlockHudPanelHost', () => {
     }));
 
     fireEvent.click(screen.getByRole('button', { name: 'Copy' }));
-    expect(screen.getByLabelText('Body HTML')).toBeTruthy();
+    expect(screen.getByRole('textbox', { name: 'Billboard body copy' })).toBeTruthy();
 
     fireEvent.click(screen.getByRole('button', { name: 'Heading' }));
     expect(screen.getByLabelText('Title')).toBeTruthy();

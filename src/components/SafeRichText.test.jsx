@@ -26,4 +26,12 @@ describe('SafeRichText', () => {
     expect(links[2]?.getAttribute('rel')).toContain('noopener');
     expect(links[2]?.getAttribute('rel')).toContain('noreferrer');
   });
+
+  it('preserves supported legacy inline colors as semantic classes', () => {
+    const html = '<p><span style="color: rgb(250, 163, 26)" class="custom-mark">Mango</span> <font color="#f26660">Melon</font></p>';
+
+    expect(sanitizeRichTextHtml(html)).toBe(
+      '<p><span class="custom-mark is-mango">Mango</span> <span class="is-melon">Melon</span></p>',
+    );
+  });
 });

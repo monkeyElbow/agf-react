@@ -325,6 +325,35 @@ function BufferedBlockSaveProbe() {
   );
 }
 
+function NewBlockWorkflowProbe() {
+  const admin = useContentAdmin();
+  const [result, setResult] = useState('');
+
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={async () => {
+          const nextResult = await admin.saveSharedBlockDraftNow(PAGE_PATH, 'billboard', 'New block HUD save');
+          setResult(nextResult?.ok ? 'saved' : nextResult?.reason || 'failed');
+        }}
+      >
+        Save new billboard block
+      </button>
+      <button
+        type="button"
+        onClick={async () => {
+          const nextResult = await admin.publishSharedBlockNow(PAGE_PATH, 'billboard', 'New block HUD publish');
+          setResult(nextResult?.ok ? 'published' : nextResult?.reason || 'failed');
+        }}
+      >
+        Make new billboard live
+      </button>
+      <output data-testid="new-block-save-result">{result}</output>
+    </div>
+  );
+}
+
 function renderOperatorProvider(initialState, publishedState = initialState) {
   return render(
     <ContentAdminProvider initialState={buildBootstrapState(initialState, publishedState)}>
@@ -591,6 +620,49 @@ describe('ContentAdminContext operator smoke and recovery', () => {
     });
   });
 
+  it('converts a block-save timeout into success when the authority already committed it', async () => {
+    const committedState = buildState({
+      heroText: 'Buffered hero',
+      collaborationByPath: {
+        [PAGE_PATH]: {
+          blocks: {
+            hero: {
+              savedBy: CURRENT_ACTOR,
+              savedAt: 1710000016000,
+            },
+          },
+          history: [],
+        },
+      },
+    });
+    authorityMocks.saveSharedBlockDraft.mockRejectedValue({
+      code: 'content-admin-request-timeout',
+      message: 'Request timed out',
+    });
+    authorityMocks.fetchSharedContentRouteSnapshot.mockResolvedValue({
+      initialized: true,
+      state: clone(committedState),
+      baseSnapshot: clone(buildState()),
+      updatedAt: 1710000016000,
+    });
+
+    render(
+      <ContentAdminProvider initialState={buildBootstrapState(buildState())}>
+        <BufferedBlockSaveProbe />
+      </ContentAdminProvider>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Change buffered hero setting' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save buffered hero block' }));
+
+    await waitFor(() => {
+      expect(authorityMocks.saveSharedBlockDraft).toHaveBeenCalled();
+      expect(authorityMocks.fetchSharedContentRouteSnapshot).toHaveBeenCalledWith(PAGE_PATH);
+      expect(screen.getByTestId('buffered-save-result').textContent).toBe('saved');
+      expect(screen.getByTestId('buffered-saved-owner').textContent).toBe(CURRENT_ACTOR.displayName);
+    });
+  });
+
   it('flushes the latest buffered setting before a block draft save', async () => {
     authorityMocks.saveSharedBlockDraft.mockImplementation((pathname, blockId, block, actor, summary) => Promise.resolve({
       ok: true,
@@ -628,6 +700,167 @@ describe('ContentAdminContext operator smoke and recovery', () => {
       );
     });
     expect(screen.getByTestId('buffered-save-result').textContent).toBe('saved');
+  });
+
+  it('saves a newly added block through the route draft endpoint', async () => {
+    const billboardBlock = {
+      id: 'billboard',
+      kind: 'billboard',
+      mode: 'dynamic',
+      name: 'Billboard',
+      settings: { title: 'New billboard' },
+      editableFields: [],
+    };
+    const authoringState = buildState({ extraBlocks: [billboardBlock] });
+    const publishedState = buildState();
+    authorityMocks.saveSharedRouteDraft.mockImplementation((pathname, routeState, _actor, summary) => Promise.resolve({
+      ok: true,
+      state: {
+        ...authoringState,
+        blocksByPath: {
+          ...authoringState.blocksByPath,
+          ...(routeState.blocksByPath || {}),
+        },
+        collaborationByPath: {
+          ...authoringState.collaborationByPath,
+          ...(routeState.collaborationByPath || {}),
+        },
+      },
+      baseSnapshot: publishedState,
+      updatedAt: 1710000010300,
+      saveResult: {
+        didSave: true,
+        savedPaths: [pathname],
+        savedBlockIdsByPath: { [pathname]: ['billboard'] },
+        summary,
+      },
+    }));
+
+    render(
+      <ContentAdminProvider initialState={buildBootstrapState(authoringState, publishedState)}>
+        <NewBlockWorkflowProbe />
+      </ContentAdminProvider>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save new billboard block' }));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('new-block-save-result').textContent).toBe('saved');
+    });
+    expect(authorityMocks.saveSharedRouteDraft).toHaveBeenCalledWith(
+      PAGE_PATH,
+      expect.objectContaining({
+        blocksByPath: expect.objectContaining({
+          [PAGE_PATH]: expect.arrayContaining([expect.objectContaining({ id: 'billboard' })]),
+        }),
+      }),
+      expect.objectContaining({ userId: CURRENT_ACTOR.userId }),
+      'New block HUD save',
+    );
+    expect(authorityMocks.saveSharedBlockDraft).not.toHaveBeenCalled();
+  });
+
+  it('saves and publishes a newly added block through the complete HUD workflow', async () => {
+    const billboardBlock = {
+      id: 'billboard',
+      kind: 'billboard',
+      mode: 'dynamic',
+      name: 'Billboard',
+      settings: { title: 'New billboard' },
+      editableFields: [],
+    };
+    const authoringState = buildState({ extraBlocks: [billboardBlock] });
+    const publishedState = buildState();
+    let savedRouteState = null;
+    authorityMocks.saveSharedRouteDraft.mockImplementation((pathname, routeState, _actor, summary) => {
+      savedRouteState = routeState;
+      return Promise.resolve({
+        ok: true,
+        state: {
+          ...authoringState,
+          blocksByPath: {
+            ...authoringState.blocksByPath,
+            ...(routeState.blocksByPath || {}),
+          },
+          collaborationByPath: {
+            ...authoringState.collaborationByPath,
+            ...(routeState.collaborationByPath || {}),
+          },
+        },
+        baseSnapshot: publishedState,
+        updatedAt: 1710000010350,
+        draftRevision: 'draft-new-billboard-1',
+        saveResult: {
+          didSave: true,
+          savedPaths: [pathname],
+          savedBlockIdsByPath: { [pathname]: ['billboard'] },
+          summary,
+        },
+      });
+    });
+    authorityMocks.publishSharedBlock.mockImplementation((_pathname, blockId, _actor, summary, expectedBlock, options = {}) => {
+      const publishedWithBillboard = {
+        ...publishedState,
+        blocksByPath: {
+          ...publishedState.blocksByPath,
+          [PAGE_PATH]: savedRouteState?.blocksByPath?.[PAGE_PATH]
+            || [
+              ...publishedState.blocksByPath[PAGE_PATH],
+              clone(billboardBlock),
+            ],
+        },
+      };
+      return Promise.resolve({
+        ok: true,
+        operationId: options.operationId,
+        pathname: PAGE_PATH,
+        scope: 'block',
+        blockId,
+        state: {
+          ...authoringState,
+          blocksByPath: savedRouteState?.blocksByPath || authoringState.blocksByPath,
+        },
+        baseSnapshot: publishedWithBillboard,
+        updatedAt: 1710000010450,
+        publishedBlock: clone(expectedBlock || billboardBlock),
+        publishResult: {
+          didPublish: true,
+          publishedPaths: [PAGE_PATH],
+          publishedBlockIdsByPath: { [PAGE_PATH]: ['billboard'] },
+          summary,
+        },
+      });
+    });
+
+    render(
+      <ContentAdminProvider initialState={buildBootstrapState(authoringState, publishedState)}>
+        <NewBlockWorkflowProbe />
+      </ContentAdminProvider>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save new billboard block' }));
+    await waitFor(() => {
+      expect(screen.getByTestId('new-block-save-result').textContent).toBe('saved');
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Make new billboard live' }));
+    await waitFor(() => {
+      expect(screen.getByTestId('new-block-save-result').textContent).toBe('published');
+    });
+    expect(authorityMocks.saveSharedRouteDraft).toHaveBeenCalledTimes(1);
+    expect(authorityMocks.saveSharedBlockDraft).not.toHaveBeenCalled();
+    expect(authorityMocks.publishSharedPage).not.toHaveBeenCalled();
+    expect(authorityMocks.publishSharedBlock).toHaveBeenCalledWith(
+      PAGE_PATH,
+      'billboard',
+      expect.objectContaining({ userId: CURRENT_ACTOR.userId }),
+      'New block HUD publish',
+      expect.objectContaining({ id: 'billboard' }),
+      expect.objectContaining({
+        operationId: expect.any(String),
+        expectedDraftRevision: '',
+      }),
+    );
   });
 
   it('persists newly added blocks through route draft saves instead of lock-only syncs', async () => {

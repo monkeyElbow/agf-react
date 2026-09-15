@@ -25,6 +25,8 @@ const GRID_CARD_OUTLINE_TONE_SET = new Set(['', 'super-grey', 'atlantean', 'mang
 // Shared planned-giving bullet contract. Keep authoring defaults and renderer
 // fallbacks identical so missing legacy fields cannot silently shrink lists.
 export const DEFAULT_DYNAMIC_GRID_CARD_BULLET_SIZE_REM = 1.55;
+export const DEFAULT_DYNAMIC_GRID_CARD_PADDING_REM = 1.35;
+export const DEFAULT_DYNAMIC_GRID_CARD_GAP_REM = 1.15;
 export const DEFAULT_DYNAMIC_GRID_CARD_BULLET_LINE_HEIGHT = 1.5;
 export const DEFAULT_DYNAMIC_GRID_CARD_TITLE_LINE_HEIGHT = 1.2;
 export const DEFAULT_DYNAMIC_GRID_CARD_TITLE_BODY_SPACE_REM = 1;
@@ -217,9 +219,17 @@ export function normalizeDynamicGridWidth(value) {
 export function normalizeDynamicGridCardPaddingRem(value) {
   const numeric = Number(value);
   if (!Number.isFinite(numeric)) {
-    return 1.35;
+    return DEFAULT_DYNAMIC_GRID_CARD_PADDING_REM;
   }
   return Math.max(0.75, Math.min(3, Number(numeric.toFixed(2))));
+}
+
+export function normalizeDynamicGridCardGapRem(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return DEFAULT_DYNAMIC_GRID_CARD_GAP_REM;
+  }
+  return Math.max(0, Math.min(4, Number(numeric.toFixed(2))));
 }
 
 export function normalizeDynamicGridCardTitleSizeRem(value) {

@@ -47,6 +47,9 @@ Change these at the shared component or token level so every HUD editor updates 
 - The shared action row is wired to the block currently being edited.
 - `Save block draft` in a block editor means save that block draft only.
 - `Make live` in a block editor means publish that block.
+- A block-level `Make live` must use the block-scoped publish operation even
+  when that block was inserted, deleted, or moved. It must never fall back to
+  the page publish operation; only the page toolbar may publish the page.
 - The bottom page toolbar is page-wide: `Save all page drafts` saves every page draft, including order and page details; `Make live` publishes the page.
 - Buttons must accurately reflect whether the scoped block or page has a change.
 - After publish, draft badges and draft actions disappear when no scoped unpublished change remains.

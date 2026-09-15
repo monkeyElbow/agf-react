@@ -19,6 +19,7 @@ import {
   normalizeDynamicGridCardBodySizeRem,
   normalizeDynamicGridFineprintSizeRem,
   normalizeDynamicGridCardPaddingRem,
+  normalizeDynamicGridCardGapRem,
   normalizeDynamicGridCardTitleLineHeight,
   normalizeDynamicGridCardTitleBodySpaceRem,
   normalizeDynamicGridCardTitleSizeRem,
@@ -34,7 +35,13 @@ import {
   normalizeGridBgTone,
   normalizeGridToneToken,
 } from './dynamicGrid';
-import { resolveBillboardPresetId } from './billboardPresets';
+import {
+  BILLBOARD_BODY_SOURCE_HTML,
+  isBillboardBodyHtmlEmpty,
+  isBillboardBodyPlaceholderHtml,
+  resolveBillboardBodySource,
+  resolveBillboardPresetId,
+} from './billboardPresets';
 import { resolveCardGridPresetDefinition, resolveCardGridPresetId } from './cardGridPresets';
 import { buildCardGridIntroHtml, hasCardGridIntroHtml } from './cardGridIntro';
 import { resolveColumnsPresetId } from './columnsPresets';
@@ -1136,9 +1143,14 @@ export function buildDynamicBillboardFromBlock(block) {
   const titleHighlights = parseTextHighlights(settings.titleHighlightsJson);
   const subtitle = String(settings.subtitle || '').trim();
   const subtitleClassName = normalizeHighlightClassName(settings.subtitleClassName || '');
+  const subtitleHighlights = parseTextHighlights(settings.subtitleHighlightsJson);
   const sectionClassName = sanitizeClassName(settings.sectionClassName || '');
-  const bodyHtml = String(settings.bodyHtml || '').trim();
-  const body = String(settings.body || '').trim();
+  const rawBodyHtml = String(settings.bodyHtml || '').trim();
+  const bodySource = resolveBillboardBodySource(settings);
+  const bodyHtml = bodySource === BILLBOARD_BODY_SOURCE_HTML && !isBillboardBodyPlaceholderHtml(rawBodyHtml)
+    ? (isBillboardBodyHtmlEmpty(rawBodyHtml) ? '' : rawBodyHtml)
+    : '';
+  const body = bodySource === BILLBOARD_BODY_SOURCE_HTML ? '' : String(settings.body || '').trim();
   const bodyColorClassName = normalizeHighlightClassName(settings.bodyColorClassName || '');
   const fineprint = parsePageContentTextLines(settings.fineprint);
   const bgTone = String(settings.bgTone || 'blue').trim().toLowerCase() || 'blue';
@@ -1266,6 +1278,7 @@ export function buildDynamicBillboardFromBlock(block) {
     sectionClassName,
     subtitle,
     subtitleClassName,
+    subtitleHighlights,
     subtitleDisplay,
     subtitleStyle: buildBillboardSubtitleStyle({
       resolvedColor: subtitleResolvedColor,
@@ -1290,6 +1303,7 @@ export function buildDynamicBillboardFromBlock(block) {
     subtitleTrackingOverride: subtitleTrackingIsExplicit,
     bodyHtml,
     body,
+    bodySource,
     ...(bodyColorClassName ? { bodyColorClassName } : {}),
     fineprint: fineprint.length ? fineprint : null,
     fineprintDisclosureId: String(settings.fineprintDisclosureId || '').trim(),
@@ -2691,6 +2705,7 @@ export function buildDynamicGridFromBlock(block) {
     String(settings.subtitleClassName || '').trim().replace(/^is-/, ''),
   );
   const cardPaddingRem = normalizeDynamicGridCardPaddingRem(settings.cardPaddingRem);
+  const cardGapRem = normalizeDynamicGridCardGapRem(settings.cardGapRem);
   const cardTitleSizeRem = normalizeDynamicGridCardTitleSizeRem(settings.cardTitleSizeRem);
   const hasCardTitleLineHeight = settings.cardTitleLineHeight !== null
     && settings.cardTitleLineHeight !== ''
@@ -2917,6 +2932,7 @@ export function buildDynamicGridFromBlock(block) {
     bodyTone,
     subheadTone,
     cardPaddingRem,
+    cardGapRem,
     cardTitleSizeRem,
     cardTitleLineHeight,
     cardTitleJustify,

@@ -9,7 +9,7 @@ const source = readFileSync(path.resolve(__dirname, './editor-control-browser-au
 describe('editor browser audit guardrails', () => {
   it('does not treat inline editor variables as proof that a descendant rendered', () => {
     expect(source).toContain('const getRenderedControlProof = (root, fieldId) =>');
-    expect(source).toContain("{ selector: '.service-native-card', property: 'padding' }");
+    expect(source).toContain("cardPaddingRem: [{ selector: '.service-native-card");
     expect(source).toContain('rendered ${fieldId} proof did not change');
     expect(source).not.toContain("style: node.getAttribute('style') || ''");
     expect(source).not.toContain('const cssVars = {}');

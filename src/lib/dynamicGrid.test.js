@@ -12,6 +12,7 @@ import {
   normalizeDynamicGridNumberPositionPercent,
   normalizeDynamicGridCardTitleLineHeight,
   normalizeDynamicGridCardTitleBodySpaceRem,
+  normalizeDynamicGridCardGapRem,
   normalizeDynamicGridCardOutlineTone,
   normalizeDynamicGridCardOutlineWidthPx,
   normalizeDynamicGridCardShadowOpacity,
@@ -109,5 +110,12 @@ describe('dynamic grid contrast helpers', () => {
     expect(normalizeDynamicGridCardTitleBodySpaceRem(5)).toBe(3);
     expect(normalizeDynamicGridCardTitleBodySpaceRem(undefined)).toBe(1);
     expect(normalizeDynamicGridCardTitleBodySpaceRem('')).toBe(1);
+  });
+
+  it('normalizes the Card Grid card-gutter slider independently from card padding', () => {
+    expect(normalizeDynamicGridCardGapRem(1.274)).toBe(1.27);
+    expect(normalizeDynamicGridCardGapRem(-1)).toBe(0);
+    expect(normalizeDynamicGridCardGapRem(5)).toBe(4);
+    expect(normalizeDynamicGridCardGapRem(undefined)).toBe(1.15);
   });
 });

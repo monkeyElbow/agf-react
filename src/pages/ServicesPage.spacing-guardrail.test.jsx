@@ -47,6 +47,20 @@ describe('services page spacing and typography guardrail', () => {
     expect(serviceCssSource).toContain('line-height: 0.98;');
   });
 
+  it('keeps the centered Services lead copy on the iPad centerline', () => {
+    const serviceCssSource = readSource('../styles/service-native.css');
+
+    expect(serviceCssSource).toContain('@media (min-width: 768px) and (max-width: 1099px) {');
+    expect(serviceCssSource).toContain(
+      '.services-native-page .services-native-intro.service-native-intro.dynamic-intro .service-native-intro-copy.is-justify-center > :is(p, .native-info-rich-html) {',
+    );
+    expect(serviceCssSource).toContain('width: min(100%, 74ch);');
+    expect(serviceCssSource).toContain('justify-self: center;');
+    expect(serviceCssSource).toContain(
+      '.services-native-page .services-native-intro.service-native-intro.dynamic-intro .service-native-intro-copy.is-justify-center > .native-info-rich-html p {',
+    );
+  });
+
   it('keeps the services breakdown as a stacked editorial directory with wrapped links and mobile-safe rows', () => {
     const cssSource = readSource('../styles/home-native.css');
 
@@ -101,8 +115,21 @@ describe('services page spacing and typography guardrail', () => {
 
     expect(cssSource).toContain('.services-native-matters {');
     expect(cssSource).toContain('padding: clamp(4.5rem, 9vw, 7.2rem) 0 clamp(4.8rem, 9.45vw, 7.5rem);');
+    expect(cssSource).toContain('.services-native-matters > .ag-panel-rail {');
+    expect(cssSource).toContain('justify-items: center;');
+    expect(cssSource).toContain('.services-native-matters > .ag-panel-rail > .native-info-rich-html {');
+    expect(cssSource).toContain('width: min(100%, 62ch);');
+    expect(cssSource).toContain('justify-self: center;');
+    expect(cssSource).toContain('.services-native-matters > .ag-panel-rail > .service-native-action-row {');
     expect(cssSource).toContain('.services-native-matters h2 {');
     expect(cssSource).toContain('font-family: var(--ag-font-helv);');
+  });
+
+  it('contains Services full-bleed descendants at the page shell', () => {
+    const serviceCssSource = readSource('../styles/service-native.css');
+
+    expect(serviceCssSource).toContain('.service-native-page {');
+    expect(serviceCssSource).toContain('overflow-x: clip;');
   });
 
   it('keeps the services wheel motion respectful when visitors prefer reduced motion', () => {
