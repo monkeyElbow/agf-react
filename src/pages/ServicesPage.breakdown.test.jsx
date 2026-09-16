@@ -103,6 +103,30 @@ describe('ServicesPage breakdown directory', () => {
     expect(renderedOrder).toEqual(savedOrder);
   });
 
+  it('passes Billboard lead-copy size and leading through the custom Services matters shell', () => {
+    mockServicesState.blocks = contentBlockBlueprintsByPath['/services'].map((block) => (
+      block.id === 'matters_band'
+        ? {
+            ...block,
+            settings: {
+              ...block.settings,
+              leadCopySizeRem: 2.15,
+              leadCopyLineHeight: 1.8,
+            },
+          }
+        : block
+    ));
+
+    const { container } = renderServicesPage();
+    const body = container.querySelector('[data-block-id="matters_band"] .native-info-rich-html');
+
+    expect(body?.className).toContain('is-dynamic-billboard-lead-copy-sized');
+    expect(body?.style.getPropertyValue('--dynamic-billboard-lead-copy-size')).toBe(
+      'clamp(calc(2.15rem * 0.68), 2.1vw, 2.15rem)',
+    );
+    expect(body?.style.getPropertyValue('--dynamic-billboard-lead-copy-line-height')).toBe('1.8');
+  });
+
   it('renders the requested breakdown intro, rows, and revised service copy', () => {
     renderServicesPage();
 

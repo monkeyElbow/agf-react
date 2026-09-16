@@ -200,6 +200,30 @@ describe('BlockHudPanelHost', () => {
     expect(document.querySelector('.admin-card-grid-hud-reference .admin-front-hud-swatch-row')).toBeTruthy();
   });
 
+  it('keeps HUD diagnostics on the final Block options page', () => {
+    render(createElement(BlockHudPanelHost, {
+      block: {
+        id: 'diagnostics-placement-probe',
+        kind: 'intro',
+        mode: 'dynamic',
+        settings: {
+          heading: 'Diagnostics placement',
+          bodyHtml: '<p>Probe</p>',
+        },
+      },
+      onSettingChange: vi.fn(),
+    }));
+
+    const diagnosticsToggle = screen.getByRole('button', { name: 'DEV · HUD diagnostics' });
+    const panelStack = document.querySelector('.admin-hud-editor-panel-stack');
+    const blockOptionsPage = [...panelStack?.children || []]
+      .find((page) => page.contains(diagnosticsToggle));
+    expect(blockOptionsPage?.classList.contains('admin-hud-editor-block-options-page')).toBe(true);
+    fireEvent.click(screen.getByRole('button', { name: 'Block options' }));
+    expect(screen.getByRole('button', { name: 'DEV · HUD diagnostics' })).toBeTruthy();
+    expect(getComputedStyle(blockOptionsPage).display).not.toBe('none');
+  });
+
   it('describes About Values as a stacked feature and hides unsupported generic layout controls', () => {
     render(createElement(BlockHudPanelHost, {
       block: {
@@ -1147,6 +1171,69 @@ describe('BlockHudPanelHost', () => {
     fireEvent.change(input, { target: { value: 'Owned draft' } });
 
     expect(onSettingChange).toHaveBeenCalledWith('line1Text', 'Owned draft');
+  });
+
+  it('uses current collaboration metadata for foreign notices and clears stale dimming after takeover', () => {
+    const currentActor = { userId: 'dev-current', displayName: 'Current Admin' };
+    const block = {
+      id: 'billboard',
+      kind: 'custom_notice',
+      mode: 'dynamic',
+      editableFields: [{ id: 'line1Text', label: 'Line 1', type: 'text' }],
+      settings: { line1Text: 'Shared billboard' },
+    };
+    let collaboration = {
+      lockedBy: { userId: 'dev-other', displayName: 'Other Admin' },
+      draftedBy: { userId: 'dev-other', displayName: 'Other Admin' },
+    };
+    const { rerender } = render(
+      <ContentAdminContext.Provider
+        value={{
+          devIdentity: currentActor,
+          getBlockCollaboration: () => collaboration,
+        }}
+      >
+        <BlockHudPanelHost
+          block={block}
+          pathname="/services/loans"
+          ownership={{ state: 'none' }}
+          onOwnershipAction={vi.fn()}
+          onSettingChange={vi.fn()}
+        />
+      </ContentAdminContext.Provider>,
+    );
+
+    expect(screen.getByText('Other Admin is editing this block')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Take over edit' })).toBeTruthy();
+    expect(screen.getByLabelText('Line 1').closest('fieldset')?.disabled).toBe(true);
+
+    collaboration = {
+      lockedBy: currentActor,
+      draftedBy: currentActor,
+    };
+    rerender(
+      <ContentAdminContext.Provider
+        value={{
+          devIdentity: currentActor,
+          getBlockCollaboration: () => collaboration,
+        }}
+      >
+        <BlockHudPanelHost
+          block={block}
+          pathname="/services/loans"
+          ownership={{
+            state: 'editing-other',
+            overlayLabel: 'Other Admin is editing this block',
+          }}
+          onOwnershipAction={vi.fn()}
+          onSettingChange={vi.fn()}
+        />
+      </ContentAdminContext.Provider>,
+    );
+
+    expect(screen.queryByText('Other Admin is editing this block')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Take over edit' })).toBeNull();
+    expect(screen.getByLabelText('Line 1').closest('fieldset')?.disabled).toBe(false);
   });
 
   it('renders request form blocks with the dedicated request form editor', () => {

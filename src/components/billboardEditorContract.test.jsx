@@ -265,6 +265,22 @@ describe('Billboard editor contract', () => {
     expect(JSON.parse(backgroundCall[1])).toMatchObject({ enabled: true });
   });
 
+  it('offers a solid white Billboard button and persists it as the shared white style', () => {
+    const onSettingChange = vi.fn();
+    render(<BillboardBlockEditor block={billboardBlock({
+      buttonLabel: 'Continue',
+      buttonStyle: 'blue',
+    })} onSettingChange={onSettingChange} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Buttons' }));
+    fireEvent.click(
+      within(screen.getByRole('radiogroup', { name: 'Billboard button style' }))
+        .getByRole('radio', { name: 'White solid' }),
+    );
+
+    expect(onSettingChange).toHaveBeenCalledWith('buttonStyle', 'white');
+  });
+
   it('routes an unselected Body HTML color swatch to the base body color setting', () => {
     const onSettingChange = vi.fn();
     render(<BillboardBlockEditor block={billboardBlock()} onSettingChange={onSettingChange} />);

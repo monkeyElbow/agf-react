@@ -1631,11 +1631,17 @@ export default function LoansPage({ sectionsOnly = false }) {
                 {loanOptionsBillboard.bodyHtml ? (
                   <SafeRichText
                     as="div"
-                    className={`native-info-rich-html${loanOptionsBillboard.bodyColorClassName ? ` ${loanOptionsBillboard.bodyColorClassName}` : ''}`}
+                    className={`native-info-rich-html${loanOptionsBillboard.bodyColorClassName ? ` ${loanOptionsBillboard.bodyColorClassName}` : ''}${loanOptionsBillboard.bodyHtmlStyle ? ' is-dynamic-billboard-lead-copy-sized' : ''}`}
                     html={loanOptionsBillboard.bodyHtml}
+                    style={loanOptionsBillboard.bodyHtmlStyle || undefined}
                   />
                 ) : loanOptionsBillboard.body ? (
-                  <p className={loanOptionsBillboard.bodyColorClassName || undefined}>{loanOptionsBillboard.body}</p>
+                  <p
+                    className={[loanOptionsBillboard.bodyColorClassName || '', loanOptionsBillboard.bodyHtmlStyle ? 'is-dynamic-billboard-lead-copy-sized' : ''].filter(Boolean).join(' ') || undefined}
+                    style={loanOptionsBillboard.bodyHtmlStyle || undefined}
+                  >
+                    {loanOptionsBillboard.body}
+                  </p>
                 ) : null}
                 {loanOptionsCtaLabel && loanOptionsCtaHref ? (
                   <div className="service-native-action-row is-centered">

@@ -251,7 +251,13 @@ export default function useLocalBlockDrafts({
     }
 
     if (!claimedBlockIdsRef.current.has(normalizedBlockId)) {
-      claimBufferedBlockEdit(normalizedPath, normalizedBlockId);
+      const claimResult = claimBufferedBlockEdit(normalizedPath, normalizedBlockId);
+      // Shared-authority callers can return a structured conflict when the
+      // block belongs to another admin. Do not let a blocked control create a
+      // temporary local value that immediately disappears on the next poll.
+      if (claimResult?.blocked) {
+        return;
+      }
       claimedBlockIdsRef.current.add(normalizedBlockId);
     }
 

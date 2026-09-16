@@ -24,6 +24,7 @@ const BILLBOARD_TEXT_TONE_OPTIONS = [
 const BILLBOARD_BUTTON_STYLE_OPTIONS = [
   { value: 'blue', label: 'Blue' },
   { value: 'dark', label: 'Dark' },
+  { value: 'white', label: 'White solid' },
   { value: 'outline', label: 'Outline' },
 ];
 

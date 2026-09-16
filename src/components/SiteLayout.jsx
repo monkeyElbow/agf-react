@@ -12,6 +12,7 @@ import SiteChatbotWindow from './SiteChatbotWindow';
 import SiteSearchPanel from './SiteSearchPanel';
 
 const DESKTOP_NAV_QUERY = '(min-width: 1100px)';
+const TOUCH_NAV_QUERY = '(hover: none), (pointer: coarse)';
 const CONTENT_WIDTH_OVERLAY_STORAGE_KEY = 'agf-admin-content-width-overlay-v1';
 const FRONT_HUD_ENABLED_STORAGE_KEY = 'agf-admin-front-hud-enabled-v1';
 const FRONT_HUD_OPACITY_STORAGE_KEY = 'agf-admin-front-hud-opacity-v1';
@@ -138,6 +139,9 @@ export default function SiteLayout({ children }) {
   const [desktopQueryMatch, setDesktopQueryMatch] = useState(
     typeof window !== 'undefined' ? window.matchMedia(DESKTOP_NAV_QUERY).matches : false,
   );
+  const [touchNavigationMatch, setTouchNavigationMatch] = useState(
+    typeof window !== 'undefined' ? window.matchMedia(TOUCH_NAV_QUERY).matches : false,
+  );
   const [forceCompactNav, setForceCompactNav] = useState(false);
 
   const [contentWidthOverlayEnabled, setContentWidthOverlayEnabled] = useState(() => {
@@ -207,6 +211,8 @@ export default function SiteLayout({ children }) {
   const pendingHudScrollRestoreRef = useRef(null);
   const frontHudOpacityRef = useRef(frontHudOpacity);
   const navHoverCloseTimeoutRef = useRef(null);
+  const touchNavPointerRef = useRef(false);
+  const touchNavOpenedMenuRef = useRef(false);
   const navRef = useRef(null);
   const navInnerRef = useRef(null);
   const brandRef = useRef(null);
@@ -260,6 +266,10 @@ export default function SiteLayout({ children }) {
   };
   const homePath = resolveManagedNavPath('/', '/');
   const isDesktop = desktopQueryMatch && !forceCompactNav;
+  const isTouchNavigationActive = () => (
+    touchNavigationMatch
+    || (typeof window !== 'undefined' && window.matchMedia(TOUCH_NAV_QUERY).matches)
+  );
 
   useLayoutEffect(() => {
     if (!isDesktop || typeof window === 'undefined') {
@@ -294,6 +304,24 @@ export default function SiteLayout({ children }) {
         setMenuOpen(false);
       }
     };
+    sync();
+
+    if (typeof media.addEventListener === 'function') {
+      media.addEventListener('change', sync);
+      return () => media.removeEventListener('change', sync);
+    }
+
+    media.addListener(sync);
+    return () => media.removeListener(sync);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return undefined;
+    }
+
+    const media = window.matchMedia(TOUCH_NAV_QUERY);
+    const sync = () => setTouchNavigationMatch(media.matches);
     sync();
 
     if (typeof media.addEventListener === 'function') {
@@ -670,6 +698,45 @@ export default function SiteLayout({ children }) {
     closeNavMenus();
   };
 
+  const handleNavGroupLabelPointerDown = (title, event) => {
+    const touchNavigation = isTouchNavigationActive();
+    const isTouchPointer = event.pointerType === 'touch'
+      || event.pointerType === 'pen'
+      || (touchNavigation && event.pointerType !== 'mouse');
+    touchNavPointerRef.current = isTouchPointer;
+    touchNavOpenedMenuRef.current = false;
+    if (!isTouchPointer || !touchNavigation || openDropdown === title) {
+      return;
+    }
+
+    cancelScheduledDropdownClose();
+    setSearchOpen(false);
+    setOpenDropdown(title);
+    touchNavOpenedMenuRef.current = true;
+  };
+
+  const handleNavGroupLabelSelect = (title, path, event) => {
+    // Touch users need the label to be a useful first target too. Keep the
+    // parent destination available on the second tap, while mouse/keyboard
+    // users retain the existing direct-navigation behavior.
+    const pointerType = event?.pointerType || event?.nativeEvent?.pointerType;
+    const isTouchActivation = touchNavPointerRef.current
+      || pointerType === 'touch'
+      || pointerType === 'pen';
+    const openedMenuFromThisTap = touchNavOpenedMenuRef.current;
+    touchNavPointerRef.current = false;
+    touchNavOpenedMenuRef.current = false;
+    if (isTouchActivation && (openedMenuFromThisTap || openDropdown !== title)) {
+      cancelScheduledDropdownClose();
+      setSearchOpen(false);
+      setOpenDropdown(title);
+      return;
+    }
+
+    navigate(path);
+    handleNavItemSelect();
+  };
+
   const setFrontHudEnabledWithActivation = (nextEnabled) => {
     captureHudToggleScroll(nextEnabled);
     if (nextEnabled) {
@@ -679,7 +746,7 @@ export default function SiteLayout({ children }) {
   };
 
   const handleGroupFocus = (title) => {
-    if (!isDesktop) {
+    if (!isDesktop || isTouchNavigationActive()) {
       return;
     }
     cancelScheduledDropdownClose();
@@ -688,7 +755,7 @@ export default function SiteLayout({ children }) {
   };
 
   const handleGroupMouseEnter = (title) => {
-    if (!isDesktop) {
+    if (!isDesktop || isTouchNavigationActive()) {
       return;
     }
     cancelScheduledDropdownClose();
@@ -697,7 +764,7 @@ export default function SiteLayout({ children }) {
   };
 
   const handleGroupBlur = (event) => {
-    if (!isDesktop) {
+    if (!isDesktop || isTouchNavigationActive()) {
       return;
     }
     const current = event.currentTarget;
@@ -709,7 +776,7 @@ export default function SiteLayout({ children }) {
   };
 
   const handleGroupMouseLeave = (event) => {
-    if (!isDesktop) {
+    if (!isDesktop || isTouchNavigationActive()) {
       return;
     }
     const current = event.currentTarget;
@@ -720,7 +787,7 @@ export default function SiteLayout({ children }) {
   };
 
   const handleNavLinksMouseLeave = (event) => {
-    if (!isDesktop) {
+    if (!isDesktop || isTouchNavigationActive()) {
       return;
     }
     const current = event.currentTarget;
@@ -801,10 +868,16 @@ export default function SiteLayout({ children }) {
                         <button
                           type="button"
                           className="site-nav-group-link"
-                          onClick={() => {
-                            navigate(resolveManagedNavPath(section.rootPath || section.items[0]?.path, '/'));
-                            handleNavItemSelect();
+                          onPointerDown={(event) => handleNavGroupLabelPointerDown(section.title, event)}
+                          onPointerCancel={() => {
+                            touchNavPointerRef.current = false;
+                            touchNavOpenedMenuRef.current = false;
                           }}
+                          onClick={(event) => handleNavGroupLabelSelect(
+                            section.title,
+                            resolveManagedNavPath(section.rootPath || section.items[0]?.path, '/'),
+                            event,
+                          )}
                         >
                           {section.title}
                         </button>
@@ -897,10 +970,12 @@ export default function SiteLayout({ children }) {
                       <button
                         type="button"
                         className="site-nav-group-link"
-                        onClick={() => {
-                          navigate('/admin/content');
-                          handleNavItemSelect();
+                        onPointerDown={(event) => handleNavGroupLabelPointerDown('Admin', event)}
+                        onPointerCancel={() => {
+                          touchNavPointerRef.current = false;
+                          touchNavOpenedMenuRef.current = false;
                         }}
+                        onClick={(event) => handleNavGroupLabelSelect('Admin', '/admin/content', event)}
                       >
                         Admin
                       </button>

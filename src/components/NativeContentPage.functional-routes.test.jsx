@@ -1533,6 +1533,7 @@ describe('NativeContentPage functional routes', () => {
               settings: {
                 ...block.settings,
                 leadCopySizeRem: 2.35,
+                leadCopyLineHeight: 1.8,
               },
             }
           : block),
@@ -1555,10 +1556,12 @@ describe('NativeContentPage functional routes', () => {
     expect(joyCopy?.style.getPropertyValue('--dynamic-billboard-lead-copy-size')).toBe(
       'clamp(calc(2.35rem * 0.68), 2.1vw, 2.35rem)',
     );
+    expect(joyCopy?.style.getPropertyValue('--dynamic-billboard-lead-copy-line-height')).toBe('1.8');
     expect(joyBody?.className).toContain('is-dynamic-billboard-lead-copy-sized');
     expect(joyBody?.style.getPropertyValue('--dynamic-billboard-lead-copy-size')).toBe(
       'clamp(calc(2.35rem * 0.68), 2.1vw, 2.35rem)',
     );
+    expect(joyBody?.style.getPropertyValue('--dynamic-billboard-lead-copy-line-height')).toBe('1.8');
   });
 
   it('renders the planned giving hero and intro through explicit managed blocks without changing the current copy', () => {

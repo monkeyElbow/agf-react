@@ -652,9 +652,10 @@
     calc(100dvh - clamp(64px, 8vh, 112px) - 20px - env(safe-area-inset-bottom, 0px)),
     max(0px, calc(var(--ag-admin-front-hud-editor-top, 100dvh) - clamp(64px, 8vh, 112px) - 12px))
   );
-  /* Keep the block list above per-block names when an uncropped light has
-     allowed those names to participate in the page-level stacking order. */
-  z-index: 2000;
+  /* Keep the block menu above the editor surface when their recovery/edge
+     areas overlap. The editor is 2000; the page workflow remains 2001; open
+     structure pickers intentionally remain higher still. */
+  z-index: 2002;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   gap: 0.35rem;
@@ -5239,6 +5240,19 @@
   caret-color: var(--admin-billboard-copy-editor-color);
 }
 
+/* Billboard body HTML is a compact source pane. Do not show an empty vertical
+   scrollbar or resize grip over its intentional blank editing space; the
+   textarea remains programmatically scrollable if a long source is loaded. */
+.admin-billboard-hud-copy-editor .admin-html-editor-source {
+  overflow-y: hidden;
+  resize: none;
+  scrollbar-width: none;
+}
+
+.admin-billboard-hud-copy-editor .admin-html-editor-source::-webkit-scrollbar {
+  display: none;
+}
+
 .admin-billboard-hud-compact-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -6642,58 +6656,79 @@
   min-width: 0;
 }
 
-.admin-billboard-hud-button-preview-column {
+.admin-billboard-hud-button-section .admin-billboard-hud-button-preview-column {
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
-  align-content: stretch;
-  gap: 0.24rem;
+  grid-template-rows: auto auto;
+  align-content: start;
+  align-items: start;
+  gap: var(--ag-hud-editor-space-2);
   min-width: 0;
-  height: 100%;
+  height: auto;
+  padding: var(--ag-hud-editor-panel-padding);
+  border: 1px solid var(--ag-hud-editor-border);
+  border-radius: var(--ag-hud-editor-radius);
+  background: rgba(255, 255, 255, 0.24);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.42);
+}
+
+.admin-billboard-hud-button-section .admin-billboard-hud-button-gap-control {
+  min-width: 0;
 }
 
 .admin-billboard-hud-button-preview-column .admin-billboard-hud-button-preview {
-  height: 100%;
-  gap: 0;
-  padding: 0.42rem 0.48rem;
+  height: auto;
+  gap: var(--ag-hud-editor-space-2);
+  padding: var(--ag-hud-editor-space-2);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .admin-billboard-hud-button-reference-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  align-items: stretch;
+  align-items: start;
 }
 
 .admin-billboard-hud-button-options-grid {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
-.admin-billboard-hud-reference-panel .admin-billboard-hud-button-fields,
-.admin-billboard-hud-reference-panel .admin-billboard-hud-button-preview {
+.admin-billboard-hud-button-section .admin-billboard-hud-button-fields,
+.admin-billboard-hud-button-section .admin-billboard-hud-button-preview {
   min-width: 0;
   min-height: 0;
 }
 
-.admin-billboard-hud-reference-panel .admin-billboard-hud-button-fields {
+.admin-billboard-hud-button-section .admin-billboard-hud-button-fields {
   gap: var(--ag-hud-editor-space-2);
   align-content: start;
   padding: var(--ag-hud-editor-panel-padding);
-  border: 1px solid rgba(var(--ag-admin-hud-accent-rgb), 0.12);
+  border: 1px solid var(--ag-hud-editor-border);
   border-radius: var(--ag-hud-editor-radius);
-  background: rgba(255, 255, 255, 0.22);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.36);
+  background: rgba(255, 255, 255, 0.24);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.42);
 }
 
-.admin-billboard-hud-reference-panel .admin-billboard-hud-button-preview {
+.admin-billboard-hud-button-section .admin-billboard-hud-button-preview {
   display: grid;
-  align-content: start;
+  align-content: center;
+  justify-items: center;
   gap: var(--ag-hud-editor-space-2);
-  padding: var(--ag-hud-editor-panel-padding);
-  border: 1px solid rgba(var(--ag-admin-hud-accent-rgb), 0.12);
-  border-radius: var(--ag-hud-editor-radius);
-  background: rgba(255, 255, 255, 0.22);
+  width: 100%;
+  min-height: 7rem;
+  padding: var(--ag-hud-editor-space-2);
+  border: 0;
+  border-radius: calc(var(--ag-hud-editor-radius) * 0.72);
+  background: transparent;
+  box-shadow: none;
 }
 
-.admin-billboard-hud-reference-panel .admin-billboard-hud-button-preview-row {
+.admin-billboard-hud-button-section .admin-billboard-hud-button-preview-row {
+  width: 100%;
   gap: var(--ag-hud-editor-space-2);
+  justify-content: center;
+  align-items: center;
 }
 
 .admin-billboard-hud-reference-layout-fields {
@@ -7107,9 +7142,18 @@
 
 .admin-billboard-editor-copy-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  column-gap: clamp(1.5rem, 3.5vw, 3rem);
-  row-gap: var(--ag-hud-editor-row-gap);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--ag-hud-editor-row-gap);
+}
+
+/* Copy owns three inner surfaces. Do not add a fourth full-width surface
+   around them. */
+.admin-billboard-hud-reference-panel.is-copy-panel {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .admin-billboard-editor-copy-fields,
@@ -7118,6 +7162,11 @@
   align-content: start;
   gap: var(--ag-hud-editor-row-gap);
   min-width: 0;
+  padding: var(--ag-hud-editor-panel-padding);
+  border: 1px solid var(--ag-hud-editor-border);
+  border-radius: var(--ag-hud-editor-radius);
+  background: rgba(255, 255, 255, 0.24);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.42);
 }
 
 .admin-billboard-editor-slider > span {
@@ -7134,7 +7183,7 @@
 
 .admin-billboard-editor-slider input[type='range'],
 .admin-billboard-editor-width-row input[type='range'] {
-  width: min(100%, 34rem);
+  width: 100%;
   max-width: 100%;
 }
 
@@ -10851,5 +10900,127 @@
 
   .admin-hud-editor-shared-surface .admin-request-form-step-toggle-meta {
     display: none;
+  }
+}
+
+/* iPad/editor interaction contract. iPad portrait is wide enough to miss the
+   phone breakpoints while still needing touch-sized controls. Keep the
+   desktop composition, but make its interactive edges safe for touch and
+   prevent compact toolbars from painting into neighboring editor columns. */
+@media (hover: none) and (pointer: coarse) and (min-width: 700px) and (max-width: 1400px) {
+  .admin-hud-editor-shared-surface,
+  .admin-hud-editor-shared-surface :is(
+    .admin-front-hud-card,
+    .admin-front-hud-field-group,
+    .admin-hud-editor-panel,
+    .admin-billboard-editor-copy-fields,
+    .admin-billboard-editor-copy-controls,
+    .admin-html-editor,
+    .admin-html-editor-controls,
+    .admin-html-editor-toolbar
+  ) {
+    min-width: 0;
+  }
+
+  .admin-hud-editor-shared-surface .admin-html-editor-controls.is-inline {
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  .admin-hud-editor-shared-surface .admin-html-editor-toolbar {
+    max-width: max-content;
+  }
+
+  /* The Billboard copy toolbar is intentionally horizontally scrollable;
+     clip its scrollport at the copy surface so it cannot cover column two. */
+  .admin-hud-editor-shared-surface .admin-billboard-editor-copy-fields {
+    overflow: hidden;
+  }
+
+  .admin-hud-editor-shared-surface .admin-hud-editor-rail-button {
+    width: 44px;
+    height: 44px;
+    min-height: 44px;
+  }
+
+  .admin-front-hud-tool.is-docked .admin-hud-editor-rail-button {
+    width: 44px;
+    height: 44px;
+    min-height: 44px;
+  }
+
+  .admin-front-hud-tool.is-docked .admin-front-hud-page-workflow-action,
+  .admin-front-hud-tool.is-docked .admin-front-hud-page-workflow-overflow > summary,
+  .admin-front-hud-tool.is-docked.is-panel-active:has(.admin-hud-editor-shared-surface)
+    > .admin-front-hud-tool-head > .admin-front-hud-tool-close,
+  .admin-hud-editor-shared-surface .admin-html-editor-mode-tabs button,
+  .admin-hud-editor-shared-surface .admin-html-editor-toolbar button,
+  .admin-hud-editor-shared-surface .admin-front-hud-segment-btn,
+  .admin-hud-editor-shared-surface .admin-front-hud-mode-toggle,
+  .admin-hud-editor-shared-surface .admin-front-hud-mini-action {
+    min-height: 38px;
+  }
+
+  .admin-hud-editor-shared-surface .admin-html-editor-mode-tabs {
+    min-height: 38px;
+    align-items: center;
+  }
+
+  .admin-hud-editor-shared-surface :is(
+    .admin-front-hud-field > input[type='text'],
+    .admin-front-hud-field > input[type='number'],
+    .admin-front-hud-field > select,
+    .admin-front-hud-field > textarea,
+    .admin-front-hud-range-controls > input:not([type='range'])
+  ) {
+    min-height: 38px;
+  }
+
+  .admin-hud-editor-shared-surface :is(
+    .admin-front-hud-range input[type='range'],
+    .admin-range-number-control input[type='range'],
+    .admin-hero-inline-height-row input[type='range'],
+    .admin-background-light-slider input[type='range'],
+    .admin-billboard-editor-slider input[type='range'],
+    .admin-billboard-editor-width-row input[type='range']
+  ) {
+    min-height: 30px !important;
+    height: 30px !important;
+  }
+
+  .admin-hud-editor-shared-surface :is(
+    .admin-front-hud-swatch,
+    .admin-swatch-option,
+    .admin-html-editor-color-swatch
+  ) {
+    width: 30px !important;
+    min-width: 30px !important;
+    height: 30px !important;
+    min-height: 30px !important;
+  }
+
+  .admin-front-hud-tool.is-docked.is-panel-active:has(.admin-hud-editor-shared-surface)
+    > .admin-front-hud-tool-head > .admin-front-hud-tool-close {
+    min-width: 38px;
+    min-height: 38px;
+  }
+
+  .admin-front-hud-dock-tab,
+  .admin-front-hud-dock-collapse,
+  .admin-front-hud-dock-collapse-toggle {
+    min-height: 44px;
+  }
+
+  .admin-front-hud-dock.is-icons-only .admin-front-hud-dock-tabs {
+    width: 56px;
+    max-width: 56px;
+  }
+
+  .admin-front-hud-dock.is-icons-only .admin-front-hud-dock-tab {
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    min-height: 44px;
   }
 }

@@ -25,6 +25,7 @@ import {
   buildDynamicSplitPanelFromBlock,
   buildDynamicTopStripFromBlock,
   buildDynamicTestimonialsFromBlock,
+  actionButtonClassName,
   heroAnimationClassForLine,
   isPdfLinkHref,
   normalizeUniversalOutlineButtonClassName,
@@ -49,6 +50,10 @@ describe('heroAnimationClassForLine', () => {
 });
 
 describe('shared external button link helpers', () => {
+  it('maps the shared white style to a solid white button', () => {
+    expect(actionButtonClassName('white')).toBe('service-native-btn is-tone-white');
+  });
+
   it('detects pdf targets and external-or-pdf button links', () => {
     expect(isPdfLinkHref('https://files.example.com/offering-circular.pdf')).toBe(true);
     expect(isPdfLinkHref('/docs/reference-packet.pdf?download=1')).toBe(true);

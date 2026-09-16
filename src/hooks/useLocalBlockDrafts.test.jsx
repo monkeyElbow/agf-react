@@ -94,6 +94,38 @@ describe('useLocalBlockDrafts', () => {
     });
   });
 
+  it('does not stage or commit a control change when ownership claim is blocked', () => {
+    vi.useFakeTimers();
+    const claimBufferedBlockEdit = vi.fn(() => ({ blocked: true, reason: 'drafted-by-other' }));
+    const commitBlockSettingsPatch = vi.fn(() => true);
+    const blocks = [
+      {
+        id: 'hero',
+        mode: 'dynamic',
+        settings: {
+          line1Text: 'Another admin draft',
+        },
+      },
+    ];
+
+    render(
+      <LocalBlockDraftsProbe
+        blocks={blocks}
+        claimBufferedBlockEdit={claimBufferedBlockEdit}
+        commitBlockSettingsPatch={commitBlockSettingsPatch}
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText('Hero text'), { target: { value: 'Blocked overwrite' } });
+
+    expect(screen.getByLabelText('Hero text').value).toBe('Another admin draft');
+    expect(claimBufferedBlockEdit).toHaveBeenCalledWith('/services/loans', 'hero');
+    act(() => {
+      vi.advanceTimersByTime(LOCAL_BLOCK_DRAFT_IDLE_COMMIT_DELAY_MS);
+    });
+    expect(commitBlockSettingsPatch).not.toHaveBeenCalled();
+  });
+
   it('clears local editor buffers when the block is published', () => {
     vi.useFakeTimers();
     const commitBlockSettingsPatch = vi.fn(() => true);

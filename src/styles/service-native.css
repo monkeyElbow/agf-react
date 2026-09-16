@@ -5379,21 +5379,6 @@
   color: inherit;
 }
 
-.service-native-section.dynamic-billboard .native-info-rich-html.is-dynamic-billboard-lead-copy-sized > :is(p, h3, h4, li) {
-  font-size: var(--dynamic-billboard-lead-copy-size) !important;
-  line-height: var(--dynamic-billboard-lead-copy-line-height, 1.55) !important;
-}
-
-.service-native-section.dynamic-billboard .native-info-section-copy > .billboard-body-copy.is-dynamic-billboard-lead-copy-sized {
-  font-size: var(--dynamic-billboard-lead-copy-size) !important;
-  line-height: var(--dynamic-billboard-lead-copy-line-height, 1.55) !important;
-}
-
-.service-native-section.retirement-do-the-math-billboard .native-info-rich-html.is-dynamic-billboard-lead-copy-sized > :is(p, h3, h4, li) {
-  font-size: var(--dynamic-billboard-lead-copy-size, inherit) !important;
-  line-height: var(--dynamic-billboard-lead-copy-line-height, 1.35) !important;
-}
-
 .service-native-section.dynamic-billboard .service-native-action-row {
   margin-top: var(--dynamic-billboard-action-gap, 1rem);
   justify-content: center;
@@ -23070,34 +23055,29 @@ p.impact-proof-story-proof-body {
 }
 
 /* A base color is applied to the rich-body wrapper when no text selection is
- * active. Keep that wrapper-level choice authoritative too. */
-.service-native-page .native-info-rich-html.is-atlantean,
-.service-native-page .native-info-rich-html.is-atlantean :is(span, strong, em, a) {
+ * active. Keep that wrapper-level choice authoritative without repainting
+ * nested semantic spans, which are deliberate marked-color selections. */
+.service-native-page .native-info-rich-html.is-atlantean {
   color: var(--ag-color-atlantean) !important;
 }
 
-.service-native-page .native-info-rich-html.is-mango,
-.service-native-page .native-info-rich-html.is-mango :is(span, strong, em, a) {
+.service-native-page .native-info-rich-html.is-mango {
   color: var(--ag-color-mango) !important;
 }
 
-.service-native-page .native-info-rich-html.is-melon,
-.service-native-page .native-info-rich-html.is-melon :is(span, strong, em, a) {
+.service-native-page .native-info-rich-html.is-melon {
   color: var(--ag-color-melon) !important;
 }
 
-.service-native-page .native-info-rich-html.is-sandstone,
-.service-native-page .native-info-rich-html.is-sandstone :is(span, strong, em, a) {
+.service-native-page .native-info-rich-html.is-sandstone {
   color: var(--ag-color-sandstone-dark) !important;
 }
 
-.service-native-page .native-info-rich-html.is-super-grey,
-.service-native-page .native-info-rich-html.is-super-grey :is(span, strong, em, a) {
+.service-native-page .native-info-rich-html.is-super-grey {
   color: var(--ag-color-super-grey) !important;
 }
 
-.service-native-page .native-info-rich-html.is-white,
-.service-native-page .native-info-rich-html.is-white :is(span, strong, em, a) {
+.service-native-page .native-info-rich-html.is-white {
   color: #ffffff !important;
 }
 
@@ -23521,6 +23501,19 @@ p.impact-proof-story-proof-body {
 :is(.loans-native-option-question-wrap, .retirement-do-the-math-billboard, .services-native-page [data-block-id="intro"], .services-native-page [data-block-id="matters_band"]) :is(.native-info-rich-html.is-white, p.is-white),
 :is(.loans-native-option-question-wrap, .retirement-do-the-math-billboard, .services-native-page [data-block-id="intro"], .services-native-page [data-block-id="matters_band"]) .native-info-rich-html.is-white :is(h1, h2, h3, h4, h5, h6, p, li, blockquote) {
   color: #ffffff !important;
+}
+
+/* Billboard body type is an explicit editor setting. Custom page shells use
+   the same runtime class, so keep this authority independent of their outer
+   section class and after their route-specific paragraph rules. */
+:is(.native-info-rich-html, p).is-dynamic-billboard-lead-copy-sized {
+  font-size: var(--dynamic-billboard-lead-copy-size) !important;
+  line-height: var(--dynamic-billboard-lead-copy-line-height, 1.55) !important;
+}
+
+.native-info-rich-html.is-dynamic-billboard-lead-copy-sized :is(h2, h3, h4, h5, h6, p, blockquote, ul, ol, li, a) {
+  font-size: var(--dynamic-billboard-lead-copy-size) !important;
+  line-height: var(--dynamic-billboard-lead-copy-line-height, 1.55) !important;
 }
 
 /* An explicit card-title swatch is a deliberate override. Keep this shared

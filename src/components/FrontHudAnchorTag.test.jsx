@@ -54,7 +54,7 @@ describe('FrontHudAnchorTag', () => {
 
   it('keeps editor surfaces above page-level block name badges', () => {
     expect(serviceNativeCss).toMatch(/\.admin-front-hud-tool\s*\{[\s\S]*?z-index: 2000;/);
-    expect(serviceNativeCss).toMatch(/\.admin-front-hud-dock\s*\{[\s\S]*?z-index: 2000;/);
+    expect(serviceNativeCss).toMatch(/\.admin-front-hud-dock\s*\{[\s\S]*?z-index: 2002;/);
     expect(serviceNativeCss).toMatch(/\.admin-front-hud-page-workflow\.is-bar\s*\{[\s\S]*?z-index: 2001;/);
   });
 

@@ -3235,6 +3235,17 @@ export function ContentAdminProvider({ children, initialState = null }) {
         return false;
       }
 
+      // The server is the final authority, but reject a foreign-owned block
+      // here too. Without this guard a control could mutate the local authoring
+      // snapshot before the later save/sync request rejected it.
+      const currentMeta = normalizeContentBlockMeta(
+        stateRef.current?.collaborationByPath?.[normalizedPath]?.blocks?.[normalizedBlockId],
+      );
+      const { lockedByOther, draftedByOther } = getForeignOwnershipMeta(currentMeta, currentActor);
+      if (lockedByOther || draftedByOther) {
+        return false;
+      }
+
       let didUpdate = false;
       const shouldSyncLock = Boolean(
         sharedAuthorityEnabled
@@ -3270,6 +3281,9 @@ export function ContentAdminProvider({ children, initialState = null }) {
         return false;
       }
       const didClaimLock = ensureLocalEditingLock(normalizedPath, normalizedBlockId);
+      if (didClaimLock?.blocked) {
+        return didClaimLock;
+      }
       if (
         didClaimLock
         && sharedAuthorityEnabled
@@ -3293,6 +3307,14 @@ export function ContentAdminProvider({ children, initialState = null }) {
 
       let didClaimLock = false;
       setOptimisticState((prevState) => {
+        const currentMeta = normalizeContentBlockMeta(
+          prevState?.collaborationByPath?.[normalizedPath]?.blocks?.[normalizedBlockId],
+        );
+        const { lockedByOther, draftedByOther } = getForeignOwnershipMeta(currentMeta, currentActor);
+        if (lockedByOther || draftedByOther) {
+          didClaimLock = { blocked: true, reason: lockedByOther ? 'locked-by-other' : 'drafted-by-other' };
+          return prevState;
+        }
         const currentLockOwnerId = String(
           prevState?.collaborationByPath?.[normalizedPath]?.blocks?.[normalizedBlockId]?.lockedBy?.userId || '',
         ).trim();
@@ -3791,6 +3813,17 @@ export function ContentAdminProvider({ children, initialState = null }) {
     };
 
     const updateBlock = (pathname, blockId, patch) => {
+      const currentMeta = normalizeContentBlockMeta(
+        stateRef.current?.collaborationByPath?.[pathname]?.blocks?.[blockId],
+      );
+      const { lockedByOther, draftedByOther } = getForeignOwnershipMeta(currentMeta, currentActor);
+      if (lockedByOther || draftedByOther) {
+        return {
+          ok: false,
+          reason: lockedByOther ? 'locked-by-other' : 'drafted-by-other',
+          owner: lockedByOther || draftedByOther,
+        };
+      }
       let didUpdate = false;
       const shouldSyncLock = Boolean(
         sharedAuthorityEnabled
@@ -3909,11 +3942,14 @@ export function ContentAdminProvider({ children, initialState = null }) {
 
     const updateBlockSetting = (pathname, blockId, settingKey, settingValue) => {
       if (sharedAuthorityEnabled && shouldBufferLocalBlockSetting(settingKey, settingValue)) {
+        const claimResult = ensureLocalEditingLock(pathname, blockId);
+        if (claimResult?.blocked) {
+          return claimResult;
+        }
         const shouldSyncLock = Boolean(
           currentActor
           && getBlockCollaboration(pathname, blockId).lockedBy?.userId !== currentActor.userId
         );
-        ensureLocalEditingLock(pathname, blockId);
         if (shouldSyncLock) {
           syncSharedSnapshot(
             () => acquireSharedBlockLock(pathname, blockId, currentActor),
@@ -3921,15 +3957,27 @@ export function ContentAdminProvider({ children, initialState = null }) {
           );
         }
         queueBufferedBlockSettingCommit(pathname, blockId, settingKey, settingValue);
-        return;
+        return { ok: true };
       }
 
-      commitBlockSettingsPatch(pathname, blockId, {
+      const didCommit = commitBlockSettingsPatch(pathname, blockId, {
         [settingKey]: settingValue,
       });
+      return { ok: didCommit };
     };
 
     const moveBlock = (pathname, blockId, direction) => {
+      const currentMeta = normalizeContentBlockMeta(
+        stateRef.current?.collaborationByPath?.[pathname]?.blocks?.[blockId],
+      );
+      const { lockedByOther, draftedByOther } = getForeignOwnershipMeta(currentMeta, currentActor);
+      if (lockedByOther || draftedByOther) {
+        return {
+          ok: false,
+          reason: lockedByOther ? 'locked-by-other' : 'drafted-by-other',
+          owner: lockedByOther || draftedByOther,
+        };
+      }
       const shouldSyncLock = Boolean(
         sharedAuthorityEnabled
         && currentActor
@@ -3984,6 +4032,17 @@ export function ContentAdminProvider({ children, initialState = null }) {
     };
 
     const moveBlockToIndex = (pathname, blockId, toIndexRaw) => {
+      const currentMeta = normalizeContentBlockMeta(
+        stateRef.current?.collaborationByPath?.[pathname]?.blocks?.[blockId],
+      );
+      const { lockedByOther, draftedByOther } = getForeignOwnershipMeta(currentMeta, currentActor);
+      if (lockedByOther || draftedByOther) {
+        return {
+          ok: false,
+          reason: lockedByOther ? 'locked-by-other' : 'drafted-by-other',
+          owner: lockedByOther || draftedByOther,
+        };
+      }
       const shouldSyncLock = Boolean(
         sharedAuthorityEnabled
         && currentActor
@@ -4100,6 +4159,17 @@ export function ContentAdminProvider({ children, initialState = null }) {
       const normalizedBlockId = String(blockId || '').trim();
       if (!normalizedPath || !normalizedBlockId) {
         return;
+      }
+      const currentMeta = normalizeContentBlockMeta(
+        stateRef.current?.collaborationByPath?.[normalizedPath]?.blocks?.[normalizedBlockId],
+      );
+      const { lockedByOther, draftedByOther } = getForeignOwnershipMeta(currentMeta, currentActor);
+      if (lockedByOther || draftedByOther) {
+        return {
+          ok: false,
+          reason: lockedByOther ? 'locked-by-other' : 'drafted-by-other',
+          owner: lockedByOther || draftedByOther,
+        };
       }
       let didRemoveBlock = false;
       clearBufferedBlockSettingCommitTimer(normalizedPath, normalizedBlockId);
@@ -4622,6 +4692,23 @@ export function ContentAdminProvider({ children, initialState = null }) {
       }
       if (!normalizedPath || !normalizedBlockId) {
         return { ok: false, reason: 'invalid-block-target' };
+      }
+
+      // Keep a stale button/callback from even starting the save-before-publish
+      // sequence for a block another admin owns. The server remains the final
+      // authority, but this preflight prevents misleading "Saving draft" UI
+      // and avoids flushing local buffers for an unauthorized target.
+      const currentBlockMeta = getBlockCollaboration(normalizedPath, normalizedBlockId);
+      const {
+        lockedByOther: currentBlockLockedByOther,
+        draftedByOther: currentBlockDraftedByOther,
+      } = getForeignOwnershipMeta(currentBlockMeta, currentActor);
+      if (currentBlockLockedByOther || currentBlockDraftedByOther) {
+        return {
+          ok: false,
+          reason: currentBlockLockedByOther ? 'locked-by-other' : 'drafted-by-other',
+          owner: currentBlockLockedByOther || currentBlockDraftedByOther,
+        };
       }
 
       setSharedPublishStatus(PUBLISH_STATUS.SAVING_DRAFT);

@@ -79,6 +79,23 @@ describe('native intro and billboard renderer guardrail', () => {
     expect(cssSource).toContain(`${selector}.is-white`);
   });
 
+  it('keeps Billboard lead-copy size and leading authoritative across custom renderers', () => {
+    const cssSource = readSource('../styles/service-native.css');
+    const servicesSource = readSource('../pages/ServicesPage.jsx');
+    const loansSource = readSource('../pages/LoansPage.jsx');
+    const retirementSource = readSource('../pages/RetirementPage.jsx');
+
+    expect(cssSource).toContain(':is(.native-info-rich-html, p).is-dynamic-billboard-lead-copy-sized {');
+    expect(cssSource).toContain('.native-info-rich-html.is-dynamic-billboard-lead-copy-sized :is(h2, h3, h4, h5, h6, p, blockquote, ul, ol, li, a) {');
+    expect(cssSource).toContain('font-size: var(--dynamic-billboard-lead-copy-size) !important;');
+    expect(cssSource).toContain('line-height: var(--dynamic-billboard-lead-copy-line-height, 1.55) !important;');
+    expect(servicesSource).toContain('bodyHtmlStyle: runtime.bodyHtmlStyle,');
+    expect(servicesSource).toContain("resolvedIntro.bodyHtmlStyle ? ' is-dynamic-billboard-lead-copy-sized' : ''");
+    expect(servicesSource).toContain("servicesMattersRuntime.bodyHtmlStyle ? ' is-dynamic-billboard-lead-copy-sized' : ''");
+    expect(loansSource).toContain("loanOptionsBillboard.bodyHtmlStyle ? ' is-dynamic-billboard-lead-copy-sized' : ''");
+    expect(retirementSource).toContain('style={retirementDoTheMathRuntime.bodyHtmlStyle || undefined}');
+  });
+
   it('keeps explicit rich Billboard body colors ahead of the section text tone', () => {
     const cssSource = readSource('../styles/service-native.css');
     const bodyColorSelector = '.service-native-section:is(.dynamic-billboard, .test-dynamic-billboard) .native-info-rich-html.is-mango';

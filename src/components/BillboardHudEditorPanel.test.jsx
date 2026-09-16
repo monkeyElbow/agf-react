@@ -33,7 +33,10 @@ describe('BillboardHudEditorPanel reference layout', () => {
     expect(screen.queryByRole('region', { name: 'Copy settings' })).toBeNull();
 
     fireEvent.click(screen.getByRole('button', { name: 'Copy' }));
-    expect(screen.getByRole('region', { name: 'Copy settings' })).toBeTruthy();
+    const copy = screen.getByRole('region', { name: 'Copy settings' });
+    expect(copy).toBeTruthy();
+    expect(copy.className).toContain('is-copy-panel');
+    expect(copy.querySelector('.admin-billboard-editor-copy-grid')).toBeTruthy();
     expect(screen.queryByRole('region', { name: 'Heading settings' })).toBeNull();
     expect(screen.queryByText('Plain lead and rich body content')).toBeNull();
 
@@ -243,6 +246,10 @@ describe('BillboardHudEditorPanel reference layout', () => {
     expect(screen.getByRole('region', { name: 'Button 1 controls' }).tagName).toBe('SECTION');
     expect(screen.getByRole('region', { name: 'Button 2 controls' }).tagName).toBe('SECTION');
     expect(screen.getByRole('region', { name: 'Button preview' }).tagName).toBe('SECTION');
+    expect(screen.getByRole('region', { name: 'Button preview' }).className)
+      .toContain('admin-billboard-hud-button-preview-column');
+    expect(screen.getByRole('region', { name: 'Button preview' })
+      .querySelector('.admin-billboard-hud-button-preview-row')).toBeTruthy();
   });
 
   it('uses one rich body-copy editor with Visual and HTML modes', () => {
@@ -331,10 +338,17 @@ describe('BillboardHudEditorPanel reference layout', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Copy' }));
     const slider = screen.getByRole('slider', { name: 'Lead copy size' });
+    const numberField = screen.getByRole('spinbutton', { name: 'Lead copy size value' });
+    const typographyColumn = screen.getByRole('region', { name: 'Lead copy typography' });
+
+    expect(typographyColumn.contains(slider)).toBe(true);
+    expect(typographyColumn.contains(numberField)).toBe(true);
     expect(slider.value).toBe('1.65');
 
     fireEvent.change(slider, { target: { value: '1.85' } });
     expect(onLeadCopySizeRemChange).toHaveBeenCalledWith(1.85);
+    fireEvent.change(numberField, { target: { value: '2.15' } });
+    expect(onLeadCopySizeRemChange).toHaveBeenCalledWith(2.15);
   });
 
   it('provides a lead-copy line-height slider in the copy panel', () => {
@@ -349,10 +363,16 @@ describe('BillboardHudEditorPanel reference layout', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Copy' }));
     const slider = screen.getByRole('slider', { name: 'Lead copy line height' });
+    const numberField = screen.getByRole('spinbutton', { name: 'Lead copy line height value' });
+    const typographyColumn = screen.getByRole('region', { name: 'Lead copy typography' });
     expect(slider.value).toBe('1.55');
+    expect(typographyColumn.contains(slider)).toBe(true);
+    expect(typographyColumn.contains(numberField)).toBe(true);
 
     fireEvent.change(slider, { target: { value: '1.8' } });
     expect(onLeadCopyLineHeightChange).toHaveBeenCalledWith(1.8);
+    fireEvent.change(numberField, { target: { value: '1.9' } });
+    expect(onLeadCopyLineHeightChange).toHaveBeenCalledWith(1.9);
   });
 
   it('keeps rich body copy readable against the selected billboard background', () => {
@@ -555,7 +575,7 @@ describe('BillboardHudEditorPanel reference layout', () => {
     expect(onPaddingTopRemChange).toHaveBeenCalledWith(6);
   });
 
-  it('wires the dedicated space-above-buttons slider', () => {
+  it('keeps the shared space-above-buttons slider and number field together above the preview', () => {
     const onActionGapRemChange = vi.fn();
     render(
       <BillboardHudEditorPanel
@@ -566,8 +586,15 @@ describe('BillboardHudEditorPanel reference layout', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Buttons' }));
     const slider = screen.getByRole('slider', { name: 'Billboard button gap' });
+    const previewColumn = screen.getByRole('region', { name: 'Button preview' });
+    const numberField = screen.getByRole('spinbutton', { name: 'Billboard button gap value' });
+
+    expect(previewColumn.contains(slider)).toBe(true);
+    expect(previewColumn.contains(numberField)).toBe(true);
     expect(slider.value).toBe('2.35');
     fireEvent.change(slider, { target: { value: '3.1' } });
     expect(onActionGapRemChange).toHaveBeenCalledWith(3.1);
+    fireEvent.change(numberField, { target: { value: '1.85' } });
+    expect(onActionGapRemChange).toHaveBeenCalledWith(1.85);
   });
 });

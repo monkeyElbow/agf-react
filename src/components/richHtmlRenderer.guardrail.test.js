@@ -31,6 +31,7 @@ describe('rich HTML renderer security boundary', () => {
     expect(css).toContain('.service-native-page .native-info-rich-html .is-mango');
     expect(css).toContain('.service-native-page .native-info-rich-html.is-mango');
     expect(css).toContain('native-info-rich-html.is-mango :is(h1, h2, h3, h4, h5, h6, p, li, blockquote)');
+    expect(css).not.toContain('.service-native-page .native-info-rich-html.is-mango :is(span, strong, em, a)');
     expect(css).toContain('.home-native-newsletter-copy .is-mango');
   });
 });

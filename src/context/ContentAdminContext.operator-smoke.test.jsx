@@ -1249,10 +1249,17 @@ describe('ContentAdminContext operator smoke and recovery', () => {
     expect(screen.getByTestId('lock-owner').textContent).toBe(OTHER_ACTOR.displayName);
     expect(screen.getByTestId('draft-owner').textContent).toBe(OTHER_ACTOR.displayName);
 
+    fireEvent.click(screen.getByRole('button', { name: 'Edit hero' }));
+    expect(screen.getByTestId('hero-text').textContent).toBe('Original hero');
+
     fireEvent.click(screen.getByRole('button', { name: 'Lock hero' }));
 
     expect(screen.getByTestId('action-result').textContent).toBe('locked-by-other');
     expect(authorityMocks.acquireSharedBlockLock).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Publish hero block' }));
+    expect(screen.getByTestId('action-result').textContent).toBe('locked-by-other');
+    expect(authorityMocks.publishSharedBlock).not.toHaveBeenCalled();
 
     fireEvent.click(screen.getByRole('button', { name: 'Take lock' }));
 

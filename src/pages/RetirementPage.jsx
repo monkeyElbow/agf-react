@@ -2129,12 +2129,16 @@ export default function RetirementPage() {
                   {retirementDoTheMathRuntime.bodyHtml ? (
                     <SafeRichText
                       as="div"
-                       className={`native-info-rich-html${retirementDoTheMathRuntime.bodyColorClassName ? ` ${retirementDoTheMathRuntime.bodyColorClassName}` : ''}${retirementDoTheMathRuntime.bodyHtmlStyle ? ' is-dynamic-billboard-lead-copy-sized' : ''}`}
+                      className={`native-info-rich-html${retirementDoTheMathRuntime.bodyColorClassName ? ` ${retirementDoTheMathRuntime.bodyColorClassName}` : ''}${retirementDoTheMathRuntime.bodyHtmlStyle ? ' is-dynamic-billboard-lead-copy-sized' : ''}`}
                       html={retirementDoTheMathRuntime.bodyHtml}
+                      style={retirementDoTheMathRuntime.bodyHtmlStyle || undefined}
                     />
                   ) : retirementDoTheMathRuntime.body ? (
-                     <div className={`native-info-rich-html${retirementDoTheMathRuntime.bodyColorClassName ? ` ${retirementDoTheMathRuntime.bodyColorClassName}` : ''}${retirementDoTheMathRuntime.bodyHtmlStyle ? ' is-dynamic-billboard-lead-copy-sized' : ''}`}>
-                      <p className={retirementDoTheMathRuntime.bodyColorClassName || undefined}>{retirementDoTheMathRuntime.body}</p>
+                    <div
+                      className={`native-info-rich-html${retirementDoTheMathRuntime.bodyColorClassName ? ` ${retirementDoTheMathRuntime.bodyColorClassName}` : ''}${retirementDoTheMathRuntime.bodyHtmlStyle ? ' is-dynamic-billboard-lead-copy-sized' : ''}`}
+                      style={retirementDoTheMathRuntime.bodyHtmlStyle || undefined}
+                    >
+                      <p className={retirementDoTheMathRuntime.bodyColorClassName || undefined} style={retirementDoTheMathRuntime.bodyHtmlStyle || undefined}>{retirementDoTheMathRuntime.body}</p>
                     </div>
                   ) : null}
                   {retirementDoTheMathRuntime.action?.label && (retirementDoTheMathRuntime.action?.to || retirementDoTheMathRuntime.action?.href) ? (

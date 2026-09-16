@@ -193,7 +193,14 @@ export default function FrontHudPageWorkflow({
   const contextOwnership = normalizedPath && normalizedBlockId
     ? getBlockOwnershipVisual(contextBlockCollaboration, devIdentity?.userId)
     : null;
-  const resolvedOwnership = ownership || contextOwnership;
+  // A caller can retain the previous visual ownership object for one render
+  // while a shared poll or takeover has already changed collaboration state.
+  // Prefer an authoritative foreign state so the workflow cannot advertise a
+  // usable editor after another admin owns the block, or remain dimmed after
+  // takeover.
+  const resolvedOwnership = contextBlockCollaboration
+    ? contextOwnership
+    : (ownership || contextOwnership);
   const isNewBlock = Boolean(
     contextBlockCollaboration?.isNewBlock
     || resolvedOwnership?.isNewBlock,

@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import * as ContentAdminContextModule from '../context/ContentAdminContext';
-import { isForeignOwnedBlockOwnership } from './BlockOwnershipOverlay';
+import { getBlockOwnershipVisual, isForeignOwnedBlockOwnership } from './BlockOwnershipOverlay';
 import HudBlockOptions from './HudBlockOptions';
 import BackgroundEditorPage from './BackgroundEditorPage';
 import {
@@ -183,10 +183,20 @@ export default function BlockHudPanelHost({
   const collaboration = block?.id && typeof contentAdmin?.getBlockCollaboration === 'function'
     ? contentAdmin.getBlockCollaboration(pathname, block.id)
     : null;
-  const isForeignOwned = isForeignOwnedBlockOwnership(ownership);
+  // Collaboration metadata is authoritative. The page-level ownership prop
+  // can lag one render behind a shared poll/takeover, which used to leave the
+  // controls looking enabled while callbacks were being rejected—or leave a
+  // newly claimed block dimmed.
+  const contextOwnership = block?.id
+    ? getBlockOwnershipVisual(collaboration, currentClient?.userId)
+    : null;
+  const resolvedOwnership = collaboration
+    ? contextOwnership
+    : (ownership || contextOwnership);
+  const isForeignOwned = isForeignOwnedBlockOwnership(resolvedOwnership);
   const isOwnedByMe = Boolean(
     currentClient?.userId
-    && ownership?.owner?.userId === currentClient.userId,
+    && resolvedOwnership?.owner?.userId === currentClient.userId,
   );
   const canEdit = !isForeignOwned;
   const isReadOnly = isForeignOwned;
@@ -204,7 +214,7 @@ export default function BlockHudPanelHost({
       currentClientDisplayName: currentClient?.displayName || '',
       lockedBy: collaboration?.lockedBy || null,
       draftedBy: collaboration?.draftedBy || null,
-      ownershipStatus: ownership?.state || 'none',
+      ownershipStatus: resolvedOwnership?.state || 'none',
       canEdit,
       isReadOnly,
       isOwnedByMe,
@@ -224,7 +234,7 @@ export default function BlockHudPanelHost({
     diagnosticKey,
     isOwnedByMe,
     isReadOnly,
-    ownership?.state,
+    resolvedOwnership?.state,
     pathname,
   ]);
 
@@ -261,27 +271,27 @@ export default function BlockHudPanelHost({
         fired: true,
         outcome: isForeignOwned ? 'blocked' : 'accepted',
         reason: isForeignOwned
-          ? `BlockHudPanelHost ${ownership?.state || 'foreign-owned'}`
+          ? `BlockHudPanelHost ${resolvedOwnership?.state || 'foreign-owned'}`
           : '',
         timestamp,
       },
     });
     return rawBlockedOnSettingChange(settingKey, nextValue);
   };
-  const hudOwnershipNotice = ownership?.state === 'drafted-other'
+  const hudOwnershipNotice = resolvedOwnership?.state === 'drafted-other'
     ? {
-      state: ownership.state,
-      label: ownership.overlayLabel || 'Unpublished draft by another admin',
-      detail: `${ownership.overlayDetail ? `${ownership.overlayDetail}. ` : ''}This draft is not live yet.`,
-      secondaryLabel: ownership.overlaySecondaryLabel || '',
-      secondaryDetail: ownership.overlaySecondaryDetail || '',
+      state: resolvedOwnership.state,
+      label: resolvedOwnership.overlayLabel || 'Unpublished draft by another admin',
+      detail: `${resolvedOwnership.overlayDetail ? `${resolvedOwnership.overlayDetail}. ` : ''}This draft is not live yet.`,
+      secondaryLabel: resolvedOwnership.overlaySecondaryLabel || '',
+      secondaryDetail: resolvedOwnership.overlaySecondaryDetail || '',
       actionLabel: typeof onOwnershipAction === 'function' ? 'Take over draft' : '',
     }
-    : ownership?.state === 'editing-other'
+    : resolvedOwnership?.state === 'editing-other'
       ? {
-      state: ownership.state,
-      label: ownership.overlayLabel || 'Another admin is editing this block',
-      detail: `${ownership.overlayDetail ? `${ownership.overlayDetail}. ` : ''}Another admin still holds the active edit lock.`,
+      state: resolvedOwnership.state,
+      label: resolvedOwnership.overlayLabel || 'Another admin is editing this block',
+      detail: `${resolvedOwnership.overlayDetail ? `${resolvedOwnership.overlayDetail}. ` : ''}Another admin still holds the active edit lock.`,
       secondaryLabel: '',
       secondaryDetail: '',
       actionLabel: typeof onOwnershipAction === 'function' ? 'Take over edit' : '',
@@ -311,7 +321,7 @@ export default function BlockHudPanelHost({
       activePanelId={activePanelId}
       currentClient={currentClient}
       collaboration={collaboration}
-      ownership={ownership}
+      ownership={resolvedOwnership}
       canEdit={canEdit}
       isReadOnly={isReadOnly}
       isOwnedByMe={isOwnedByMe}
@@ -320,18 +330,21 @@ export default function BlockHudPanelHost({
   );
 
   const blockOptionsMarkup = (
-    <HudBlockOptions
-      block={block}
-      pathname={pathname}
-      ownership={ownership}
-      contentAdmin={contentAdmin}
-      showWorkflowActions={showWorkflowActions}
-      showPublishAction={showPublishAction}
-      onOwnershipAction={onOwnershipAction}
-      onReleaseDraft={releaseDraft}
-      onPublishBlock={publishBlock}
-      onBlockDeleted={onBlockDeleted}
-    />
+    <div className="admin-hud-editor-block-options-page">
+      {diagnosticsMarkup}
+      <HudBlockOptions
+        block={block}
+        pathname={pathname}
+        ownership={resolvedOwnership}
+        contentAdmin={contentAdmin}
+        showWorkflowActions={showWorkflowActions}
+        showPublishAction={showPublishAction}
+        onOwnershipAction={onOwnershipAction}
+        onReleaseDraft={releaseDraft}
+        onPublishBlock={publishBlock}
+        onBlockDeleted={onBlockDeleted}
+      />
+    </div>
   );
   const isDynamicMigratedHudEditor = Boolean(
     MigratedHudEditor && String(block.mode || '').trim() === 'dynamic',
@@ -391,7 +404,6 @@ export default function BlockHudPanelHost({
     return (
       <>
         {ownershipNoticeMarkup}
-        {diagnosticsMarkup}
         {renderReadOnlyShell(
           <>
             {renderMigratedHudEditor()}
@@ -406,7 +418,6 @@ export default function BlockHudPanelHost({
         return (
           <>
             {ownershipNoticeMarkup}
-            {diagnosticsMarkup}
             <p className="admin-front-hud-note">This dynamic block does not have HUD-editable fields yet.</p>
             {blockOptionsMarkup}
           </>
@@ -415,7 +426,6 @@ export default function BlockHudPanelHost({
   return (
         <>
           {ownershipNoticeMarkup}
-          {diagnosticsMarkup}
           {renderReadOnlyShell(
             <HudEditorCompatibilityShell block={block} blockKind={block.kind} blockLabel={definition.label || block.kind} blockOptions={blockOptionsMarkup} onSettingChange={blockedOnSettingChange}>
               <FieldControlGrid

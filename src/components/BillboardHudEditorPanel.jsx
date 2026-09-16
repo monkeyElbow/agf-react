@@ -46,7 +46,9 @@ export const BILLBOARD_EDITOR_SECTIONS = Object.freeze([
 function billboardPreviewButtonClassName(style, tone) {
   const normalizedStyle = String(style || '').trim().toLowerCase();
   const normalizedTone = String(tone || '').trim().toLowerCase();
-  const previewTone = normalizedStyle === 'dark'
+  const previewTone = normalizedStyle === 'white'
+    ? 'white'
+    : normalizedStyle === 'dark'
     ? 'super-grey'
     : normalizedStyle === 'outline'
       ? (normalizedTone || 'atlantean')
@@ -63,6 +65,9 @@ function buildButtonStyleSwatch(style) {
   const token = String(style || '').trim().toLowerCase();
   if (token === 'dark') {
     return 'linear-gradient(145deg, #414042 0%, #5f5e61 100%)';
+  }
+  if (token === 'white') {
+    return 'linear-gradient(145deg, #ffffff 0%, #ececec 100%)';
   }
   if (token === 'outline') {
     return 'linear-gradient(145deg, #ffffff 0%, #edf4f7 100%)';
@@ -673,9 +678,9 @@ export default function BillboardHudEditorPanel({
         ) : null}
 
         {activeSection === 'copy' ? (
-          <BillboardPanel id="02" title="Copy" showHeader={false}>
+          <BillboardPanel id="02" title="Copy" className="is-copy-panel" showHeader={false}>
             <div className="admin-billboard-editor-copy-grid">
-              <div className="admin-billboard-editor-copy-fields">
+              <section className="admin-billboard-editor-copy-fields" aria-label="Body copy preview">
                 <BillboardControlField label="Body copy">
                   <div className={`admin-billboard-hud-copy-editor is-bg-${String(bgTone || 'white').trim() || 'white'} ${String(bodyColorClassName || '').trim()}`}>
                     <AdminHtmlEditor
@@ -696,8 +701,8 @@ export default function BillboardHudEditorPanel({
                   </div>
                   <small>Edit this copy visually, or open HTML to edit the same content as source.</small>
                 </BillboardControlField>
-              </div>
-              <div className="admin-billboard-editor-copy-controls">
+              </section>
+              <section className="admin-billboard-editor-copy-controls" aria-label="Lead copy typography">
                 <BillboardSlider
                   label="Lead copy size"
                   ariaLabel="Lead copy size"
@@ -717,6 +722,8 @@ export default function BillboardHudEditorPanel({
                   step={0.05}
                   onChange={onLeadCopyLineHeightChange}
                 />
+              </section>
+              <section className="admin-billboard-editor-copy-controls" aria-label="Body alignment and width">
                 <BillboardSegment label="Body alignment" options={bodyJustifyOptions} value={bodyJustify} onChange={onBodyJustifyChange} />
                 <BillboardWidthControl
                   label="Body width"
@@ -728,7 +735,7 @@ export default function BillboardHudEditorPanel({
                   step={BILLBOARD_BODY_WIDTH_STEP_PX}
                   onChange={onBodyMaxWidthPxChange}
                 />
-              </div>
+              </section>
             </div>
             <p className="admin-page-content-layout-hint">Body alignment changes the text inside its centered column. Body width controls that column; it does not move the billboard title.</p>
           </BillboardPanel>
@@ -736,16 +743,6 @@ export default function BillboardHudEditorPanel({
 
         {activeSection === 'buttons' ? (
           <section className="admin-billboard-hud-button-section" aria-label="Buttons settings">
-            <BillboardSlider
-              label="Space above buttons"
-              ariaLabel="Billboard button gap"
-              value={normalizeBillboardActionGap(actionGapRem) ?? 1}
-              min={BILLBOARD_ACTION_GAP_MIN_REM}
-              max={BILLBOARD_ACTION_GAP_MAX_REM}
-              step={BILLBOARD_ACTION_GAP_STEP_REM}
-              unit="rem"
-              onChange={onActionGapRemChange}
-            />
             <div className="admin-billboard-hud-reference-grid admin-billboard-hud-button-reference-grid">
               <section className="admin-billboard-hud-button-fields" aria-label="Button 1 controls">
                 <span className="admin-billboard-hud-button-field-label">Button 1 Label</span>
@@ -802,8 +799,19 @@ export default function BillboardHudEditorPanel({
                 </div>
               </section>
               <section className="admin-billboard-hud-button-preview-column" aria-label="Button preview">
-                <span className="admin-front-hud-hero-line-label">Preview</span>
+                <BillboardSlider
+                  className="admin-billboard-hud-button-gap-control"
+                  label="Space above buttons"
+                  ariaLabel="Billboard button gap"
+                  value={normalizeBillboardActionGap(actionGapRem) ?? 1}
+                  min={BILLBOARD_ACTION_GAP_MIN_REM}
+                  max={BILLBOARD_ACTION_GAP_MAX_REM}
+                  step={BILLBOARD_ACTION_GAP_STEP_REM}
+                  unit="rem"
+                  onChange={onActionGapRemChange}
+                />
                 <div className={`admin-billboard-hud-button-preview is-bg-${previewBackgroundTone}`}>
+                  <span className="admin-front-hud-hero-line-label">Preview</span>
                   <div className="admin-billboard-hud-button-preview-row">
                     {previewButtons.length ? previewButtons.map((button, index) => (
                       <button

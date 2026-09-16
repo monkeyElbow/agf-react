@@ -104,6 +104,7 @@ function mapServicesBillboardToIntroRuntime(runtime) {
     headingHighlights: Array.isArray(runtime.titleHighlights) ? runtime.titleHighlights : [],
     bodyHtml: runtime.bodyHtml,
     body: runtime.body,
+    bodyHtmlStyle: runtime.bodyHtmlStyle,
     extraLine: runtime.subtitle,
     extraLineClassName: '',
     extraLineStyle: undefined,
@@ -865,11 +866,17 @@ export default function ServicesPage() {
             {resolvedIntro.bodyHtml ? (
               <SafeRichText
                 as="div"
-                className={`native-info-rich-html${resolvedIntro.bodyColorClassName ? ` ${resolvedIntro.bodyColorClassName}` : ''}`}
+                className={`native-info-rich-html${resolvedIntro.bodyColorClassName ? ` ${resolvedIntro.bodyColorClassName}` : ''}${resolvedIntro.bodyHtmlStyle ? ' is-dynamic-billboard-lead-copy-sized' : ''}`}
                 html={resolvedIntro.bodyHtml}
+                style={resolvedIntro.bodyHtmlStyle || undefined}
               />
             ) : resolvedIntro.body ? (
-              <p className={resolvedIntro.bodyColorClassName || undefined}>{resolvedIntro.body}</p>
+              <p
+                className={[resolvedIntro.bodyColorClassName || '', resolvedIntro.bodyHtmlStyle ? 'is-dynamic-billboard-lead-copy-sized' : ''].filter(Boolean).join(' ') || undefined}
+                style={resolvedIntro.bodyHtmlStyle || undefined}
+              >
+                {resolvedIntro.body}
+              </p>
             ) : null}
             {resolvedIntro.extraLine ? (
               <p
@@ -1023,12 +1030,17 @@ export default function ServicesPage() {
           {servicesMattersRuntime.bodyHtml ? (
             <SafeRichText
               as="div"
-              className={`native-info-rich-html${servicesMattersRuntime.bodyColorClassName ? ` ${servicesMattersRuntime.bodyColorClassName}` : ''}`}
+              className={`native-info-rich-html${servicesMattersRuntime.bodyColorClassName ? ` ${servicesMattersRuntime.bodyColorClassName}` : ''}${servicesMattersRuntime.bodyHtmlStyle ? ' is-dynamic-billboard-lead-copy-sized' : ''}`}
               html={servicesMattersRuntime.bodyHtml}
               style={servicesMattersRuntime.bodyHtmlStyle || undefined}
             />
           ) : servicesMattersRuntime.body ? (
-            <p className={servicesMattersRuntime.bodyColorClassName || undefined} style={servicesMattersRuntime.bodyHtmlStyle || undefined}>{servicesMattersRuntime.body}</p>
+            <p
+              className={[servicesMattersRuntime.bodyColorClassName || '', servicesMattersRuntime.bodyHtmlStyle ? 'is-dynamic-billboard-lead-copy-sized' : ''].filter(Boolean).join(' ') || undefined}
+              style={servicesMattersRuntime.bodyHtmlStyle || undefined}
+            >
+              {servicesMattersRuntime.body}
+            </p>
           ) : null}
           {servicesMattersRuntime.action ? (
             <div className="service-native-action-row is-centered">

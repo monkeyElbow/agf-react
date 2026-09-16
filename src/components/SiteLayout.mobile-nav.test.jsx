@@ -39,9 +39,11 @@ function readSource(relativePath) {
   return readFileSync(path.resolve(__dirname, relativePath), 'utf8');
 }
 
-function mockMatchMedia(matches) {
-  window.matchMedia = vi.fn().mockImplementation(() => ({
-    matches,
+function mockMatchMedia(matches, touchMatches = false) {
+  window.matchMedia = vi.fn().mockImplementation((query) => ({
+    matches: query.includes('(hover: none)') || query.includes('(pointer: coarse)')
+      ? touchMatches
+      : matches,
     addEventListener: vi.fn(),
     removeEventListener: vi.fn(),
     addListener: vi.fn(),
@@ -119,6 +121,33 @@ describe('SiteLayout mobile nav drawer', () => {
 
     expect(screen.getByRole('button', { name: 'Collapse Services menu' }).getAttribute('aria-expanded')).toBe('true');
     expect(document.getElementById('site-nav-dropdown-services')).toBeTruthy();
+  });
+
+  it('opens a parent menu from the label on touch-capable desktop-width layouts', () => {
+    mockMatchMedia(true, true);
+    mockPathname = '/services';
+    renderLayout();
+
+    const servicesLabel = screen.getByRole('button', { name: 'Services' });
+    fireEvent.pointerDown(servicesLabel, { pointerType: 'touch' });
+    fireEvent.click(servicesLabel, { detail: 1, pointerType: 'touch' });
+
+    expect(screen.getByRole('button', { name: 'Collapse Services menu' })).toBeTruthy();
+
+    fireEvent.pointerDown(servicesLabel, { pointerType: 'touch' });
+    fireEvent.click(servicesLabel, { detail: 1, pointerType: 'touch' });
+
+    expect(screen.getByRole('button', { name: 'Expand Services menu' })).toBeTruthy();
+  });
+
+  it('keeps same-width mouse navigation direct', () => {
+    mockMatchMedia(true, false);
+    mockPathname = '/services';
+    renderLayout();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Services' }), { detail: 1 });
+
+    expect(screen.getByRole('button', { name: 'Expand Services menu' })).toBeTruthy();
   });
 
   it('restores the page position when the front HUD is toggled on', () => {
@@ -352,6 +381,7 @@ describe('SiteLayout mobile nav drawer', () => {
   it('keeps the mobile drawer on the shared premium dropdown surface and fast reveal contract', () => {
     const cssSource = readSource('../styles.css');
 
+    expect(cssSource).toMatch(/\.site-nav\s*\{[\s\S]*?z-index: 2500;/);
     expect(cssSource).toContain('@media (max-width: 1099px) {');
     expect(cssSource).toContain('@keyframes site-nav-dropdown-reveal {');
     expect(cssSource).toContain('.site-nav-dropdown-link {');
