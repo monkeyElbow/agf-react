@@ -6,7 +6,9 @@ import PageContentEditorPreview from '../PageContentEditorPreview';
 import SharedRouteLinkField from '../RouteLinkField';
 import BillboardHudEditorPanel, {
   BillboardSlider,
+  BillboardSegment,
   normalizeBillboardBodyWidth,
+  normalizeBillboardBodyGap,
   normalizeBillboardActionGap,
   normalizeBillboardHeaderGap,
   normalizeBillboardPadding,
@@ -15,7 +17,11 @@ import BillboardHudEditorPanel, {
 import ColorPalette from '../ColorPalette';
 import { HeroHudEditorPanel } from '../HeroHudEditorShared';
 import IntroHudEditorPanel from '../IntroHudEditorShared';
-import PageContentHudEditorPanel, { PageContentLayoutControls } from '../PageContentHudEditorPanel';
+import PageContentHudEditorPanel, {
+  PageContentAddressControls,
+  PageContentAlignmentControl,
+  PageContentLayoutControls,
+} from '../PageContentHudEditorPanel';
 import TestimonialsHudEditorPanel from '../TestimonialsHudEditorPanel';
 import TopStripHudEditorPanel from '../TopStripHudEditorPanel';
 import ColumnsHudEditorPanel from '../ColumnsHudEditorPanel';
@@ -73,6 +79,7 @@ import {
   normalizeBillboardLeadCopySizeRem,
   normalizeBillboardLeadCopyLineHeight,
   normalizeBillboardLineSpacing,
+  normalizeBillboardSubtitleDisplay,
   normalizeBillboardSubtitleSizeRem,
   normalizeBillboardTitleFontFamily,
   normalizeBillboardTitleFontWeight,
@@ -102,6 +109,7 @@ import {
   getGridSafeToneForBg,
   DEFAULT_DYNAMIC_GRID_CARD_BULLET_LINE_HEIGHT,
   DEFAULT_DYNAMIC_GRID_CARD_BULLET_SIZE_REM,
+  DEFAULT_DYNAMIC_GRID_NUMBER_SIZE_REM,
   normalizeDynamicGridCardJustify,
   normalizeGridBgTone,
   normalizeGridCardStyleToken,
@@ -148,9 +156,9 @@ import {
   serializeSupportLibraryGroups,
 } from '../../lib/supportLibrary';
 import {
+  getPageContentBodyEditorHtml,
   getPageContentEditorField,
-  getPageContentEditorHtml,
-  hasLegacyPageContentSource,
+  hasLegacyPageContentBodySource,
 } from '../../lib/pageContentEditorHtml';
 import { getBlockPresentationLockedFieldIds } from '../../lib/blockPresentationContracts';
 import {
@@ -238,6 +246,8 @@ const GRID_LOCAL_DRAFT_FIELD_IDS = Object.freeze(
   Array.from({ length: 8 }, (_, index) => index + 1).flatMap((slot) => ([
     `card${slot}Title`,
     `card${slot}Body`,
+    `card${slot}CopyLabel`,
+    `card${slot}CopyText`,
     `card${slot}ButtonLabel`,
     `card${slot}ButtonUrl`,
     `card${slot}Button2Label`,
@@ -1307,6 +1317,8 @@ function CardGridCardEditor({
   const fineprintSpaceBeforeField = fieldById.get(`${prefix}FineprintSpaceBeforeRem`);
   const fineprintLineHeightField = fieldById.get(`${prefix}FineprintLineHeight`);
   const fineprintSpaceAfterField = fieldById.get(`${prefix}FineprintSpaceAfterRem`);
+  const copyLabelField = fieldById.get(`${prefix}CopyLabel`);
+  const copyTextField = fieldById.get(`${prefix}CopyText`);
   const contentFields = [titleField, showTitleDestination ? titleDestinationField : null].filter(Boolean).map((field) => (
     field === titleDestinationField ? { ...field, label: 'Destination' } : field
   ));
@@ -1382,6 +1394,24 @@ function CardGridCardEditor({
             </div>
           </div>
         </CardGridEditorDisclosure>
+
+        {[copyLabelField, copyTextField].some(Boolean) ? (
+          <CardGridEditorDisclosure
+            label="Copy to clipboard"
+            summary={String(settings[`${prefix}CopyText`] || '').trim() ? 'Configured' : 'Optional'}
+            sectionId="copy"
+            openSection={openSection}
+            onToggle={toggleSection}
+          >
+            <DraftBackedFieldControlGrid
+              fields={[copyLabelField, copyTextField].filter(Boolean)}
+              settings={settings}
+              onSettingChange={onSettingChange}
+              className="admin-content-field-list--inline"
+              draftFieldIds={GRID_LOCAL_DRAFT_FIELD_IDS}
+            />
+          </CardGridEditorDisclosure>
+        ) : null}
 
         {showActions ? (
         <CardGridEditorDisclosure
@@ -2853,7 +2883,8 @@ function PanelAppearanceControls({
 }
 
 function toEditorHtml(value, fallbackText = '') {
-  const source = String(value || '').trim();
+  const rawSource = String(value || '').trim();
+  const source = isBillboardBodyHtmlEmpty(rawSource) ? '' : rawSource;
   if (source) {
     if (/<[a-z][^>]*>/i.test(source)) {
       return source;
@@ -3845,6 +3876,24 @@ export function RequestFormBlockEditor({
   const requestTitleColorOptions = Array.isArray(titleColorField?.options) && titleColorField.options.length
     ? titleColorField.options
     : HERO_SWATCH_OPTIONS;
+  const requestTitleFontFamily = normalizeBillboardTitleFontFamily(settings.titleFontFamily || 'helv');
+  const requestTitleFontWeight = normalizeBillboardTitleFontWeight(
+    settings.titleFontWeight,
+    requestTitleFontFamily,
+  );
+  const requestTitleWeightOptions = getBillboardTitleWeightOptions(requestTitleFontFamily);
+  const requestJustifyOptions = Array.isArray(fieldById.get('justify')?.options) && fieldById.get('justify').options.length
+    ? fieldById.get('justify').options
+    : [
+      { value: 'left', label: 'Left' },
+      { value: 'center', label: 'Center' },
+      { value: 'right', label: 'Right' },
+    ];
+  const requestBodyJustifyOptions = Array.isArray(fieldById.get('bodyJustify')?.options) && fieldById.get('bodyJustify').options.length
+    ? fieldById.get('bodyJustify').options
+    : requestJustifyOptions;
+  const requestJustify = normalizeJustifySelection(settings.justify || 'left', requestJustifyOptions);
+  const requestBodyJustify = normalizeJustifySelection(settings.bodyJustify || 'left', requestBodyJustifyOptions);
   const leadCopyFieldId = resolveRequestFormLeadCopyFieldId(settings);
   const {
     draftValues: requestFormDraftValues,
@@ -3887,6 +3936,43 @@ export function RequestFormBlockEditor({
   const headingAndLeadContent = (
     <div className="admin-request-form-content-grid">
       <div className="admin-request-form-heading-column">
+        <div className="admin-request-form-typography-controls" aria-label="Request form heading and body typography">
+          <BillboardSegment
+            label="Heading font"
+            options={[
+              { value: 'heading', label: 'Avenir' },
+              { value: 'helv', label: 'Helvetica' },
+            ]}
+            value={requestTitleFontFamily}
+            onChange={(nextValue) => {
+              const nextFontFamily = normalizeBillboardTitleFontFamily(nextValue);
+              onSettingChange('titleFontFamily', nextFontFamily);
+              const currentRawWeight = Number(settings.titleFontWeight);
+              const nextWeight = normalizeBillboardTitleFontWeight(currentRawWeight, nextFontFamily);
+              if (!Number.isFinite(currentRawWeight) || nextWeight !== currentRawWeight) {
+                onSettingChange('titleFontWeight', nextWeight);
+              }
+            }}
+          />
+          <BillboardSegment
+            label="Heading weight"
+            options={requestTitleWeightOptions.map((weight) => ({ value: Number(weight), label: String(weight) }))}
+            value={requestTitleFontWeight}
+            onChange={(nextValue) => onSettingChange('titleFontWeight', Number(nextValue))}
+          />
+          <BillboardSegment
+            label="Heading alignment"
+            options={requestJustifyOptions}
+            value={requestJustify}
+            onChange={(nextValue) => onSettingChange('justify', nextValue)}
+          />
+          <BillboardSegment
+            label="Body alignment"
+            options={requestBodyJustifyOptions}
+            value={requestBodyJustify}
+            onChange={(nextValue) => onSettingChange('bodyJustify', nextValue)}
+          />
+        </div>
         <ColorTextSelectionEditor
           label="Form heading"
           text={settings.title ?? ''}
@@ -3902,6 +3988,11 @@ export function RequestFormBlockEditor({
           previewTagName="h2"
           previewClassName={getPanelTextTonePreviewClassName(requestTextTone, 'dark')}
           previewWrapClassName={requestHeadingPreviewWrapClassName}
+          previewStyle={{
+            fontFamily: requestTitleFontFamily === 'helv' ? 'var(--ag-font-helv)' : 'var(--ag-font-heading)',
+            fontWeight: requestTitleFontWeight,
+            textAlign: requestJustify,
+          }}
           spanDetailsUnderToggle
           useResetForClear
           swatchOptions={requestTitleColorOptions}
@@ -5435,6 +5526,7 @@ export function BillboardBlockEditor({ block, onSettingChange, routeOptions = []
   );
   const billboardLineSpacing = normalizeBillboardLineSpacing(effectiveBillboardSettings.lineSpacing);
   const billboardHeaderGapRem = normalizeBillboardHeaderGap(effectiveBillboardSettings.headerGapRem);
+  const billboardBodyGapRem = normalizeBillboardBodyGap(effectiveBillboardSettings.bodyGapRem);
   const billboardActionGapRem = normalizeBillboardActionGap(effectiveBillboardSettings.actionGapRem);
   const billboardTitleFontFamily = normalizeBillboardTitleFontFamily(effectiveBillboardSettings.titleFontFamily);
   const billboardTitleFontWeight = normalizeBillboardTitleFontWeight(
@@ -5442,6 +5534,12 @@ export function BillboardBlockEditor({ block, onSettingChange, routeOptions = []
     billboardTitleFontFamily,
   );
   const billboardTitleWeightOptions = getBillboardTitleWeightOptions(billboardTitleFontFamily);
+  const billboardSubtitleDisplay = normalizeBillboardSubtitleDisplay(effectiveBillboardSettings.subtitleDisplay);
+  const billboardSubtitleFontWeight = normalizeBillboardTitleFontWeight(
+    effectiveBillboardSettings.subtitleFontWeight,
+    billboardTitleFontFamily,
+    billboardSubtitleDisplay === 'headline' ? billboardTitleFontWeight : 400,
+  );
   const billboardTitleSizeRem = normalizeBillboardTitleSizeRem(effectiveBillboardSettings.titleSizeRem);
   const legacyBillboardLetterSpacingEm = effectiveBillboardSettings.titleLetterSpacingEm;
   const billboardTitleTrackingEm = normalizeBillboardTitleLetterSpacingEm(
@@ -5599,6 +5697,9 @@ export function BillboardBlockEditor({ block, onSettingChange, routeOptions = []
       subtitleColorOptions={HERO_SWATCH_OPTIONS}
       subtitleSizeRem={billboardSubtitleSizeRem}
       onSubtitleSizeRemChange={(nextValue) => onSettingChange('subtitleSizeRem', Number(nextValue))}
+      subtitleFontWeight={billboardSubtitleFontWeight}
+      onSubtitleFontWeightChange={(nextValue) => onSettingChange('subtitleFontWeight', Number(nextValue))}
+      subtitleWeightOptions={billboardTitleWeightOptions}
       titleInputRef={billboardTitleInputRef}
       onTitleSelectionCapture={captureBillboardTitleSelection}
       titleSelection={billboardTitleSelection}
@@ -5651,6 +5752,8 @@ export function BillboardBlockEditor({ block, onSettingChange, routeOptions = []
         'bodyMaxWidthPx',
         nextValue == null || nextValue === '' ? '' : normalizeBillboardBodyWidth(nextValue),
       )}
+      bodyGapRem={billboardBodyGapRem}
+      onBodyGapRemChange={(nextValue) => onSettingChange('bodyGapRem', normalizeBillboardBodyGap(nextValue))}
       leadCopySizeRem={billboardLeadCopySizeRem}
       onLeadCopySizeRemChange={(nextValue) => onSettingChange('leadCopySizeRem', Number(nextValue))}
       leadCopyLineHeight={billboardLeadCopyLineHeight}
@@ -5677,6 +5780,7 @@ export function BillboardBlockEditor({ block, onSettingChange, routeOptions = []
       showTitleFont={!lockedFieldIds.has('titleFontFamily')}
       showTitleAlignment={!lockedFieldIds.has('justify')}
       showTitleWeight={!lockedFieldIds.has('titleFontWeight')}
+      showSubtitleWeight={!lockedFieldIds.has('subtitleFontWeight')}
       titleFontOptions={[
         { value: 'heading', label: 'Avenir' },
         { value: 'helv', label: 'Helvetica Neue' },
@@ -7111,6 +7215,7 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
   const fieldById = new Map(allFields.map((field) => [field.id, field]));
   const bgToneField = fieldById.get('bgTone') || null;
   const headerSizeField = fieldById.get('headerSizeRem') || null;
+  const headerLetterSpacingField = fieldById.get('headerLetterSpacingEm') || null;
   const headerWidthField = fieldById.get('headerWidthPercent') || null;
   const headerSubheadSpaceField = fieldById.get('headerSubheadSpaceRem') || null;
   const headerCardsSpaceField = fieldById.get('headerCardsSpaceRem') || null;
@@ -7253,7 +7358,7 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
     headerSubheadSpacingField,
     headerCardsSpacingField,
   ].filter(Boolean);
-  const headerControlFields = [headerSizeField, headerWidthField, subheadSizeField, subheadJustifyField, ...spacingFields]
+  const headerControlFields = [headerSizeField, headerLetterSpacingField, headerWidthField, subheadSizeField, subheadJustifyField, ...spacingFields]
     .filter(Boolean)
     .filter((field) => (
       !isValueCardsPresentation
@@ -7276,7 +7381,9 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
     fieldById.get('cardPaddingRem'),
     fieldById.get('cardGapRem'),
     fieldById.get('fineprintSizeRem'),
-    ...(isNumberedStepCardsGrid ? [fieldById.get('numberPositionPercent')] : []),
+    ...(isNumberedStepCardsGrid
+      ? [fieldById.get('numberPositionPercent'), fieldById.get('numberSizeRem')]
+      : []),
   ].filter(Boolean);
   const bulletTypographyFields = [
     fieldById.get('cardBulletSizeRem'),
@@ -7737,15 +7844,12 @@ export function PageContentBlockEditor({ block, onSettingChange }) {
   const appearanceFields = fields.filter((field) => field.id === 'textTone');
   const backgroundToneField = fields.find((field) => field.id === 'bgTone') || null;
   const editorField = getPageContentEditorField(settings);
-  const usesLegacySource = hasLegacyPageContentSource(settings);
+  const usesLegacyBodySource = hasLegacyPageContentBodySource(settings);
 
   const handleHtmlChange = (nextValue) => {
     onSettingChange(editorField, nextValue);
-    if (usesLegacySource) {
+    if (usesLegacyBodySource) {
       onSettingChange('body', '');
-      onSettingChange('fineprint', '');
-      onSettingChange('addressTitle', '');
-      onSettingChange('addressLines', '');
     }
   };
 
@@ -7753,13 +7857,13 @@ export function PageContentBlockEditor({ block, onSettingChange }) {
     <div className="admin-intro-block-editor admin-page-content-block-editor">
       <div className="admin-page-content-editor-main">
         <AdminHtmlEditor
-          value={toEditorHtml(getPageContentEditorHtml(settings))}
+          value={toEditorHtml(getPageContentBodyEditorHtml(settings))}
           onChange={handleHtmlChange}
           placeholder="Start page content..."
         />
         <PageContentEditorPreview
           settings={settings}
-          html={getPageContentEditorHtml(settings)}
+          html={getPageContentBodyEditorHtml(settings)}
         />
       </div>
 
@@ -7771,6 +7875,18 @@ export function PageContentBlockEditor({ block, onSettingChange }) {
           className="admin-content-field-list--inline admin-page-content-appearance-fields"
         />
       ) : null}
+
+      <PageContentAddressControls
+        settings={settings}
+        onSettingChange={onSettingChange}
+      />
+
+      <div className="admin-page-content-alignment-row">
+        <PageContentAlignmentControl
+          settings={settings}
+          onSettingChange={onSettingChange}
+        />
+      </div>
 
       <BackgroundEditorPage
         backgroundTone={settings.bgTone}
@@ -8360,7 +8476,7 @@ export function ColumnsBlockEditor({ block, onSettingChange, routeOptions = [] }
   const layoutFieldIds = Array.isArray(presetEditor.layoutFieldIds) && presetEditor.layoutFieldIds.length
     ? presetEditor.layoutFieldIds
     : (presetDefinition ? [] : ['columnsStyle', 'leadLine', 'followupLine', 'contentWidth']);
-  const layoutFields = layoutFieldIds
+  const layoutFields = [...new Set([...layoutFieldIds, 'justify'])]
     .map((fieldId) => fieldById.get(fieldId))
     .filter(Boolean);
   const maxColumns = Number.isInteger(presetEditor.maxColumns)
@@ -8515,6 +8631,7 @@ export function ColumnsBlockEditor({ block, onSettingChange, routeOptions = [] }
           const imageAltField = fieldById.get(`col${slot}ImageAlt`);
           const titleField = fieldById.get(`col${slot}Title`);
           const bodyField = fieldById.get(`col${slot}Body`);
+          const bodyHtmlField = fieldById.get(`col${slot}BodyHtml`);
           const slotFields = [
             fieldById.get(`col${slot}Enabled`),
             showTypeField ? fieldById.get(`col${slot}Type`) : null,
@@ -8532,10 +8649,6 @@ export function ColumnsBlockEditor({ block, onSettingChange, routeOptions = [] }
             } : null,
             !isPhotoColumn ? fieldById.get(`col${slot}TitleClassName`) : null,
             !isPhotoColumn ? fieldById.get(`col${slot}TitleHighlightsJson`) : null,
-            !isLegacyHighlightStyle && bodyField ? {
-              ...bodyField,
-              label: isPhotoColumn ? `Column ${slot} photo caption` : bodyField.label,
-            } : null,
             showTextImageFields ? fieldById.get(`col${slot}ImageUrl`) : null,
             showTextImageFields ? fieldById.get(`col${slot}ImageAlt`) : null,
             showActionFields ? fieldById.get(`col${slot}ButtonLabel`) : null,
@@ -8560,6 +8673,20 @@ export function ColumnsBlockEditor({ block, onSettingChange, routeOptions = [] }
                 routeOptions={routeOptions}
                 draftFieldIds={COLUMNS_LOCAL_DRAFT_FIELD_IDS}
               />
+              {!isLegacyHighlightStyle && bodyField && bodyHtmlField ? (
+                <AdminHtmlEditor
+                  compact
+                  showModeTabs
+                  ariaLabel={isPhotoColumn ? `Column ${slot} photo caption` : `Column ${slot} body`}
+                  className="admin-grid-body-editor admin-grid-body-editor--columns-column"
+                  value={toEditorHtml(settings[bodyHtmlField.id], settings[bodyField.id])}
+                  onChange={(nextValue) => {
+                    onSettingChange(bodyHtmlField.id, nextValue);
+                    onSettingChange(bodyField.id, '');
+                  }}
+                  placeholder={isPhotoColumn ? `Column ${slot} photo caption` : `Column ${slot} body`}
+                />
+              ) : null}
             </section>
           );
         })}

@@ -318,6 +318,19 @@ describe('LoansPage front HUD', () => {
     expect(renderedOrder).toEqual(savedOrder);
   });
 
+  it('renders the loan-options Billboard as its own sibling section', () => {
+    const { container } = renderLoansPage();
+    const optionsSection = container.querySelector('[data-block-id="loan_options"]');
+    const optionsBillboard = container.querySelector('[data-block-id="cta_band"]');
+
+    expect(optionsSection).toBeTruthy();
+    expect(optionsBillboard).toBeTruthy();
+    expect(optionsSection?.contains(optionsBillboard)).toBe(false);
+    expect(optionsBillboard?.parentElement).toBe(optionsSection?.parentElement);
+    expect(optionsBillboard?.tagName).toBe('SECTION');
+    expect(optionsBillboard?.querySelector('h2')?.textContent).toBe('Which loan is right for me?');
+  });
+
   it('renders live Intro settings through the Loans page renderer', () => {
     mockBlocksByPath = {
       '/services/loans': cloneLoansDynamicBlocks().map((block) => (
@@ -385,6 +398,33 @@ describe('LoansPage front HUD', () => {
     expect(title?.querySelectorAll('mark')).toHaveLength(0);
     expect(title?.textContent).toContain('First heading line');
     expect(title?.textContent).toContain('Second heading line');
+  });
+
+  it('passes shared request-form typography settings through the Loans adapter', () => {
+    mockBlocksByPath = {
+      '/services/loans': cloneLoansDynamicBlocks().map((block) => (
+        block.id === 'request_form'
+          ? {
+            ...block,
+            settings: {
+              ...(block.settings || {}),
+              titleFontFamily: 'heading',
+              titleFontWeight: 800,
+              justify: 'right',
+              bodyJustify: 'center',
+            },
+          }
+          : block
+      )),
+    };
+
+    const { container } = renderLoansPage();
+    const title = container.querySelector('.loans-native-inquiry .dynamic-request-copy > h2');
+    const body = container.querySelector('.loans-native-inquiry .dynamic-request-copy');
+
+    expect(title?.getAttribute('style')).toContain('font-weight: 800');
+    expect(title?.getAttribute('style')).toContain('text-align: right');
+    expect(body?.getAttribute('style')).toContain('text-align: center');
   });
 
   it('renders legacy double-escaped request-form markup as rich text', () => {

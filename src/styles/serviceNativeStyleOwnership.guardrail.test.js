@@ -19,6 +19,7 @@ const CLASSIFIED_ROUTE_SCOPED_DYNAMIC_SELECTORS = Object.freeze({
   'native-info-page--legacy-giving': 'Planned-giving product cards need route-scoped flex-card padding and vertical balance.',
   'native-info-page--legacy-qcd': 'Qualified charitable distribution steps retain their declared route presentation while sharing the step-card contract.',
   'native-info-page--life-quote': 'Life quote product cards need route-specific dynamic grid card shell sizing.',
+  'native-info-page--retirement-403b': '403(b) request-form heading keeps the editor Helvetica contract.',
   'native-info-page--retirement-iras': 'IRA type cards keep their route-specific card shell and title spacing.',
   'native-info-page--retirement-rollovers': 'Rollover cards keep their route-specific card presentation.',
 });
@@ -207,6 +208,15 @@ describe('implementation-ownership.service-native style ownership', () => {
     expect(source).not.toContain('box-shadow: 0 14px 30px rgba(16, 43, 64, 0.06) !important;');
   });
 
+  it('keeps migrated 403(b) loan card copy on the shared body-justify control', () => {
+    const source = readSource('./service-native.css');
+
+    expect(source).toContain(
+      '.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).retirement-403b-native-loans\n  .service-native-card-rich-body > :is(p, ul)',
+    );
+    expect(source).toContain('text-align: var(--dynamic-grid-card-body-justify, left) !important;');
+  });
+
   it('keeps planned-giving asset bullet cards padded beyond the dynamic-grid default', () => {
     const source = readSource('./service-native.css');
 
@@ -366,6 +376,7 @@ describe('implementation-ownership.service-native style ownership', () => {
 
     [
       '.native-dynamic-request.is-request-form-preset-contact .dynamic-request-layout {',
+      '.native-info-page--retirement-403b\n  [data-block-id="request_form"].native-dynamic-request\n  .dynamic-request-copy > h2 {\n  font-family: var(--ag-font-body) !important;',
       '.native-dynamic-request.is-request-form-preset-group-life-quote .dynamic-request-copy > h2,',
       '.native-dynamic-request.is-request-form-preset-consultant-contact .dynamic-request-layout {',
       '.native-dynamic-request.is-request-form-preset-retirement-rollover .dynamic-request-layout {',
@@ -614,6 +625,9 @@ describe('implementation-ownership.service-native style ownership', () => {
       'background: #fff;',
       '.native-info-page--retirement-iras .retirement-child-native-comparison > .native-info-full-bleed > h2 {',
       'color: var(--ag-color-super-grey);',
+      'letter-spacing: var(--ag-letter-spacing-helv-heading);',
+      '.native-info-page--retirement-iras .retirement-ira-native-rates > .ag-panel-rail > h2 {',
+      '.native-info-page--retirement-iras .retirement-ira-native-limits > .ag-panel-rail > h2 {',
       '.native-info-page--retirement-iras .retirement-child-native-comparison .native-info-table-wrap {',
       '--ira-comparison-shadow-gutter: clamp(1.35rem, 2.7vw, 2rem);',
       'overflow: visible;',

@@ -51,7 +51,8 @@ describe('native page managed-order guardrails', () => {
     ['hero', 'intro', 'loan_options', 'request_form', 'value_cards', 'vision_fuel', 'cta_form', 'testimonials'].forEach((blockId) => {
       expect(source).toContain(`managedBlockOrderStyle('${blockId}')`);
     });
-    expect(source).toContain("canReorder={blockId !== 'cta_band'}");
+    expect(source).toContain("managedBlockOrderStyle('cta_band')");
+    expect(source).not.toContain("canReorder={blockId !== 'cta_band'}");
   });
 
   it.each([

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import ColorPalette from './ColorPalette';
+import AdminHtmlEditor from './AdminHtmlEditor';
 import TextHighlightColorControls from './TextHighlightColorControls';
 import {
   HudEditorBlockOptionsPage,
@@ -61,6 +62,33 @@ const PHOTO_ASPECT_OPTIONS = [
   { value: 'landscape', label: 'Wide' },
   { value: 'portrait', label: 'Tall' },
 ];
+
+function toColumnsEditorHtml(value, fallbackText = '') {
+  const rawSource = String(value || '').trim();
+  const source = (
+    !rawSource
+    || /^<(p|div)\b[^>]*>\s*(?:<br\s*\/?>|&nbsp;|\s)*<\/\1>$/i.test(rawSource)
+  ) ? '' : rawSource;
+  if (source) {
+    if (/<[a-z][^>]*>/i.test(source)) {
+      return source;
+    }
+    const escaped = source
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;');
+    return `<p>${escaped.replace(/\r\n?|\n/g, '<br>')}</p>`;
+  }
+  const fallback = String(fallbackText || '').trim();
+  if (!fallback) {
+    return '<p></p>';
+  }
+  const escaped = fallback
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;');
+  return `<p>${escaped.replace(/\r\n?|\n/g, '<br>')}</p>`;
+}
 
 function getColumnButtonHrefDraftFieldId(slot) {
   return `col${slot}ButtonHrefDraft`;
@@ -295,6 +323,7 @@ function ColumnSlotEditor({
   const titleFieldId = `col${slot}Title`;
   const titleHighlightsFieldId = `col${slot}TitleHighlightsJson`;
   const bodyFieldId = `col${slot}Body`;
+  const bodyHtmlFieldId = `col${slot}BodyHtml`;
   const imageUrlFieldId = `col${slot}ImageUrl`;
   const imageAltFieldId = `col${slot}ImageAlt`;
   const buttonLabelFieldId = `col${slot}ButtonLabel`;
@@ -323,6 +352,7 @@ function ColumnSlotEditor({
     ? `Selected Color "${selectedTitlePreview}"`
     : 'Core Color';
   const bodyValue = String(draftValues[bodyFieldId] ?? settings[bodyFieldId] ?? '');
+  const bodyHtmlValue = String(draftValues[bodyHtmlFieldId] ?? settings[bodyHtmlFieldId] ?? '');
   const imageUrlValue = String(draftValues[imageUrlFieldId] ?? settings[imageUrlFieldId] ?? '');
   const imageAltValue = String(draftValues[imageAltFieldId] ?? settings[imageAltFieldId] ?? '');
   const buttonLabelValue = String(draftValues[buttonLabelFieldId] ?? settings[buttonLabelFieldId] ?? '');
@@ -512,15 +542,22 @@ function ColumnSlotEditor({
           paletteClassName="is-field-linked"
           swatchClassName="is-compact is-icon-only"
         />
-        <label className="admin-front-hud-field admin-front-hud-columns-body-field">
-          <span>{bodyLabel}</span>
-          <textarea
-            rows={6}
-            value={bodyValue}
-            onChange={(event) => updateDraftValue(bodyFieldId, event.target.value)}
-            onBlur={() => commitDraftValue(bodyFieldId)}
-          />
-        </label>
+        <AdminHtmlEditor
+          compact
+          showModeTabs
+          ariaLabel={bodyLabel}
+          className="admin-grid-body-editor admin-grid-body-editor--columns-column"
+          value={toColumnsEditorHtml(bodyHtmlValue, bodyValue)}
+          onChange={(nextValue) => {
+            updateDraftValue(bodyHtmlFieldId, nextValue);
+            updateDraftValue(bodyFieldId, '');
+          }}
+          onBlur={() => {
+            commitDraftValue(bodyHtmlFieldId);
+            commitDraftValue(bodyFieldId);
+          }}
+          placeholder={bodyLabel}
+        />
       </section>
       {!isPhotoColumn ? (
         <details className="admin-front-hud-columns-disclosure">
@@ -651,6 +688,7 @@ function GenericColumnsHudEditorPanel({
       const titleFieldId = `col${slot}Title`;
       const titleHighlightsFieldId = `col${slot}TitleHighlightsJson`;
       const bodyFieldId = `col${slot}Body`;
+      const bodyHtmlFieldId = `col${slot}BodyHtml`;
       const imageUrlFieldId = `col${slot}ImageUrl`;
       const imageAltFieldId = `col${slot}ImageAlt`;
       const buttonLabelFieldId = `col${slot}ButtonLabel`;
@@ -679,6 +717,12 @@ function GenericColumnsHudEditorPanel({
           value: String(settings[bodyFieldId] || ''),
           mode: 'blur',
           commit: (nextValue) => onSettingChange(bodyFieldId, nextValue),
+        },
+        {
+          id: bodyHtmlFieldId,
+          value: String(settings[bodyHtmlFieldId] || ''),
+          mode: 'blur',
+          commit: (nextValue) => onSettingChange(bodyHtmlFieldId, nextValue),
         },
         {
           id: imageUrlFieldId,

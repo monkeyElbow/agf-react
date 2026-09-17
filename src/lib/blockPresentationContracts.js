@@ -108,34 +108,6 @@ const BILLBOARD_PRESENTATION_CONTRACTS = Object.freeze([
       'fineprintDisclosureId',
     ]),
   }),
-  Object.freeze({
-    id: 'legacy-ministry-impact-outro',
-    matches: (settings) => (
-      hasClassName(settings, 'legacy-child-native-billboard')
-    ),
-    settings: Object.freeze({
-      titleFontFamily: 'helv',
-      titleFontWeight: 700,
-      titleSizeRem: 4.59375,
-    }),
-    lockedFieldIds: Object.freeze([
-      'titleFontFamily',
-      'titleFontWeight',
-      'titleSizeRem',
-    ]),
-  }),
-  Object.freeze({
-    id: 'retirement-daily-billboard',
-    matches: (settings) => hasClassName(settings, 'retirement-daily-billboard'),
-    settings: Object.freeze({
-      titleFontFamily: 'helv',
-      titleFontWeight: 700,
-    }),
-    lockedFieldIds: Object.freeze([
-      'titleFontFamily',
-      'titleFontWeight',
-    ]),
-  }),
 ]);
 
 export function getRequestFormPresetPresentationContract(presetId) {

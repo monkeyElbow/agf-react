@@ -234,7 +234,11 @@ function resolveInvestmentCertificateCards(block) {
       actionHref: action.href || action.to || String(settings[`card${slot}ButtonUrl`] || '').trim() || 'https://secure.agfinancial.org/invest',
       actionOpenInNewWindow: action.openInNewWindow !== false,
     };
-  });
+  }).filter((card) => (
+    !Number.isFinite(Number(runtime?.cardCount))
+    || Number(runtime.cardCount) < 1
+    || Number(card.slot) <= Number(runtime.cardCount)
+  ));
 }
 
 function resolveInvestmentsHeroAnimationPreset(value) {
@@ -1041,6 +1045,10 @@ export default function InvestmentsPage() {
   );
   const resolvedCertificateCards = useMemo(
     () => (certificatesBlockIsHidden ? [] : resolveInvestmentCertificateCards(certificatesBlock || DEFAULT_CERTIFICATES_BLOCK)),
+    [certificatesBlock, certificatesBlockIsHidden],
+  );
+  const certificatesGridRuntime = useMemo(
+    () => (certificatesBlockIsHidden ? null : buildCanonicalBlockRuntime(certificatesBlock || DEFAULT_CERTIFICATES_BLOCK)),
     [certificatesBlock, certificatesBlockIsHidden],
   );
   const introHudSettings = useMemo(
@@ -2211,23 +2219,39 @@ export default function InvestmentsPage() {
       {resolvedCertificateCards.length ? (
         <section
           ref={certificatesSectionRef}
-          className={`service-native-section investments-native-panel${getHudBlockStateClassName('certificates')}${getOwnershipVisualForBlockId('certificates').className || ''}`}
+          className={`service-native-section native-dynamic-grid investments-native-panel is-width-${certificatesGridRuntime?.contentWidth || 'content'} is-columns-${certificatesGridRuntime?.columns || 'two'} is-card-grid-style-${certificatesGridRuntime?.cardStyle || 'card2'}${certificatesGridRuntime?.cardOutline === true ? ' is-card-outline' : ''}${certificatesGridRuntime?.cardOutline === false ? ' is-card-outline-off' : ''}${certificatesGridRuntime?.cardOutlineTone ? ` is-card-outline-${certificatesGridRuntime.cardOutlineTone}` : ''}${certificatesGridRuntime?.cardShadow === true ? ' is-card-shadow' : ''}${certificatesGridRuntime?.cardShadow === false ? ' is-card-shadow-off' : ''}${certificatesGridRuntime?.cardHoverScale === true ? ' is-card-hover-scale' : ''}${certificatesGridRuntime?.cardHoverScale === false ? ' is-card-hover-scale-disabled' : ''}${certificatesGridRuntime?.titleTone ? ` is-title-${certificatesGridRuntime.titleTone}` : ''}${certificatesGridRuntime?.bodyTone ? ` is-body-${certificatesGridRuntime.bodyTone}` : ''}${getHudBlockStateClassName('certificates')}${getOwnershipVisualForBlockId('certificates').className || ''}`}
           id="certificates"
           data-block-id="certificates"
-          style={managedBlockOrderStyle('certificates')}
+          style={{
+            ...managedBlockOrderStyle('certificates'),
+            ...(Number.isFinite(Number(certificatesGridRuntime?.paddingTopRem)) ? { paddingTop: `${certificatesGridRuntime.paddingTopRem}rem` } : {}),
+            ...(Number.isFinite(Number(certificatesGridRuntime?.paddingBottomRem)) ? { paddingBottom: `${certificatesGridRuntime.paddingBottomRem}rem` } : {}),
+            ...(Number.isFinite(Number(certificatesGridRuntime?.cardPaddingRem)) ? { '--dynamic-grid-card-padding': `${certificatesGridRuntime.cardPaddingRem}rem` } : {}),
+            ...(Number.isFinite(Number(certificatesGridRuntime?.cardGapRem)) ? { '--dynamic-grid-card-gap': `${certificatesGridRuntime.cardGapRem}rem` } : {}),
+            ...(Number.isFinite(Number(certificatesGridRuntime?.cardTitleSizeRem)) ? { '--dynamic-grid-card-title-size': `${certificatesGridRuntime.cardTitleSizeRem}rem` } : {}),
+            ...(Number.isFinite(Number(certificatesGridRuntime?.cardBodySizeRem)) ? { '--dynamic-grid-card-body-size': `${certificatesGridRuntime.cardBodySizeRem}rem` } : {}),
+            ...(Number.isFinite(Number(certificatesGridRuntime?.cardBodyLineHeight)) ? { '--dynamic-grid-card-body-line-height': String(certificatesGridRuntime.cardBodyLineHeight) } : {}),
+            ...(Number.isFinite(Number(certificatesGridRuntime?.cardTitleLineHeight)) ? { '--dynamic-grid-card-title-line-height': String(certificatesGridRuntime.cardTitleLineHeight) } : {}),
+            ...(Number.isFinite(Number(certificatesGridRuntime?.cardOutlineWidth)) ? { '--dynamic-grid-card-outline-width': `${certificatesGridRuntime.cardOutlineWidth}px` } : {}),
+            ...(Number.isFinite(Number(certificatesGridRuntime?.cardShadowOpacity)) ? { '--dynamic-grid-card-shadow-opacity': String(certificatesGridRuntime.cardShadowOpacity) } : {}),
+            '--dynamic-grid-card-title-justify': certificatesGridRuntime?.cardTitleJustify || 'center',
+            '--dynamic-grid-card-body-justify': certificatesGridRuntime?.cardBodyJustify || 'left',
+          }}
         >
           <BlockSurfaceLayers ownership={getOwnershipVisualForBlockId('certificates')} hudAnchor={renderHudAnchor('certificates')} />
           <div className="ag-panel-rail">
-            <div className="service-native-grid is-two retirement-account-grid">
+            <div className={`service-native-grid is-${certificatesGridRuntime?.columns || 'two'} retirement-account-grid`}>
               {resolvedCertificateCards.map((card) => (
                 <article
                   key={`${card.titleTop}-${card.titleBottom}`}
-                  className={`service-native-card retirement-account-card retirement-account-card--certificate retirement-account-card--${card.tone} fade-up fade-up-force-observe`}
+                  className={`service-native-card ${certificatesGridRuntime?.cardStyle || 'card2'} retirement-account-card retirement-account-card--certificate retirement-account-card--${card.tone} fade-up fade-up-force-observe`}
                 >
                   <div className="retirement-account-card__cap">
-                    <h3>
-                      {card.titleTop}
-                      {card.titleBottom ? <><br />{card.titleBottom}</> : null}
+                    <h3 style={{ textAlign: certificatesGridRuntime?.cardTitleJustify || undefined }}>
+                      <span className="service-native-card-title-content">
+                        {card.titleTop}
+                        {card.titleBottom ? <><br />{card.titleBottom}</> : null}
+                      </span>
                     </h3>
                   </div>
                   <div className="retirement-account-card__body">

@@ -126,7 +126,7 @@ describe('buildDynamicColumnsFromBlock', () => {
       },
     });
 
-    expect(runtime).toMatchObject({
+      expect(runtime).toMatchObject({
       title: 'Compare options',
       titleClassName: 'is-atlantean',
       leadLine: 'Start here',
@@ -207,6 +207,38 @@ describe('buildDynamicColumnsFromBlock', () => {
       }),
     ]);
   });
+
+  it('treats per-column HTML as authoritative over legacy plain body text', () => {
+    const runtime = buildDynamicColumnsFromBlock({
+      id: 'columns-source-precedence',
+      kind: 'columns',
+      mode: 'dynamic',
+      settings: {
+        columns: 'two',
+        col1Enabled: true,
+        col1Title: 'Rich column',
+        col1Body: 'Legacy text that must not reappear.',
+        col1BodyHtml: '<p>Authoritative <strong>HTML</strong>.</p>',
+        col2Enabled: true,
+        col2Title: 'Plain column',
+        col2Body: 'Plain text remains available when HTML is empty.',
+        col2BodyHtml: '<p><br></p>',
+      },
+    });
+
+    expect(runtime?.items).toEqual([
+      expect.objectContaining({
+        slot: 1,
+        body: '',
+        bodyHtml: '<p>Authoritative <strong>HTML</strong>.</p>',
+      }),
+      expect.objectContaining({
+        slot: 2,
+        body: 'Plain text remains available when HTML is empty.',
+        bodyHtml: '',
+      }),
+    ]);
+  });
 });
 
 describe('buildDynamicCtaFormFromBlock', () => {
@@ -252,8 +284,10 @@ describe('buildDynamicCtaFormFromBlock', () => {
       submitLabel: 'Follow up with me',
       successMessage: 'Thanks. We will reach out soon.',
       submitStyle: 'outline',
-      submitTone: 'mango',
-    });
+        submitTone: 'mango',
+      });
+    expect(runtime.paddingTopRem).toBeUndefined();
+    expect(runtime.paddingBottomRem).toBeUndefined();
     expect(runtime?.targetSectionKey).toBeUndefined();
     expect(runtime?.titleHighlights).toEqual([{ text: 'faith', className: 'is-mango' }]);
     expect(runtime?.fields).toEqual([
@@ -273,6 +307,27 @@ describe('buildDynamicCtaFormFromBlock', () => {
         ],
       }),
     ]);
+  });
+
+  it('carries explicit CTA section padding into the canonical runtime', () => {
+    const runtime = buildDynamicCtaFormFromBlock({
+      id: 'cta_form',
+      kind: 'cta_form',
+      mode: 'dynamic',
+      settings: {
+        title: 'Contact our team',
+        paddingTopRem: 3.25,
+        paddingBottomRem: 5.5,
+        fieldsJson: ctaFieldsJson([
+          { id: 'email', label: 'Email', type: 'email', required: true },
+        ]),
+      },
+    });
+
+    expect(runtime).toMatchObject({
+      paddingTopRem: 3.25,
+      paddingBottomRem: 5.5,
+    });
   });
 
   it('keeps legacy published CTA snapshots visible until the explicit field migration runs', () => {
@@ -488,6 +543,10 @@ describe('buildDynamicRequestFormFromBlock', () => {
         bodyHtml: '<p>We will respond quickly.</p>',
         bgTone: 'sand',
         textTone: 'dark',
+        titleFontFamily: 'helv',
+        titleFontWeight: 700,
+        justify: 'left',
+        bodyJustify: 'left',
         targetSectionKey: 'class:request-target',
         submitLabel: 'Submit request',
         successMessage: 'Thanks. We received your request.',
@@ -520,6 +579,10 @@ describe('buildDynamicRequestFormFromBlock', () => {
       bodyHtml: '<p>We will respond quickly.</p>',
       bgTone: 'sand',
       textTone: 'dark',
+      titleFontFamily: 'helv',
+      titleFontWeight: 700,
+      justify: 'left',
+      bodyJustify: 'left',
       submitLabel: 'Submit request',
       successMessage: 'Thanks. We received your request.',
       transitionalAdapter: 'step-fields-json',
@@ -548,6 +611,29 @@ describe('buildDynamicRequestFormFromBlock', () => {
         ],
       }),
     ]);
+  });
+
+  it('normalizes shared request-form heading typography and body alignment', () => {
+    const runtime = buildDynamicRequestFormFromBlock({
+      id: 'request_form',
+      kind: 'request_form',
+      mode: 'dynamic',
+      settings: {
+        title: 'Request a quote',
+        titleFontFamily: 'heading',
+        titleFontWeight: 800,
+        justify: 'center',
+        bodyJustify: 'right',
+        step1FieldsJson: JSON.stringify([{ id: 'name', label: 'Name', type: 'text' }]),
+      },
+    });
+
+    expect(runtime).toMatchObject({
+      titleFontFamily: 'heading',
+      titleFontWeight: 800,
+      justify: 'center',
+      bodyJustify: 'right',
+    });
   });
 
   it('keeps certificate request styling on block-owned settings', () => {
@@ -757,7 +843,7 @@ describe('buildDynamicBillboardFromBlock', () => {
         titleLetterSpacingEm: -0.015,
         headlineMaxWidthPx: 980,
         contentMaxWidthPx: 1100,
-        paddingBottomRem: 7.5,
+        paddingBottomRem: 12.5,
         actionsBeforeCards: true,
         buttonLabel: 'Take the next step',
         buttonLinkJson: serializeLinkValue({
@@ -799,7 +885,7 @@ describe('buildDynamicBillboardFromBlock', () => {
       copyFadeRootMargin: '',
       copyStyle: { '--dynamic-billboard-copy-max-width': '1100px' },
       contentMaxWidthPx: 1100,
-      paddingBottomRem: 7.5,
+      paddingBottomRem: 12.5,
       actionsBeforeCards: true,
       action: expect.objectContaining({
         label: 'Take the next step',
@@ -885,6 +971,45 @@ describe('buildDynamicBillboardFromBlock', () => {
     });
 
     expect(runtime?.subtitleStyle?.letterSpacing).toBe('-0.08em');
+  });
+
+  it('routes the independent subtitle weight to the rendered supporting subtitle', () => {
+    const runtime = buildDynamicBillboardFromBlock({
+      kind: 'billboard',
+      mode: 'dynamic',
+      settings: {
+        title: 'Weighted title',
+        subtitle: 'Bold supporting subtitle',
+        subtitleDisplay: 'supporting',
+        subtitleFontWeight: 700,
+      },
+    });
+
+    expect(runtime?.subtitleStyle?.fontWeight).toBe(700);
+  });
+
+  it('keeps the IRA daily billboard typography and alignment connected to shared settings', () => {
+    const runtime = buildDynamicBillboardFromBlock({
+      kind: 'billboard',
+      mode: 'dynamic',
+      settings: {
+        title: 'Retire a little every day.',
+        subtitle: 'Starting now.',
+        sectionClassName: 'retirement-everyday retirement-daily-billboard',
+        titleFontFamily: 'heading',
+        titleFontWeight: 500,
+        titleSizeRem: 5.1,
+        lineSpacing: 1.12,
+        justify: 'left',
+      },
+    });
+
+    expect(runtime?.titleStyle).toEqual(expect.objectContaining({
+      fontFamily: 'var(--ag-font-heading)',
+      fontWeight: 500,
+      lineHeight: 1.12,
+    }));
+    expect(runtime?.justify).toBe('left');
   });
 
   it('does not render the seeded Billboard body placeholder as content', () => {
@@ -980,6 +1105,7 @@ describe('buildDynamicBillboardFromBlock', () => {
         bodyJustify: 'left',
         bodyMaxWidthPx: 645,
         headerGapRem: 1.17,
+        bodyGapRem: 1.23,
       },
     });
 
@@ -990,8 +1116,10 @@ describe('buildDynamicBillboardFromBlock', () => {
       copyStyle: {
         '--dynamic-billboard-body-max-width': '650px',
         '--dynamic-billboard-header-gap': '1.17rem',
+        '--dynamic-billboard-body-gap': '1.23rem',
       },
       headerGapRem: 1.17,
+      bodyGapRem: 1.23,
     });
   });
 
@@ -2252,6 +2380,28 @@ describe('buildDynamicGridFromBlock', () => {
     }));
   });
 
+  it('carries optional card-grid address blocks through the shared renderer contract', () => {
+    const runtime = buildDynamicGridFromBlock({
+      id: 'rollover-process',
+      kind: 'card_grid',
+      mode: 'dynamic',
+      settings: {
+        presetId: 'step-cards',
+        card1Title: '1',
+        card1Body: 'Download the form.',
+        addressClassName: 'rollovers-copy-address',
+        addressTitle: 'AGFinancial',
+        addressLines: 'PO Box 2515\nSpringfield MO 65801',
+      },
+    });
+
+    expect(runtime.addressBlock).toEqual({
+      className: 'rollovers-copy-address',
+      title: 'AGFinancial',
+      lines: ['PO Box 2515', 'Springfield MO 65801'],
+    });
+  });
+
   it('keeps legacy subhead and body fields rendering separately until the merged field is edited', () => {
     const runtime = buildDynamicGridFromBlock({
       id: 'legacy-step-grid',
@@ -2686,6 +2836,81 @@ describe('buildDynamicGridFromBlock', () => {
           tone: 'atlantean',
           className: 'custom-grid-action',
         }),
+      }),
+    ]);
+  });
+
+  it('defaults numbered step-card titles above body copy with left alignment while preserving explicit alignment edits', () => {
+    const defaultRuntime = buildDynamicGridFromBlock({
+      id: 'enrollment_steps',
+      presetId: 'step-cards',
+      kind: 'card_grid',
+      mode: 'dynamic',
+      settings: {
+        card1Title: '1. Complete the enrollment form',
+        card1Body: 'Fill out the form.',
+      },
+    });
+    const centeredRuntime = buildDynamicGridFromBlock({
+      id: 'enrollment_steps',
+      presetId: 'step-cards',
+      kind: 'card_grid',
+      mode: 'dynamic',
+      settings: {
+        cardTitleJustify: 'center',
+        cardBodyJustify: 'center',
+        card1Title: '1. Complete the enrollment form',
+        card1Body: 'Fill out the form.',
+      },
+    });
+
+    expect(defaultRuntime).toMatchObject({ cardTitleJustify: 'left', cardBodyJustify: 'left' });
+    expect(centeredRuntime).toMatchObject({ cardTitleJustify: 'center', cardBodyJustify: 'center' });
+  });
+
+  it('keeps legacy numbered-card size responsive until the admin authors a size', () => {
+    const legacyRuntime = buildDynamicGridFromBlock({
+      id: 'legacy-numbered-grid',
+      presetId: 'step-cards',
+      kind: 'card_grid',
+      mode: 'dynamic',
+      settings: { card1Title: '1. First step', card1Body: 'Start here.' },
+    });
+    const authoredRuntime = buildDynamicGridFromBlock({
+      id: 'authored-numbered-grid',
+      presetId: 'step-cards',
+      kind: 'card_grid',
+      mode: 'dynamic',
+      settings: { numberSizeRem: 4.25, card1Title: '1. First step', card1Body: 'Start here.' },
+    });
+
+    expect(legacyRuntime.numberSizeRem).toBeUndefined();
+    expect(authoredRuntime.numberSizeRem).toBe(4.25);
+  });
+
+  it('preserves authored line breaks and clipboard fields on numbered cards', () => {
+    const runtime = buildDynamicGridFromBlock({
+      id: 'enrollment_steps',
+      presetId: 'step-cards',
+      kind: 'card_grid',
+      mode: 'dynamic',
+      settings: {
+        cardBodyJustify: 'left',
+        card4Title: 'Mail or fax completed forms to:',
+        card4Body: '<p>AGFinancial<br />PO Box 2515<br />Springfield, MO 65801</p>',
+        card4CopyLabel: 'Copy mailing address',
+        card4CopyText: 'AGFinancial\nPO Box 2515\nSpringfield, MO 65801',
+      },
+    });
+
+    expect(runtime).toMatchObject({ cardBodyJustify: 'left' });
+    expect(runtime.cards).toEqual([
+      expect.objectContaining({
+        title: 'Mail or fax completed forms to:',
+        body: '',
+        bodyHtml: '<p>AGFinancial<br />PO Box 2515<br />Springfield, MO 65801</p>',
+        copyLabel: 'Copy mailing address',
+        copyText: 'AGFinancial\nPO Box 2515\nSpringfield, MO 65801',
       }),
     ]);
   });
@@ -3319,6 +3544,10 @@ describe('buildDynamicPageContentFromBlock', () => {
         body: ['Line one.', 'Line two.'],
         html: '<p>Body copy.</p>',
         bodyFontSizeRem: 1.35,
+        bodyLineHeight: 1.7,
+        bodyBorderTone: 'mango',
+        bodyBorderWidth: 2.5,
+        bodyBorderShadow: false,
         widget: 'retirement-403b-rate-table',
         logoImage: '/logo.png',
         logoAlt: 'Partner logo',
@@ -3356,11 +3585,20 @@ describe('buildDynamicPageContentFromBlock', () => {
       body: ['Line one.', 'Line two.'],
       html: '<p>Body copy.</p>',
       bodyFontSizeRem: 1.35,
+      bodyLineHeight: 1.7,
+      bodyBorderTone: 'mango',
+      bodyBorderWidth: 2.5,
+      bodyBorderShadow: false,
       widget: 'retirement-403b-rate-table',
       logoImage: '/logo.png',
       logoAlt: 'Partner logo',
       logoText: '',
       bgTone: 'white',
+      backgroundEffects: {
+        enabled: false,
+        lights: [],
+        clip: true,
+      },
       textTone: 'dark',
       table: {
         headers: ['Limit', '2026'],

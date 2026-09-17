@@ -7,12 +7,31 @@
  */
 export const NUMBERED_STEP_CARDS_CLASS_NAME = 'is-numbered-step-cards';
 
+export function splitNumberedStepCardTitle(value, fallbackNumber = 1) {
+  const source = String(value || '').trim();
+  const fallback = Number.isFinite(Number(fallbackNumber))
+    ? Math.max(1, Math.round(Number(fallbackNumber)))
+    : 1;
+  const match = source.match(/^(\d{1,2})\s*[.)-]\s*(.*?)\s*$/);
+  const bareNumber = source.match(/^(\d{1,2})$/);
+  const numericValue = match?.[1] || bareNumber?.[1];
+  const number = Number.isFinite(Number(numericValue))
+    ? Math.max(1, Math.round(Number(numericValue)))
+    : fallback;
+
+  return {
+    number: String(number).padStart(2, '0'),
+    title: match?.[2] || (bareNumber ? '' : source),
+  };
+}
+
 const NUMBERED_STEP_SECTION_TOKENS = new Set([
   'ministers-group-life-native-enroll',
   'online-contrib-native-steps',
   'retirement-403b-group-enrollment-steps',
   'retirement-403b-native-loan-apply',
   'retirement-individual-enrollment-steps',
+  'retirement-rollovers-native-process',
 ]);
 
 function sectionTokens(value) {

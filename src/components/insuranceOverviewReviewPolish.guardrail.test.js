@@ -199,9 +199,8 @@ describe('insurance overview review polish guardrail', () => {
     expect(cssSource).toContain('.native-info-page--life-quote .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).life-quote-native-types {');
     expect(cssSource).toContain('--dynamic-grid-card-body-size: var(--service-native-intro-body-size);');
     expect(cssSource).toContain('padding-top: clamp(4.4rem, 7.2vw, 6.1rem);');
-    expect(cssSource).toContain('box-shadow: 0 8px 18px rgba(16, 43, 64, 0.06);');
     expect(cssSource).toContain('.native-info-page--life-quote .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).life-quote-native-types .service-native-card p {');
-    expect(cssSource).toContain('font-size: var(--service-native-intro-body-size);');
+    expect(cssSource).toContain('font-size: var(--dynamic-grid-card-body-size, var(--service-native-intro-body-size));');
     expect(cssSource).toContain('.native-info-page--life-quote .service-native-section.native-dynamic-request {');
     expect(cssSource).toContain('padding-top: clamp(4.8rem, 8vw, 6.4rem) !important;');
     expect(cssSource).toContain('padding-bottom: clamp(5.2rem, 8.5vw, 7rem) !important;');

@@ -7,6 +7,7 @@ const CalculatorRouteStyles = lazy(() => import('./CalculatorRouteStyles'));
 import { getBlockOwnershipVisual, isForeignOwnedBlockOwnership } from './BlockOwnershipOverlay';
 import BlockBackgroundEffects from './BlockBackgroundEffects';
 import BlockSurfaceLayers from './BlockSurfaceLayers';
+import CopyToClipboardButton, { copyTextToClipboard } from './CopyToClipboardButton';
 import FrontHudDock from './FrontHudDock';
 import {
   createInitialFormValues,
@@ -78,7 +79,10 @@ import {
 import { CALCULATOR_INTRO_KIND, CALCULATOR_WIDGET_KIND } from '../lib/calculatorWidgetIdentity';
 import { normalizeBlockForRender } from '../lib/blockPresentationContracts';
 import { buildCanonicalBlockRuntime } from '../blocks/registry';
-import { resolveNumberedStepCardsClassName } from '../lib/numberedStepCardsContract';
+import {
+  resolveNumberedStepCardsClassName,
+  splitNumberedStepCardTitle,
+} from '../lib/numberedStepCardsContract';
 import { normalizeBackgroundEffects } from '../lib/backgroundEffects';
 import {
   DEFAULT_DYNAMIC_GRID_CARD_BULLET_LINE_HEIGHT,
@@ -1092,12 +1096,14 @@ function buildNativeBillboardSection(block, { includeTestClassName = false } = {
       runtime.bodyColorClassName,
       runtime.bodyHtmlStyle ? 'is-dynamic-billboard-lead-copy-sized' : '',
       runtime.bodyJustify ? `is-body-justify-${runtime.bodyJustify}` : '',
-      runtime.headerGapRem !== null ? 'is-dynamic-billboard-header-gap' : '',
+      !runtime.subtitle && runtime.headerGapRem !== null ? 'is-dynamic-billboard-header-gap' : '',
+      runtime.bodyGapRem !== null ? 'is-dynamic-billboard-body-gap' : '',
     ].filter(Boolean).join(' '),
     htmlStyle: runtime.bodyHtmlStyle || undefined,
     body: runtime.body ? [runtime.body] : [],
     bodyJustify: normalizeHeroJustify(runtime.bodyJustify || 'center'),
     headerGapRem: runtime.headerGapRem,
+    bodyGapRem: runtime.bodyGapRem,
     actionGapRem: runtime.actionGapRem,
     fineprint: runtime.fineprint || undefined,
     fineprintDisclosureId: runtime.fineprintDisclosureId || undefined,
@@ -1127,6 +1133,10 @@ function buildDynamicPageContentSection(block, pathname) {
     body,
     html,
     bodyFontSizeRem,
+    bodyLineHeight,
+    bodyBorderTone,
+    bodyBorderWidth,
+    bodyBorderShadow,
     widget,
     logoKey,
     logoImage,
@@ -1177,7 +1187,8 @@ function buildDynamicPageContentSection(block, pathname) {
     blockId: String(block?.id || '').trim() || undefined,
     hideTitle: !title && !titleHtml,
     anchorId: anchorId || undefined,
-    className: `${sectionClassBase}${sectionClassName ? ` ${sectionClassName}` : ''}${Number.isFinite(Number(bodyFontSizeRem)) ? ' is-page-content-body-size-controlled' : ''} is-bg-${bgTone} is-text-${textTone}`,
+    className: `${sectionClassBase}${sectionClassName ? ` ${sectionClassName}` : ''}${Number.isFinite(Number(bodyFontSizeRem)) ? ' is-page-content-body-size-controlled' : ''} is-bg-${bgTone} is-text-${textTone} is-justify-${justify}`,
+    backgroundEffects: runtime.backgroundEffects,
     fullBleed: Boolean(fullBleed),
     railClassName: railClassName || undefined,
     title,
@@ -1215,7 +1226,18 @@ function buildDynamicPageContentSection(block, pathname) {
       '--dyn-content-padding-top': `${paddingTopRem}rem`,
       '--dyn-content-padding-bottom': `${paddingBottomRem}rem`,
       '--dyn-content-max-width': `${contentMaxWidthPx}px`,
-      ...(Number.isFinite(Number(bodyFontSizeRem)) ? { '--dyn-content-body-size': `${bodyFontSizeRem}rem` } : {}),
+      ...(bodyFontSizeRem !== null && Number.isFinite(Number(bodyFontSizeRem))
+        ? { '--dyn-content-body-size': `${bodyFontSizeRem}rem` }
+        : {}),
+      ...(bodyLineHeight !== null && Number.isFinite(Number(bodyLineHeight))
+        ? { '--dyn-content-body-line-height': String(bodyLineHeight) }
+        : {}),
+      ...(bodyBorderTone ? { '--dyn-content-body-border-color': `var(--ag-color-${bodyBorderTone})` } : {}),
+      ...(bodyBorderWidth !== null && Number.isFinite(Number(bodyBorderWidth))
+        ? { '--dyn-content-body-border-width': `${bodyBorderWidth}px` }
+        : {}),
+      ...(bodyBorderShadow === true ? { '--dyn-content-body-shadow': '0 18px 36px rgba(12, 42, 61, 0.08)' } : {}),
+      ...(bodyBorderShadow === false ? { '--dyn-content-body-shadow': 'none' } : {}),
     },
   };
 }
@@ -1355,6 +1377,7 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
     cardTitleJustify,
     cardTitleBodySpaceRem,
     numberPositionPercent,
+    numberSizeRem,
     cardBodySizeRem,
     cardBulletSize,
     cardBulletSizeRem,
@@ -1368,9 +1391,11 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
     headerWidthPercent,
     subheadSizeRem,
     headerSizeRem,
+    headerLetterSpacingEm,
     cardHoverScale,
     hasMergedIntro,
     actions,
+    addressBlock,
     cards: runtimeCards,
   } = runtime;
   const hasIntroCopy = Boolean(title || body || bodyHtml);
@@ -1421,6 +1446,8 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
       inquiryLabel: card.inquiryLabel,
       body: card.body,
       bodyHtml: card.bodyHtml,
+      copyLabel: card.copyLabel,
+      copyText: card.copyText,
       bodySegments: card.bodySegments,
       list: Array.isArray(card.list) ? card.list : undefined,
       fineprint: card.fineprint || undefined,
@@ -1487,9 +1514,11 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
     sand,
     columns,
     actions: (Array.isArray(actions) ? actions : []).map((action) => toNativeActionItem(action)).filter(Boolean),
+    addressBlock: addressBlock || undefined,
     locationFilter: locationFilter || undefined,
     focusMessageCard: Boolean(locationFilter?.focusMessageCard),
     cardLayout,
+    cardTitleJustify,
     cards: visibleCards,
     sectionStyle: {
       ...(Number.isFinite(Number(paddingTopRem)) ? { paddingTop: `${paddingTopRem}rem` } : {}),
@@ -1498,16 +1527,14 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
       '--dynamic-grid-card-gap': `${cardGapRem}rem`,
       '--dynamic-grid-card-title-size': `${cardTitleSizeRem}rem`,
       '--dynamic-grid-card-title-justify': cardTitleJustify,
-      '--dynamic-grid-card-title-justify-content': cardTitleJustify === 'left'
-        ? 'flex-start'
-        : cardTitleJustify === 'right'
-          ? 'flex-end'
-          : 'center',
       '--dynamic-grid-card-title-body-space': `${cardTitleBodySpaceRem}rem`,
       ...(Number.isFinite(Number(cardTitleLineHeight))
         ? { '--dynamic-grid-card-title-line-height': String(cardTitleLineHeight) }
         : {}),
       '--numbered-step-card-number-offset': `${numberPositionPercent}%`,
+      ...(Number.isFinite(Number(numberSizeRem))
+        ? { '--numbered-step-card-number-size': `${numberSizeRem}rem` }
+        : {}),
       '--dynamic-grid-card-outline-width': `${cardOutlineWidth}px`,
       '--dynamic-grid-card-shadow-opacity': String(cardShadowOpacity),
       '--dynamic-grid-card-body-size': `${cardBodySizeRem}rem`,
@@ -1516,6 +1543,7 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
       ...(Number.isFinite(Number(headerSizeRem))
         ? { '--dynamic-grid-header-size': `${headerSizeRem}rem` }
         : {}),
+      '--dynamic-grid-header-letter-spacing': `${headerLetterSpacingEm}em`,
       ...(Number.isFinite(Number(headerWidthPercent))
         ? { '--dynamic-grid-header-width': `${headerWidthPercent}%` }
         : {}),
@@ -1732,6 +1760,10 @@ function buildDynamicRequestFormSection(block, pathname) {
       title: runtime.title,
       titleClassName: runtime.titleClassName,
       titleHighlightsJson: runtime.titleHighlightsJson,
+      titleFontFamily: runtime.titleFontFamily,
+      titleFontWeight: runtime.titleFontWeight,
+      justify: runtime.justify,
+      bodyJustify: runtime.bodyJustify,
       subtitle: runtime.subtitle,
       bodyHtml: runtime.bodyHtml,
       body: runtime.body,
@@ -2922,16 +2954,7 @@ function CopyAddressBlock({ config, className = '' }) {
   const copyText = [title, ...lines].filter(Boolean).join('\n');
 
   const onCopy = async () => {
-    try {
-      if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(copyText);
-        setCopyTip('Address copied.');
-        return;
-      }
-      throw new Error('Clipboard unavailable');
-    } catch {
-      setCopyTip('Copy not available in this browser.');
-    }
+    setCopyTip(await copyTextToClipboard(copyText) ? 'Address copied.' : 'Copy not available in this browser.');
   };
 
   return (
@@ -6526,12 +6549,11 @@ export default function NativeContentPage({ page }) {
           sectionHtml
           || (Array.isArray(section.body) && section.body.length),
         );
-        // Header gap normally belongs on billboard body copy. Body-less
-        // billboards (such as the 403(b) investment strategy heading) put
-        // their next content in the action row instead, so carry the same
-        // spacing contract to that row without double-spacing body copy.
+        // Header gap belongs between the title and subtitle. If either is
+        // absent, it falls through to the first remaining content element.
         const dynamicBillboardActionHeaderGapClassName = isDynamicBillboardSection
           && !hasDynamicBillboardBody
+          && !section.subtitle
           && section.headerGapRem !== null
           && section.headerGapRem !== undefined
           ? ' is-dynamic-billboard-header-gap'
@@ -6548,7 +6570,7 @@ export default function NativeContentPage({ page }) {
               marginTop: `${section.actionGapRem}rem`,
             }
           : undefined;
-        // Billboard actions render outside the copy wrapper. Keep Header gap's
+        // Billboard actions render outside the copy wrapper. Keep the header gap's
         // variable on the action row itself so it cannot be lost at that
         // wrapper boundary (notably the 403(b) strategy billboard).
         const dynamicBillboardActionHeaderGapStyle = dynamicBillboardActionHeaderGapClassName
@@ -7212,7 +7234,13 @@ export default function NativeContentPage({ page }) {
                   ) : null}
                   {section.subtitle ? (
                     <h3
-                      className={['native-info-section-subtitle', section.subtitleClassName || ''].filter(Boolean).join(' ')}
+                      className={[
+                        'native-info-section-subtitle',
+                        section.subtitleClassName || '',
+                        isDynamicBillboardSection && section.headerGapRem !== null && section.headerGapRem !== undefined
+                          ? 'is-dynamic-billboard-header-gap'
+                          : '',
+                      ].filter(Boolean).join(' ')}
                       style={section.subtitleStyle || undefined}
                     >
                       {Array.isArray(section.subtitleHighlights) && section.subtitleHighlights.length
@@ -7235,7 +7263,12 @@ export default function NativeContentPage({ page }) {
                             'billboard-body-copy',
                             section.htmlClassName || '',
                             sectionBodyJustifyToken ? `is-body-justify-${sectionBodyJustifyToken}` : '',
-                            section.headerGapRem !== null && section.headerGapRem !== undefined ? 'is-dynamic-billboard-header-gap' : '',
+                            !section.subtitle && section.headerGapRem !== null && section.headerGapRem !== undefined
+                              ? 'is-dynamic-billboard-header-gap'
+                              : '',
+                            section.bodyGapRem !== null && section.bodyGapRem !== undefined
+                              ? 'is-dynamic-billboard-body-gap'
+                              : '',
                           ].filter(Boolean).join(' ')
                         : undefined}
                       style={isDynamicBillboardSection ? (section.htmlStyle || undefined) : undefined}
@@ -7494,10 +7527,12 @@ export default function NativeContentPage({ page }) {
                   >
                     <div className="native-columns-copy">
                       {card.title ? (
-                        <h3 className={card.titleClassName || undefined}>
-                          {Array.isArray(card.titleHighlights) && card.titleHighlights.length
-                            ? renderHighlightedText(card.title, card.titleHighlights)
-                            : card.title}
+                        <h3 className={card.titleClassName || undefined} style={{ textAlign: section.cardTitleJustify || undefined }}>
+                          <span className="service-native-card-title-content">
+                            {Array.isArray(card.titleHighlights) && card.titleHighlights.length
+                              ? renderHighlightedText(card.title, card.titleHighlights)
+                              : card.title}
+                          </span>
                         </h3>
                       ) : null}
                       {card.subtitle ? <p className="service-native-card-subtitle">{renderTextWithStrong(card.subtitle)}</p> : null}
@@ -7549,11 +7584,14 @@ export default function NativeContentPage({ page }) {
                         <div className={useRetirementCertificateCardLayout ? 'retirement-account-card__cap' : 'investments-native-cert-card__cap'}>
                           <h3
                             className={card.titleClassName || undefined}
+                            style={{ textAlign: section.cardTitleJustify || undefined }}
                             aria-label={Array.isArray(card.titleHighlights) && card.titleHighlights.length ? card.title : undefined}
                           >
-                            {Array.isArray(card.titleHighlights) && card.titleHighlights.length
-                              ? renderHighlightedText(card.title, card.titleHighlights)
-                              : card.title}
+                            <span className="service-native-card-title-content">
+                              {Array.isArray(card.titleHighlights) && card.titleHighlights.length
+                                ? renderHighlightedText(card.title, card.titleHighlights)
+                                : card.title}
+                            </span>
                           </h3>
                         </div>
                       ) : null}
@@ -7593,6 +7631,9 @@ export default function NativeContentPage({ page }) {
                   const resolvedMessageLayout = isActiveMessageCard && card.messagePanel ? 'inline' : 'toggle';
                   const shouldAnimateCard = !focusMessageCard;
                   const forceScrollRevealCard = shouldAnimateCard && sectionClassName.includes('legacy-giving-types');
+                  const numberedStepTitle = isNumberedStepCardsSection
+                    ? splitNumberedStepCardTitle(card.title, card.slot || cardIndex + 1)
+                    : null;
 
                   return (
                   <article key={`grid-card-${card.slot || card.id || card.title || cardIndex + 1}`} className={`service-native-card ${shouldAnimateCard ? 'fade-up fade-up-fail-open' : ''}${forceScrollRevealCard ? ' fade-up-force-observe' : ''} ${card.cardClass || 'card2'}${card.messagePanel && resolvedMessageLayout === 'inline' ? ' has-inline-message' : ''}`.trim()} style={dynamicCardPaddingStyle}>
@@ -7600,15 +7641,34 @@ export default function NativeContentPage({ page }) {
                       {card.iconKey ? (
                         <PlannedGivingStepIcon iconKey={card.iconKey} tone={card.iconTone} />
                       ) : null}
-                      {card.title ? (
-                        <h3 className={card.titleClassName || undefined}>
-                          {Array.isArray(card.titleHighlights) && card.titleHighlights.length
-                            ? <span className="consultant-name-text">{renderHighlightedText(card.title, card.titleHighlights)}</span>
-                            : <span className="consultant-name-text">{card.title}</span>}
-                          {card.titleSuffix ? <span className="consultant-name-credentials">{card.titleSuffix}</span> : null}
+                      {isNumberedStepCardsSection ? (
+                        <span className="service-native-card-step-number" aria-hidden="true">
+                          {numberedStepTitle.number}
+                        </span>
+                      ) : null}
+                      {!isNumberedStepCardsSection && card.title ? (
+                        <h3 className={card.titleClassName || undefined} style={{ textAlign: section.cardTitleJustify || undefined }}>
+                          <span className="service-native-card-title-content">
+                            {Array.isArray(card.titleHighlights) && card.titleHighlights.length
+                              ? <span className="consultant-name-text">{renderHighlightedText(card.title, card.titleHighlights)}</span>
+                              : <span className="consultant-name-text">{card.title}</span>}
+                            {card.titleSuffix ? <span className="consultant-name-credentials">{card.titleSuffix}</span> : null}
+                          </span>
                         </h3>
                       ) : null}
-                      <div className={isNumberedStepCardsSection ? 'service-native-card-flow service-native-card-step-content' : 'service-native-card-flow'}>
+                      <div className={isNumberedStepCardsSection ? 'service-native-card-step-content' : 'service-native-card-flow'}>
+                      {isNumberedStepCardsSection && numberedStepTitle.title ? (
+                        <h3
+                          className={`service-native-card-step-title${card.titleClassName ? ` ${card.titleClassName}` : ''}`}
+                          style={{ textAlign: section.cardTitleJustify || undefined }}
+                        >
+                          <span className="service-native-card-title-content">
+                            {Array.isArray(card.titleHighlights) && card.titleHighlights.length
+                              ? renderHighlightedText(numberedStepTitle.title, card.titleHighlights)
+                              : numberedStepTitle.title}
+                          </span>
+                        </h3>
+                      ) : null}
                       {card.subtitle ? <p className="service-native-card-subtitle">{renderTextWithStrong(card.subtitle)}</p> : null}
                       {card.phone ? (
                         <p className="service-native-card-phone">
@@ -7619,6 +7679,7 @@ export default function NativeContentPage({ page }) {
                       ) : null}
                       {card.body ? <p>{renderTextWithStrong(card.body)}</p> : null}
                       {card.bodyHtml ? <SafeRichText as="div" className="native-info-rich-html service-native-card-rich-body" html={card.bodyHtml} /> : null}
+                      {card.copyText ? <CopyToClipboardButton text={card.copyText} label={card.copyLabel || 'Copy'} /> : null}
                       {Array.isArray(card.list) && card.list.length ? (
                         <ul className="service-native-card-bullet-list">
                           {card.list.map((item) => (

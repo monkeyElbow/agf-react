@@ -1,15 +1,33 @@
 import { useMemo, useState } from 'react';
 import AdminHtmlEditor from './AdminHtmlEditor';
+import BackgroundEditorPage from './BackgroundEditorPage';
 import ColorPalette from './ColorPalette';
 import useBufferedFieldDrafts from '../hooks/useBufferedFieldDrafts';
 import {
+  getPageContentBodyEditorHtml,
   getPageContentEditorField,
-  getPageContentEditorHtml,
-  hasLegacyPageContentSource,
+  hasLegacyPageContentBodySource,
 } from '../lib/pageContentEditorHtml';
 import {
   PANEL_TEXT_TONE_OPTIONS,
+  SURFACE_BG_TONE_OPTIONS,
 } from '../lib/colorSystem';
+
+const PAGE_CONTENT_JUSTIFY_OPTIONS = [
+  { value: 'left', label: 'Left' },
+  { value: 'center', label: 'Center' },
+  { value: 'right', label: 'Right' },
+];
+
+const ROLLOVER_PROCESS_BORDER_TONE_OPTIONS = [
+  { value: '', label: 'Default', swatch: 'linear-gradient(145deg, #ffffff 0%, #d1d5db 100%)', hideSwatch: true },
+  { value: 'super-grey', label: 'Super Grey', swatch: 'var(--ag-color-super-grey)' },
+  { value: 'atlantean', label: 'Blue', swatch: 'var(--ag-color-atlantean)' },
+  { value: 'mango', label: 'Mango', swatch: 'var(--ag-color-mango)' },
+  { value: 'melon', label: 'Melon', swatch: 'var(--ag-color-melon)' },
+  { value: 'sandstone', label: 'Sandstone', swatch: 'var(--ag-color-sandstone)' },
+  { value: 'white', label: 'White', swatch: 'var(--ag-color-white)' },
+];
 import {
   HudEditorBlockOptionsPage,
   HudEditorModelLayout,
@@ -88,7 +106,7 @@ function PageContentAdvancedSlider({
   onChange,
 }) {
   const numericValue = Math.min(max, Math.max(min, toPageContentNumber(value, fallback)));
-  const labelText = `${label} (${unit})`;
+  const labelText = unit ? `${label} (${unit})` : label;
 
   return (
     <div className="admin-front-hud-range admin-page-content-advanced-slider">
@@ -147,6 +165,79 @@ function PageContentSurfaceToneControls({ settings = {}, onSettingChange }) {
   );
 }
 
+export function PageContentAddressControls({ settings = {}, onSettingChange }) {
+  if (typeof onSettingChange !== 'function') {
+    return null;
+  }
+
+  return (
+    <section className="admin-page-content-layout-card admin-page-content-address-card">
+      <span className="admin-front-hud-control-label">Address block</span>
+      <label className="admin-page-content-field-label" htmlFor="page-content-address-title">
+        <span>Address title</span>
+        <input
+          id="page-content-address-title"
+          type="text"
+          value={settings.addressTitle || ''}
+          onChange={(event) => onSettingChange('addressTitle', event.target.value)}
+        />
+      </label>
+      <label className="admin-page-content-field-label" htmlFor="page-content-address-lines">
+        <span>Address lines</span>
+        <textarea
+          id="page-content-address-lines"
+          rows={4}
+          value={settings.addressLines || ''}
+          onChange={(event) => onSettingChange('addressLines', event.target.value)}
+        />
+      </label>
+      <label className="admin-page-content-field-label" htmlFor="page-content-address-class-name">
+        <span>Address style class (optional)</span>
+        <input
+          id="page-content-address-class-name"
+          type="text"
+          value={settings.addressClassName || ''}
+          onChange={(event) => onSettingChange('addressClassName', event.target.value)}
+        />
+      </label>
+      <label className="admin-page-content-field-label" htmlFor="page-content-fineprint">
+        <span>Fine print / fax / notes</span>
+        <textarea
+          id="page-content-fineprint"
+          rows={5}
+          value={settings.fineprint || ''}
+          onChange={(event) => onSettingChange('fineprint', event.target.value)}
+        />
+      </label>
+    </section>
+  );
+}
+
+export function PageContentAlignmentControl({ settings = {}, onSettingChange }) {
+  if (typeof onSettingChange !== 'function') {
+    return null;
+  }
+
+  const value = PAGE_CONTENT_JUSTIFY_OPTIONS.some((option) => option.value === settings.justify)
+    ? settings.justify
+    : 'center';
+
+  return (
+    <label className="admin-page-content-field-label admin-page-content-alignment-control" htmlFor="page-content-justify">
+      <span>Content alignment</span>
+      <select
+        id="page-content-justify"
+        value={value}
+        onChange={(event) => onSettingChange('justify', event.target.value)}
+      >
+        {PAGE_CONTENT_JUSTIFY_OPTIONS.map((option) => (
+          <option key={option.value} value={option.value}>{option.label}</option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
 export function resolvePageContentWidthPreset(settings = {}) {
   const width = getPageContentWidthValue(settings);
   return PAGE_CONTENT_WIDTH_PRESETS.find((preset) => preset.maxWidthPx === width)?.id || '';
@@ -166,6 +257,7 @@ export function PageContentLayoutControls({
   settings = {},
   onSettingChange,
   className = '',
+  showRolloverProcessControls = false,
 }) {
   if (typeof onSettingChange !== 'function') {
     return null;
@@ -199,6 +291,11 @@ export function PageContentLayoutControls({
           unit="px"
           onChange={(nextValue) => onSettingChange('contentMaxWidthPx', nextValue)}
         />
+      </section>
+
+      <section className="admin-page-content-layout-card">
+        <span className="admin-front-hud-control-label">Alignment</span>
+        <PageContentAlignmentControl settings={settings} onSettingChange={onSettingChange} />
       </section>
 
       <section className="admin-page-content-layout-card">
@@ -246,6 +343,52 @@ export function PageContentLayoutControls({
           />
         </div>
       </section>
+
+      {showRolloverProcessControls ? (
+        <section className="admin-page-content-layout-card admin-page-content-rollover-process-card">
+          <span className="admin-front-hud-control-label">Process cards</span>
+          <PageContentAdvancedSlider
+            label="Body line height"
+            value={settings.bodyLineHeight}
+            fallback={1.62}
+            min={1.1}
+            max={2.1}
+            step={0.01}
+            unit=""
+            onChange={(nextValue) => onSettingChange('bodyLineHeight', nextValue)}
+          />
+          <PageContentAdvancedSlider
+            label="Border width"
+            value={settings.bodyBorderWidth}
+            fallback={2}
+            min={0.5}
+            max={3}
+            step={0.5}
+            unit="px"
+            onChange={(nextValue) => onSettingChange('bodyBorderWidth', nextValue)}
+          />
+          <label className="admin-page-content-surface-tone-grid">
+            <span>Border color</span>
+            <ColorPalette
+              variant="admin"
+              className="is-compact admin-hero-inline-swatch-list is-icon-only"
+              ariaLabel="Body card border color"
+              options={ROLLOVER_PROCESS_BORDER_TONE_OPTIONS}
+              value={String(settings.bodyBorderTone || '')}
+              preventMouseDown
+              onChange={(nextValue) => onSettingChange('bodyBorderTone', nextValue)}
+            />
+          </label>
+          <label className="admin-page-content-checkbox-row">
+            <input
+              type="checkbox"
+              checked={settings.bodyBorderShadow !== false}
+              onChange={(event) => onSettingChange('bodyBorderShadow', event.target.checked)}
+            />
+            <span>Card shadow</span>
+          </label>
+        </section>
+      ) : null}
     </div>
   );
 }
@@ -259,23 +402,23 @@ export default function PageContentHudEditorPanel({
   const [miniEditorEnabled, setMiniEditorEnabled] = useState(true);
   const [activeEditorSection, setActiveEditorSection] = useState('content');
   const settings = block?.settings || {};
+  const isRolloverProcess = String(settings.sectionClassName || '')
+    .split(/\s+/)
+    .includes('retirement-rollovers-native-process');
   const editorField = getPageContentEditorField(settings);
-  const usesLegacySource = hasLegacyPageContentSource(settings);
+  const usesLegacyBodySource = hasLegacyPageContentBodySource(settings);
   const htmlDraftFields = useMemo(() => ([
     {
       id: editorField,
-      value: getPageContentEditorHtml(settings),
+      value: getPageContentBodyEditorHtml(settings),
       commit: (nextValue) => {
         onSettingChange?.(editorField, nextValue);
-        if (usesLegacySource) {
+        if (usesLegacyBodySource) {
           onSettingChange?.('body', '');
-          onSettingChange?.('fineprint', '');
-          onSettingChange?.('addressTitle', '');
-          onSettingChange?.('addressLines', '');
         }
       },
     },
-  ]), [editorField, onSettingChange, settings, usesLegacySource]);
+  ]), [editorField, onSettingChange, settings, usesLegacyBodySource]);
   const {
     draftValues,
     updateDraftValue,
@@ -283,7 +426,9 @@ export default function PageContentHudEditorPanel({
   } = useBufferedFieldDrafts({ fields: htmlDraftFields, sourceRevision });
   const editorSections = appendHudBlockOptionsSection([
     { id: 'content', label: 'Content', icon: 'Aa' },
+    { id: 'address', label: 'Address', icon: '⌖' },
     { id: 'layout', label: 'Layout', icon: '▦' },
+    { id: 'background', label: 'Background', icon: '◌' },
   ], blockOptions);
 
   if (!block || typeof onSettingChange !== 'function') {
@@ -328,7 +473,7 @@ export default function PageContentHudEditorPanel({
               compact
               showFooterToggle={false}
               paletteVariant="hud"
-              value={draftValues[editorField] ?? getPageContentEditorHtml(settings)}
+              value={draftValues[editorField] ?? getPageContentBodyEditorHtml(settings)}
               onChange={(nextValue) => updateDraftValue(editorField, nextValue)}
               onBlur={() => commitDraftValue(editorField)}
               baseColorClassName={String(settings.bodyColorClassName || 'is-super-grey')}
@@ -341,7 +486,7 @@ export default function PageContentHudEditorPanel({
             <span>Body HTML</span>
             <textarea
               aria-label="Body HTML"
-              value={draftValues[editorField] ?? getPageContentEditorHtml(settings)}
+              value={draftValues[editorField] ?? getPageContentBodyEditorHtml(settings)}
               onChange={(event) => updateDraftValue(editorField, event.target.value)}
               onBlur={() => commitDraftValue(editorField)}
             />
@@ -359,6 +504,21 @@ export default function PageContentHudEditorPanel({
           settings={settings}
           onSettingChange={onSettingChange}
           className="admin-front-hud-page-content-settings"
+          showRolloverProcessControls={isRolloverProcess}
+        />
+      </section>
+      <section className="admin-hud-editor-panel admin-front-hud-page-content-address-panel">
+        <PageContentAddressControls settings={settings} onSettingChange={onSettingChange} />
+      </section>
+      <section className="admin-hud-editor-panel admin-front-hud-page-content-background-panel">
+        <BackgroundEditorPage
+          backgroundTone={settings.bgTone}
+          backgroundToneOptions={SURFACE_BG_TONE_OPTIONS}
+          backgroundToneLabel="Page content background"
+          onBackgroundToneChange={(nextValue) => onSettingChange('bgTone', nextValue)}
+          backgroundEffectsJson={settings.backgroundEffectsJson}
+          onBackgroundEffectsChange={(nextValue) => onSettingChange('backgroundEffectsJson', nextValue)}
+          paletteVariant="hud"
         />
       </section>
       <HudEditorBlockOptionsPage>{blockOptions}</HudEditorBlockOptionsPage>

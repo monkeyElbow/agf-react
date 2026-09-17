@@ -26,6 +26,20 @@ export const PLANNED_GIVING_STEPS_PATH = '/services/planned-giving/qualified-cha
 export const QCD_CENTERED_CARD_GRID_MIGRATION_ID = 'qcd-centered-card-grid';
 export const QCD_CENTERED_CARD_GRID_MIGRATION_VERSION = 1;
 
+export const RETIREMENT_403B_LOAN_DETAILS_CARD_GRID_MIGRATION_ID = 'retirement-403b-loan-details-card-grid';
+export const RETIREMENT_403B_LOAN_DETAILS_CARD_GRID_MIGRATION_VERSION = 1;
+export const RETIREMENT_403B_LOAN_DETAILS_PATH = '/services/retirement/403b';
+
+export const RETIREMENT_ROLLOVER_PROCESS_CARD_GRID_MIGRATION_ID = 'retirement-rollover-process-card-grid';
+export const RETIREMENT_ROLLOVER_PROCESS_CARD_GRID_MIGRATION_VERSION = 1;
+export const RETIREMENT_ROLLOVER_PROCESS_PATH = '/services/retirement/rollovers';
+
+export const RETIREMENT_INDIVIDUAL_ENROLLMENT_STEP_CARD_PRESENTATION_MIGRATION_ID = 'retirement-individual-enrollment-step-card-presentation';
+export const RETIREMENT_INDIVIDUAL_ENROLLMENT_STEP_CARD_PRESENTATION_MIGRATION_VERSION = 1;
+export const RETIREMENT_INDIVIDUAL_ENROLLMENT_MAIL_FAX_STEP_MIGRATION_ID = 'retirement-individual-enrollment-mail-fax-step';
+export const RETIREMENT_INDIVIDUAL_ENROLLMENT_MAIL_FAX_STEP_MIGRATION_VERSION = 1;
+export const RETIREMENT_INDIVIDUAL_ENROLLMENT_PATH = '/services/retirement/403b/403b-individual-enrollment';
+
 export const CGA_SECURE_ACT_CARD_MIGRATION_ID = 'cga-secure-act-card';
 export const CGA_SECURE_ACT_CARD_MIGRATION_VERSION = 4;
 export const CGA_PATH = '/services/planned-giving/charitable-gift-annuities';
@@ -966,6 +980,395 @@ export function migrateQcdCenteredCardGridState(rawState) {
         }
       : source,
     changed,
+  };
+}
+
+/**
+ * Moves the one-off 403(b) loan-details content block onto the shared
+ * one-card grid renderer. The original HTML is retained in a recovery field
+ * because this is a presentation migration, not a content rewrite.
+ */
+export function migrateRetirement403bLoanDetailsBlock(pathname, block) {
+  const source = cloneJson(block);
+  if (
+    String(pathname || '').trim() !== RETIREMENT_403B_LOAN_DETAILS_PATH
+    || String(source?.id || '').trim() !== 'loan_details'
+    || String(source?.kind || '').trim() !== 'content'
+    || String(source?.mode || '').trim() !== 'dynamic'
+  ) {
+    return source;
+  }
+
+  const originalSettings = source.settings && typeof source.settings === 'object'
+    ? { ...source.settings }
+    : {};
+  const legacyHtml = String(originalSettings.bodyHtml || originalSettings.html || '');
+  const legacyHtmlFallback = String(originalSettings.html || '');
+  const existingTitle = String(originalSettings.title || '').trim();
+  const hasCanonicalHeading = /<h2\b[^>]*>\s*403\(b\)\s*Plan Loans\s*<\/h2>/i.test(legacyHtml);
+  const cardBody = existingTitle || !hasCanonicalHeading
+    ? legacyHtml
+    : legacyHtml.replace(/\s*<h2\b[^>]*>\s*403\(b\)\s*Plan Loans\s*<\/h2>\s*/i, '\n');
+  const nextSettings = {
+    ...originalSettings,
+    title: existingTitle || '403(b) Plan Loans',
+    body: '',
+    bodyHtml: '',
+    html: '',
+    contentWidth: 'content',
+    columns: 'one',
+    cardCount: '1',
+    cardStyle: 'card2',
+    titleTone: String(originalSettings.textTone || '').trim().toLowerCase() === 'white' ? 'white' : 'super-grey',
+    bodyTone: 'super-grey',
+    card1Title: '',
+    card1Body: cardBody.trim(),
+    legacyLoanDetailsHtml: legacyHtml,
+    legacyLoanDetailsSourcesJson: legacyHtmlFallback && legacyHtmlFallback !== legacyHtml
+      ? JSON.stringify({ html: legacyHtmlFallback, bodyHtml: String(originalSettings.bodyHtml || '') })
+      : '',
+  };
+
+  return {
+    ...source,
+    templateId: 'card_grid',
+    presetId: 'loan-details',
+    kind: 'card_grid',
+    name: 'Card Grid · 403(b) Plan Loans',
+    settings: nextSettings,
+  };
+}
+
+export function migrateRetirement403bLoanDetailsState(rawState) {
+  const source = cloneJson(rawState) || {};
+  const blocks = source?.blocksByPath?.[RETIREMENT_403B_LOAN_DETAILS_PATH];
+  if (!Array.isArray(blocks)) {
+    return { state: source, changed: false };
+  }
+  const migratedBlocks = blocks.map((block) => migrateRetirement403bLoanDetailsBlock(
+    RETIREMENT_403B_LOAN_DETAILS_PATH,
+    block,
+  ));
+  const changed = JSON.stringify(migratedBlocks) !== JSON.stringify(blocks);
+  return {
+    state: changed
+      ? {
+          ...source,
+          blocksByPath: {
+            ...(source.blocksByPath || {}),
+            [RETIREMENT_403B_LOAN_DETAILS_PATH]: migratedBlocks,
+          },
+        }
+      : source,
+    changed,
+  };
+}
+
+function stripRolloverHtmlTags(value) {
+  return String(value || '')
+    .replace(/<[^>]+>/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function extractRolloverProcessCopy(settings) {
+  const html = String(settings?.html || settings?.bodyHtml || '').trim();
+  const titleMatch = html.match(/<h[1-3]\b[^>]*>([\s\S]*?)<\/h[1-3]>/i);
+  const paragraphs = [...html.matchAll(/<p\b[^>]*>([\s\S]*?)<\/p>/gi)]
+    .map((match) => String(match[1] || '').trim())
+    .filter(Boolean);
+  const legacyBody = String(settings?.body || '')
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  return {
+    title: stripRolloverHtmlTags(titleMatch?.[1] || '') || 'Start the process',
+    bodies: paragraphs.length ? paragraphs : legacyBody,
+    html,
+  };
+}
+
+/**
+ * Moves the rollover process from bespoke page-content HTML to the shared
+ * numbered step-card preset. Address and form settings remain on the block,
+ * while the original source is retained for recovery.
+ */
+export function migrateRetirementRolloverProcessBlock(pathname, block) {
+  const source = cloneJson(block);
+  if (
+    String(pathname || '').trim() !== RETIREMENT_ROLLOVER_PROCESS_PATH
+    || String(source?.id || '').trim() !== 'rollover_process'
+    || String(source?.kind || '').trim() !== 'content'
+    || String(source?.mode || '').trim() !== 'dynamic'
+  ) {
+    return source;
+  }
+
+  const originalSettings = source.settings && typeof source.settings === 'object'
+    ? { ...source.settings }
+    : {};
+  const extracted = extractRolloverProcessCopy(originalSettings);
+  const bodies = extracted.bodies.slice(0, 3);
+  const nextSettings = {
+    ...originalSettings,
+    title: extracted.title,
+    subtitle: '',
+    titleClassName: '',
+    titleHighlightsJson: '',
+    bodyHtml: '',
+    body: '',
+    html: '',
+    bgTone: 'white',
+    contentWidth: 'content',
+    columns: 'one',
+    cardCount: String(Math.max(1, bodies.length)),
+    cardStyle: 'card2',
+    cardOutline: true,
+    cardOutlineTone: 'alternating',
+    cardOutlineWidth: 2,
+    cardShadow: false,
+    cardPaddingRem: 1.75,
+    cardBodySizeRem: 1.08,
+    cardBodyLineHeight: Number.isFinite(Number(originalSettings.bodyLineHeight))
+      ? Number(originalSettings.bodyLineHeight)
+      : 1.62,
+    card1Title: '1',
+    card1Body: bodies[0] || '',
+    card2Title: '2',
+    card2Body: bodies[1] || '',
+    card3Title: '3',
+    card3Body: bodies[2] || '',
+    legacyRolloverProcessHtml: extracted.html,
+    legacyRolloverProcessSourcesJson: JSON.stringify({
+      html: String(originalSettings.html || ''),
+      bodyHtml: String(originalSettings.bodyHtml || ''),
+      body: String(originalSettings.body || ''),
+    }),
+  };
+
+  return {
+    ...source,
+    templateId: 'card_grid',
+    presetId: 'step-cards',
+    kind: 'card_grid',
+    name: 'Rollover Process · Step-by-Step',
+    settings: nextSettings,
+  };
+}
+
+export function migrateRetirementRolloverProcessState(rawState) {
+  const source = cloneJson(rawState) || {};
+  const blocks = source?.blocksByPath?.[RETIREMENT_ROLLOVER_PROCESS_PATH];
+  if (!Array.isArray(blocks)) {
+    return { state: source, changed: false };
+  }
+  const migratedBlocks = blocks.map((block) => migrateRetirementRolloverProcessBlock(
+    RETIREMENT_ROLLOVER_PROCESS_PATH,
+    block,
+  ));
+  const changed = JSON.stringify(migratedBlocks) !== JSON.stringify(blocks);
+  return {
+    state: changed
+      ? {
+          ...source,
+          blocksByPath: {
+            ...(source.blocksByPath || {}),
+            [RETIREMENT_ROLLOVER_PROCESS_PATH]: migratedBlocks,
+          },
+        }
+      : source,
+    changed,
+  };
+}
+
+function stripStepCardNumberPrefix(value) {
+  return String(value || '').replace(/^\d{1,2}\s*[.)-]\s*/, '').trim();
+}
+
+/**
+ * Moves the individual-enrollment card titles out of the oversized number
+ * treatment. The original settings are retained so this presentation repair
+ * can be reversed without guessing at authored copy.
+ */
+export function migrateRetirementIndividualEnrollmentStepCardPresentationBlock(pathname, block) {
+  const source = cloneJson(block);
+  if (
+    String(pathname || '').trim() !== RETIREMENT_INDIVIDUAL_ENROLLMENT_PATH
+    || String(source?.id || '').trim() !== 'enrollment_steps'
+    || String(source?.kind || '').trim() !== 'card_grid'
+    || String(source?.mode || '').trim() !== 'dynamic'
+  ) {
+    return source;
+  }
+
+  const originalSettings = source.settings && typeof source.settings === 'object'
+    ? { ...source.settings }
+    : {};
+  if (String(originalSettings.legacyEnrollmentStepPresentationSettingsJson || '').trim()) {
+    return source;
+  }
+  const nextSettings = {
+    ...originalSettings,
+    titleTone: 'alternating',
+    cardTitleSizeRem: 1.55,
+    cardTitleLineHeight: 1.05,
+    cardTitleBodySpaceRem: 0.5,
+    card1Title: stripStepCardNumberPrefix(originalSettings.card1Title) || 'Complete the enrollment form',
+    card2Title: stripStepCardNumberPrefix(originalSettings.card2Title) || 'Return your enrollment form',
+    card3Title: stripStepCardNumberPrefix(originalSettings.card3Title) || 'Complete payroll deduction',
+    legacyEnrollmentStepPresentationSettingsJson: JSON.stringify({
+      titleTone: originalSettings.titleTone,
+      cardTitleSizeRem: originalSettings.cardTitleSizeRem,
+      cardTitleLineHeight: originalSettings.cardTitleLineHeight,
+      cardTitleBodySpaceRem: originalSettings.cardTitleBodySpaceRem,
+      card1Title: originalSettings.card1Title,
+      card2Title: originalSettings.card2Title,
+      card3Title: originalSettings.card3Title,
+    }),
+  };
+
+  return {
+    ...source,
+    settings: nextSettings,
+  };
+}
+
+export function migrateRetirementIndividualEnrollmentStepCardPresentationState(rawState) {
+  const source = cloneJson(rawState) || {};
+  const blocks = source?.blocksByPath?.[RETIREMENT_INDIVIDUAL_ENROLLMENT_PATH];
+  if (!Array.isArray(blocks)) {
+    return { state: source, changed: false };
+  }
+  const migratedBlocks = blocks.map((block) => migrateRetirementIndividualEnrollmentStepCardPresentationBlock(
+    RETIREMENT_INDIVIDUAL_ENROLLMENT_PATH,
+    block,
+  ));
+  const changed = JSON.stringify(migratedBlocks) !== JSON.stringify(blocks);
+  return {
+    state: changed
+      ? {
+          ...source,
+          blocksByPath: {
+            ...(source.blocksByPath || {}),
+            [RETIREMENT_INDIVIDUAL_ENROLLMENT_PATH]: migratedBlocks,
+          },
+        }
+      : source,
+    changed,
+  };
+}
+
+function buildMailFaxCardBody(settings) {
+  const addressLines = String(settings?.addressLines || '')
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const addressMarkup = addressLines.length
+    ? `<p>${addressLines.map(escapeHtml).join('<br>')}</p>`
+    : '';
+  const fineprint = String(settings?.fineprint || '').trim();
+  const fineprintMatch = fineprint.match(/^\*\*(.+?)\*\*(.*)$/);
+  const fineprintMarkup = fineprint
+    ? `<p>${fineprintMatch
+      ? `<strong>${escapeHtml(fineprintMatch[1])}</strong>${escapeHtml(fineprintMatch[2])}`
+      : escapeHtml(fineprint)}</p>`
+    : '';
+  return `${addressMarkup}${fineprintMarkup}`;
+}
+
+/**
+ * Moves the individual-enrollment Mail/Fax page-content block into step 04 of
+ * the shared numbered Card Grid. The old block is retained inside a recovery
+ * field on the Card Grid before it is removed from the active block list.
+ */
+export function migrateRetirementIndividualEnrollmentMailFaxStepState(rawState) {
+  const source = cloneJson(rawState) || {};
+  const blocks = source?.blocksByPath?.[RETIREMENT_INDIVIDUAL_ENROLLMENT_PATH];
+  if (!Array.isArray(blocks)) {
+    return { state: source, changed: false };
+  }
+
+  const stepsBlock = blocks.find((block) => (
+    String(block?.id || '').trim() === 'enrollment_steps'
+    && String(block?.kind || '').trim() === 'card_grid'
+    && String(block?.mode || '').trim() === 'dynamic'
+  ));
+  const returnBlock = blocks.find((block) => (
+    String(block?.id || '').trim() === 'return_forms'
+    && String(block?.kind || '').trim() === 'content'
+    && String(block?.mode || '').trim() === 'dynamic'
+  ));
+  if (!stepsBlock || !returnBlock) {
+    return { state: source, changed: false };
+  }
+
+  const originalSettings = stepsBlock.settings && typeof stepsBlock.settings === 'object'
+    ? { ...stepsBlock.settings }
+    : {};
+  if (String(originalSettings.legacyEnrollmentMailFaxStepSourceJson || '').trim()) {
+    return { state: source, changed: false };
+  }
+
+  const hasCard4Content = [
+    originalSettings.card4Title,
+    originalSettings.card4Body,
+    originalSettings.card4BodyHtml,
+    originalSettings.card4CopyText,
+    originalSettings.card4ButtonLabel,
+  ].some((value) => String(value || '').trim());
+  if (hasCard4Content) {
+    return { state: source, changed: false };
+  }
+
+  const returnSettings = returnBlock.settings && typeof returnBlock.settings === 'object'
+    ? returnBlock.settings
+    : {};
+  const addressLines = String(returnSettings.addressLines || '')
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const addressTitle = String(returnSettings.addressTitle || '').trim() || 'Mail or fax completed forms to:';
+  const nextSettings = {
+    ...originalSettings,
+    cardCount: 4,
+    cardTitleJustify: 'left',
+    cardBodyJustify: 'left',
+    card4Title: addressTitle,
+    card4Body: buildMailFaxCardBody(returnSettings),
+    card4CopyLabel: 'Copy mailing address',
+    card4CopyText: addressLines.join('\n'),
+    legacyEnrollmentMailFaxStepSourceJson: JSON.stringify({
+      returnFormsBlock: returnBlock,
+      previousCard4Settings: {
+        card4Title: originalSettings.card4Title,
+        card4Body: originalSettings.card4Body,
+        card4BodyHtml: originalSettings.card4BodyHtml,
+        card4CopyLabel: originalSettings.card4CopyLabel,
+        card4CopyText: originalSettings.card4CopyText,
+      },
+    }),
+  };
+  const migratedStepsBlock = {
+    ...stepsBlock,
+    name: 'Enrollment Steps',
+    presetId: 'step-cards',
+    templateId: 'card_grid',
+    settings: nextSettings,
+  };
+  const nextBlocks = blocks
+    .filter((block) => block !== returnBlock)
+    .map((block) => (block === stepsBlock ? migratedStepsBlock : block));
+
+  return {
+    state: {
+      ...source,
+      blocksByPath: {
+        ...(source.blocksByPath || {}),
+        [RETIREMENT_INDIVIDUAL_ENROLLMENT_PATH]: nextBlocks,
+      },
+    },
+    changed: JSON.stringify(nextBlocks) !== JSON.stringify(blocks),
   };
 }
 

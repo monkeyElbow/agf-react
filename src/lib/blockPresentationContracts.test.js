@@ -48,16 +48,15 @@ describe('block presentation contracts', () => {
     expect(normalizeBillboardPresentationSettings({
       sectionClassName: 'legacy-child-native-billboard',
       title: 'Admin edited title',
+      titleFontFamily: 'heading',
+      titleFontWeight: 600,
+      titleSizeRem: 3.4,
     })).toMatchObject({
-      titleFontFamily: 'helv',
-      titleFontWeight: 700,
-      titleSizeRem: 4.59375,
+      title: 'Admin edited title',
+      titleFontFamily: 'heading',
+      titleFontWeight: 600,
+      titleSizeRem: 3.4,
     });
-
-    expect(normalizeBillboardPresentationSettings({
-      sectionClassName: 'legacy-child-native-billboard',
-      title: 'Another admin title',
-    }).title).toBe('Another admin title');
 
     expect(normalizeBillboardPresentationSettings({
       title: 'More joy in receiving.',
@@ -67,9 +66,11 @@ describe('block presentation contracts', () => {
       sectionClassName: 'retirement-everyday retirement-daily-billboard',
       titleFontFamily: 'heading',
       titleFontWeight: 800,
+      justify: 'left',
     })).toMatchObject({
-      titleFontFamily: 'helv',
-      titleFontWeight: 700,
+      titleFontFamily: 'heading',
+      titleFontWeight: 800,
+      justify: 'left',
     });
   });
 
@@ -125,15 +126,52 @@ describe('block presentation contracts', () => {
         { id: 'title' },
         { id: 'titleFontFamily' },
         { id: 'titleFontWeight' },
+        { id: 'justify' },
         { id: 'body' },
       ],
     });
 
     expect(dailyBillboard.settings).toMatchObject({
-      titleFontFamily: 'helv',
-      titleFontWeight: 700,
+      titleFontFamily: 'heading',
+      titleFontWeight: 800,
     });
-    expect(dailyBillboard.editableFields.map((field) => field.id)).toEqual(['title', 'body']);
+    expect(dailyBillboard.editableFields.map((field) => field.id)).toEqual([
+      'title',
+      'titleFontFamily',
+      'titleFontWeight',
+      'justify',
+      'body',
+    ]);
+
+    const ministryImpactBillboard = normalizeBlockPresentation({
+      kind: 'billboard',
+      settings: {
+        sectionClassName: 'legacy-child-native-billboard',
+        titleFontFamily: 'heading',
+        titleFontWeight: 600,
+        titleSizeRem: 3.4,
+      },
+      editableFields: [
+        { id: 'title' },
+        { id: 'titleFontFamily' },
+        { id: 'titleFontWeight' },
+        { id: 'titleSizeRem' },
+        { id: 'justify' },
+      ],
+    });
+
+    expect(ministryImpactBillboard.settings).toMatchObject({
+      titleFontFamily: 'heading',
+      titleFontWeight: 600,
+      titleSizeRem: 3.4,
+    });
+    expect(ministryImpactBillboard.editableFields.map((field) => field.id)).toEqual([
+      'title',
+      'titleFontFamily',
+      'titleFontWeight',
+      'titleSizeRem',
+      'justify',
+    ]);
   });
 
   it('keeps presentation normalization idempotent and editable copy stable', () => {

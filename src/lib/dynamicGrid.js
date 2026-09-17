@@ -32,6 +32,7 @@ export const DEFAULT_DYNAMIC_GRID_CARD_TITLE_LINE_HEIGHT = 1.2;
 export const DEFAULT_DYNAMIC_GRID_CARD_TITLE_BODY_SPACE_REM = 1;
 export const DEFAULT_DYNAMIC_GRID_FINEPRINT_SIZE_REM = 0.96;
 export const DEFAULT_DYNAMIC_GRID_NUMBER_POSITION_PERCENT = 0;
+export const DEFAULT_DYNAMIC_GRID_NUMBER_SIZE_REM = 3.2;
 export const DEFAULT_DYNAMIC_GRID_CARD_OUTLINE_WIDTH_PX = 1.5;
 export const DEFAULT_DYNAMIC_GRID_CARD_SHADOW_OPACITY = 0.14;
 // Keep the header gap in the shared runtime contract so a legacy block with
@@ -45,6 +46,7 @@ export const DEFAULT_DYNAMIC_GRID_HEADER_CARDS_SPACE_REM = 1.15;
 export const DEFAULT_DYNAMIC_GRID_SUBHEAD_SIZE_REM = 1.26;
 export const DEFAULT_DYNAMIC_GRID_HEADER_SIZE_REM = 2.9;
 export const DEFAULT_DYNAMIC_GRID_HEADER_WIDTH_PERCENT = 100;
+export const DEFAULT_DYNAMIC_GRID_HEADER_LETTER_SPACING_EM = -0.026;
 
 export function normalizeDynamicGridCardOutlineTone(value) {
   const token = String(value ?? '').trim().toLowerCase();
@@ -203,12 +205,28 @@ export function normalizeDynamicGridHeaderWidthPercent(value) {
   return Math.max(40, Math.min(100, Math.round(parsed)));
 }
 
+export function normalizeDynamicGridHeaderLetterSpacingEm(value) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) {
+    return DEFAULT_DYNAMIC_GRID_HEADER_LETTER_SPACING_EM;
+  }
+  return Math.max(-0.12, Math.min(0.04, Number(parsed.toFixed(3))));
+}
+
 export function normalizeDynamicGridNumberPositionPercent(value) {
   const parsed = Number(value);
   if (!Number.isFinite(parsed)) {
     return DEFAULT_DYNAMIC_GRID_NUMBER_POSITION_PERCENT;
   }
   return Math.max(-50, Math.min(50, Math.round(parsed)));
+}
+
+export function normalizeDynamicGridNumberSizeRem(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return DEFAULT_DYNAMIC_GRID_NUMBER_SIZE_REM;
+  }
+  return Math.max(1.5, Math.min(6, Number(numeric.toFixed(2))));
 }
 
 export function normalizeDynamicGridWidth(value) {

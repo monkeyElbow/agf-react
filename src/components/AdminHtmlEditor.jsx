@@ -458,8 +458,8 @@ export default function AdminHtmlEditor({
         </div>
       ) : null}
       <div className="admin-html-editor-toolbar" role="toolbar" aria-label="Article body formatting">
-        <button type="button" onMouseDown={preserveSelection} onClick={() => applyCommand('bold')} title="Bold"><strong>B</strong></button>
-        <button type="button" onMouseDown={preserveSelection} onClick={() => applyCommand('italic')} title="Italic"><em>I</em></button>
+        <button type="button" className="admin-html-editor-format-button" aria-label="Bold" onMouseDown={preserveSelection} onClick={() => applyCommand('bold')} title="Bold"><strong>B</strong></button>
+        <button type="button" className="admin-html-editor-format-button" aria-label="Italic" onMouseDown={preserveSelection} onClick={() => applyCommand('italic')} title="Italic"><em>I</em></button>
         <ColorPalette
           variant={paletteVariant}
           className="is-compact is-icon-only is-circular admin-html-editor-color-group"
@@ -505,12 +505,12 @@ export default function AdminHtmlEditor({
             <button type="button" onMouseDown={preserveSelection} onClick={() => applyCommand('formatBlock', 'blockquote')} title="Quote">Quote</button>
           </>
         ) : null}
-        <button type="button" onMouseDown={preserveSelection} onClick={onSetLink} title="Add link">Link</button>
-        <button type="button" onMouseDown={preserveSelection} onClick={() => applyCommand('unlink')} title="Remove link">Unlink</button>
+        <button type="button" className="admin-html-editor-action-link" aria-label="Link" onMouseDown={preserveSelection} onClick={onSetLink} title="Add link">Link</button>
+        <button type="button" className="admin-html-editor-action-unlink" aria-label="Unlink" onMouseDown={preserveSelection} onClick={() => applyCommand('unlink')} title="Remove link">Unlink</button>
         {!usesInlineBasicToolbar ? (
           <button type="button" onMouseDown={preserveSelection} onClick={() => applyCommand('insertHorizontalRule')} title="Divider">Divider</button>
         ) : null}
-        <button type="button" onMouseDown={preserveSelection} onClick={() => applyCommand('removeFormat')} title="Clear inline formatting">Clear</button>
+        <button type="button" className="admin-html-editor-action-clear" aria-label="Clear formatting" onMouseDown={preserveSelection} onClick={() => applyCommand('removeFormat')} title="Clear inline formatting">Clear</button>
       </div>
       </div>
 

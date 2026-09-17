@@ -2,6 +2,7 @@ import { fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import BillboardHudEditorPanel, {
   normalizeBillboardBodyWidth,
+  normalizeBillboardBodyGap,
   normalizeBillboardHeaderGap,
   normalizeBillboardPadding,
   normalizeBillboardWidth,
@@ -20,7 +21,11 @@ describe('BillboardHudEditorPanel reference layout', () => {
     expect(normalizeBillboardHeaderGap('1.17')).toBe(1.15);
     expect(normalizeBillboardHeaderGap('4.2')).toBe(4);
     expect(normalizeBillboardHeaderGap('')).toBeNull();
-    expect(normalizeBillboardPadding('8.2')).toBe(8);
+    expect(normalizeBillboardBodyGap('1.17')).toBe(1.15);
+    expect(normalizeBillboardBodyGap('4.2')).toBe(4);
+    expect(normalizeBillboardBodyGap('')).toBeNull();
+    expect(normalizeBillboardPadding('8.2')).toBe(8.25);
+    expect(normalizeBillboardPadding('17')).toBe(16);
     expect(normalizeBillboardPadding('7.5')).toBe(7.5);
     expect(normalizeBillboardPadding('')).toBeNull();
   });
@@ -46,16 +51,30 @@ describe('BillboardHudEditorPanel reference layout', () => {
   });
 
   it('removes the extra heading header and uses the requested two-column workbench', () => {
-    render(<BillboardHudEditorPanel title="A headline" subtitle="Supporting copy" />);
+    render(
+      <BillboardHudEditorPanel
+        title="A headline"
+        subtitle="Supporting copy"
+        subtitleFontWeight={400}
+        subtitleWeightOptions={[400, 700]}
+      />,
+    );
 
     const heading = screen.getByRole('region', { name: 'Heading settings' });
     expect(heading.querySelector('.admin-billboard-hud-reference-head')).toBeNull();
     expect(heading.querySelector('.admin-billboard-hud-heading-workbench')).toBeTruthy();
     expect(heading.querySelector('.admin-billboard-hud-heading-slider-panel')).toBeTruthy();
-    expect(heading.querySelector('.admin-billboard-hud-heading-type-panel')).toBeTruthy();
     expect(heading.querySelector('.admin-billboard-hud-heading-controls-box')).toBeTruthy();
     expect(heading.querySelector('.admin-billboard-hud-heading-title-panel')).toBeTruthy();
     expect(heading.querySelector('.admin-billboard-hud-heading-subtitle-panel')).toBeTruthy();
+
+    const titleTypeRow = heading.querySelector('.admin-billboard-hud-heading-type-row');
+    expect(titleTypeRow).toBeTruthy();
+    expect(titleTypeRow?.querySelector('[aria-label="Title font"]')).toBeTruthy();
+    expect(titleTypeRow?.querySelector('[aria-label="Title weight"]')).toBeTruthy();
+
+    const subtitlePanel = heading.querySelector('.admin-billboard-hud-heading-subtitle-panel');
+    expect(subtitlePanel?.querySelector('[aria-label="Subtitle weight"]')).toBeTruthy();
   });
 
   it('shows compact marked-span indicators without adding a status row', () => {
@@ -292,11 +311,36 @@ describe('BillboardHudEditorPanel reference layout', () => {
     expect(screen.getByRole('textbox', { name: 'Billboard body copy' }).tagName).toBe('DIV');
   });
 
-  it('separates title alignment from body alignment and body width on the Copy page', () => {
+  it('disables body presentation controls when the body is empty', () => {
+    render(
+      <BillboardHudEditorPanel
+        bodyHtml="<p><br></p>"
+        bodyJustify="center"
+        bodyJustifyOptions={[
+          { value: 'left', label: 'Left' },
+          { value: 'center', label: 'Center' },
+          { value: 'right', label: 'Right' },
+        ]}
+        bodyMaxWidthPx={640}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Copy' }));
+    expect(screen.getByRole('slider', { name: 'Lead copy size' }).disabled).toBe(true);
+    expect(screen.getByRole('spinbutton', { name: 'Lead copy size value' }).disabled).toBe(true);
+    expect(screen.getByRole('slider', { name: 'Lead copy line height' }).disabled).toBe(true);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Layout' }));
+    expect(within(screen.getByRole('group', { name: 'Body alignment' })).getByRole('button', { name: 'Center' }).disabled).toBe(true);
+    expect(screen.getByRole('slider', { name: 'Body width' }).disabled).toBe(true);
+  });
+
+  it('keeps title alignment with heading controls and body alignment on the Layout page', () => {
     const onBodyJustifyChange = vi.fn();
     const onBodyMaxWidthPxChange = vi.fn();
     render(
       <BillboardHudEditorPanel
+        bodyHtml="<p>Body copy</p>"
         justify="center"
         justifyOptions={[
           { value: 'left', label: 'Left' },
@@ -315,8 +359,12 @@ describe('BillboardHudEditorPanel reference layout', () => {
       />,
     );
 
-    expect(screen.getByText('Title alignment')).toBeTruthy();
+    expect(screen.getByRole('group', { name: 'Title alignment' })).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Copy' }));
+    expect(screen.queryByRole('group', { name: 'Body alignment' })).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Layout' }));
+    expect(screen.queryByRole('group', { name: 'Title alignment' })).toBeNull();
     expect(screen.getByRole('group', { name: 'Body alignment' })).toBeTruthy();
     expect(screen.getByRole('slider', { name: 'Body width' }).value).toBe('640');
 
@@ -324,6 +372,23 @@ describe('BillboardHudEditorPanel reference layout', () => {
     expect(onBodyJustifyChange).toHaveBeenCalledWith('center');
     fireEvent.change(screen.getByRole('slider', { name: 'Body width' }), { target: { value: '700' } });
     expect(onBodyMaxWidthPxChange).toHaveBeenCalledWith(700);
+  });
+
+  it('keeps subtitle weight in the subtitle typography surface', () => {
+    const onSubtitleFontWeightChange = vi.fn();
+    render(
+      <BillboardHudEditorPanel
+        subtitleFontWeight={400}
+        subtitleWeightOptions={[400, 700]}
+        onSubtitleFontWeightChange={onSubtitleFontWeightChange}
+      />,
+    );
+
+    expect(screen.getByText('Subtitle weight')).toBeTruthy();
+    const subtitlePanel = screen.getByText('Subtitle weight').closest('.admin-billboard-hud-heading-subtitle-panel');
+    expect(subtitlePanel).toBeTruthy();
+    fireEvent.click(within(subtitlePanel).getByRole('button', { name: '700' }));
+    expect(onSubtitleFontWeightChange).toHaveBeenCalledWith(700);
   });
 
   it('provides a lead-copy size slider in the copy panel', () => {
@@ -435,22 +500,32 @@ describe('BillboardHudEditorPanel reference layout', () => {
     expect(screen.queryByText('Title weight')).toBeNull();
   });
 
-  it('provides a separate header gap slider from title leading', () => {
+  it('provides separate title and body spacing sliders from title leading', () => {
     const onHeaderGapRemChange = vi.fn();
+    const onBodyGapRemChange = vi.fn();
     render(
       <BillboardHudEditorPanel
+        bodyHtml="<p>Body copy.</p>"
         headerGapRem={1.5}
         onHeaderGapRemChange={onHeaderGapRemChange}
+        bodyGapRem={1.25}
+        onBodyGapRemChange={onBodyGapRemChange}
         lineSpacing={1.05}
       />,
     );
 
     expect(screen.getByRole('slider', { name: 'Title line height' }).value).toBe('1.05');
-    const slider = screen.getByRole('slider', { name: 'Header gap' });
-    expect(slider.value).toBe('1.5');
+    const titleGapSlider = screen.getByRole('slider', { name: 'Title to subtitle gap' });
+    expect(titleGapSlider.value).toBe('1.5');
 
-    fireEvent.change(slider, { target: { value: '2' } });
+    fireEvent.change(titleGapSlider, { target: { value: '2' } });
     expect(onHeaderGapRemChange).toHaveBeenCalledWith(2);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Copy' }));
+    const bodyGapSlider = screen.getByRole('slider', { name: 'Space above body' });
+    expect(bodyGapSlider.value).toBe('1.25');
+    fireEvent.change(bodyGapSlider, { target: { value: '1.75' } });
+    expect(onBodyGapRemChange).toHaveBeenCalledWith(1.75);
   });
 
   it('pairs compact billboard sliders with editable numeric inputs', () => {
@@ -525,6 +600,7 @@ describe('BillboardHudEditorPanel reference layout', () => {
   it('uses the branded range treatment for width sliders and places bottom padding under top padding', () => {
     render(
       <BillboardHudEditorPanel
+        bodyHtml="<p>Body copy</p>"
         contentMaxWidthPx={900}
         bodyMaxWidthPx={640}
         paddingTopRem={4}
@@ -535,27 +611,27 @@ describe('BillboardHudEditorPanel reference layout', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Layout' }));
     expect(screen.queryByText('Bounded width and surface')).toBeNull();
     expect(screen.getByRole('slider', { name: 'Content width' }).closest('.admin-front-hud-range')).toBeTruthy();
-    expect(screen.getByRole('slider', { name: 'Billboard top padding' }).closest('.admin-billboard-editor-width-grid')?.querySelector('.admin-billboard-editor-bottom-padding')).toBeTruthy();
-
-    fireEvent.click(screen.getByRole('button', { name: 'Copy' }));
-    expect(screen.getByRole('slider', { name: 'Body width' }).closest('.admin-front-hud-range')).toBeTruthy();
+    expect(screen.getByRole('slider', { name: 'Billboard top padding' }).closest('.admin-billboard-editor-layout-grid')).toBeTruthy();
+    expect(screen.getByRole('slider', { name: 'Billboard bottom padding' }).closest('.admin-billboard-editor-layout-controls')).toBeTruthy();
+    expect(screen.getByRole('slider', { name: 'Body width' }).closest('.admin-billboard-editor-layout-controls')).toBeTruthy();
   });
 
   it('wires the billboard bottom padding slider', () => {
     const onPaddingBottomRemChange = vi.fn();
     render(
       <BillboardHudEditorPanel
-        paddingBottomRem={7.5}
+        paddingBottomRem={12.5}
         onPaddingBottomRemChange={onPaddingBottomRemChange}
       />,
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Layout' }));
     const slider = screen.getByRole('slider', { name: 'Billboard bottom padding' });
-    expect(slider.value).toBe('7.5');
+    expect(slider.value).toBe('12.5');
+    expect(slider.max).toBe('16');
 
-    fireEvent.change(slider, { target: { value: '8' } });
-    expect(onPaddingBottomRemChange).toHaveBeenCalledWith(8);
+    fireEvent.change(slider, { target: { value: '16' } });
+    expect(onPaddingBottomRemChange).toHaveBeenCalledWith(16);
   });
 
   it('wires the billboard top padding slider', () => {

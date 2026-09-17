@@ -20,13 +20,24 @@ export function isBillboardBodyHtmlEmpty(value) {
     .replace(/>\s+</g, '><')
     .replace(/\s+/g, '')
     .toLowerCase();
-  return !normalized || [
+  if (!normalized || [
     '<p></p>',
     '<p><br></p>',
     '<p><br/></p>',
     '<p><br /></p>',
     '<p>&nbsp;</p>',
-  ].includes(normalized);
+  ].includes(normalized)) {
+    return true;
+  }
+
+  // Browsers can emit div/br or span-only markup when the last visual text
+  // node is deleted. Treat those shapes as empty too, so an empty body never
+  // keeps its layout gap or typography controls active.
+  return normalized
+    .replace(/<br\s*\/?>(?=\s*<|$)/gi, '')
+    .replace(/&(?:nbsp|#160);/gi, '')
+    .replace(/<[^>]*>/g, '')
+    .trim() === '';
 }
 
 /**
@@ -67,6 +78,7 @@ const BILLBOARD_PRESET_DEFINITIONS = Object.freeze([
       bodyMaxWidthPx: '',
       lineSpacing: 1,
       headerGapRem: '',
+      bodyGapRem: '',
       titleFontFamily: 'helv',
       titleFontWeight: 700,
       titleSizeRem: 3.4,

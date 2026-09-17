@@ -25,7 +25,7 @@ describe('PageContentHudEditorPanel', () => {
     expect(screen.getByLabelText('Body HTML')).toBeTruthy();
   });
 
-  it('loads legacy address copy into HUD HTML editor and promotes it on blur', () => {
+  it('keeps legacy address copy out of the body editor and exposes it on Address', () => {
     const onSettingChange = vi.fn();
     renderPanel({
       html: '<p></p>',
@@ -34,19 +34,22 @@ describe('PageContentHudEditorPanel', () => {
     }, onSettingChange);
 
     const editor = screen.getByRole('textbox', { name: 'HTML content' });
-    expect(editor.textContent).toContain('Mail or fax completed forms to:');
-    expect(editor.textContent).toContain('Springfield, MO 65808-0263');
+    expect(editor.textContent).toBe('');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Address' }));
+    expect(screen.getByLabelText('Address title').value).toBe('Mail or fax completed forms to:');
+    expect(screen.getByLabelText('Address lines').value).toContain('Springfield, MO 65808-0263');
 
     editor.innerHTML = '<p>Updated mail instructions.</p>';
     fireEvent.input(editor);
     fireEvent.blur(editor);
 
     expect(onSettingChange).toHaveBeenCalledWith('html', '<p>Updated mail instructions.</p>');
-    expect(onSettingChange).toHaveBeenCalledWith('addressTitle', '');
-    expect(onSettingChange).toHaveBeenCalledWith('addressLines', '');
+    expect(onSettingChange).not.toHaveBeenCalledWith('addressTitle', '');
+    expect(onSettingChange).not.toHaveBeenCalledWith('addressLines', '');
   });
 
-  it('loads legacy fineprint copy and promotes it to the editable html source', () => {
+  it('keeps legacy fineprint copy out of the body editor and exposes it with the address fields', () => {
     const onSettingChange = vi.fn();
     renderPanel({
       html: '<p></p>',
@@ -54,14 +57,16 @@ describe('PageContentHudEditorPanel', () => {
     }, onSettingChange);
 
     const editor = screen.getByRole('textbox', { name: 'HTML content' });
-    expect(editor.textContent).toContain('AGFinancial is an equal opportunity employer.');
+    expect(editor.textContent).toBe('');
+    fireEvent.click(screen.getByRole('button', { name: 'Address' }));
+    expect(screen.getByLabelText('Fine print / fax / notes').value).toBe('AGFinancial is an equal opportunity employer.');
 
     editor.innerHTML = '<p>Updated careers copy.</p>';
     fireEvent.input(editor);
     fireEvent.blur(editor);
 
     expect(onSettingChange).toHaveBeenCalledWith('html', '<p>Updated careers copy.</p>');
-    expect(onSettingChange).toHaveBeenCalledWith('fineprint', '');
+    expect(onSettingChange).not.toHaveBeenCalledWith('fineprint', '');
   });
 
   it('shows the numeric Page Content controls as sliders', () => {
@@ -105,5 +110,34 @@ describe('PageContentHudEditorPanel', () => {
     });
 
     expect(onSettingChange).toHaveBeenCalledWith('paddingBottomRem', 3.5);
+  });
+
+  it('exposes stored address fields instead of hiding rendered address content', () => {
+    const onSettingChange = vi.fn();
+    renderPanel({
+      addressTitle: 'Mail completed forms to:',
+      addressLines: 'AGFinancial\nPO Box 2515',
+    }, onSettingChange);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Address' }));
+
+    expect(screen.getByLabelText('Address title').value).toBe('Mail completed forms to:');
+    expect(screen.getByLabelText('Address lines').value).toBe('AGFinancial\nPO Box 2515');
+    fireEvent.change(screen.getByLabelText('Address title'), { target: { value: 'Mail or fax to:' } });
+    expect(onSettingChange).toHaveBeenCalledWith('addressTitle', 'Mail or fax to:');
+  });
+
+  it('keeps alignment and background/lights on separate editor pages', () => {
+    const onSettingChange = vi.fn();
+    renderPanel({ justify: 'left' }, onSettingChange);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Layout' }));
+    expect(screen.getByLabelText('Content alignment').value).toBe('left');
+    fireEvent.change(screen.getByLabelText('Content alignment'), { target: { value: 'right' } });
+    expect(onSettingChange).toHaveBeenCalledWith('justify', 'right');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Background' }));
+    expect(screen.getByRole('radiogroup', { name: 'Background color' })).toBeTruthy();
+    expect(screen.getByText('Background lights')).toBeTruthy();
   });
 });

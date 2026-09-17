@@ -57,8 +57,10 @@ describe('native intro and billboard renderer guardrail', () => {
     expect(runtimeSource).toContain("const bodyJustifyToken = String(settings.bodyJustify || settings.justify || 'center').trim().toLowerCase();");
     expect(runtimeSource).toContain("'--dynamic-billboard-body-max-width'");
     expect(runtimeSource).toContain("'--dynamic-billboard-header-gap'");
+    expect(runtimeSource).toContain("'--dynamic-billboard-body-gap'");
     expect(source).toContain('bodyJustify: normalizeHeroJustify(runtime.bodyJustify || \'center\')');
     expect(source).toContain('is-dynamic-billboard-header-gap');
+    expect(source).toContain('is-dynamic-billboard-body-gap');
     expect(source).toContain('is-body-justify-${sectionBodyJustifyToken}');
     expect(source).toContain("'billboard-body-copy',");
     expect(source).toContain("section.htmlClassName || '',");
@@ -91,9 +93,16 @@ describe('native intro and billboard renderer guardrail', () => {
     expect(cssSource).toContain('line-height: var(--dynamic-billboard-lead-copy-line-height, 1.55) !important;');
     expect(servicesSource).toContain('bodyHtmlStyle: runtime.bodyHtmlStyle,');
     expect(servicesSource).toContain("resolvedIntro.bodyHtmlStyle ? ' is-dynamic-billboard-lead-copy-sized' : ''");
-    expect(servicesSource).toContain("servicesMattersRuntime.bodyHtmlStyle ? ' is-dynamic-billboard-lead-copy-sized' : ''");
-    expect(loansSource).toContain("loanOptionsBillboard.bodyHtmlStyle ? ' is-dynamic-billboard-lead-copy-sized' : ''");
-    expect(retirementSource).toContain('style={retirementDoTheMathRuntime.bodyHtmlStyle || undefined}');
+    expect(servicesSource).toContain("import { BillboardBlock } from '../components/blocks/PageBlocksRenderer';");
+    expect(servicesSource).toContain('block={billboardIntroBlock}');
+    expect(servicesSource).toContain('block={servicesMattersBlock}');
+    expect(servicesSource).toContain("extraSectionClassName={`services-native-intro dynamic-intro");
+    expect(loansSource).toContain('const loanOptionsBillboardBlock = useMemo');
+    expect(loansSource).toContain('<BillboardBlock');
+    expect(loansSource).toContain('block={loanOptionsBillboardRenderBlock}');
+    expect(loansSource).toContain("sectionStyle={managedBlockOrderStyle('cta_band')}");
+    expect(retirementSource).toContain('runtimeOverride={retirementDoTheMathRuntime}');
+    expect(retirementSource).toContain('beforeTitle={(');
   });
 
   it('keeps explicit rich Billboard body colors ahead of the section text tone', () => {
@@ -197,9 +206,8 @@ describe('native intro and billboard renderer guardrail', () => {
     expect(retirementSource).toContain("ownership={getOwnershipVisualForBlockId('billboard')}");
     expect(retirementSource).not.toContain('fallbackRolloverBillboard');
 
-    expect(servicesSource).toContain('bodyColorClassName: runtime.bodyColorClassName');
-    expect(servicesSource).toContain('resolvedIntro.bodyColorClassName');
-    expect(servicesSource).toContain('servicesMattersRuntime.bodyColorClassName');
+    expect(servicesSource).toContain('block={billboardIntroBlock}');
+    expect(servicesSource).toContain('block={servicesMattersBlock}');
 
     expect(cssSource).toContain('.services-native-page [data-block-id="intro"]');
     expect(cssSource).toContain('.services-native-page [data-block-id="matters_band"]');

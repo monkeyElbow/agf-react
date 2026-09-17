@@ -48,6 +48,14 @@ describe('retirement 403(b) review polish guardrail', () => {
     expect(source).toContain('letterSpacing: `${heroHudLetterSpacingEm}em`,');
   });
 
+  it('does not manufacture the legacy soft return in the daily Billboard title', () => {
+    const source = readSource('./RetirementPage.jsx');
+
+    expect(source).toContain('return renderTextWithHighlights(title, highlights);');
+    expect(source).not.toContain(".replace(/\\s+(<[^>]+>every day<\\/[^>]+>)\\./i, '<br />$1.')");
+    expect(source).not.toContain(".replace(/\\s+every day\\./i, '<br />every day.')");
+  });
+
   it('keeps retirement hero spacing driven by shared HUD line-gap logic instead of a route-only css gap', () => {
     const cssSource = `${readSource('../styles/service-native.css')}\n${readSource('../styles/service-native-calculators.css')}`;
 
@@ -114,17 +122,13 @@ describe('retirement 403(b) review polish guardrail', () => {
     expect(source).toContain("const RETIREMENT_SCALE_REVEAL_CLASS_NAME = 'fade-up fade-up-force-observe fade-up-repeat-observe billboard-scroll-reveal-scale-up';");
     expect(source).toContain("const RETIREMENT_SCALE_REVEAL_ROOT_MARGIN = '0px 0px -20% 0px';");
     expect(source).toContain('copyClassName: appendRetirementScaleRevealClassName(runtime.copyClassName),');
-    expect(source).toContain('function stripRetirementDoTheMathWrapperRevealClassName(className) {');
-    expect(source).toContain("const doTheMathJustify = retirementDoTheMathRuntime?.justify || 'center';");
-    expect(source).toContain('const doTheMathCopyClassName = stripRetirementDoTheMathWrapperRevealClassName(');
-    expect(source).toContain("className={`native-info-section-copy is-justify-${doTheMathJustify}${doTheMathCopyClassName ? ` ${doTheMathCopyClassName}` : ''}`}");
-    expect(source).toContain('style={buildRetirementBillboardActionRowStyle(doTheMathJustify)}');
-    expect(source).toContain('className="retirement-do-the-math-title fade-up fade-up-force-observe fade-up-repeat-observe"');
-    expect(source).toContain('className="retirement-do-the-math-support fade-up fade-up-force-observe fade-up-repeat-observe"');
-    expect(source).toContain('data-fade-root-margin="0px 0px 4% 0px"');
+    expect(source).toContain('runtimeOverride={retirementDoTheMathRuntime}');
+    expect(source).toContain('beforeTitle={(');
+    expect(source).toContain("className: 'retirement-do-the-math-title fade-up fade-up-force-observe fade-up-repeat-observe'");
+    expect(source).toContain("'data-fade-root-margin': '0px 0px 4% 0px'");
     expect(source).toContain('<HomeDoTheMathBadge');
     expect(source).not.toContain("id: 'home_do_the_math'");
-    expect(source).toContain('className={`service-native-section retirement-do-the-math-billboard');
+    expect(source).toContain('extraSectionClassName={`retirement-do-the-math-billboard');
     expect(source).toContain("{renderHudAnchor('columns_math')}");
 
     expect(blueprintSource).toMatch(/id: 'columns_math'[\s\S]*?kind: 'billboard'[\s\S]*?justify: 'center'[\s\S]*?lineSpacing: 0\.94[\s\S]*?contentMaxWidthPx: 1216,/);
@@ -187,7 +191,7 @@ describe('retirement 403(b) review polish guardrail', () => {
     expect(pageSource).toContain('defaultRetirementRolloverBillboardSettings');
     expect(pageSource).toContain('const renderedBillboard = dynamicBillboard || DEFAULT_RETIREMENT_BILLBOARD;');
     expect(pageSource).toContain('? Math.max(Number(renderedBillboard.contentMaxWidthPx), 1480)');
-    expect(pageSource).toContain("const renderedBillboardJustify = 'center';");
+    expect(pageSource).toContain("const renderedBillboardJustify = renderedBillboard?.justify || 'center';");
     expect(pageSource).toContain('const renderedRolloverBillboard = dynamicRolloverBillboard || DEFAULT_RETIREMENT_ROLLOVER_BILLBOARD;');
     expect(pageSource).toContain("rollover_billboard: RETIREMENT_ROLLOVER_BILLBOARD_HUD_PANEL_ID");
     expect(pageSource).toContain("rollover_billboard: '.retirement-rollover-billboard'");
@@ -209,7 +213,7 @@ describe('retirement 403(b) review polish guardrail', () => {
     [
       "id: 'billboard', kind: 'billboard'",
       "id: 'rollover_billboard', kind: 'billboard'",
-      'data-block-id="columns_math"',
+      'block={columnsMathBlock}',
       'id="retirement-savings-calculator"',
       '<DynamicCtaSection',
     ].forEach((sourceToken) => {

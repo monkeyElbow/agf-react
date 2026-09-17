@@ -68,6 +68,7 @@ describe('canonical block registry', () => {
       'investment-options',
       'eligibility-cards',
       'step-cards',
+      'loan-details',
       'services-directory',
     ]);
     expect(getBlockDefinition('card_grid')?.editorType).toBe('card_grid');

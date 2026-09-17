@@ -176,24 +176,10 @@ function getRetirementBillboardCopyClassName(runtime, usesScrollProgress) {
 }
 
 function formatRetirementDailyBillboardTitleHtml(title, highlights) {
-  const rendered = renderTextWithHighlights(title, highlights);
-  if (!/Retire a little every day\.?/i.test(String(title || ''))) {
-    return rendered;
-  }
-  return rendered
-    .replace(/\s+(<[^>]+>every day<\/[^>]+>)\./i, '<br />$1.')
-    .replace(/\s+every day\./i, '<br />every day.');
-}
-
-function buildRetirementBillboardActionRowStyle(justify) {
-  const token = String(justify || '').trim().toLowerCase();
-  if (token === 'right') {
-    return { justifyContent: 'flex-end' };
-  }
-  if (token === 'left') {
-    return { justifyContent: 'flex-start' };
-  }
-  return { justifyContent: 'center' };
+  // Keep line breaks authored by an admin, but do not manufacture one for
+  // this legacy title. renderTextWithHighlights already converts explicit
+  // newline characters to <br /> elements.
+  return renderTextWithHighlights(title, highlights);
 }
 
 function appendRetirementScaleRevealClassName(className) {
@@ -202,20 +188,6 @@ function appendRetirementScaleRevealClassName(className) {
     ...RETIREMENT_SCALE_REVEAL_CLASS_NAME.split(/\s+/),
   ].map((token) => token.trim()).filter(Boolean);
   return [...new Set(classNames)].join(' ');
-}
-
-function stripRetirementDoTheMathWrapperRevealClassName(className) {
-  return String(className || '')
-    .split(/\s+/)
-    .map((token) => token.trim())
-    .filter(Boolean)
-    .filter((token) => ![
-      'fade-up',
-      'fade-up-force-observe',
-      'fade-up-repeat-observe',
-      'billboard-scroll-reveal-scale-up',
-    ].includes(token))
-    .join(' ');
 }
 
 function buildRetirementDoTheMathRuntime(block) {
@@ -794,16 +766,6 @@ export default function RetirementPage() {
     () => buildRetirementDoTheMathRuntime(columnsMathBlock),
     [columnsMathBlock],
   );
-  const doTheMathJustify = retirementDoTheMathRuntime?.justify || 'center';
-  const doTheMathCopyClassName = stripRetirementDoTheMathWrapperRevealClassName(
-    retirementDoTheMathRuntime?.copyClassName,
-  );
-  const doTheMathSectionStyle = retirementDoTheMathRuntime?.action
-    ? { '--dynamic-billboard-padding-bottom': 'clamp(4.1rem, 8vw, 6.8rem)' }
-    : undefined;
-  const doTheMathRailStyle = retirementDoTheMathRuntime?.contentMaxWidthPx
-    ? { '--dynamic-billboard-max-width': `${retirementDoTheMathRuntime.contentMaxWidthPx}px` }
-    : undefined;
   const heroHudLineHeight = Number.isFinite(Number(heroHudSettings.lineHeight))
     ? Number(heroHudSettings.lineHeight)
     : RETIREMENT_HERO_BASE_LINE_HEIGHT;
@@ -836,7 +798,7 @@ export default function RetirementPage() {
     () => getRetirementBillboardCopyClassName(renderedBillboard, billboardCopyUsesScrollProgress),
     [billboardCopyUsesScrollProgress, renderedBillboard],
   );
-  const renderedBillboardJustify = 'center';
+  const renderedBillboardJustify = renderedBillboard?.justify || 'center';
   const renderedBillboardBodyJustify = renderedBillboard?.bodyJustify || renderedBillboard?.justify || 'center';
   const renderedBillboardHeaderGapClassName = renderedBillboard?.headerGapRem !== null && renderedBillboard?.headerGapRem !== undefined
     ? ' is-dynamic-billboard-header-gap'
@@ -2088,89 +2050,28 @@ export default function RetirementPage() {
       />
 
       {retirementDoTheMathRuntime ? (
-        <section
-          className={`service-native-section retirement-do-the-math-billboard${showFrontHud && columnsMathBlock ? ' has-admin-front-hud' : ''}${hasOpenHudPanel ? (isColumnsMathHudFocusTarget ? ' is-hud-focus-target' : ' is-hud-dimmed') : ''}${getOwnershipVisualForBlockId('columns_math').className || ''}`}
-          data-block-id="columns_math"
-          style={{ ...managedBlockOrderStyle('columns_math'), ...(doTheMathSectionStyle || {}) }}
-        >
-          <BlockSurfaceLayers ownership={getOwnershipVisualForBlockId('columns_math')} hudAnchor={renderHudAnchor('columns_math')} />
-          <div className="ag-panel-rail" style={doTheMathRailStyle}>
-            <div
-              className={`native-info-section-copy is-justify-${doTheMathJustify}${doTheMathCopyClassName ? ` ${doTheMathCopyClassName}` : ''}`}
-              style={retirementDoTheMathRuntime.copyStyle || undefined}
-            >
-              <HomeDoTheMathBadge
-                linkTarget={
-                  retirementDoTheMathRuntime.action?.to
-                  || retirementDoTheMathRuntime.action?.href
-                  || '/calculators'
-                }
-              />
-              {retirementDoTheMathRuntime.title ? (
-                <h2
-                  className="retirement-do-the-math-title fade-up fade-up-force-observe fade-up-repeat-observe"
-                  data-fade-root-margin="0px 0px 4% 0px"
-                >
-                  <span
-                    dangerouslySetInnerHTML={{
-                      __html: renderTextWithHighlights(
-                        retirementDoTheMathRuntime.title,
-                        retirementDoTheMathRuntime.titleHighlights,
-                      ),
-                    }}
-                  />
-                </h2>
-              ) : null}
-              {(retirementDoTheMathRuntime.bodyHtml || retirementDoTheMathRuntime.body || retirementDoTheMathRuntime.action?.label) ? (
-                <div
-                  className="retirement-do-the-math-support fade-up fade-up-force-observe fade-up-repeat-observe"
-                  data-fade-root-margin="0px 0px 4% 0px"
-                >
-                  {retirementDoTheMathRuntime.bodyHtml ? (
-                    <SafeRichText
-                      as="div"
-                      className={`native-info-rich-html${retirementDoTheMathRuntime.bodyColorClassName ? ` ${retirementDoTheMathRuntime.bodyColorClassName}` : ''}${retirementDoTheMathRuntime.bodyHtmlStyle ? ' is-dynamic-billboard-lead-copy-sized' : ''}`}
-                      html={retirementDoTheMathRuntime.bodyHtml}
-                      style={retirementDoTheMathRuntime.bodyHtmlStyle || undefined}
-                    />
-                  ) : retirementDoTheMathRuntime.body ? (
-                    <div
-                      className={`native-info-rich-html${retirementDoTheMathRuntime.bodyColorClassName ? ` ${retirementDoTheMathRuntime.bodyColorClassName}` : ''}${retirementDoTheMathRuntime.bodyHtmlStyle ? ' is-dynamic-billboard-lead-copy-sized' : ''}`}
-                      style={retirementDoTheMathRuntime.bodyHtmlStyle || undefined}
-                    >
-                      <p className={retirementDoTheMathRuntime.bodyColorClassName || undefined} style={retirementDoTheMathRuntime.bodyHtmlStyle || undefined}>{retirementDoTheMathRuntime.body}</p>
-                    </div>
-                  ) : null}
-                  {retirementDoTheMathRuntime.action?.label && (retirementDoTheMathRuntime.action?.to || retirementDoTheMathRuntime.action?.href) ? (
-                    <div
-                      className={`service-native-action-row${doTheMathJustify === 'center' ? ' is-centered' : ''}${doTheMathJustify === 'right' ? ' is-right' : ''}${doTheMathJustify === 'left' ? ' is-left' : ''}`}
-                      style={buildRetirementBillboardActionRowStyle(doTheMathJustify)}
-                    >
-                      {(retirementDoTheMathRuntime.action.to
-                        || (retirementDoTheMathRuntime.action.href
-                        && !isExternalLinkHref(retirementDoTheMathRuntime.action.href)
-                        && retirementDoTheMathRuntime.action.href.startsWith('/'))) ? (
-                          <Link
-                            to={retirementDoTheMathRuntime.action.to || retirementDoTheMathRuntime.action.href}
-                            className={actionButtonClassName(retirementDoTheMathRuntime.action.style, retirementDoTheMathRuntime.action.tone)}
-                          >
-                            {retirementDoTheMathRuntime.action.label}
-                          </Link>
-                        ) : (
-                          <a
-                            href={retirementDoTheMathRuntime.action.href}
-                            className={actionButtonClassName(retirementDoTheMathRuntime.action.style, retirementDoTheMathRuntime.action.tone)}
-                          >
-                            {retirementDoTheMathRuntime.action.label}
-                          </a>
-                        )}
-                    </div>
-                  ) : null}
-                </div>
-              ) : null}
-            </div>
-          </div>
-        </section>
+        <BillboardBlock
+          block={columnsMathBlock}
+          runtimeOverride={retirementDoTheMathRuntime}
+          resolveTo={resolveManagedPathFromRef}
+          ownership={getOwnershipVisualForBlockId('columns_math')}
+          hudAnchor={renderHudAnchor('columns_math')}
+          sectionStyle={managedBlockOrderStyle('columns_math')}
+          beforeTitle={(
+            <HomeDoTheMathBadge
+              linkTarget={
+                retirementDoTheMathRuntime.action?.to
+                || retirementDoTheMathRuntime.action?.href
+                || '/calculators'
+              }
+            />
+          )}
+          titleProps={{
+            className: 'retirement-do-the-math-title fade-up fade-up-force-observe fade-up-repeat-observe',
+            'data-fade-root-margin': '0px 0px 4% 0px',
+          }}
+          extraSectionClassName={`retirement-do-the-math-billboard${showFrontHud && columnsMathBlock ? ' has-admin-front-hud' : ''}${hasOpenHudPanel ? (isColumnsMathHudFocusTarget ? ' is-hud-focus-target' : ' is-hud-dimmed') : ''}`}
+        />
       ) : null}
 
       <section className="service-native-section retirement-calc-section" id="retirement-savings-calculator" style={{ order: 65 }}>

@@ -3,6 +3,7 @@ import {
   NUMBERED_STEP_CARDS_CLASS_NAME,
   isNumberedStepCardsSection,
   resolveNumberedStepCardsClassName,
+  splitNumberedStepCardTitle,
 } from './numberedStepCardsContract';
 
 describe('numbered step-card renderer contract', () => {
@@ -12,6 +13,15 @@ describe('numbered step-card renderer contract', () => {
       .toBe(NUMBERED_STEP_CARDS_CLASS_NAME);
   });
 
+  it('separates compact step numbers from authored card titles', () => {
+    expect(splitNumberedStepCardTitle('1. Complete the enrollment form', 1))
+      .toEqual({ number: '01', title: 'Complete the enrollment form' });
+    expect(splitNumberedStepCardTitle('02', 2))
+      .toEqual({ number: '02', title: '' });
+    expect(splitNumberedStepCardTitle('Return your enrollment form', 2))
+      .toEqual({ number: '02', title: 'Return your enrollment form' });
+  });
+
   it('recognizes legacy numbered routes while their snapshots converge', () => {
     expect(resolveNumberedStepCardsClassName({
       presetId: 'default',
@@ -19,7 +29,7 @@ describe('numbered step-card renderer contract', () => {
     })).toBe(NUMBERED_STEP_CARDS_CLASS_NAME);
     expect(resolveNumberedStepCardsClassName({
       sectionClassName: 'retirement-rollovers-native-process',
-    })).toBe('');
+    })).toBe(NUMBERED_STEP_CARDS_CLASS_NAME);
     expect(resolveNumberedStepCardsClassName({
       sectionClassName: 'ordinary-card-grid',
     })).toBe('');
@@ -33,6 +43,7 @@ describe('numbered step-card renderer contract', () => {
       { sectionClassName: 'retirement-403b-group-enrollment-steps' },
       { sectionClassName: 'retirement-403b-native-loan-apply' },
       { sectionClassName: 'retirement-individual-enrollment-steps' },
+      { sectionClassName: 'retirement-rollovers-native-process' },
     ];
 
     numberedVariants.forEach((variant) => {

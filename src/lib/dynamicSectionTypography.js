@@ -191,12 +191,18 @@ export function buildBillboardSubtitleStyle({
   subtitleSizeRem,
   titleFontFamily,
   titleFontWeight,
+  subtitleFontWeight,
   titleSizeRem,
   subtitleLetterSpacingEm,
 }) {
   const normalizedDisplay = normalizeBillboardSubtitleDisplay(subtitleDisplay);
   const normalizedFontFamily = normalizeBillboardTitleFontFamily(titleFontFamily);
-  const normalizedFontWeight = normalizeBillboardTitleFontWeight(titleFontWeight, normalizedFontFamily);
+  const normalizedTitleFontWeight = normalizeBillboardTitleFontWeight(titleFontWeight, normalizedFontFamily);
+  const normalizedSubtitleFontWeight = normalizeBillboardTitleFontWeight(
+    subtitleFontWeight,
+    normalizedFontFamily,
+    normalizedDisplay === 'headline' ? normalizedTitleFontWeight : 400,
+  );
   const normalizedTitleSizeRem = normalizeBillboardTitleSizeRem(titleSizeRem);
   const normalizedLetterSpacing = normalizeBillboardTitleLetterSpacingEm(
     subtitleLetterSpacingEm,
@@ -211,7 +217,7 @@ export function buildBillboardSubtitleStyle({
     ...(normalizedDisplay === 'headline'
       ? {
         fontFamily: normalizedFontFamily === 'helv' ? 'var(--ag-font-helv)' : 'var(--ag-font-heading)',
-        fontWeight: normalizedFontWeight,
+        fontWeight: normalizedSubtitleFontWeight,
         fontSize: `clamp(calc(${normalizedSubtitleSizeRem ?? normalizedTitleSizeRem}rem * 0.58), 8vw, ${normalizedSubtitleSizeRem ?? normalizedTitleSizeRem}rem)`,
         lineHeight: 1.05,
         letterSpacing: `${normalizedLetterSpacing}em`,
@@ -222,6 +228,7 @@ export function buildBillboardSubtitleStyle({
         ...(normalizedSubtitleSizeRem
           ? { fontSize: `clamp(calc(${normalizedSubtitleSizeRem}rem * 0.68), 5vw, ${normalizedSubtitleSizeRem}rem)` }
           : {}),
+        fontWeight: normalizedSubtitleFontWeight,
         letterSpacing: `${normalizedLetterSpacing}em`,
       }
       : {}),

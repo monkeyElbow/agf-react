@@ -103,7 +103,7 @@ describe('investments page review polish guardrails', () => {
     const pageSource = readSource('./InvestmentsPage.jsx');
     const cssSource = readSource('../styles/service-native.css');
 
-    expect(pageSource).toContain('className="service-native-grid is-two retirement-account-grid"');
+    expect(pageSource).toContain('className={`service-native-grid is-${certificatesGridRuntime?.columns || \'two\'} retirement-account-grid`}');
     expect(pageSource).toContain('retirement-account-card retirement-account-card--certificate');
     expect(pageSource).toContain('retirement-account-card__cap');
     expect(pageSource).toContain('retirement-account-card__body');

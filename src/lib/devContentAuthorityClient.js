@@ -520,6 +520,46 @@ export async function migrateQcdCenteredCardGridSnapshot(actor = null, reason = 
   });
 }
 
+export async function migrateRetirement403bLoanDetailsSnapshot(actor = null, reason = '') {
+  return sendJson('/migrate-retirement-403b-loan-details-card-grid', {
+    method: 'POST',
+    body: JSON.stringify({
+      actor: cloneJson(actor),
+      reason: String(reason || '').trim(),
+    }),
+  });
+}
+
+export async function migrateRetirementRolloverProcessSnapshot(actor = null, reason = '') {
+  return sendJson('/migrate-retirement-rollover-process-card-grid', {
+    method: 'POST',
+    body: JSON.stringify({
+      actor: cloneJson(actor),
+      reason: String(reason || '').trim(),
+    }),
+  });
+}
+
+export async function migrateRetirementIndividualEnrollmentStepCardPresentationSnapshot(actor = null, reason = '') {
+  return sendJson('/migrate-retirement-individual-enrollment-step-card-presentation', {
+    method: 'POST',
+    body: JSON.stringify({
+      actor: cloneJson(actor),
+      reason: String(reason || '').trim(),
+    }),
+  });
+}
+
+export async function migrateRetirementIndividualEnrollmentMailFaxStepSnapshot(actor = null, reason = '') {
+  return sendJson('/migrate-retirement-individual-enrollment-mail-fax-step', {
+    method: 'POST',
+    body: JSON.stringify({
+      actor: cloneJson(actor),
+      reason: String(reason || '').trim(),
+    }),
+  });
+}
+
 export async function migrateOnlineContributionsStepsSnapshot(actor = null, reason = '') {
   return sendJson('/migrate-online-contributions-step-cards', {
     method: 'POST',

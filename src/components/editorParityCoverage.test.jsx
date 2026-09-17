@@ -612,7 +612,7 @@ function renderHudSurface(block) {
 }
 
 describe('editor parity coverage', () => {
-  it('loads legacy page-content address copy into HTML editor and promotes it on edit', () => {
+  it('keeps legacy page-content address copy independent from HTML body edits', () => {
     const onSettingChange = vi.fn();
     render(createElement(PageContentBlockEditor, {
       block: {
@@ -627,18 +627,17 @@ describe('editor parity coverage', () => {
     }));
 
     const editor = screen.getByRole('textbox', { name: 'HTML content' });
-    expect(editor.textContent).toContain('Mail or fax completed forms to:');
-    expect(editor.textContent).toContain('Springfield, MO 65808-0263');
+    expect(editor.textContent).toBe('');
 
     editor.innerHTML = '<p>Updated mail instructions.</p>';
     fireEvent.input(editor);
 
     expect(onSettingChange).toHaveBeenCalledWith('html', '<p>Updated mail instructions.</p>');
-    expect(onSettingChange).toHaveBeenCalledWith('addressTitle', '');
-    expect(onSettingChange).toHaveBeenCalledWith('addressLines', '');
+    expect(onSettingChange).not.toHaveBeenCalledWith('addressTitle', '');
+    expect(onSettingChange).not.toHaveBeenCalledWith('addressLines', '');
   });
 
-  it('loads legacy page-content fineprint copy into HTML editor and promotes it on edit', () => {
+  it('keeps legacy page-content fineprint independent from HTML body edits', () => {
     const onSettingChange = vi.fn();
     render(createElement(PageContentBlockEditor, {
       block: {
@@ -652,13 +651,13 @@ describe('editor parity coverage', () => {
     }));
 
     const editor = screen.getByRole('textbox', { name: 'HTML content' });
-    expect(editor.textContent).toContain('AGFinancial is an equal opportunity employer.');
+    expect(editor.textContent).toBe('');
 
     editor.innerHTML = '<p>Updated careers copy.</p>';
     fireEvent.input(editor);
 
     expect(onSettingChange).toHaveBeenCalledWith('html', '<p>Updated careers copy.</p>');
-    expect(onSettingChange).toHaveBeenCalledWith('fineprint', '');
+    expect(onSettingChange).not.toHaveBeenCalledWith('fineprint', '');
   });
 
   it('keeps every HUD editor type mapped to a parity contract', () => {

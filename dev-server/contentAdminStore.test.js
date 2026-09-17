@@ -1791,6 +1791,61 @@ describe('createDevContentAuthorityStore', () => {
     expect(secondPass.migration).toMatchObject({ alreadyApplied: true, didMigrate: false });
   });
 
+  it('migrates 403(b) loan details to one card and records a recoverable backup', () => {
+    const persistenceFile = makeTempFile();
+    const backupDir = path.join(path.dirname(persistenceFile), 'backups');
+    const store = createStore(persistenceFile, { backupDir });
+    const actor = createActor();
+    const pathname = '/services/retirement/403b';
+    const loanDetails = {
+      id: 'loan_details',
+      kind: 'content',
+      mode: 'dynamic',
+      settings: {
+        html: '<h2>403(b) Plan Loans</h2><p>Keep loan guidance.</p>',
+        bgTone: 'grey',
+        textTone: 'white',
+      },
+    };
+    const state = {
+      pageHierarchy: { [pathname]: { path: pathname, title: '403(b)' } },
+      blocksByPath: { [pathname]: [loanDetails] },
+      pathAliases: {},
+      collaborationByPath: { [pathname]: { blocks: {}, history: [] } },
+    };
+
+    store.resetFromSeed(state, { actor });
+    const migrated = store.migrateRetirement403bLoanDetailsSnapshot({
+      actor,
+      reason: 'move 403(b) loan details onto the temporary one-card preset',
+    });
+
+    expect(migrated.ok).toBe(true);
+    expect(migrated.migration).toMatchObject({
+      id: 'retirement-403b-loan-details-card-grid',
+      version: 1,
+      didMigrate: true,
+    });
+    expect(migrated.state.blocksByPath[pathname][0]).toMatchObject({
+      kind: 'card_grid',
+      presetId: 'loan-details',
+      settings: {
+        cardCount: '1',
+        card1Body: '<p>Keep loan guidance.</p>',
+        legacyLoanDetailsHtml: loanDetails.settings.html,
+      },
+    });
+    expect(migrated.backup.reason).toBe('before-retirement-403b-loan-details-card-grid-migration');
+    expect(migrated.snapshotMigrations['retirement-403b-loan-details-card-grid']).toBe(1);
+
+    const reloaded = createStore(persistenceFile, { backupDir });
+    const secondPass = reloaded.migrateRetirement403bLoanDetailsSnapshot({
+      actor,
+      reason: 'repeat should be a no-op',
+    });
+    expect(secondPass.migration).toMatchObject({ alreadyApplied: true, didMigrate: false });
+  });
+
   it('migrates Online Contributions setup cards onto the shared numbered-step preset', () => {
     const persistenceFile = makeTempFile();
     const backupDir = path.join(path.dirname(persistenceFile), 'backups');

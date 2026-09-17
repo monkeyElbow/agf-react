@@ -1,6 +1,6 @@
 const TEXT_LIKE_BLOCK_SETTING_PATTERN = /(text|title|heading|body|html|subtitle|label|message|copy|lead|followup|caption|alt|placeholder|options|url|ref|note|summary|json)/i;
 const CONTINUOUS_NUMERIC_BLOCK_SETTING_PATTERN = /(spacing|size|width|height|padding|space|opacity|offset|share|radius|scale|letter|line|maxwidth|contentmaxwidth|ms)/i;
-const IMMEDIATE_BLOCK_SETTING_PATTERN = /^(bgTone|textTone|justify|buttonStyle|buttonTone|mode|hidden|openInNewWindow|selectionMode|autoplay|enabled|required|type|fontFamily|fontWeight|titleFontWeight|animationPreset|actionJustify|heightMode)$/i;
+const IMMEDIATE_BLOCK_SETTING_PATTERN = /^(bgTone|textTone|justify|buttonStyle|buttonTone|mode|hidden|openInNewWindow|selectionMode|autoplay|enabled|required|type|fontFamily|fontWeight|titleFontWeight|subtitleFontWeight|animationPreset|actionJustify|heightMode)$/i;
 
 export const SHARED_BLOCK_DRAFT_SYNC_TEXT_DELAY_MS = 140;
 export const SHARED_BLOCK_DRAFT_SYNC_DISCRETE_DELAY_MS = 90;

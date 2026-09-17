@@ -2380,7 +2380,8 @@ describe('dynamic block control wiring', () => {
     expect(screen.queryByText('Flexible columns')).toBeNull();
     expect(screen.queryByText('General-purpose columns block for text and photo layouts.')).toBeNull();
     expect(screen.queryByLabelText('Columns style')).toBeNull();
-    expect(screen.getByLabelText('Column 1 body').getAttribute('rows')).toBe('6');
+    expect(screen.getByLabelText('Column 1 body')).toBeTruthy();
+    expect(screen.getByRole('radiogroup', { name: 'Columns alignment' })).toBeTruthy();
 
     fireEvent.change(screen.getByLabelText(widthField.label), {
       target: { value: nextOption.value },
@@ -2809,6 +2810,14 @@ describe('dynamic block control wiring', () => {
       render(<RequestFormBlockEditor block={block} onSettingChange={onSettingChange} />);
 
       expect(screen.queryByText('Body HTML')).toBeNull();
+      expect(screen.getByRole('group', { name: 'Heading font' })).toBeTruthy();
+      expect(screen.getByRole('group', { name: 'Heading weight' })).toBeTruthy();
+      expect(screen.getByRole('group', { name: 'Heading alignment' })).toBeTruthy();
+      expect(screen.getByRole('group', { name: 'Body alignment' })).toBeTruthy();
+      fireEvent.click(within(screen.getByRole('group', { name: 'Heading font' })).getByRole('button', { name: 'Avenir' }));
+      expect(onSettingChange).toHaveBeenCalledWith('titleFontFamily', 'heading');
+      fireEvent.click(within(screen.getByRole('group', { name: 'Body alignment' })).getByRole('button', { name: 'Right' }));
+      expect(onSettingChange).toHaveBeenCalledWith('bodyJustify', 'right');
       expect(screen.getByRole('button', { name: /step 1/i }).getAttribute('aria-expanded')).toBe('true');
       expect(screen.getByRole('button', { name: /step 2/i }).getAttribute('aria-expanded')).toBe('false');
       expect(screen.getByRole('button', { name: /step 3/i }).getAttribute('aria-expanded')).toBe('false');

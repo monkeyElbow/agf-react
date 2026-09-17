@@ -41,7 +41,7 @@ describe('card-grid editor wiring', () => {
     expect(gridSource.slice(layoutPageStart, appearancePageStart)).not.toContain('admin-billboard-editor-panel-index');
     expect(gridSource).toContain('backgroundEffectsJson={settings.backgroundEffectsJson}');
     expect(gridSource).toContain('const subheadJustifyField = fieldById.get(\'subtitleJustify\') || null;');
-    expect(gridSource).toContain('const headerControlFields = [headerSizeField, headerWidthField, subheadSizeField, subheadJustifyField, ...spacingFields]');
+    expect(gridSource).toContain('const headerControlFields = [headerSizeField, headerLetterSpacingField, headerWidthField, subheadSizeField, subheadJustifyField, ...spacingFields]');
     expect(gridSource).toContain('.filter(Boolean)');
     expect(gridSource).not.toContain('admin-card-grid-hud-group--spacing');
     const frontHudCssSource = readFileSync(path.resolve(__dirname, '../styles/front-hud.css'), 'utf8');
@@ -75,6 +75,22 @@ describe('card-grid editor wiring', () => {
     expect(definitionSource).toContain("id: 'subtitleJustify'");
     expect(definitionSource).toContain("label: 'Grid subhead justify'");
     expect(editorSource).toContain("const isSubheadJustify = field.id === 'subtitleJustify';");
+  });
+
+  it('exposes and wires Card Grid header letter spacing', () => {
+    expect(definitionSource).toContain("id: 'headerLetterSpacingEm'");
+    expect(definitionSource).toContain("label: 'Header letter spacing (em)'");
+    expect(definitionSource).toContain("type: 'range'");
+    expect(definitionSource).toContain("unit: 'em'");
+    expect(definitionSource).toContain('DEFAULT_DYNAMIC_GRID_HEADER_LETTER_SPACING_EM');
+    expect(editorSource).toContain("const headerLetterSpacingField = fieldById.get('headerLetterSpacingEm')");
+    expect(editorSource).toContain("headerControlFields = [headerSizeField, headerLetterSpacingField");
+    const runtimeSource = readFileSync(path.resolve(__dirname, '../lib/dynamicPageBlocks.js'), 'utf8');
+    expect(runtimeSource).toContain('headerLetterSpacingEm');
+    const rendererSource = readFileSync(path.resolve(__dirname, './NativeContentPage.jsx'), 'utf8');
+    expect(rendererSource).toContain("'--dynamic-grid-header-letter-spacing'");
+    const cssSource = readFileSync(path.resolve(__dirname, '../styles/service-native.css'), 'utf8');
+    expect(cssSource).toContain('letter-spacing: var(--dynamic-grid-header-letter-spacing, var(--ag-letter-spacing-helv-intro));');
   });
 
   it('exposes card gutter as a separate spacing control', () => {
@@ -131,15 +147,26 @@ describe('card-grid editor wiring', () => {
     expect(editorSource).toContain("field.type === 'select' ? 'select' : 'range'");
     const rendererSource = readFileSync(path.resolve(__dirname, './NativeContentPage.jsx'), 'utf8');
     expect(rendererSource).toContain("'--dynamic-grid-card-title-justify'");
-    expect(rendererSource).toContain("'--dynamic-grid-card-title-justify-content'");
+    expect(rendererSource).toContain('service-native-card-title-content');
+    expect(readFileSync(path.resolve(__dirname, './blocks/DynamicCardGridSection.jsx'), 'utf8')).toContain('service-native-card-title-content');
+    expect(readFileSync(path.resolve(__dirname, '../pages/LoansPage.jsx'), 'utf8')).toContain('service-native-card-title-content');
+    expect(readFileSync(path.resolve(__dirname, '../pages/InvestmentsPage.jsx'), 'utf8')).toContain('service-native-card-title-content');
+    expect(readFileSync(path.resolve(__dirname, '../styles/service-native.css'), 'utf8')).toContain(
+      '.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid) .service-native-card h3 > .service-native-card-title-content',
+    );
     expect(rendererSource).toContain("'--dynamic-grid-card-body-justify'");
     expect(rendererSource).toContain("'--dynamic-grid-card-title-body-space'");
     const nativeCssSource = readFileSync(path.resolve(__dirname, '../styles/service-native.css'), 'utf8');
     expect(nativeCssSource).toContain('text-align: var(--dynamic-grid-card-title-justify, center) !important;');
-    expect(nativeCssSource).toContain('justify-content: var(--dynamic-grid-card-title-justify-content, center) !important;');
+    expect(nativeCssSource).toContain('display: block !important;');
+    expect(nativeCssSource).not.toContain('dynamic-grid-card-title-justify-content');
     expect(nativeCssSource).toContain('text-align: var(--dynamic-grid-card-body-justify, left) !important;');
     expect(nativeCssSource).toContain('margin: 0 0 var(--dynamic-grid-card-title-body-space, 1rem);');
     expect(nativeCssSource).toContain('.service-native-card-flow > :is(');
+    const numberedCardCssSource = readFileSync(path.resolve(__dirname, '../styles/service-native-numbered-cards.css'), 'utf8');
+    expect(numberedCardCssSource).toContain('.service-native-card .service-native-card-step-title {');
+    expect(numberedCardCssSource).toContain('justify-self: stretch !important;');
+    expect(numberedCardCssSource).toContain('width: 100% !important;');
     expect(nativeCssSource).toContain(
       '.service-native-section.loans-native-options .service-native-card-flow > :is(\n  p:not(.service-native-card-subtitle):not(.service-native-card-phone):not(.service-native-card-fineprint),',
     );
@@ -160,6 +187,21 @@ describe('card-grid editor wiring', () => {
     expect(rendererSource).toContain("'--numbered-step-card-number-offset'");
     const numberedCssSource = readFileSync(path.resolve(__dirname, '../styles/service-native-numbered-cards.css'), 'utf8');
     expect(numberedCssSource).toContain('left: var(--numbered-step-card-number-offset, 0%);');
+  });
+
+  it('exposes scoped number-label sizing for numbered cards', () => {
+    expect(definitionSource).toContain("id: 'numberSizeRem'");
+    expect(definitionSource).toContain("label: 'Card number label size'");
+    expect(definitionSource).toContain('min: 1.5');
+    expect(definitionSource).toContain('max: 6');
+    expect(definitionSource).toContain('DEFAULT_DYNAMIC_GRID_NUMBER_SIZE_REM');
+    expect(editorSource).toContain("fieldById.get('numberSizeRem')");
+    const runtimeSource = readFileSync(path.resolve(__dirname, '../lib/dynamicPageBlocks.js'), 'utf8');
+    expect(runtimeSource).toContain('numberSizeRem');
+    const rendererSource = readFileSync(path.resolve(__dirname, './NativeContentPage.jsx'), 'utf8');
+    expect(rendererSource).toContain("'--numbered-step-card-number-size'");
+    const numberedCssSource = readFileSync(path.resolve(__dirname, '../styles/service-native-numbered-cards.css'), 'utf8');
+    expect(numberedCssSource).toContain('font-size: var(--numbered-step-card-number-size) !important;');
   });
 
   it('exposes an alternating body-color option for card copy', () => {

@@ -20,9 +20,11 @@ import {
   DEFAULT_DYNAMIC_GRID_FINEPRINT_SIZE_REM,
   DEFAULT_DYNAMIC_GRID_HEADER_CARDS_SPACE_REM,
   DEFAULT_DYNAMIC_GRID_HEADER_WIDTH_PERCENT,
+  DEFAULT_DYNAMIC_GRID_HEADER_LETTER_SPACING_EM,
   DEFAULT_DYNAMIC_GRID_HEADER_SUBHEAD_SPACE_REM,
   DEFAULT_DYNAMIC_GRID_SUBHEAD_SIZE_REM,
   DEFAULT_DYNAMIC_GRID_NUMBER_POSITION_PERCENT,
+  DEFAULT_DYNAMIC_GRID_NUMBER_SIZE_REM,
   DEFAULT_DYNAMIC_GRID_CARD_OUTLINE_WIDTH_PX,
   DEFAULT_DYNAMIC_GRID_CARD_SHADOW_OPACITY,
 } from '../../lib/dynamicGrid';
@@ -88,6 +90,16 @@ const sections = [
         max: 4.5,
         step: 0.05,
         defaultValue: 2.9,
+      }),
+      defineEditorField({
+        id: 'headerLetterSpacingEm',
+        label: 'Header letter spacing (em)',
+        type: 'range',
+        min: -0.12,
+        max: 0.04,
+        step: 0.005,
+        unit: 'em',
+        defaultValue: DEFAULT_DYNAMIC_GRID_HEADER_LETTER_SPACING_EM,
       }),
       defineEditorField({
         id: 'headerWidthPercent',
@@ -250,6 +262,7 @@ const sections = [
       defineEditorField({ id: 'cardTitleJustify', label: 'Card title justify', type: 'select', options: GRID_CARD_JUSTIFY_OPTIONS }),
       defineEditorField({ id: 'cardTitleBodySpaceRem', label: 'Title-to-body space', type: 'range', min: 0, max: 3, step: 0.05, defaultValue: DEFAULT_DYNAMIC_GRID_CARD_TITLE_BODY_SPACE_REM, suffix: 'rem' }),
       defineEditorField({ id: 'numberPositionPercent', label: 'Number position (− left / + right)', type: 'range', min: -50, max: 50, step: 1, defaultValue: DEFAULT_DYNAMIC_GRID_NUMBER_POSITION_PERCENT, suffix: '%' }),
+      defineEditorField({ id: 'numberSizeRem', label: 'Card number label size', type: 'range', min: 1.5, max: 6, step: 0.05, defaultValue: DEFAULT_DYNAMIC_GRID_NUMBER_SIZE_REM, unit: 'rem' }),
       defineEditorField({ id: 'cardBodySizeRem', label: 'Card body size', type: 'number', min: 0.8, max: 1.5, step: 0.05, unit: 'rem' }),
       defineEditorField({
         id: 'cardBulletSizeRem',
@@ -359,6 +372,8 @@ const sections = [
         }),
         defineEditorField({ id: `card${slot}PanelTone`, label: `Card ${slot} panel tone`, type: 'text' }),
         defineEditorField({ id: `card${slot}Body`, label: `Card ${slot} body`, type: 'textarea', rows: 2 }),
+        defineEditorField({ id: `card${slot}CopyLabel`, label: `Card ${slot} clipboard button label`, type: 'text' }),
+        defineEditorField({ id: `card${slot}CopyText`, label: `Card ${slot} clipboard text`, type: 'textarea', rows: 3 }),
         defineEditorField({ id: `card${slot}ListJson`, label: `Card ${slot} bullets`, type: 'textarea', rows: 5 }),
         defineEditorField({ id: `card${slot}Fineprint`, label: `Card ${slot} fineprint`, type: 'textarea', rows: 2 }),
         defineEditorField({
@@ -468,6 +483,7 @@ export const cardGridBlockDefinition = createBlockDefinition({
     subtitleJustify: 'center',
     headerWidthPercent: DEFAULT_DYNAMIC_GRID_HEADER_WIDTH_PERCENT,
     headerCardsSpaceRem: DEFAULT_DYNAMIC_GRID_HEADER_CARDS_SPACE_REM,
+    headerLetterSpacingEm: DEFAULT_DYNAMIC_GRID_HEADER_LETTER_SPACING_EM,
     cardHoverScale: false,
     cardPaddingRem: 1.35,
     cardGapRem: DEFAULT_DYNAMIC_GRID_CARD_GAP_REM,

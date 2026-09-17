@@ -9,6 +9,7 @@ import DynamicCtaSection from '../components/DynamicCtaSection';
 import FrontHudAnchorTag from '../components/FrontHudAnchorTag';
 import ManagedBlockOrder from '../components/ManagedBlockOrder';
 import SafeRichText from '../components/SafeRichText';
+import { BillboardBlock } from '../components/blocks/PageBlocksRenderer';
 import { useContentAdmin } from '../context/ContentAdminContextCore';
 import { useFrontHud } from '../context/FrontHudContext';
 import { useTestimonials } from '../context/TestimonialsContext';
@@ -68,21 +69,26 @@ const SERVICES_HUD_SECTION_KEY_BY_BLOCK_ID = {
 
 function buildServicesBreakdownRuntime(block) {
   const gridRuntime = buildCanonicalBlockRuntime(block);
-  if (gridRuntime) {
-    return {
-      ...gridRuntime,
-      rows: (Array.isArray(gridRuntime.cards) ? gridRuntime.cards : []).map((card) => ({
-        ...card,
-        path: card.titleLink?.to || card.titleLink?.href || '',
-        description: card.body || card.bodyHtml || '',
-        links: (Array.isArray(card.links) ? card.links : []).map((item) => ({
-          ...item,
-          path: item.to || item.href || '',
-        })),
-      })),
-    };
+  if (!gridRuntime) {
+    return null;
   }
-  return buildCanonicalBlockRuntime(block);
+  return {
+    ...gridRuntime,
+    rows: (Array.isArray(gridRuntime.cards) ? gridRuntime.cards : []).map((card) => ({
+      ...card,
+      path: card.titleLink?.to || card.titleLink?.href || '',
+      description: card.body || '',
+      descriptionHtml: card.bodyHtml || '',
+      links: (Array.isArray(card.links) ? card.links : []).map((item) => ({
+        ...item,
+        path: item.to || item.href || '',
+      })),
+    })).filter((card) => (
+      !Number.isFinite(Number(gridRuntime.cardCount))
+      || Number(gridRuntime.cardCount) < 1
+      || Number(card.slot) <= Number(gridRuntime.cardCount)
+    )),
+  };
 }
 
 function clampFrontHudOpacity(value) {
@@ -267,7 +273,7 @@ export default function ServicesPage() {
   const servicesMattersBlock = useMemo(() => (
     managedBlocks.find((block) => (
       block?.id === 'matters_band'
-      && ['billboard', 'site_feature'].includes(block?.kind)
+      && block?.kind === 'billboard'
       && block?.mode === 'dynamic'
       && block?.hidden !== true
       && block?.hidden !== 'true'
@@ -849,6 +855,17 @@ export default function ServicesPage() {
         </div>
       </section>
 
+      {billboardIntroBlock ? (
+        <BillboardBlock
+          block={billboardIntroBlock}
+          resolveTo={(target) => target}
+          ownership={getOwnershipVisualForBlockId('intro')}
+          hudAnchor={renderHudAnchor('intro')}
+          sectionStyle={managedBlockOrderStyle('intro')}
+          subtitleBaseClassName="native-info-section-subtitle"
+          extraSectionClassName={`services-native-intro dynamic-intro${getHudBlockStateClassName('intro')}`}
+        />
+      ) : (
       <section className={`services-native-intro dynamic-intro is-bg-${resolvedIntro.bgTone || 'white'} is-text-${resolvedIntro.textTone || 'dark'}${getHudBlockStateClassName('intro')}${getOwnershipVisualForBlockId('intro').className || ''}`} data-block-id="intro" style={managedBlockOrderStyle('intro')}>
         <BlockSurfaceLayers ownership={getOwnershipVisualForBlockId('intro')} hudAnchor={renderHudAnchor('intro')} />
         <div className="ag-panel-rail">
@@ -919,17 +936,19 @@ export default function ServicesPage() {
           </div>
         </div>
       </section>
+      )}
 
     {servicesBreakdownRuntime ? (
       <section
         ref={servicesBreakdownSectionRef}
-        className={`${servicesBreakdownRuntime.sectionClassName || 'services-native-grid-wrap services-breakdown-section'}${getHudBlockStateClassName('services_cards')}${getOwnershipVisualForBlockId('services_cards').className || ''}`}
+        className={`${servicesBreakdownRuntime.sectionClassName || 'services-native-grid-wrap services-breakdown-section'} native-dynamic-grid is-width-${servicesBreakdownRuntime.contentWidth || 'content'} is-columns-${servicesBreakdownRuntime.columns || 'one'} is-card-grid-style-${servicesBreakdownRuntime.cardStyle || 'card2'}${servicesBreakdownRuntime.cardStyle === 'none' ? ' is-card-none' : ''}${servicesBreakdownRuntime.cardOutline === true ? ' is-card-outline' : ''}${servicesBreakdownRuntime.cardOutline === false ? ' is-card-outline-off' : ''}${servicesBreakdownRuntime.cardOutlineTone ? ` is-card-outline-${servicesBreakdownRuntime.cardOutlineTone}` : ''}${servicesBreakdownRuntime.cardShadow === true ? ' is-card-shadow' : ''}${servicesBreakdownRuntime.cardShadow === false ? ' is-card-shadow-off' : ''}${servicesBreakdownRuntime.cardHoverScale === true ? ' is-card-hover-scale' : ''}${servicesBreakdownRuntime.cardHoverScale === false ? ' is-card-hover-scale-disabled' : ''}${getHudBlockStateClassName('services_cards')}${getOwnershipVisualForBlockId('services_cards').className || ''}`}
         data-block-id="services_cards"
         style={{
           ...managedBlockOrderStyle('services_cards'),
           ...(Number.isFinite(Number(servicesBreakdownRuntime.headerSizeRem))
             ? { '--services-breakdown-header-size': `${servicesBreakdownRuntime.headerSizeRem}rem` }
             : {}),
+          '--services-breakdown-header-letter-spacing': `${servicesBreakdownRuntime.headerLetterSpacingEm}em`,
           ...(Number.isFinite(Number(servicesBreakdownRuntime.headerWidthPercent))
             ? { '--services-breakdown-header-width': `${servicesBreakdownRuntime.headerWidthPercent}%` }
             : {}),
@@ -950,6 +969,23 @@ export default function ServicesPage() {
             : {}),
           ...(Number.isFinite(Number(servicesBreakdownRuntime.cardPaddingRem))
             ? { '--services-breakdown-card-padding': `${servicesBreakdownRuntime.cardPaddingRem}rem` }
+            : {}),
+          ...(Number.isFinite(Number(servicesBreakdownRuntime.cardGapRem))
+            ? { '--services-breakdown-card-gap': `${servicesBreakdownRuntime.cardGapRem}rem` }
+            : {}),
+          ...(Number.isFinite(Number(servicesBreakdownRuntime.cardOutlineWidth))
+            ? { '--services-breakdown-card-outline-width': `${servicesBreakdownRuntime.cardOutlineWidth}px` }
+            : {}),
+          ...(Number.isFinite(Number(servicesBreakdownRuntime.cardShadowOpacity))
+            ? { '--services-breakdown-card-shadow-opacity': String(servicesBreakdownRuntime.cardShadowOpacity) }
+            : {}),
+          '--services-breakdown-card-title-justify': servicesBreakdownRuntime.cardTitleJustify || 'left',
+          '--dynamic-grid-card-title-justify': servicesBreakdownRuntime.cardTitleJustify || 'left',
+          ...(servicesBreakdownRuntime.cardBodyJustify
+            ? { '--services-breakdown-card-body-justify': servicesBreakdownRuntime.cardBodyJustify }
+            : {}),
+          ...(servicesBreakdownRuntime.columns
+            ? { '--services-breakdown-columns': servicesBreakdownRuntime.columns }
             : {}),
           '--services-breakdown-card-border': servicesBreakdownRuntime.cardOutline === false
             ? 'none'
@@ -972,10 +1008,13 @@ export default function ServicesPage() {
               {(Array.isArray(servicesBreakdownRuntime.rows) ? servicesBreakdownRuntime.rows : []).map((service) => (
               <article
                 key={`${service.path}-${service.title}`}
-                className="services-breakdown-panel fade-up fade-up-force-observe"
+                className={`services-breakdown-panel ${servicesBreakdownRuntime.cardStyle || 'card2'} fade-up fade-up-force-observe`}
                 data-service-breakdown-row={service.title}
               >
-                <h3 className={service.titleClassName || `is-${servicesBreakdownRuntime.titleTone || 'super-grey'}`}>
+                <h3
+                  className={service.titleClassName || `is-${servicesBreakdownRuntime.titleTone || 'super-grey'}`}
+                  style={{ textAlign: servicesBreakdownRuntime.cardTitleJustify || 'left' }}
+                >
                   {isExternalLinkHref(service.path) ? (
                     <a href={service.path} target="_blank" rel="noreferrer noopener">{service.title}</a>
                   ) : (
@@ -983,9 +1022,13 @@ export default function ServicesPage() {
                   )}
                 </h3>
 
-                <p className={`services-breakdown-description ${service.bodyTone || `is-${servicesBreakdownRuntime.bodyTone || 'super-grey'}`}`}>
-                  {service.description}
-                </p>
+                {service.descriptionHtml ? (
+                  <SafeRichText as="div" className={`services-breakdown-description ${service.bodyTone || `is-${servicesBreakdownRuntime.bodyTone || 'super-grey'}`}`} html={service.descriptionHtml} />
+                ) : (
+                  <p className={`services-breakdown-description ${service.bodyTone || `is-${servicesBreakdownRuntime.bodyTone || 'super-grey'}`}`}>
+                    {service.description}
+                  </p>
+                )}
 
                 <nav className="services-breakdown-links" aria-label={`${service.title} links`}>
                   {(Array.isArray(service.links) ? service.links : []).map((item) => (
@@ -1005,70 +1048,17 @@ export default function ServicesPage() {
       ) : null}
 
     {servicesMattersRuntime ? (
-      <section
-        ref={servicesMattersSectionRef}
-        className={`${servicesMattersRuntime.sectionClassName || 'services-native-matters'}${getHudBlockStateClassName('matters_band')}${getOwnershipVisualForBlockId('matters_band').className || ''}`}
-        data-block-id="matters_band"
-        style={managedBlockOrderStyle('matters_band')}
-      >
-        <BlockSurfaceLayers ownership={getOwnershipVisualForBlockId('matters_band')} hudAnchor={renderHudAnchor('matters_band')} />
-        <div className="ag-panel-rail">
-          <h2 style={servicesMattersRuntime.titleStyle}>
-            <span
-              dangerouslySetInnerHTML={{
-                __html: renderTextWithHighlights(
-                  servicesMattersRuntime.title,
-                  servicesMattersRuntime.titleHighlights?.length
-                    ? servicesMattersRuntime.titleHighlights
-                    : servicesMattersRuntime.title === 'What you do matters.'
-                      ? [{ text: 'matters', className: 'is-white' }]
-                      : [],
-                ),
-              }}
-            />
-          </h2>
-          {servicesMattersRuntime.bodyHtml ? (
-            <SafeRichText
-              as="div"
-              className={`native-info-rich-html${servicesMattersRuntime.bodyColorClassName ? ` ${servicesMattersRuntime.bodyColorClassName}` : ''}${servicesMattersRuntime.bodyHtmlStyle ? ' is-dynamic-billboard-lead-copy-sized' : ''}`}
-              html={servicesMattersRuntime.bodyHtml}
-              style={servicesMattersRuntime.bodyHtmlStyle || undefined}
-            />
-          ) : servicesMattersRuntime.body ? (
-            <p
-              className={[servicesMattersRuntime.bodyColorClassName || '', servicesMattersRuntime.bodyHtmlStyle ? 'is-dynamic-billboard-lead-copy-sized' : ''].filter(Boolean).join(' ') || undefined}
-              style={servicesMattersRuntime.bodyHtmlStyle || undefined}
-            >
-              {servicesMattersRuntime.body}
-            </p>
-          ) : null}
-          {servicesMattersRuntime.action ? (
-            <div className="service-native-action-row is-centered">
-              {isExternalLinkHref(servicesMattersRuntime.action.href || servicesMattersRuntime.action.to) ? (
-                <a
-                  href={servicesMattersRuntime.action.href || servicesMattersRuntime.action.to}
-                  className="service-native-btn is-dark"
-                  target={servicesMattersRuntime.action.openInNewWindow ? '_blank' : undefined}
-                  rel={servicesMattersRuntime.action.openInNewWindow ? 'noreferrer noopener' : undefined}
-                >
-                  {servicesMattersRuntime.action.label}
-                </a>
-              ) : (
-                <Link
-                  to={servicesMattersRuntime.action.to || servicesMattersRuntime.action.href}
-                  className="service-native-btn is-dark"
-                  target={servicesMattersRuntime.action.openInNewWindow ? '_blank' : undefined}
-                  rel={servicesMattersRuntime.action.openInNewWindow ? 'noreferrer noopener' : undefined}
-                >
-                  {servicesMattersRuntime.action.label}
-                </Link>
-              )}
-            </div>
-          ) : null}
-        </div>
-      </section>
-      ) : null}
-
+      <BillboardBlock
+        block={servicesMattersBlock}
+        resolveTo={(target) => target}
+        ownership={getOwnershipVisualForBlockId('matters_band')}
+        hudAnchor={renderHudAnchor('matters_band')}
+        sectionRef={servicesMattersSectionRef}
+        sectionStyle={managedBlockOrderStyle('matters_band')}
+        subtitleBaseClassName="native-info-section-subtitle"
+        extraSectionClassName={getHudBlockStateClassName('matters_band')}
+      />
+    ) : null}
       <div ref={ctaSectionRef} data-block-id="cta_form" style={managedBlockOrderStyle('cta_form')}>
         <DynamicCtaSection
           managedBlocks={managedBlocks}

@@ -25,10 +25,13 @@ import {
   normalizeDynamicGridCardTitleSizeRem,
   normalizeDynamicGridCardJustify,
   normalizeDynamicGridNumberPositionPercent,
+  normalizeDynamicGridNumberSizeRem,
   normalizeDynamicGridCardOutlineTone,
   normalizeDynamicGridCardOutlineWidthPx,
   normalizeDynamicGridCardShadowOpacity,
   normalizeDynamicGridHeaderSizeRem,
+  normalizeDynamicGridHeaderLetterSpacingEm,
+  DEFAULT_DYNAMIC_GRID_HEADER_LETTER_SPACING_EM,
   normalizeDynamicGridSubheadSizeRem,
   normalizeDynamicGridColumns,
   normalizeDynamicGridWidth,
@@ -82,6 +85,7 @@ import {
 import { resolveSiteFeatureCatalogEntry } from '../data/siteFeatureCatalog';
 import { parseSupportLibraryGroups } from './supportLibrary';
 import { normalizeHeroPaddingRem } from './heroPadding';
+import { getDynamicColumnWidthShare } from './dynamicColumns';
 
 export { DEFAULT_RATES_LEGAL_COPY_SETTINGS } from './ratesLegalCopyDefaults';
 
@@ -519,7 +523,22 @@ function normalizeSiteFeatureGalleryNumber(value, fallback, min, max) {
 
 function normalizeOptionalHtmlContent(value) {
   const html = String(value || '').trim();
-  return (!html || html === '<p></p>' || html === '<p><br></p>') ? '' : html;
+  if (!html) {
+    return '';
+  }
+  const normalized = html
+    .replace(/>\s+</g, '><')
+    .replace(/\s+/g, '')
+    .toLowerCase();
+  if (['<p></p>', '<p><br></p>', '<p><br/></p>', '<p>&nbsp;</p>'].includes(normalized)) {
+    return '';
+  }
+  const textOnly = normalized
+    .replace(/<br\s*\/?>/gi, '')
+    .replace(/&(?:nbsp|#160);/gi, '')
+    .replace(/<[^>]*>/g, '')
+    .trim();
+  return textOnly ? html : '';
 }
 
 function parsePageContentTextLines(value) {
@@ -1165,6 +1184,12 @@ export function buildDynamicBillboardFromBlock(block) {
     settings.titleFontWeight,
     titleFontFamily,
   );
+  const subtitleDisplay = normalizeBillboardSubtitleDisplay(settings.subtitleDisplay);
+  const subtitleFontWeight = normalizeBillboardTitleFontWeight(
+    settings.subtitleFontWeight,
+    titleFontFamily,
+    subtitleDisplay === 'headline' ? titleFontWeight : 400,
+  );
   const titleSizeRem = normalizeBillboardTitleSizeRem(settings.titleSizeRem);
   // `titleLetterSpacingEm` is the legacy shared value. Keep it as a fallback
   // so existing billboards retain their appearance while new edits use
@@ -1180,7 +1205,6 @@ export function buildDynamicBillboardFromBlock(block) {
     subtitleTrackingIsExplicit ? settings.subtitleTrackingEm : legacyLetterSpacingEm,
     titleFontFamily,
   );
-  const subtitleDisplay = normalizeBillboardSubtitleDisplay(settings.subtitleDisplay);
   const subtitleHasExplicitSize = String(settings.subtitleSizeRem ?? '').trim() !== ''
     && Number.isFinite(Number(settings.subtitleSizeRem));
   const subtitleSizeRem = subtitleHasExplicitSize
@@ -1212,6 +1236,11 @@ export function buildDynamicBillboardFromBlock(block) {
   const headerGapRem = hasHeaderGapOverride
     ? normalizePageContentSpaceRem(settings.headerGapRem, 1.15, 0, 4)
     : null;
+  const hasBodyGapOverride = String(settings.bodyGapRem ?? '').trim() !== ''
+    && Number.isFinite(Number(settings.bodyGapRem));
+  const bodyGapRem = hasBodyGapOverride
+    ? normalizePageContentSpaceRem(settings.bodyGapRem, 1.15, 0, 4)
+    : null;
   const hasActionGapOverride = String(settings.actionGapRem ?? '').trim() !== ''
     && Number.isFinite(Number(settings.actionGapRem));
   const actionGapRem = hasActionGapOverride
@@ -1220,12 +1249,12 @@ export function buildDynamicBillboardFromBlock(block) {
   const hasPaddingTopOverride = String(settings.paddingTopRem ?? '').trim() !== ''
     && Number.isFinite(Number(settings.paddingTopRem));
   const paddingTopRem = hasPaddingTopOverride
-    ? normalizePageContentSpaceRem(settings.paddingTopRem, 4, 0, 8)
+    ? normalizePageContentSpaceRem(settings.paddingTopRem, 4, 0, 16)
     : null;
   const hasPaddingBottomOverride = String(settings.paddingBottomRem ?? '').trim() !== ''
     && Number.isFinite(Number(settings.paddingBottomRem));
   const paddingBottomRem = hasPaddingBottomOverride
-    ? normalizePageContentSpaceRem(settings.paddingBottomRem, 4, 0, 8)
+    ? normalizePageContentSpaceRem(settings.paddingBottomRem, 4, 0, 16)
     : null;
   const actions = [
     buildCanonicalActionLinkFromFields(settings, {
@@ -1286,6 +1315,7 @@ export function buildDynamicBillboardFromBlock(block) {
       subtitleSizeRem,
       titleFontFamily,
       titleFontWeight,
+      subtitleFontWeight,
       titleSizeRem,
       subtitleLetterSpacingEm,
     }),
@@ -1319,12 +1349,14 @@ export function buildDynamicBillboardFromBlock(block) {
     // narrow column.
     copyStyle: contentMaxWidthPx || bodyMaxWidthPx
       || headerGapRem !== null
+      || bodyGapRem !== null
       || leadCopySizeRem !== null
       || leadCopyLineHeight !== null
       ? {
           ...(contentMaxWidthPx ? { '--dynamic-billboard-copy-max-width': `${contentMaxWidthPx}px` } : {}),
           ...(bodyMaxWidthPx ? { '--dynamic-billboard-body-max-width': `${bodyMaxWidthPx}px` } : {}),
           ...(headerGapRem !== null ? { '--dynamic-billboard-header-gap': `${headerGapRem}rem` } : {}),
+          ...(bodyGapRem !== null ? { '--dynamic-billboard-body-gap': `${bodyGapRem}rem` } : {}),
           ...(leadCopySizeRem !== null || leadCopyLineHeight !== null
             ? buildBillboardLeadCopyStyle(leadCopySizeRem, leadCopyLineHeight)
             : {}),
@@ -1336,6 +1368,7 @@ export function buildDynamicBillboardFromBlock(block) {
     contentMaxWidthPx,
     bodyMaxWidthPx,
     headerGapRem,
+    bodyGapRem,
     actionGapRem,
     paddingTopRem,
     paddingBottomRem,
@@ -1363,6 +1396,7 @@ export function buildDynamicColumnsFromBlock(block) {
     : normalizeColumnsBgTone(settings.bgTone, 'white');
   const contentWidth = normalizeColumnsWidth(settings.contentWidth);
   const columns = normalizeColumnsCount(settings.columns);
+  const maxColumnSlot = { two: 2, three: 3, four: 4 }[columns] || 2;
   const justifyToken = String(settings.justify || 'center').trim().toLowerCase();
   const justify = justifyToken === 'left' || justifyToken === 'right' ? justifyToken : 'center';
   const normalizedBodyHtml = (!bodyHtml || bodyHtml === '<p></p>' || bodyHtml === '<p><br></p>') ? '' : bodyHtml;
@@ -1380,7 +1414,8 @@ export function buildDynamicColumnsFromBlock(block) {
   const items = Array.from({ length: 4 }, (_, index) => index + 1)
     .map((slot) => {
       const enabledValue = settings[`col${slot}Enabled`];
-      const isEnabled = enabledValue === undefined ? slot <= 2 : toBoolean(enabledValue);
+      const isEnabled = slot <= maxColumnSlot
+        && (enabledValue === undefined ? slot <= 2 : toBoolean(enabledValue));
       if (!isEnabled) {
         return null;
       }
@@ -1392,22 +1427,26 @@ export function buildDynamicColumnsFromBlock(block) {
         title: String(settings[`col${slot}Title`] || '').trim(),
         titleClassName: normalizeHighlightClassName(settings[`col${slot}TitleClassName`] || ''),
         titleHighlights: parseTextHighlights(settings[`col${slot}TitleHighlightsJson`]),
-        body: String(settings[`col${slot}Body`] || '').trim(),
+        // Column HTML is the authoritative source when present. Keeping the
+        // legacy plain body in the runtime at the same time made the generic
+        // renderer show both copies while the custom Columns renderer showed
+        // only HTML.
         bodyHtml: normalizeOptionalHtmlContent(settings[`col${slot}BodyHtml`]),
+        body: normalizeOptionalHtmlContent(settings[`col${slot}BodyHtml`])
+          ? ''
+          : String(settings[`col${slot}Body`] || '').trim(),
         imageUrl: String(settings[`col${slot}ImageUrl`] || '').trim(),
         imageAlt: String(settings[`col${slot}ImageAlt`] || '').trim(),
         iconKey: String(settings[`col${slot}IconKey`] || '').trim(),
         iconTone: sanitizeClassName(settings[`col${slot}IconTone`] || ''),
-        widthShare: Number.isFinite(Number(settings[`col${slot}WidthShare`]))
-          ? Number(settings[`col${slot}WidthShare`])
-          : 1,
-        action: isLegacyHighlightStyle
+        widthShare: getDynamicColumnWidthShare(settings, slot),
+          action: isLegacyHighlightStyle
           ? null
           : buildCanonicalActionLinkFromFields(settings, {
             labelKeys: [`col${slot}ButtonLabel`],
             linkJsonKeys: [`col${slot}ButtonLinkJson`],
-            hrefKeys: [],
-            toKeys: [],
+            hrefKeys: [`col${slot}ButtonUrl`],
+            toKeys: [`col${slot}ButtonPageRef`],
             styleKeys: [`col${slot}ButtonStyle`],
             toneKeys: [`col${slot}ButtonTone`],
             openInNewWindowKeys: [],
@@ -1445,6 +1484,13 @@ export function buildDynamicColumnsFromBlock(block) {
     columns,
     columnsStyle,
     sectionClassName: sanitizeClassName(settings.sectionClassName || ''),
+    // These presentation values are consumed by the custom page owner too;
+    // keep them in the canonical runtime so that owner cannot invent a
+    // second settings-to-rendering path.
+    columnTitleSizeRem: settings.columnTitleSizeRem,
+    photoMaxWidthPx: settings.photoMaxWidthPx,
+    photoCornerRadiusPx: settings.photoCornerRadiusPx,
+    photoAspect: settings.photoAspect,
     items,
     action: action || null,
     actions,
@@ -2262,6 +2308,16 @@ export function buildDynamicCtaFormFromBlock(block, { fallbackSettings = null, f
   const triggerMode = normalizeDynamicCtaTriggerMode(
     resolveCtaFormSetting(settings, fallbackSettings, 'triggerMode'),
   );
+  const rawPaddingTopRem = resolveCtaFormSetting(settings, fallbackSettings, 'paddingTopRem');
+  const rawPaddingBottomRem = resolveCtaFormSetting(settings, fallbackSettings, 'paddingBottomRem');
+  const hasPaddingTopOverride = rawPaddingTopRem !== null
+    && rawPaddingTopRem !== undefined
+    && String(rawPaddingTopRem).trim() !== ''
+    && Number.isFinite(Number(rawPaddingTopRem));
+  const hasPaddingBottomOverride = rawPaddingBottomRem !== null
+    && rawPaddingBottomRem !== undefined
+    && String(rawPaddingBottomRem).trim() !== ''
+    && Number.isFinite(Number(rawPaddingBottomRem));
 
   if (!title && !bodyHtml && !fields.length) {
     return null;
@@ -2274,6 +2330,8 @@ export function buildDynamicCtaFormFromBlock(block, { fallbackSettings = null, f
     titleHighlights,
     anchorId: String(settings.anchorId || '').trim(),
     sectionClassName: sanitizeClassName(settings.sectionClassName || ''),
+    ...(hasPaddingTopOverride ? { paddingTopRem: normalizePageContentSpaceRem(rawPaddingTopRem, 2.5, 0, 8) } : {}),
+    ...(hasPaddingBottomOverride ? { paddingBottomRem: normalizePageContentSpaceRem(rawPaddingBottomRem, 4, 0, 8) } : {}),
     displayMode,
     triggerMode,
     bodyHtml,
@@ -2356,6 +2414,12 @@ export function buildDynamicRequestFormFromBlock(block) {
   const title = String(settings.title || '').trim();
   const titleClassName = normalizeHighlightClassName(settings.titleClassName || '');
   const titleHighlightsJson = String(settings.titleHighlightsJson || '').trim();
+  const titleFontFamily = normalizeBillboardTitleFontFamily(settings.titleFontFamily || 'helv');
+  const titleFontWeight = normalizeBillboardTitleFontWeight(settings.titleFontWeight, titleFontFamily);
+  const justifyToken = String(settings.justify || 'left').trim().toLowerCase();
+  const justify = ['left', 'center', 'right'].includes(justifyToken) ? justifyToken : 'left';
+  const bodyJustifyToken = String(settings.bodyJustify || 'left').trim().toLowerCase();
+  const bodyJustify = ['left', 'center', 'right'].includes(bodyJustifyToken) ? bodyJustifyToken : 'left';
   const subtitle = String(settings.subtitle || '').trim();
   const bodyHtml = normalizeHtmlContent(settings.bodyHtml);
   const body = String(settings.body || '').trim();
@@ -2397,6 +2461,10 @@ export function buildDynamicRequestFormFromBlock(block) {
     title,
     titleClassName,
     titleHighlightsJson,
+    titleFontFamily,
+    titleFontWeight,
+    justify,
+    bodyJustify,
     anchorId: String(settings.anchorId || '').trim(),
     subtitle,
     bodyHtml,
@@ -2601,11 +2669,13 @@ function normalizeOptionalCardRichHtml(value) {
   }
 
   const withoutBlankStructure = source
-    .replace(/<br\s*\/?>(\s*)/gi, '$1')
-    .replace(/<(p|div)(?:\s[^>]*)?>\s*(?:&nbsp;|\s)*<\/\1>/gi, '')
+    // Preserve authored line breaks. Only remove empty structural wrappers;
+    // stripping every <br> collapses addresses and other multiline card copy.
+    .replace(/<(p|div)(?:\s[^>]*)?>\s*(?:(?:&nbsp;|\s|<br\s*\/?>)*)<\/\1>/gi, '')
     .trim();
 
-  return withoutBlankStructure.replace(/&nbsp;/gi, ' ');
+  const normalized = withoutBlankStructure.replace(/&nbsp;/gi, ' ');
+  return /^<br\s*\/?>$/i.test(normalized) ? '' : normalized;
 }
 
 export function buildDynamicGridFromBlock(block) {
@@ -2713,9 +2783,18 @@ export function buildDynamicGridFromBlock(block) {
   const cardTitleLineHeight = hasCardTitleLineHeight
     ? normalizeDynamicGridCardTitleLineHeight(settings.cardTitleLineHeight)
     : undefined;
-  const cardTitleJustify = normalizeDynamicGridCardJustify(settings.cardTitleJustify, 'center');
+  const cardTitleJustify = normalizeDynamicGridCardJustify(
+    settings.cardTitleJustify || presetDefinition?.defaults?.cardTitleJustify,
+    'center',
+  );
   const cardTitleBodySpaceRem = normalizeDynamicGridCardTitleBodySpaceRem(settings.cardTitleBodySpaceRem);
   const numberPositionPercent = normalizeDynamicGridNumberPositionPercent(settings.numberPositionPercent);
+  const hasNumberSize = settings.numberSizeRem !== null
+    && settings.numberSizeRem !== ''
+    && Number.isFinite(Number(settings.numberSizeRem));
+  const numberSizeRem = hasNumberSize
+    ? normalizeDynamicGridNumberSizeRem(settings.numberSizeRem)
+    : undefined;
   const cardBodySizeRem = normalizeDynamicGridCardBodySizeRem(settings.cardBodySizeRem);
   const cardBulletSize = normalizeDynamicGridCardBulletSize(settings.cardBulletSize);
   const cardBulletSizeRem = normalizeDynamicGridCardBulletSizeRem(
@@ -2723,7 +2802,10 @@ export function buildDynamicGridFromBlock(block) {
   );
   const cardBulletLineHeight = normalizeDynamicGridCardBulletLineHeight(settings.cardBulletLineHeight);
   const cardBodyLineHeight = normalizeDynamicGridCardBodyLineHeight(settings.cardBodyLineHeight);
-  const cardBodyJustify = normalizeDynamicGridCardJustify(settings.cardBodyJustify, 'left');
+  const cardBodyJustify = normalizeDynamicGridCardJustify(
+    settings.cardBodyJustify || presetDefinition?.defaults?.cardBodyJustify,
+    'left',
+  );
   const fineprintSizeRem = normalizeDynamicGridFineprintSizeRem(settings.fineprintSizeRem);
   const hasPaddingTop = settings.paddingTopRem !== null && settings.paddingTopRem !== ''
     && Number.isFinite(Number(settings.paddingTopRem));
@@ -2761,6 +2843,9 @@ export function buildDynamicGridFromBlock(block) {
   const headerSizeRem = hasHeaderSize
     ? normalizeDynamicGridHeaderSizeRem(settings.headerSizeRem)
     : undefined;
+  const headerLetterSpacingEm = normalizeDynamicGridHeaderLetterSpacingEm(
+    settings.headerLetterSpacingEm ?? DEFAULT_DYNAMIC_GRID_HEADER_LETTER_SPACING_EM,
+  );
   const resolvedCardClass = cardStyle === 'none' ? 'card-none' : cardStyle;
   const sectionAction = buildCanonicalActionLinkFromFields(settings, {
     labelKeys: ['buttonLabel'],
@@ -2772,6 +2857,19 @@ export function buildDynamicGridFromBlock(block) {
     styleKeys: ['buttonStyle'],
     toneKeys: ['buttonTone'],
   });
+  const addressTitle = String(settings.addressTitle || '').trim();
+  const addressLines = String(settings.addressLines || '')
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const addressClassName = sanitizeClassName(settings.addressClassName || '');
+  const addressBlock = addressTitle || addressLines.length
+    ? {
+        className: addressClassName || undefined,
+        title: addressTitle,
+        lines: addressLines,
+      }
+    : null;
 
   const cards = Array.from({ length: 8 }, (_, index) => index + 1)
     .map((slot) => {
@@ -2800,6 +2898,8 @@ export function buildDynamicGridFromBlock(block) {
         ? normalizeHtmlContent(cardBodyHtmlSource)
         : '';
       const cardBody = cardBodyHtml ? '' : cardBodyHtmlSource;
+      const cardCopyLabel = String(settings[`card${slot}CopyLabel`] || '').trim();
+      const cardCopyText = String(settings[`card${slot}CopyText`] || '').trim();
       const cardClassName = sanitizeClassName(settings[`card${slot}ClassName`] || '');
       const cardIconKey = String(settings[`card${slot}IconKey`] || '').trim();
       const cardIconTone = sanitizeClassName(settings[`card${slot}IconTone`] || '');
@@ -2863,7 +2963,7 @@ export function buildDynamicGridFromBlock(block) {
       const cardLinks = parseCardGridLinkItemsJson(settings[`card${slot}LinksJson`]);
       const cardAccordions = parseCardGridAccordionsJson(settings[`card${slot}AccordionsJson`]);
       const cardActions = [cardPrimaryAction, cardSecondaryAction].filter(Boolean);
-      if (!cardTitle && !cardTitleLink && !cardBody && !cardBodyHtml && !cardList.length && !cardFineprint.length && !cardActions.length && !cardLinks.length && !cardAccordions.length) {
+      if (!cardTitle && !cardTitleLink && !cardBody && !cardBodyHtml && !cardList.length && !cardFineprint.length && !cardActions.length && !cardLinks.length && !cardAccordions.length && !cardCopyText) {
         return null;
       }
 
@@ -2875,6 +2975,8 @@ export function buildDynamicGridFromBlock(block) {
         titleHighlights: cardTitleHighlights,
         body: cardBody,
         bodyHtml: cardBodyHtml,
+        copyLabel: cardCopyLabel,
+        copyText: cardCopyText,
         bodySegments: splitCertificateCardBody(cardBody),
         list: cardList,
         fineprint: cardFineprint.length ? cardFineprint : null,
@@ -2895,7 +2997,7 @@ export function buildDynamicGridFromBlock(block) {
     })
     .filter(Boolean);
 
-  if (!title && !subtitle && !body && !bodyHtml && !cards.length && !consultantService && !sectionAction) {
+  if (!title && !subtitle && !body && !bodyHtml && !cards.length && !consultantService && !sectionAction && !addressBlock) {
     return null;
   }
 
@@ -2921,6 +3023,7 @@ export function buildDynamicGridFromBlock(block) {
     sand,
     consultantService,
     locationFilter,
+    addressBlock,
     cardStyle,
     cardOutline,
     cardOutlineTone,
@@ -2938,6 +3041,7 @@ export function buildDynamicGridFromBlock(block) {
     cardTitleJustify,
     cardTitleBodySpaceRem,
     numberPositionPercent,
+    numberSizeRem,
     cardBodySizeRem,
     cardBulletSize,
     cardBulletSizeRem,
@@ -2954,6 +3058,7 @@ export function buildDynamicGridFromBlock(block) {
     subheadSizeRem,
     subtitleJustify,
     headerSizeRem,
+    headerLetterSpacingEm,
     cardHoverScale,
     actions: sectionAction ? [sectionAction] : [],
     cards,
@@ -3054,6 +3159,16 @@ export function buildDynamicPageContentFromBlock(block) {
   const bodyFontSizeRem = hasBodyFontSize
     ? normalizePageContentSpaceRem(settings.bodyFontSizeRem, 1.1, 0.8, 2.4)
     : null;
+  const bodyLineHeight = Number.isFinite(Number(settings.bodyLineHeight))
+    ? Math.min(2.1, Math.max(1.1, Number(settings.bodyLineHeight)))
+    : null;
+  const borderToneToken = String(settings.bodyBorderTone || '').trim().toLowerCase();
+  const bodyBorderTone = ['super-grey', 'atlantean', 'mango', 'melon', 'sandstone', 'white'].includes(borderToneToken)
+    ? borderToneToken
+    : '';
+  const bodyBorderWidth = Number.isFinite(Number(settings.bodyBorderWidth))
+    ? Math.min(3, Math.max(0.5, Number(settings.bodyBorderWidth)))
+    : null;
   const bgTone = normalizeSurfaceBgTone(settings.bgTone, 'white');
   const textTone = normalizeSharedPanelTextTone(settings.textTone, 'dark');
   const widget = String(settings.widget || '').trim();
@@ -3135,7 +3250,14 @@ export function buildDynamicPageContentFromBlock(block) {
     html: normalizedHtml,
     ...(bodyColorClassName ? { bodyColorClassName } : {}),
     bodyFontSizeRem,
+    bodyLineHeight,
+    bodyBorderTone,
+    bodyBorderWidth,
+    bodyBorderShadow: settings.bodyBorderShadow === undefined
+      ? null
+      : toBoolean(settings.bodyBorderShadow),
     bgTone,
+    backgroundEffects: normalizeBackgroundEffects(settings.backgroundEffectsJson),
     textTone,
     widget,
     ...(logoKey ? { logoKey } : {}),

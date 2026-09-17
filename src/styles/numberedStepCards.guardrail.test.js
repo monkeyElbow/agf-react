@@ -26,6 +26,10 @@ describe('numbered step-card vertical alignment guardrail', () => {
     expect(source).toContain('display: flex;');
     expect(source).toContain('align-items: center;');
     expect(source).toContain('flex: 0 0 auto;');
+    expect(source).toContain('align-self: stretch !important;\n  width: 100%;');
+    expect(source).toContain(
+      '.is-numbered-step-cards .service-native-card-step-content > .service-native-card-rich-body {\n  align-self: stretch;\n  width: 100%;',
+    );
     expect(source).toContain('The legacy service stylesheet still carries a more-specific preset rule');
     expect(source).toContain('.service-native-card-step-content\n  > :is(p, .service-native-card-rich-body');
     expect(source).not.toContain('translateY(0.42em)');

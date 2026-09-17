@@ -25,6 +25,7 @@ describe('native card shell style guardrail', () => {
     expect(source).toContain('margin: 0 0 var(--native-card-shell-title-gap);');
     expect(source).toContain('padding-bottom: var(--native-card-shell-title-padding);');
     expect(source).toContain('padding-top: var(--native-card-shell-action-gap);');
+    expect(source).toContain('.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-preset-eligibility-cards.is-card-none .service-native-card.card-none {\n  background: #fff;\n  background-image: none;');
     expect(source).toContain('.native-columns-copy .service-native-action-row {');
     expect(source).toContain('margin-top: var(--native-card-shell-action-gap);');
   });

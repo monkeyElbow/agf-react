@@ -20,6 +20,21 @@ describe('iPad HUD editor interaction guardrails', () => {
     );
   });
 
+  it('keeps the Billboard body-copy toolbar compact without vertical scrolling or button collapse', () => {
+    expect(frontHudCss).toMatch(
+      /\.admin-billboard-hud-copy-editor \.admin-html-editor-controls\.is-inline \{[\s\S]*?overflow-x: auto;[\s\S]*?overflow-y: hidden;/,
+    );
+    expect(frontHudCss).toMatch(
+      /\.admin-billboard-hud-copy-editor \.admin-html-editor-toolbar \{[\s\S]*?flex: 0 0 auto !important;[\s\S]*?width: max-content;/,
+    );
+    expect(frontHudCss).toMatch(
+      /\.admin-billboard-hud-copy-editor \.admin-html-editor-color-group \.admin-html-editor-color-swatch \{[\s\S]*?width: 18px !important;/,
+    );
+    expect(frontHudCss).toMatch(
+      /\.admin-billboard-hud-copy-editor \.admin-html-editor-toolbar\s+button \{[\s\S]*?width: 28px;[\s\S]*?height: 26px;/,
+    );
+  });
+
   it('gives iPad editors usable touch hit areas for rails, fields, sliders, and swatches', () => {
     expect(frontHudCss).toContain('width: 44px;');
     expect(frontHudCss).toContain('min-height: 38px;');

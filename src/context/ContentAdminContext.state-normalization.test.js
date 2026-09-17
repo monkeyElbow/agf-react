@@ -59,6 +59,7 @@ describe('ContentAdminContext state normalization', () => {
       'retirement-403b-snapshot-repairs',
       'planned-giving-retired-static-comparison',
       'qcd-centered-card-grid',
+      'retirement-403b-loan-details-card-grid',
       'online-contributions-step-cards',
       'numbered-step-cards-preset-metadata',
       'site-feature-repeatable-content-fields',

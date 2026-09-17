@@ -663,6 +663,102 @@
   --btn-hover-text: var(--ag-color-mango);
 }
 
+/* Investment certificates keep their split cap/body shell, but all sizing,
+   spacing, grid, outline, shadow, and tone controls come from Card Grid. */
+.investments-native-panel .retirement-account-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--dynamic-grid-card-gap, var(--native-card-family-gap));
+}
+
+.investments-native-panel .retirement-account-grid.is-one {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.investments-native-panel .retirement-account-grid.is-three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.investments-native-panel .retirement-account-grid.is-four {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.investments-native-panel .retirement-account-card--certificate {
+  border: var(--dynamic-grid-card-outline-width, 1px) solid var(--dynamic-grid-card-outline-color, transparent);
+  box-shadow: 0 12px 26px rgba(5, 30, 54, var(--dynamic-grid-card-shadow-opacity, 0.08));
+}
+
+.investments-native-panel.is-card-outline-off .retirement-account-card--certificate {
+  border: 0;
+}
+
+.investments-native-panel.is-card-shadow-off .retirement-account-card--certificate,
+.investments-native-panel.is-card-shadow-off .retirement-account-card--certificate:hover {
+  box-shadow: none;
+}
+
+.investments-native-panel .retirement-account-card--certificate .retirement-account-card__cap,
+.investments-native-panel .retirement-account-card--certificate .retirement-account-card__body {
+  padding-left: var(--dynamic-grid-card-padding, 1.35rem);
+  padding-right: var(--dynamic-grid-card-padding, 1.35rem);
+}
+
+.investments-native-panel .retirement-account-card--certificate .retirement-account-card__cap {
+  padding-top: var(--dynamic-grid-card-padding, 1.35rem);
+}
+
+.investments-native-panel .retirement-account-card--certificate .retirement-account-card__body {
+  padding-bottom: var(--dynamic-grid-card-padding, 1.35rem);
+}
+
+.investments-native-panel .retirement-account-card--certificate h3 {
+  font-size: var(--dynamic-grid-card-title-size, clamp(1.9rem, 3.35vw, 2.45rem));
+  line-height: var(--dynamic-grid-card-title-line-height, 1.02);
+  text-align: var(--dynamic-grid-card-title-justify, center);
+}
+
+.investments-native-panel .retirement-account-card--certificate p,
+.investments-native-panel .retirement-account-card--certificate .native-info-rich-html {
+  font-size: var(--dynamic-grid-card-body-size, clamp(1.1rem, 1.6vw, 1.22rem));
+  line-height: var(--dynamic-grid-card-body-line-height, 1.6);
+  text-align: var(--dynamic-grid-card-body-justify, left);
+}
+
+.investments-native-panel.is-body-atlantean .retirement-account-card--certificate p,
+.investments-native-panel.is-body-atlantean .retirement-account-card--certificate .native-info-rich-html {
+  color: var(--ag-color-atlantean);
+}
+
+.investments-native-panel.is-body-mango .retirement-account-card--certificate p,
+.investments-native-panel.is-body-mango .retirement-account-card--certificate .native-info-rich-html {
+  color: var(--ag-color-mango);
+}
+
+.investments-native-panel.is-body-melon .retirement-account-card--certificate p,
+.investments-native-panel.is-body-melon .retirement-account-card--certificate .native-info-rich-html {
+  color: var(--ag-color-melon);
+}
+
+.investments-native-panel.is-body-white .retirement-account-card--certificate p,
+.investments-native-panel.is-body-white .retirement-account-card--certificate .native-info-rich-html {
+  color: var(--ag-color-white);
+}
+
+@media (max-width: 980px) {
+  .investments-native-panel .retirement-account-grid.is-three,
+  .investments-native-panel .retirement-account-grid.is-four {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .investments-native-panel .retirement-account-grid,
+  .investments-native-panel .retirement-account-grid.is-two,
+  .investments-native-panel .retirement-account-grid.is-three,
+  .investments-native-panel .retirement-account-grid.is-four {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 .retirement-everyday {
   --dynamic-billboard-padding-top: clamp(4.1rem, 8vw, 6.8rem);
   --retirement-billboard-stack-gap: clamp(1.2rem, 2.35vw, 1.7rem);
@@ -965,7 +1061,7 @@
   width: 100%;
   margin: 0;
   font-family: var(--ag-font-helv);
-  font-size: clamp(calc(5.25rem * 0.58), 8vw, 5.25rem) !important;
+  font-size: clamp(calc(5.25rem * 0.58), 8vw, 5.25rem);
   line-height: 1;
   letter-spacing: -0.03em;
   text-wrap: balance;
@@ -1928,6 +2024,10 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.service-native-grid.is-one {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .service-native-grid.is-four {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
@@ -2257,23 +2357,24 @@
   z-index: 1;
 }
 
-/* Uncropped effects intentionally bridge the seam into the following block.
-   Remove the host stacking context so the light can paint across siblings,
-   then keep every authored rail above that bridge. Ownership and HUD layers
-   already sit above this contract at z-index 10 and 1001 respectively. */
+/* An uncropped light may overscan its owning block so it still reads as a
+   background wash. Do not elevate the whole authored rail with it: card
+   surfaces get the explicit foreground layer below. */
 :is(.service-native-section, .service-native-intro, .service-native-hero):has(> .block-background-effects.is-uncropped),
 [data-block-id]:has(> .block-background-effects.is-uncropped) {
   isolation: auto;
-}
-
-.service-native-page:has(.block-background-effects.is-uncropped) :is(.service-native-section, .service-native-intro, .service-native-hero):not(:has(> .block-background-effects.is-uncropped)) {
   z-index: auto;
 }
 
-.service-native-page:has(.block-background-effects.is-uncropped) :is(.service-native-section, .service-native-intro, .service-native-hero) > :is(.ag-panel-rail, .ag-panel-rail-wide),
-.service-native-page:has(.block-background-effects.is-uncropped) [data-block-id] > :is(.ag-panel-rail, .ag-panel-rail-wide) {
+:is(.service-native-section, .service-native-intro, .service-native-hero):has(> .block-background-effects.is-uncropped) > :is(.ag-panel-rail, .ag-panel-rail-wide),
+[data-block-id]:has(> .block-background-effects.is-uncropped) > :is(.ag-panel-rail, .ag-panel-rail-wide) {
+  z-index: auto;
+}
+
+:is(.service-native-section, .service-native-intro, .service-native-hero) .service-native-card,
+[data-block-id] .services-breakdown-panel {
   position: relative;
-  z-index: 3;
+  z-index: 1;
 }
 
 .block-background-effects {
@@ -2281,6 +2382,7 @@
   inset: 0;
   z-index: 0;
   pointer-events: none;
+  overflow: hidden;
 }
 
 .block-background-effects.is-clipped {
@@ -2288,8 +2390,9 @@
 }
 
 .block-background-effects.is-uncropped {
+  /* Keep the authored edge-wash behavior, while cards remain above it. */
   overflow: visible;
-  z-index: 2;
+  z-index: 0;
 }
 
 .block-background-light {
@@ -2699,11 +2802,6 @@
   line-height: 1.05;
 }
 
-.investments-native-page .service-native-section.native-dynamic-cta[data-block-id="cta_form"] {
-  padding-top: 0;
-  padding-bottom: clamp(4.2rem, 6.7vw, 5.8rem);
-}
-
 .investments-native-page .service-native-section.native-dynamic-cta[data-block-id="cta_form"] > .ag-panel-rail {
   display: flex;
   flex-direction: column;
@@ -2950,7 +3048,11 @@
   text-align: center;
   font-size: var(--dynamic-grid-header-size, var(--loans-native-options-title-size));
   line-height: 0.98;
-  letter-spacing: -0.042em;
+  letter-spacing: var(--dynamic-grid-header-letter-spacing, -0.042em);
+  max-width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  white-space: normal;
 }
 
 .service-native-section.loans-native-options .loans-native-options-subtitle {
@@ -2984,6 +3086,7 @@
   margin-top: var(--dynamic-grid-header-cards-space, var(--loans-native-options-copy-gap));
   grid-template-columns: repeat(var(--dynamic-grid-columns, 4), minmax(0, 1fr));
   gap: var(--dynamic-grid-card-gap, clamp(1rem, 2vw, 1.35rem));
+  min-width: 0;
 }
 
 .loans-native-option-card {
@@ -3008,7 +3111,6 @@
   font-size: var(--dynamic-grid-card-title-size, clamp(1.68rem, 2.45vw, 2.14rem));
   line-height: var(--dynamic-grid-card-title-line-height, 0.9);
   text-align: var(--dynamic-grid-card-title-justify, left);
-  justify-content: var(--dynamic-grid-card-title-justify-content, flex-start) !important;
   font-weight: 700;
   letter-spacing: 0;
   min-height: 0 !important;
@@ -6059,8 +6161,15 @@
 }
 
 .service-native-section:is(.native-dynamic-page-content, .test-dynamic-page-content).is-page-content-body-size-controlled .native-info-section-copy > p,
-.service-native-section:is(.native-dynamic-page-content, .test-dynamic-page-content) .native-info-rich-html.is-page-content-body-size-controlled > :is(p, ul, ol, li) {
+.service-native-section:is(.native-dynamic-page-content, .test-dynamic-page-content) .native-info-rich-html.is-page-content-body-size-controlled > :is(p, ul, ol, li),
+.service-native-section:is(.native-dynamic-page-content, .test-dynamic-page-content).is-page-content-body-size-controlled > :is(.ag-panel-rail, .ag-panel-rail-wide) > :is(p, .service-native-note) {
   font-size: var(--dyn-content-body-size) !important;
+}
+
+.service-native-section:is(.native-dynamic-page-content, .test-dynamic-page-content).is-page-content-body-size-controlled .native-info-section-copy > p,
+.service-native-section:is(.native-dynamic-page-content, .test-dynamic-page-content) .native-info-rich-html.is-page-content-body-size-controlled > :is(p, ul, ol, li),
+.service-native-section:is(.native-dynamic-page-content, .test-dynamic-page-content).is-page-content-body-size-controlled > :is(.ag-panel-rail, .ag-panel-rail-wide) > p {
+  line-height: var(--dyn-content-body-line-height, inherit);
 }
 
 .service-native-section.native-dynamic-grid,
@@ -6111,7 +6220,7 @@
   font-family: var(--ag-font-helv);
   font-size: var(--dynamic-grid-header-size, clamp(1.9rem, 4.2vw, 2.9rem));
   line-height: 1.04;
-  letter-spacing: var(--ag-letter-spacing-helv-intro);
+  letter-spacing: var(--dynamic-grid-header-letter-spacing, var(--ag-letter-spacing-helv-intro));
   color: var(--dynamic-grid-heading-color);
 }
 
@@ -8640,6 +8749,41 @@
   gap: 0.15rem;
 }
 
+/* The individual-enrollment return block is a prominent mail/fax instruction,
+   not a tiny utility footer. Keep its address and fax copy on the shared page
+   content size token, with a readable 2rem fallback for legacy blocks that do
+   not yet persist bodyFontSizeRem. */
+.service-native-section.native-dynamic-page-content.retirement-individual-enrollment-return
+  .native-info-copy-address,
+.service-native-section.native-dynamic-page-content.retirement-individual-enrollment-return
+  .native-info-copy-address-btn,
+.service-native-section.native-dynamic-page-content.retirement-individual-enrollment-return
+  .native-info-copy-address-lines,
+.service-native-section.native-dynamic-page-content.retirement-individual-enrollment-return
+  > :is(.ag-panel-rail, .ag-panel-rail-wide) > .service-native-note {
+  font-size: var(--dyn-content-body-size, 2rem);
+  line-height: var(--dyn-content-body-line-height, 1.18);
+}
+
+.service-native-section.native-dynamic-page-content.retirement-individual-enrollment-return
+  .native-info-copy-address-btn {
+  font-family: inherit;
+  font-weight: inherit;
+}
+
+.service-native-section.native-dynamic-page-content.retirement-individual-enrollment-return
+  > .ag-panel-rail > .service-native-note {
+  font-size: var(--dyn-content-body-size, 2rem) !important;
+  line-height: var(--dyn-content-body-line-height, 1.18) !important;
+}
+
+/* The 501(c)(3) disclosure is a fine-print note between the eligibility
+   cards and the enrollment steps, not a second white content surface. */
+.native-info-page--retirement-403b
+  .service-native-section.native-dynamic-page-content.retirement-individual-enrollment-qualify-disclosure {
+  background-color: transparent;
+}
+
 .native-info-copy-address-title {
   font-family: var(--ag-font-helv);
   font-weight: 700;
@@ -8682,6 +8826,94 @@
 .native-info-copy-address-tip.is-visible .native-info-copy-address-tip-text {
   opacity: 1;
   visibility: visible;
+}
+
+.service-native-copy-card-control {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.35rem;
+}
+
+.service-native-copy-card-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  appearance: none;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  padding: 0.42rem 0.78rem;
+  background: transparent;
+  color: var(--ag-color-atlantean);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.88em;
+  line-height: 1;
+}
+
+.service-native-copy-card-button:hover,
+.service-native-copy-card-button:focus-visible {
+  background: color-mix(in srgb, currentColor 9%, transparent);
+}
+
+.service-native-copy-card-button svg {
+  width: 1em;
+  height: 1em;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.service-native-copy-card-status {
+  min-height: 1em;
+  color: color-mix(in srgb, currentColor 70%, transparent);
+  font-size: 0.78em;
+}
+
+/* Page Content blocks can intentionally omit the copy wrapper for legacy
+   layouts. Keep their alignment control authoritative for direct children as
+   well as for rich-text descendants. */
+.service-native-section.native-dynamic-page-content.is-justify-left > .ag-panel-rail > :is(h1, h2, h3, p, .native-info-rich-html, .native-info-copy-address, .native-info-link-list),
+.service-native-section.native-dynamic-page-content.is-justify-left > .ag-panel-rail-wide > :is(h1, h2, h3, p, .native-info-rich-html, .native-info-copy-address, .native-info-link-list) {
+  text-align: left;
+}
+
+.service-native-section.native-dynamic-page-content.is-justify-center > .ag-panel-rail > :is(h1, h2, h3, p, .native-info-rich-html, .native-info-copy-address, .native-info-link-list),
+.service-native-section.native-dynamic-page-content.is-justify-center > .ag-panel-rail-wide > :is(h1, h2, h3, p, .native-info-rich-html, .native-info-copy-address, .native-info-link-list) {
+  text-align: center;
+}
+
+.service-native-section.native-dynamic-page-content.is-justify-right > .ag-panel-rail > :is(h1, h2, h3, p, .native-info-rich-html, .native-info-copy-address, .native-info-link-list),
+.service-native-section.native-dynamic-page-content.is-justify-right > .ag-panel-rail-wide > :is(h1, h2, h3, p, .native-info-rich-html, .native-info-copy-address, .native-info-link-list) {
+  text-align: right;
+}
+
+.service-native-section.native-dynamic-page-content.is-justify-left > .ag-panel-rail > .native-info-rich-html :is(h1, h2, h3, h4, h5, h6, p, li, blockquote),
+.service-native-section.native-dynamic-page-content.is-justify-left > .ag-panel-rail-wide > .native-info-rich-html :is(h1, h2, h3, h4, h5, h6, p, li, blockquote) {
+  text-align: left;
+}
+
+.service-native-section.native-dynamic-page-content.is-justify-center > .ag-panel-rail > .native-info-rich-html :is(h1, h2, h3, h4, h5, h6, p, li, blockquote),
+.service-native-section.native-dynamic-page-content.is-justify-center > .ag-panel-rail-wide > .native-info-rich-html :is(h1, h2, h3, h4, h5, h6, p, li, blockquote) {
+  text-align: center;
+}
+
+.service-native-section.native-dynamic-page-content.is-justify-right > .ag-panel-rail > .native-info-rich-html :is(h1, h2, h3, h4, h5, h6, p, li, blockquote),
+.service-native-section.native-dynamic-page-content.is-justify-right > .ag-panel-rail-wide > .native-info-rich-html :is(h1, h2, h3, h4, h5, h6, p, li, blockquote) {
+  text-align: right;
+}
+
+.service-native-section.native-dynamic-page-content.is-justify-left .native-info-copy-address-btn,
+.service-native-section.native-dynamic-page-content.is-justify-left .native-info-copy-address-lines {
+  align-items: flex-start;
+}
+
+.service-native-section.native-dynamic-page-content.is-justify-right .native-info-copy-address-btn,
+.service-native-section.native-dynamic-page-content.is-justify-right .native-info-copy-address-lines {
+  align-items: flex-end;
 }
 
 .service-native-card-bullet-list {
@@ -9470,7 +9702,6 @@
 
 .native-info-page--life-quote .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).life-quote-native-types {
   --dynamic-grid-card-body-size: var(--service-native-intro-body-size);
-  background: #ffffff;
   padding-top: clamp(4.4rem, 7.2vw, 6.1rem);
   padding-bottom: clamp(4.4rem, 7.2vw, 6.1rem);
 }
@@ -9489,17 +9720,13 @@
 
 .native-info-page--life-quote .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).life-quote-native-types .service-native-card {
   min-height: 100%;
-  background: #ffffff;
-  border: 0;
   border-radius: 10px;
-  box-shadow: 0 8px 18px rgba(16, 43, 64, 0.06);
   padding: var(--dynamic-grid-card-padding, clamp(1.9rem, 2.8vw, 2.7rem));
   justify-content: flex-start;
 }
 
 .native-info-page--life-quote .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).life-quote-native-types .service-native-card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 10px 22px rgba(16, 43, 64, 0.08);
 }
 
 .native-info-page--life-quote .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).life-quote-native-types .service-native-card > div:first-child {
@@ -9512,13 +9739,13 @@
   display: block;
   min-height: 0 !important;
   width: 100%;
-  margin: 0 0 0.95rem;
+  margin: 0 0 var(--dynamic-grid-card-title-body-space, 0.95rem);
   padding-bottom: 0 !important;
   font-family: "helvetica-neue-lt-pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
   letter-spacing: 0;
-  text-align: left;
-  font-size: clamp(1.72rem, 2.7vw, 2.28rem);
-  line-height: 1.02 !important;
+  text-align: var(--dynamic-grid-card-title-justify, left);
+  font-size: var(--dynamic-grid-card-title-size, clamp(1.72rem, 2.7vw, 2.28rem));
+  line-height: var(--dynamic-grid-card-title-line-height, 1.02) !important;
 }
 
 .native-info-page--life-quote .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).life-quote-native-types .service-native-card h3::after {
@@ -9528,11 +9755,11 @@
 .native-info-page--life-quote .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).life-quote-native-types .service-native-card p {
   margin-top: 0;
   color: var(--dynamic-grid-body-color, var(--ag-color-super-grey));
-  text-align: left;
+  text-align: var(--dynamic-grid-card-body-justify, left) !important;
   /* These descriptions are lead copy, not card fine print. Keep the route
      on the same readable scale as the shared intro lead text. */
-  font-size: var(--service-native-intro-body-size);
-  line-height: 1.48;
+  font-size: var(--dynamic-grid-card-body-size, var(--service-native-intro-body-size));
+  line-height: var(--dynamic-grid-card-body-line-height, 1.48);
 }
 
 .native-info-page--life-quote .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).life-quote-native-types .service-native-card:nth-child(1) h3 {
@@ -14022,6 +14249,14 @@ p.impact-proof-story-proof-body {
   margin-top: var(--dynamic-grid-header-cards-space, 0);
 }
 
+/* Background lights are intentionally allowed to overscan a block, but not
+   the document viewport. Careers is the narrowest Card Grid instance and
+   previously let that layer create page-level horizontal scrolling. */
+.native-info-page--careers .careers-native-benefits {
+  overflow: clip;
+  contain: paint;
+}
+
 .native-info-page--careers .careers-native-benefits .service-native-card h3 {
   position: relative;
   font-size: clamp(1.35rem, 1.7vw, 1.75rem);
@@ -14508,7 +14743,7 @@ p.impact-proof-story-proof-body {
 .native-info-page--retirement-iras .retirement-child-native-comparison > .native-info-full-bleed > h2 {
   color: var(--ag-color-super-grey);
   font-family: "helvetica-neue-lt-pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  letter-spacing: 0;
+  letter-spacing: var(--ag-letter-spacing-helv-heading);
   text-align: center;
   font-size: clamp(2.2rem, 4.2vw, 3.55rem);
   margin-bottom: clamp(1.3rem, 2.8vw, 2rem);
@@ -14663,7 +14898,7 @@ p.impact-proof-story-proof-body {
 .native-info-page--retirement-iras .retirement-ira-native-rates > .ag-panel-rail > h2 {
   color: var(--ag-color-super-grey);
   font-family: "helvetica-neue-lt-pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  letter-spacing: 0;
+  letter-spacing: var(--ag-letter-spacing-helv-heading);
   text-align: left;
   font-size: clamp(2rem, 3vw, 2.7rem);
 }
@@ -14707,7 +14942,7 @@ p.impact-proof-story-proof-body {
 .native-info-page--retirement-iras .retirement-ira-native-limits > .ag-panel-rail > h2 {
   color: var(--ag-color-super-grey);
   font-family: "helvetica-neue-lt-pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  letter-spacing: 0;
+  letter-spacing: var(--ag-letter-spacing-helv-heading);
   text-align: left;
   font-size: clamp(2rem, 3vw, 2.7rem);
 }
@@ -15908,7 +16143,7 @@ p.impact-proof-story-proof-body {
   row-gap: clamp(0.85rem, 1.9vw, 1.2rem);
   align-items: center;
   padding: var(--dynamic-grid-card-padding, clamp(1.2rem, 2.3vw, 1.6rem));
-  border: 2px solid var(--ret403b-step-accent);
+  border: var(--dynamic-grid-card-outline-width, 2px) solid var(--ret403b-step-accent);
   border-radius: 1.75rem !important;
   background: #fff;
   box-shadow: none;
@@ -15965,6 +16200,20 @@ p.impact-proof-story-proof-body {
   border-color: var(--ag-color-sandstone-dark) !important;
 }
 
+/* The numbered-step skin has its own alternating default accents, but an
+   explicit Card Grid border tone must still win when an admin selects one. */
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-preset-step-cards.is-card-outline-atlantean .service-native-card,
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-preset-step-cards.is-card-outline-mango .service-native-card,
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-preset-step-cards.is-card-outline-melon .service-native-card,
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-preset-step-cards.is-card-outline-sandstone .service-native-card,
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-preset-step-cards.is-card-outline-white .service-native-card {
+  border-color: var(--dynamic-grid-card-outline-color) !important;
+}
+
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-preset-step-cards.is-card-outline-off .service-native-card {
+  border-width: 0 !important;
+}
+
 .retirement-403b-group-enrollment-steps .service-native-card:hover,
 .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-preset-step-cards .service-native-card:hover {
   transform: none;
@@ -15984,8 +16233,8 @@ p.impact-proof-story-proof-body {
   align-self: center;
   color: var(--dynamic-grid-body-color);
   text-align: left;
-  font-size: var(--step-card-body-font-size, clamp(1.18rem, 1.95vw, 1.42rem));
-  line-height: var(--step-card-body-line-height, 1.42);
+  font-size: var(--dynamic-grid-card-body-size, var(--step-card-body-font-size, clamp(1.18rem, 1.95vw, 1.42rem)));
+  line-height: var(--dynamic-grid-card-body-line-height, var(--step-card-body-line-height, 1.42));
 }
 
 .retirement-403b-group-enrollment-steps .service-native-card p strong,
@@ -19034,13 +19283,15 @@ p.impact-proof-story-proof-body {
   border: 2px solid var(--rollover-step-accent);
   border-radius: 1.75rem;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(247, 251, 252, 0.98) 100%);
-  box-shadow: 0 18px 36px rgba(12, 42, 61, 0.08);
+  box-shadow: var(--dyn-content-body-shadow, 0 18px 36px rgba(12, 42, 61, 0.08));
   color: var(--ag-color-super-grey);
-  font-size: clamp(1.18rem, 1.95vw, 1.42rem);
-  line-height: 1.62;
+  font-size: var(--dyn-content-body-size, clamp(1.18rem, 1.95vw, 1.42rem));
+  line-height: var(--dyn-content-body-line-height, 1.62);
   margin: 0 auto;
   max-width: 82ch;
   counter-increment: rollover-process-step;
+  border-width: var(--dyn-content-body-border-width, 2px);
+  border-color: var(--dyn-content-body-border-color, var(--rollover-step-accent));
 }
 
 .native-info-page--retirement-rollovers .retirement-rollovers-native-process > .ag-panel-rail > .native-info-rich-html > p::before {
@@ -19743,8 +19994,23 @@ p.impact-proof-story-proof-body {
   text-align: left;
 }
 
-.retirement-403b-native-loans > .ag-panel-rail {
+.retirement-403b-native-loans > :is(.ag-panel-rail, .ag-panel-rail-wide) {
   max-width: 74rem;
+}
+
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).retirement-403b-native-loans .native-info-section-copy > h2 {
+  margin-bottom: clamp(1.45rem, 3vw, 2.2rem);
+  color: #fff;
+  text-align: center;
+  font-family: var(--ag-font-helv);
+  font-size: clamp(2.55rem, 4.9vw, 3.9rem);
+  line-height: 0.94;
+  letter-spacing: -0.03em;
+}
+
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).retirement-403b-native-loans .service-native-card.card2 {
+  width: min(100%, 70rem);
+  margin-inline: auto;
 }
 
 .retirement-403b-native-loans .native-info-rich-html {
@@ -20314,6 +20580,16 @@ p.impact-proof-story-proof-body {
   padding: var(--dynamic-grid-card-padding, clamp(1.75rem, 2.6vw, 2.25rem));
 }
 
+/* Eligibility cards are a fixed preset, not borderless content rails. The
+   preset hides the generic card-style control, so a legacy or default
+   `cardStyle: none` value must not make the cards transparent. Keep the
+   surface opaque so an uncropped neighboring light cannot show through it. */
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-preset-eligibility-cards.is-card-none .service-native-card.card-none {
+  background: #fff;
+  background-image: none;
+  border-radius: 24px;
+}
+
 .retirement-403b-loan-copy {
   gap: clamp(1.1rem, 2.2vw, 1.6rem);
 }
@@ -20383,54 +20659,100 @@ p.impact-proof-story-proof-body {
 }
 
 /*
- * 403(b) loans is still a dynamic page-content block, so its surface and
- * text tones must be owned by the block contract. The editor writes
- * `bgTone`/`textTone`; this hook keeps the legacy loan markup on that same
- * path while allowing the existing sandstone variant to be selected without
- * another route-specific stylesheet or HTML fork.
+ * 403(b) loans is now a shared one-card grid preset. Keep the old surface
+ * hooks readable for any pre-migration snapshot while the card-grid surface
+ * owns the current presentation.
  */
-.service-native-section:is(.native-dynamic-page-content, .test-dynamic-page-content).retirement-403b-native-loans.is-bg-grey {
+.service-native-section:is(.native-dynamic-page-content, .test-dynamic-page-content, .native-dynamic-grid, .test-dynamic-grid).retirement-403b-native-loans.is-bg-grey {
   background: linear-gradient(145deg, var(--ag-color-super-grey) 0%, #636265 100%);
 }
 
-.service-native-section:is(.native-dynamic-page-content, .test-dynamic-page-content).retirement-403b-native-loans.is-bg-sand {
+.service-native-section:is(.native-dynamic-page-content, .test-dynamic-page-content, .native-dynamic-grid, .test-dynamic-grid).retirement-403b-native-loans.is-bg-sand {
   background: linear-gradient(147deg, rgb(242, 238, 235) 62%, rgb(218, 215, 208) 100%);
 }
 
-.service-native-section:is(.native-dynamic-page-content, .test-dynamic-page-content).retirement-403b-native-loans.is-text-white
+/* The loan section is a dark editorial surface. The shared card-grid shell
+ * only transports the rich content; the visible rounded surface belongs to
+ * the Details callout inside that content. */
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).retirement-403b-native-loans .service-native-card {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0;
+  box-shadow: none !important;
+  transform: none;
+}
+
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).retirement-403b-native-loans .service-native-card:hover {
+  box-shadow: none !important;
+  transform: none;
+}
+
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).retirement-403b-native-loans .service-native-card-rich-body > p:first-of-type,
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).retirement-403b-native-loans .service-native-card-rich-body > p.retirement-403b-loan-followup,
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).retirement-403b-native-loans .service-native-card-rich-body > p.retirement-403b-loan-fineprint {
+  color: #ffffff !important;
+}
+
+.service-native-section:is(.native-dynamic-page-content, .test-dynamic-page-content, .native-dynamic-grid, .test-dynamic-grid).retirement-403b-native-loans.is-text-white
   .retirement-403b-loan-copy :is(h2, h3, p, li, a:not(.service-native-btn)),
-.service-native-section:is(.native-dynamic-page-content, .test-dynamic-page-content).retirement-403b-native-loans.is-text-white
+.service-native-section:is(.native-dynamic-page-content, .test-dynamic-page-content, .native-dynamic-grid, .test-dynamic-grid).retirement-403b-native-loans.is-text-white
   .native-info-rich-html :is(h2, h3, p, li, a:not(.service-native-btn)) {
   color: #fff !important;
 }
 
-.service-native-section:is(.native-dynamic-page-content, .test-dynamic-page-content).retirement-403b-native-loans.is-text-dark
+.service-native-section:is(.native-dynamic-page-content, .test-dynamic-page-content, .native-dynamic-grid, .test-dynamic-grid).retirement-403b-native-loans.is-text-dark
   .retirement-403b-loan-copy :is(h2, h3, p, li, a:not(.service-native-btn)),
-.service-native-section:is(.native-dynamic-page-content, .test-dynamic-page-content).retirement-403b-native-loans.is-text-dark
+.service-native-section:is(.native-dynamic-page-content, .test-dynamic-page-content, .native-dynamic-grid, .test-dynamic-grid).retirement-403b-native-loans.is-text-dark
   .native-info-rich-html :is(h2, h3, p, li, a:not(.service-native-btn)) {
   color: var(--ag-color-super-grey) !important;
 }
 
-.service-native-section:is(.native-dynamic-page-content, .test-dynamic-page-content).retirement-403b-native-loans.is-text-blue
+.service-native-section:is(.native-dynamic-page-content, .test-dynamic-page-content, .native-dynamic-grid, .test-dynamic-grid).retirement-403b-native-loans.is-text-blue
   .retirement-403b-loan-copy :is(h2, h3, p, li, a:not(.service-native-btn)),
-.service-native-section:is(.native-dynamic-page-content, .test-dynamic-page-content).retirement-403b-native-loans.is-text-blue
+.service-native-section:is(.native-dynamic-page-content, .test-dynamic-page-content, .native-dynamic-grid, .test-dynamic-grid).retirement-403b-native-loans.is-text-blue
   .native-info-rich-html :is(h2, h3, p, li, a:not(.service-native-btn)) {
   color: var(--ag-color-atlantean) !important;
 }
 
-.service-native-section:is(.native-dynamic-page-content, .test-dynamic-page-content).retirement-403b-native-loans.is-bg-grey
+.service-native-section:is(.native-dynamic-page-content, .test-dynamic-page-content, .native-dynamic-grid, .test-dynamic-grid).retirement-403b-native-loans.is-bg-grey
   .retirement-403b-loan-detail-card {
   background: rgba(255, 255, 255, 0.08);
 }
 
-.service-native-section:is(.native-dynamic-page-content, .test-dynamic-page-content).retirement-403b-native-loans.is-bg-sand
+.service-native-section:is(.native-dynamic-page-content, .test-dynamic-page-content, .native-dynamic-grid, .test-dynamic-grid).retirement-403b-native-loans.is-bg-sand
   .retirement-403b-loan-detail-card {
   background: rgba(255, 255, 255, 0.72);
 }
 
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).retirement-403b-native-loans .service-native-card-rich-body .retirement-403b-loan-detail-card {
+  background: transparent !important;
+  border: 2px solid var(--ret403b-loan-detail-accent, var(--ag-color-mango));
+}
+
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).retirement-403b-native-loans .service-native-card-rich-body .retirement-403b-loan-detail-card h3 {
+  color: var(--ag-color-mango) !important;
+  font-size: clamp(2.15rem, 3.4vw, 2.8rem) !important;
+  line-height: 0.98 !important;
+}
+
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).retirement-403b-native-loans .service-native-card-rich-body .retirement-403b-loan-detail-card :is(p, li) {
+  color: #ffffff !important;
+}
+
+/* The migrated loan-details card still carries the legacy loan-copy class.
+   Its old page-content rule centered the first paragraph, which made this
+   Card Grid card disagree with every other card-body alignment setting. Once
+   it is inside a Card Grid, the shared body-justify control owns all copy. */
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).retirement-403b-native-loans
+  .service-native-card-rich-body > :is(p, ul),
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).retirement-403b-native-loans
+  .service-native-card-rich-body .retirement-403b-loan-copy > :is(p, ul) {
+  text-align: var(--dynamic-grid-card-body-justify, left) !important;
+}
+
 /* Mango is an intentional inline accent and is never replaced by the
    section's inherited tone. */
-.service-native-section:is(.native-dynamic-page-content, .test-dynamic-page-content).retirement-403b-native-loans
+.service-native-section:is(.native-dynamic-page-content, .test-dynamic-page-content, .native-dynamic-grid, .test-dynamic-grid).retirement-403b-native-loans
   :is(.is-mango, mark.is-mango, .retirement-403b-loan-detail-card h3) {
   color: var(--ag-color-mango) !important;
 }
@@ -22692,9 +23014,31 @@ p.impact-proof-story-proof-body {
 
 /* Card Grid alignment is block-owned. Keep title and body justification out
  * of individual card fields so one setting controls the complete grid. */
-.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid) .service-native-card h3 {
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid) .service-native-card h3,
+.service-native-section.loans-native-options .loans-native-option-card h3 {
+  /* Card titles are text blocks, not flex rows. A flex title can report the
+     selected text-align while its child is still positioned by justify-content. */
+  display: block !important;
   text-align: var(--dynamic-grid-card-title-justify, center) !important;
-  justify-content: var(--dynamic-grid-card-title-justify-content, center) !important;
+  justify-content: initial !important;
+}
+
+/* Card titles may be flex containers for legacy card families. Keep the
+ * visible title content as one full-width alignment target so text-align is
+ * not merely correct on the parent while the child link/spans stay put. */
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid) .service-native-card h3 > .service-native-card-title-content {
+  display: block;
+  flex: none;
+  width: 100%;
+  min-width: 0;
+  text-align: inherit;
+}
+
+.service-native-section.loans-native-options .loans-native-option-card h3 > .service-native-card-title-content {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  text-align: inherit;
 }
 
 .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid) .service-native-card-flow > :is(
@@ -23453,11 +23797,21 @@ p.impact-proof-story-proof-body {
 }
 
 .service-native-section:is(.dynamic-billboard, .test-dynamic-billboard, .home-native-billboard) .native-info-rich-html.is-dynamic-billboard-header-gap,
-.service-native-section:is(.dynamic-billboard, .test-dynamic-billboard, .home-native-billboard) .native-info-section-copy > p.billboard-body-copy.is-dynamic-billboard-header-gap {
+.service-native-section:is(.dynamic-billboard, .test-dynamic-billboard, .home-native-billboard) .native-info-section-copy > p.billboard-body-copy.is-dynamic-billboard-header-gap,
+.service-native-section:is(.dynamic-billboard, .test-dynamic-billboard, .home-native-billboard) .native-info-section-subtitle.is-dynamic-billboard-header-gap {
   margin-top: var(--dynamic-billboard-header-gap) !important;
 }
 
 .service-native-section:is(.dynamic-billboard, .test-dynamic-billboard, .home-native-billboard) .native-info-rich-html.is-dynamic-billboard-header-gap > :first-child {
+  margin-top: 0 !important;
+}
+
+.service-native-section:is(.dynamic-billboard, .test-dynamic-billboard, .home-native-billboard) .native-info-rich-html.is-dynamic-billboard-body-gap,
+.service-native-section:is(.dynamic-billboard, .test-dynamic-billboard, .home-native-billboard) .native-info-section-copy > p.billboard-body-copy.is-dynamic-billboard-body-gap {
+  margin-top: var(--dynamic-billboard-body-gap) !important;
+}
+
+.service-native-section:is(.dynamic-billboard, .test-dynamic-billboard, .home-native-billboard) .native-info-rich-html.is-dynamic-billboard-body-gap > :first-child {
   margin-top: 0 !important;
 }
 

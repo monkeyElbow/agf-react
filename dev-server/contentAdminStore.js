@@ -55,6 +55,14 @@ import {
   SUPPORT_LIBRARY_BLOCK_MIGRATION_VERSION,
   QCD_CENTERED_CARD_GRID_MIGRATION_ID,
   QCD_CENTERED_CARD_GRID_MIGRATION_VERSION,
+  RETIREMENT_403B_LOAN_DETAILS_CARD_GRID_MIGRATION_ID,
+  RETIREMENT_403B_LOAN_DETAILS_CARD_GRID_MIGRATION_VERSION,
+  RETIREMENT_ROLLOVER_PROCESS_CARD_GRID_MIGRATION_ID,
+  RETIREMENT_ROLLOVER_PROCESS_CARD_GRID_MIGRATION_VERSION,
+  RETIREMENT_INDIVIDUAL_ENROLLMENT_STEP_CARD_PRESENTATION_MIGRATION_ID,
+  RETIREMENT_INDIVIDUAL_ENROLLMENT_STEP_CARD_PRESENTATION_MIGRATION_VERSION,
+  RETIREMENT_INDIVIDUAL_ENROLLMENT_MAIL_FAX_STEP_MIGRATION_ID,
+  RETIREMENT_INDIVIDUAL_ENROLLMENT_MAIL_FAX_STEP_MIGRATION_VERSION,
   ENDOWMENTS_PRESENTATION_MIGRATION_ID,
   ENDOWMENTS_PRESENTATION_MIGRATION_VERSION,
   MIF_REQUEST_HEADLINE_COLOR_MIGRATION_ID,
@@ -63,6 +71,10 @@ import {
   QCD_REQUEST_HEADLINE_COLOR_MIGRATION_VERSION,
   migrateGenerosityFundSnapshot,
   migrateQcdCenteredCardGridState,
+  migrateRetirement403bLoanDetailsState,
+  migrateRetirementRolloverProcessState,
+  migrateRetirementIndividualEnrollmentStepCardPresentationState,
+  migrateRetirementIndividualEnrollmentMailFaxStepState,
   migrateCgaSecureActCardState,
   migrateInsuranceCoverageCtaState,
   migrateInsuranceFeatureColumnsState,
@@ -3681,6 +3693,334 @@ export function createJsonContentStore({
         migration: {
           id: QCD_CENTERED_CARD_GRID_MIGRATION_ID,
           version: QCD_CENTERED_CARD_GRID_MIGRATION_VERSION,
+          didMigrate: changed,
+          alreadyApplied: false,
+        },
+      };
+    },
+
+    migrateRetirement403bLoanDetailsSnapshot({ actor, reason = '' } = {}) {
+      const normalizedActor = normalizeActor(actor);
+      const normalizedReason = String(reason || '').trim();
+      if (!normalizedActor || !normalizedReason) {
+        return { ok: false, error: 'migration-actor-and-reason-required', ...publishSnapshot() };
+      }
+
+      const currentVersion = Number(
+        record.snapshotMigrations?.[RETIREMENT_403B_LOAN_DETAILS_CARD_GRID_MIGRATION_ID] || 0,
+      );
+      if (currentVersion >= RETIREMENT_403B_LOAN_DETAILS_CARD_GRID_MIGRATION_VERSION) {
+        return {
+          ok: true,
+          ...publishSnapshot(),
+          migration: {
+            id: RETIREMENT_403B_LOAN_DETAILS_CARD_GRID_MIGRATION_ID,
+            version: RETIREMENT_403B_LOAN_DETAILS_CARD_GRID_MIGRATION_VERSION,
+            didMigrate: false,
+            alreadyApplied: true,
+          },
+        };
+      }
+
+      const stateMigration = migrateRetirement403bLoanDetailsState(record.state);
+      const baseMigration = migrateRetirement403bLoanDetailsState(record.baseSnapshot);
+      const changed = Boolean(stateMigration.changed || baseMigration.changed);
+      let backup = null;
+      if (changed) {
+        try {
+          backup = createSharedContentBackup('before-retirement-403b-loan-details-card-grid-migration', {
+            action: 'retirement-403b-loan-details-card-grid-migration',
+            migrationId: RETIREMENT_403B_LOAN_DETAILS_CARD_GRID_MIGRATION_ID,
+            migrationVersion: RETIREMENT_403B_LOAN_DETAILS_CARD_GRID_MIGRATION_VERSION,
+            actor: normalizedActor,
+            operationReason: normalizedReason,
+          });
+        } catch (error) {
+          return {
+            ok: false,
+            error: 'backup-failed',
+            details: error instanceof Error ? error.message : 'backup-failed',
+            ...publishSnapshot(),
+          };
+        }
+      }
+
+      const timestamp = now();
+      const previousState = record.state;
+      record = {
+        ...record,
+        initialized: true,
+        updatedAt: timestamp,
+        state: normalizeSharedState(stateMigration.state),
+        baseSnapshot: normalizeSharedState(baseMigration.state),
+        snapshotMigrations: {
+          ...(record.snapshotMigrations || {}),
+          [RETIREMENT_403B_LOAN_DETAILS_CARD_GRID_MIGRATION_ID]: RETIREMENT_403B_LOAN_DETAILS_CARD_GRID_MIGRATION_VERSION,
+        },
+      };
+      if (changed) {
+        addRevisionsForChangedPaths(previousState, record.state, {
+          actor: normalizedActor,
+          reason: normalizedReason,
+          summary: '403(b) loan details card-grid migration',
+        });
+      }
+      persistRecord();
+      return {
+        ok: true,
+        actor: normalizedActor,
+        reason: normalizedReason,
+        backup,
+        ...publishSnapshot(),
+        migration: {
+          id: RETIREMENT_403B_LOAN_DETAILS_CARD_GRID_MIGRATION_ID,
+          version: RETIREMENT_403B_LOAN_DETAILS_CARD_GRID_MIGRATION_VERSION,
+          didMigrate: changed,
+          alreadyApplied: false,
+        },
+      };
+    },
+
+    migrateRetirementRolloverProcessSnapshot({ actor, reason = '' } = {}) {
+      const normalizedActor = normalizeActor(actor);
+      const normalizedReason = String(reason || '').trim();
+      if (!normalizedActor || !normalizedReason) {
+        return { ok: false, error: 'migration-actor-and-reason-required', ...publishSnapshot() };
+      }
+
+      const currentVersion = Number(
+        record.snapshotMigrations?.[RETIREMENT_ROLLOVER_PROCESS_CARD_GRID_MIGRATION_ID] || 0,
+      );
+      if (currentVersion >= RETIREMENT_ROLLOVER_PROCESS_CARD_GRID_MIGRATION_VERSION) {
+        return {
+          ok: true,
+          ...publishSnapshot(),
+          migration: {
+            id: RETIREMENT_ROLLOVER_PROCESS_CARD_GRID_MIGRATION_ID,
+            version: RETIREMENT_ROLLOVER_PROCESS_CARD_GRID_MIGRATION_VERSION,
+            didMigrate: false,
+            alreadyApplied: true,
+          },
+        };
+      }
+
+      const stateMigration = migrateRetirementRolloverProcessState(record.state);
+      const baseMigration = migrateRetirementRolloverProcessState(record.baseSnapshot);
+      const changed = Boolean(stateMigration.changed || baseMigration.changed);
+      let backup = null;
+      if (changed) {
+        try {
+          backup = createSharedContentBackup('before-retirement-rollover-process-card-grid-migration', {
+            action: 'retirement-rollover-process-card-grid-migration',
+            migrationId: RETIREMENT_ROLLOVER_PROCESS_CARD_GRID_MIGRATION_ID,
+            migrationVersion: RETIREMENT_ROLLOVER_PROCESS_CARD_GRID_MIGRATION_VERSION,
+            actor: normalizedActor,
+            operationReason: normalizedReason,
+          });
+        } catch (error) {
+          return {
+            ok: false,
+            error: 'backup-failed',
+            details: error instanceof Error ? error.message : 'backup-failed',
+            ...publishSnapshot(),
+          };
+        }
+      }
+
+      const timestamp = now();
+      const previousState = record.state;
+      record = {
+        ...record,
+        initialized: true,
+        updatedAt: timestamp,
+        state: normalizeSharedState(stateMigration.state),
+        baseSnapshot: normalizeSharedState(baseMigration.state),
+        snapshotMigrations: {
+          ...(record.snapshotMigrations || {}),
+          [RETIREMENT_ROLLOVER_PROCESS_CARD_GRID_MIGRATION_ID]: RETIREMENT_ROLLOVER_PROCESS_CARD_GRID_MIGRATION_VERSION,
+        },
+      };
+      if (changed) {
+        addRevisionsForChangedPaths(previousState, record.state, {
+          actor: normalizedActor,
+          reason: normalizedReason,
+          summary: 'rollover process card-grid migration',
+        });
+      }
+      persistRecord();
+      return {
+        ok: true,
+        actor: normalizedActor,
+        reason: normalizedReason,
+        backup,
+        ...publishSnapshot(),
+        migration: {
+          id: RETIREMENT_ROLLOVER_PROCESS_CARD_GRID_MIGRATION_ID,
+          version: RETIREMENT_ROLLOVER_PROCESS_CARD_GRID_MIGRATION_VERSION,
+          didMigrate: changed,
+          alreadyApplied: false,
+        },
+      };
+    },
+
+    migrateRetirementIndividualEnrollmentStepCardPresentationSnapshot({ actor, reason = '' } = {}) {
+      const normalizedActor = normalizeActor(actor);
+      const normalizedReason = String(reason || '').trim();
+      if (!normalizedActor || !normalizedReason) {
+        return { ok: false, error: 'migration-actor-and-reason-required', ...publishSnapshot() };
+      }
+
+      const currentVersion = Number(
+        record.snapshotMigrations?.[RETIREMENT_INDIVIDUAL_ENROLLMENT_STEP_CARD_PRESENTATION_MIGRATION_ID] || 0,
+      );
+      if (currentVersion >= RETIREMENT_INDIVIDUAL_ENROLLMENT_STEP_CARD_PRESENTATION_MIGRATION_VERSION) {
+        return {
+          ok: true,
+          ...publishSnapshot(),
+          migration: {
+            id: RETIREMENT_INDIVIDUAL_ENROLLMENT_STEP_CARD_PRESENTATION_MIGRATION_ID,
+            version: RETIREMENT_INDIVIDUAL_ENROLLMENT_STEP_CARD_PRESENTATION_MIGRATION_VERSION,
+            didMigrate: false,
+            alreadyApplied: true,
+          },
+        };
+      }
+
+      const stateMigration = migrateRetirementIndividualEnrollmentStepCardPresentationState(record.state);
+      const baseMigration = migrateRetirementIndividualEnrollmentStepCardPresentationState(record.baseSnapshot);
+      const changed = Boolean(stateMigration.changed || baseMigration.changed);
+      let backup = null;
+      if (changed) {
+        try {
+          backup = createSharedContentBackup('before-retirement-individual-enrollment-step-card-presentation-migration', {
+            action: 'retirement-individual-enrollment-step-card-presentation-migration',
+            migrationId: RETIREMENT_INDIVIDUAL_ENROLLMENT_STEP_CARD_PRESENTATION_MIGRATION_ID,
+            migrationVersion: RETIREMENT_INDIVIDUAL_ENROLLMENT_STEP_CARD_PRESENTATION_MIGRATION_VERSION,
+            actor: normalizedActor,
+            operationReason: normalizedReason,
+          });
+        } catch (error) {
+          return {
+            ok: false,
+            error: 'backup-failed',
+            details: error instanceof Error ? error.message : 'backup-failed',
+            ...publishSnapshot(),
+          };
+        }
+      }
+
+      const timestamp = now();
+      const previousState = record.state;
+      record = {
+        ...record,
+        initialized: true,
+        updatedAt: timestamp,
+        state: normalizeSharedState(stateMigration.state),
+        baseSnapshot: normalizeSharedState(baseMigration.state),
+        snapshotMigrations: {
+          ...(record.snapshotMigrations || {}),
+          [RETIREMENT_INDIVIDUAL_ENROLLMENT_STEP_CARD_PRESENTATION_MIGRATION_ID]: RETIREMENT_INDIVIDUAL_ENROLLMENT_STEP_CARD_PRESENTATION_MIGRATION_VERSION,
+        },
+      };
+      if (changed) {
+        addRevisionsForChangedPaths(previousState, record.state, {
+          actor: normalizedActor,
+          reason: normalizedReason,
+          summary: 'individual enrollment step-card presentation migration',
+        });
+      }
+      persistRecord();
+      return {
+        ok: true,
+        actor: normalizedActor,
+        reason: normalizedReason,
+        backup,
+        ...publishSnapshot(),
+        migration: {
+          id: RETIREMENT_INDIVIDUAL_ENROLLMENT_STEP_CARD_PRESENTATION_MIGRATION_ID,
+          version: RETIREMENT_INDIVIDUAL_ENROLLMENT_STEP_CARD_PRESENTATION_MIGRATION_VERSION,
+          didMigrate: changed,
+          alreadyApplied: false,
+        },
+      };
+    },
+
+    migrateRetirementIndividualEnrollmentMailFaxStepSnapshot({ actor, reason = '' } = {}) {
+      const normalizedActor = normalizeActor(actor);
+      const normalizedReason = String(reason || '').trim();
+      if (!normalizedActor || !normalizedReason) {
+        return { ok: false, error: 'migration-actor-and-reason-required', ...publishSnapshot() };
+      }
+
+      const currentVersion = Number(
+        record.snapshotMigrations?.[RETIREMENT_INDIVIDUAL_ENROLLMENT_MAIL_FAX_STEP_MIGRATION_ID] || 0,
+      );
+      if (currentVersion >= RETIREMENT_INDIVIDUAL_ENROLLMENT_MAIL_FAX_STEP_MIGRATION_VERSION) {
+        return {
+          ok: true,
+          ...publishSnapshot(),
+          migration: {
+            id: RETIREMENT_INDIVIDUAL_ENROLLMENT_MAIL_FAX_STEP_MIGRATION_ID,
+            version: RETIREMENT_INDIVIDUAL_ENROLLMENT_MAIL_FAX_STEP_MIGRATION_VERSION,
+            didMigrate: false,
+            alreadyApplied: true,
+          },
+        };
+      }
+
+      const stateMigration = migrateRetirementIndividualEnrollmentMailFaxStepState(record.state);
+      const baseMigration = migrateRetirementIndividualEnrollmentMailFaxStepState(record.baseSnapshot);
+      const changed = Boolean(stateMigration.changed || baseMigration.changed);
+      let backup = null;
+      if (changed) {
+        try {
+          backup = createSharedContentBackup('before-retirement-individual-enrollment-mail-fax-step-migration', {
+            action: 'retirement-individual-enrollment-mail-fax-step-migration',
+            migrationId: RETIREMENT_INDIVIDUAL_ENROLLMENT_MAIL_FAX_STEP_MIGRATION_ID,
+            migrationVersion: RETIREMENT_INDIVIDUAL_ENROLLMENT_MAIL_FAX_STEP_MIGRATION_VERSION,
+            actor: normalizedActor,
+            operationReason: normalizedReason,
+          });
+        } catch (error) {
+          return {
+            ok: false,
+            error: 'backup-failed',
+            details: error instanceof Error ? error.message : 'backup-failed',
+            ...publishSnapshot(),
+          };
+        }
+      }
+
+      const timestamp = now();
+      const previousState = record.state;
+      record = {
+        ...record,
+        initialized: true,
+        updatedAt: timestamp,
+        state: normalizeSharedState(stateMigration.state),
+        baseSnapshot: normalizeSharedState(baseMigration.state),
+        snapshotMigrations: {
+          ...(record.snapshotMigrations || {}),
+          [RETIREMENT_INDIVIDUAL_ENROLLMENT_MAIL_FAX_STEP_MIGRATION_ID]: RETIREMENT_INDIVIDUAL_ENROLLMENT_MAIL_FAX_STEP_MIGRATION_VERSION,
+        },
+      };
+      if (changed) {
+        addRevisionsForChangedPaths(previousState, record.state, {
+          actor: normalizedActor,
+          reason: normalizedReason,
+          summary: 'individual enrollment Mail/Fax step migration',
+        });
+      }
+      persistRecord();
+      return {
+        ok: true,
+        actor: normalizedActor,
+        reason: normalizedReason,
+        backup,
+        ...publishSnapshot(),
+        migration: {
+          id: RETIREMENT_INDIVIDUAL_ENROLLMENT_MAIL_FAX_STEP_MIGRATION_ID,
+          version: RETIREMENT_INDIVIDUAL_ENROLLMENT_MAIL_FAX_STEP_MIGRATION_VERSION,
           didMigrate: changed,
           alreadyApplied: false,
         },

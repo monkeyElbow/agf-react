@@ -9,6 +9,16 @@ import {
   SURFACE_BG_TONE_OPTIONS,
 } from '../../lib/colorSystem';
 
+const PAGE_CONTENT_BORDER_TONE_OPTIONS = [
+  { value: '', label: 'Default', swatch: 'linear-gradient(145deg, #ffffff 0%, #d1d5db 100%)', hideSwatch: true },
+  { value: 'super-grey', label: 'Super Grey', swatch: 'var(--ag-color-super-grey)' },
+  { value: 'atlantean', label: 'Blue', swatch: 'var(--ag-color-atlantean)' },
+  { value: 'mango', label: 'Mango', swatch: 'var(--ag-color-mango)' },
+  { value: 'melon', label: 'Melon', swatch: 'var(--ag-color-melon)' },
+  { value: 'sandstone', label: 'Sandstone', swatch: 'var(--ag-color-sandstone)' },
+  { value: 'white', label: 'White', swatch: 'var(--ag-color-white)' },
+];
+
 const PAGE_CONTENT_HEADING_TONE_OPTIONS = SEMANTIC_TEXT_COLOR_OPTIONS_WITH_DEFAULT;
 
 const PAGE_CONTENT_HIGHLIGHT_TONE_OPTIONS = PAGE_CONTENT_HEADING_TONE_OPTIONS.filter((option) => option.value);
@@ -37,13 +47,10 @@ const sections = [
       defineEditorField({ id: 'html', label: 'Page Content HTML', type: 'html' }),
       defineEditorField({ id: 'bodyColorClassName', label: 'Body color', type: 'swatch', options: PAGE_CONTENT_HEADING_TONE_OPTIONS }),
       defineEditorField({ id: 'bodyFontSizeRem', label: 'Body font size (rem)', type: 'range', min: 0.8, max: 2.4, step: 0.05 }),
-      defineEditorField({
-        id: 'bgTone',
-        label: 'Section background',
-        type: 'swatch',
-        layout: 'half',
-        options: SURFACE_BG_TONE_OPTIONS,
-      }),
+      defineEditorField({ id: 'bodyLineHeight', label: 'Body line height', type: 'range', min: 1.1, max: 2.1, step: 0.05 }),
+      defineEditorField({ id: 'bodyBorderTone', label: 'Body card border color', type: 'swatch', options: PAGE_CONTENT_BORDER_TONE_OPTIONS }),
+      defineEditorField({ id: 'bodyBorderWidth', label: 'Body card border width (px)', type: 'range', min: 0.5, max: 3, step: 0.5 }),
+      defineEditorField({ id: 'bodyBorderShadow', label: 'Body card shadow', type: 'boolean' }),
       defineEditorField({
         id: 'textTone',
         label: 'Section text color',
@@ -75,6 +82,30 @@ const sections = [
       defineEditorField({ id: 'paddingTopRem', label: 'Padding top (rem)', type: 'range', min: 0, max: 8, step: 0.05 }),
       defineEditorField({ id: 'paddingBottomRem', label: 'Padding bottom (rem)', type: 'range', min: 0, max: 8, step: 0.05 }),
       defineEditorField({ id: 'contentMaxWidthPx', label: 'Content max width (px)', type: 'range', min: 560, max: 1440, step: 10 }),
+      defineEditorField({
+        id: 'justify',
+        label: 'Content alignment',
+        type: 'select',
+        options: [
+          { value: 'left', label: 'Left' },
+          { value: 'center', label: 'Center' },
+          { value: 'right', label: 'Right' },
+        ],
+      }),
+    ],
+  },
+  {
+    id: 'background',
+    title: 'Background',
+    surfaces: ['hud', 'admin'],
+    fields: [
+      defineEditorField({
+        id: 'bgTone',
+        label: 'Section background',
+        type: 'swatch',
+        options: SURFACE_BG_TONE_OPTIONS,
+      }),
+      defineEditorField({ id: 'backgroundEffectsJson', label: 'Background lights', type: 'background_lights' }),
     ],
   },
   {
@@ -173,7 +204,12 @@ export const pageContentBlockDefinition = createBlockDefinition({
     html: '',
     bodyColorClassName: '',
     bodyFontSizeRem: null,
+    bodyLineHeight: null,
+    bodyBorderTone: '',
+    bodyBorderWidth: null,
+    bodyBorderShadow: null,
     bgTone: 'white',
+    backgroundEffectsJson: '',
     textTone: 'dark',
     widget: '',
     logoImage: '',
@@ -214,8 +250,8 @@ export const pageContentBlockDefinition = createBlockDefinition({
   },
   editor: {
     sections,
-    hudSectionIds: ['content', 'layout', 'placement', 'media', 'actions', 'address', 'table', 'support', 'fineprint'],
-    adminSectionIds: ['content', 'layout', 'placement', 'media', 'actions', 'address', 'table', 'support', 'fineprint'],
+    hudSectionIds: ['content', 'layout', 'background', 'placement', 'media', 'actions', 'address', 'table', 'support', 'fineprint'],
+    adminSectionIds: ['content', 'layout', 'background', 'placement', 'media', 'actions', 'address', 'table', 'support', 'fineprint'],
   },
   validators: [
     (block) => Boolean(buildDynamicPageContentFromBlock(block)),

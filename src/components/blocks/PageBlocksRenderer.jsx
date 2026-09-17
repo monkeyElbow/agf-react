@@ -13,11 +13,6 @@ import {
 } from '../../blocks/foundation/forms';
 import { useContentAdmin } from '../../context/ContentAdminContextCore';
 import {
-  getDynamicColumnWidthShare,
-  getVisibleDynamicColumnSlots,
-  toDynamicColumnsCountToken,
-} from '../../lib/dynamicColumns';
-import {
   buildDynamicCtaPresentationClassName,
   isExternalLinkHref,
   normalizeUniversalOutlineButtonClassName,
@@ -1050,19 +1045,20 @@ export function BillboardBlock({
   const effectiveJustify = justifyOverride || runtime.justify || 'center';
   const effectiveBodyJustify = runtime.bodyJustify || effectiveJustify;
   const bodyJustifyClassName = `is-body-justify-${effectiveBodyJustify}`;
-  const bodyHeaderGapClassName = runtime.headerGapRem !== null && runtime.headerGapRem !== undefined
+  const hasSubtitle = Boolean(String(runtime.subtitle || '').trim());
+  const hasBody = Boolean(String(runtime.bodyHtml || '').trim() || String(runtime.body || '').trim());
+  const headerGapClassName = runtime.headerGapRem !== null && runtime.headerGapRem !== undefined
     ? 'is-dynamic-billboard-header-gap'
     : '';
-  const hasBillboardBody = Boolean(runtime.bodyHtml || runtime.body);
-  const actionHeaderGapClassName = !hasBillboardBody && bodyHeaderGapClassName
-    ? ` ${bodyHeaderGapClassName}`
+  const bodyHeaderGapClassName = !hasSubtitle ? headerGapClassName : '';
+  const bodyGapClassName = runtime.bodyGapRem !== null && runtime.bodyGapRem !== undefined
+    ? 'is-dynamic-billboard-body-gap'
     : '';
+  const subtitleHeaderGapClassName = hasSubtitle ? headerGapClassName : '';
+  const actionHeaderGapClassName = !hasSubtitle && !hasBody ? headerGapClassName : '';
   const actionGapClassName = runtime.actionGapRem !== null && runtime.actionGapRem !== undefined
     ? ' is-dynamic-billboard-action-gap'
     : '';
-  const actionHeaderGapStyle = !hasBillboardBody && bodyHeaderGapClassName
-    ? { '--dynamic-billboard-header-gap': `${runtime.headerGapRem}rem` }
-    : {};
   const copyClassName = [
     'native-info-section-copy',
     `is-justify-${effectiveJustify}`,
@@ -1077,6 +1073,9 @@ export function BillboardBlock({
   ].filter(Boolean).join(' ');
   const mathBadgeLinkTarget = actions[0]?.to || actions[0]?.href || '/calculators';
   const TitleTag = titleTag === 'h1' ? 'h1' : 'h2';
+  const resolvedTitleClassName = [runtime.titleClassName || '', titleProps.className || '']
+    .filter(Boolean)
+    .join(' ');
   const resolvedSectionStyle = {
     ...(sectionStyle || {}),
     ...(sectionStyleOverride || {}),
@@ -1116,7 +1115,7 @@ export function BillboardBlock({
           {runtime.title ? (
             <TitleTag
               {...titleProps}
-              className={runtime.titleClassName || undefined}
+              className={resolvedTitleClassName || undefined}
               style={runtime.titleStyle}
             >
               {typeof titleRenderer === 'function'
@@ -1128,7 +1127,7 @@ export function BillboardBlock({
           ) : null}
           {runtime.subtitle ? (
             <p
-              className={[subtitleBaseClassName, runtime.subtitleClassName || ''].filter(Boolean).join(' ')}
+              className={[subtitleBaseClassName, runtime.subtitleClassName || '', subtitleHeaderGapClassName].filter(Boolean).join(' ')}
               style={runtime.subtitleStyle || undefined}
             >
               {runtime.subtitleHighlights?.length
@@ -1139,7 +1138,7 @@ export function BillboardBlock({
           {runtime.bodyHtml ? (
             <SafeRichText
               as="div"
-              className={['native-info-rich-html', runtime.bodyColorClassName || '', runtime.bodyHtmlStyle ? 'is-dynamic-billboard-lead-copy-sized' : '', bodyJustifyClassName, bodyHeaderGapClassName].filter(Boolean).join(' ')}
+              className={['native-info-rich-html', runtime.bodyColorClassName || '', runtime.bodyHtmlStyle ? 'is-dynamic-billboard-lead-copy-sized' : '', bodyJustifyClassName, bodyHeaderGapClassName, bodyGapClassName].filter(Boolean).join(' ')}
               html={runtime.bodyHtml}
               style={runtime.bodyHtmlStyle || undefined}
               {...bodyEditProps}
@@ -1147,7 +1146,7 @@ export function BillboardBlock({
           ) : null}
           {!runtime.bodyHtml && runtime.body ? (
             <div
-              className={['native-info-rich-html', runtime.bodyColorClassName || '', runtime.bodyHtmlStyle ? 'is-dynamic-billboard-lead-copy-sized' : '', bodyJustifyClassName, bodyHeaderGapClassName].filter(Boolean).join(' ')}
+              className={['native-info-rich-html', runtime.bodyColorClassName || '', runtime.bodyHtmlStyle ? 'is-dynamic-billboard-lead-copy-sized' : '', bodyJustifyClassName, bodyHeaderGapClassName, bodyGapClassName].filter(Boolean).join(' ')}
               style={runtime.bodyHtmlStyle || undefined}
               {...bodyEditProps}
             >
@@ -1156,9 +1155,8 @@ export function BillboardBlock({
           ) : null}
           {actions.length ? (
             <div
-              className={`service-native-action-row${effectiveJustify === 'center' ? ' is-centered' : ''}${effectiveJustify === 'right' ? ' is-right' : ''}${effectiveJustify === 'left' ? ' is-left' : ''}${actionHeaderGapClassName}${actionGapClassName}`}
+              className={`service-native-action-row${effectiveJustify === 'center' ? ' is-centered' : ''}${effectiveJustify === 'right' ? ' is-right' : ''}${effectiveJustify === 'left' ? ' is-left' : ''}${actionHeaderGapClassName ? ` ${actionHeaderGapClassName}` : ''}${actionGapClassName}`}
               style={{
-                ...actionHeaderGapStyle,
                 ...buildBillboardActionRowStyle(effectiveJustify, runtime.actionGapRem),
               }}
             >
@@ -1483,6 +1481,10 @@ function CtaFormBlock({ block, ownership, hudAnchor, sectionHudClassName = '' })
   const salesforceUrl = String(runtime.salesforceUrl || '').trim();
   const presentationClassName = buildDynamicCtaPresentationClassName(runtime);
   const textTone = ['blue', 'grey'].includes(bgTone) ? 'white' : 'dark';
+  const sectionStyle = {
+    ...(Number.isFinite(Number(runtime?.paddingTopRem)) ? { paddingTop: `${runtime.paddingTopRem}rem` } : {}),
+    ...(Number.isFinite(Number(runtime?.paddingBottomRem)) ? { paddingBottom: `${runtime.paddingBottomRem}rem` } : {}),
+  };
   const submitClassName = [
     toActionButtonClassName(runtime.submitStyle, runtime.submitTone),
     String(block.submitClassName || '').trim(),
@@ -1522,6 +1524,7 @@ function CtaFormBlock({ block, ownership, hudAnchor, sectionHudClassName = '' })
       data-block-id={block?.id || undefined}
       data-cta-display-mode={runtime?.displayMode || 'default'}
       data-cta-trigger-mode={runtime?.triggerMode || 'default'}
+      style={sectionStyle}
     >
       <BlockSurfaceLayers ownership={ownership} hudAnchor={hudAnchor} backgroundEffects={<BlockBackgroundEffects effects={runtime.backgroundEffects} />} />
       <div className="ag-panel-rail">
@@ -1933,6 +1936,12 @@ export function ColumnsBlock({
       ...block.settings,
     }
     : block;
+  const canonicalDynamicBlock = isDynamicColumnsBlock && !isObject(block?.settings)
+    ? { ...dynamicBlock, settings: dynamicBlock }
+    : dynamicBlock;
+  const dynamicRuntime = isDynamicColumnsBlock
+    ? buildCanonicalBlockRuntime(canonicalDynamicBlock)
+    : null;
   const dynamicPresetClassToken = isDynamicColumnsBlock ? resolvePresetFamilyClassToken(dynamicBlock) : '';
   const shouldAnimateColumnsItems = dynamicPresetClassToken === 'value-cards';
   const dynamicColumnsRevealKey = isDynamicColumnsBlock
@@ -1959,36 +1968,44 @@ export function ColumnsBlock({
   }, [shouldAnimateColumnsItems, dynamicBlock?.id, dynamicColumnsRevealKey]);
 
   if (isDynamicColumnsBlock) {
-    const title = String(dynamicBlock.title || '').trim();
-    const titleClassName = normalizeToneClass(dynamicBlock.titleClassName || '');
-    const titleHighlights = parseHighlightsJson(dynamicBlock.titleHighlightsJson, title);
-    const leadLine = String(dynamicBlock.leadLine || '').trim();
-    const leadLineClassName = normalizeToneClass(dynamicBlock.leadLineClassName || '');
-    const leadLineHighlights = parseHighlightsJson(dynamicBlock.leadLineHighlightsJson, leadLine);
-    const followupLine = String(dynamicBlock.followupLine || '').trim();
-    const followupLineClassName = normalizeToneClass(dynamicBlock.followupLineClassName || '');
-    const followupLineHighlights = parseHighlightsJson(dynamicBlock.followupLineHighlightsJson, followupLine);
-    const bodyHtml = String(dynamicBlock.bodyHtml || '').trim();
-    const sectionClassName = String(dynamicBlock.sectionClassName || '').trim();
-    const columnsStyle = normalizeDynamicColumnsStyle(dynamicBlock.columnsStyle);
-    const justify = normalizeHeroJustify(dynamicBlock.justify || 'center');
+    if (!dynamicRuntime) {
+      return null;
+    }
+    const title = String(dynamicRuntime.title || '').trim();
+    const titleClassName = normalizeToneClass(dynamicRuntime.titleClassName || '');
+    const titleHighlights = Array.isArray(dynamicRuntime.titleHighlights)
+      ? dynamicRuntime.titleHighlights
+      : [];
+    const leadLine = String(dynamicRuntime.leadLine || '').trim();
+    const leadLineClassName = normalizeToneClass(dynamicRuntime.leadLineClassName || '');
+    const leadLineHighlights = Array.isArray(dynamicRuntime.leadLineHighlights)
+      ? dynamicRuntime.leadLineHighlights
+      : [];
+    const followupLine = String(dynamicRuntime.followupLine || '').trim();
+    const followupLineClassName = normalizeToneClass(dynamicRuntime.followupLineClassName || '');
+    const followupLineHighlights = Array.isArray(dynamicRuntime.followupLineHighlights)
+      ? dynamicRuntime.followupLineHighlights
+      : [];
+    const bodyHtml = String(dynamicRuntime.bodyHtml || '').trim();
+    const sectionClassName = String(dynamicRuntime.sectionClassName || '').trim();
+    const columnsStyle = normalizeDynamicColumnsStyle(dynamicRuntime.columnsStyle);
+    const justify = normalizeHeroJustify(dynamicRuntime.justify || 'center');
     const bgTone = columnsStyle === 'legacy-highlight'
       ? 'blue'
-      : normalizePanelBgTone(dynamicBlock.bgTone || 'white');
-    const contentWidth = String(dynamicBlock.contentWidth || '').trim().toLowerCase() === 'browser'
+      : normalizePanelBgTone(dynamicRuntime.bgTone || 'white');
+    const contentWidth = String(dynamicRuntime.contentWidth || '').trim().toLowerCase() === 'browser'
       ? 'browser'
       : 'content';
-    const visibleColumnSlots = getVisibleDynamicColumnSlots(dynamicBlock);
-    const columns = toDynamicColumnsCountToken(visibleColumnSlots.length);
+    const columns = String(dynamicRuntime.columns || 'two').trim().toLowerCase() || 'two';
     const presetClassToken = dynamicPresetClassToken;
     const presetRuntimeClassName = buildPresetFamilyRuntimeClassName('columns', presetClassToken);
     const useFamilyPresetCtaStyle = (
       columnsStyle === 'retirement'
       && (presetClassToken === 'housing-allowance' || presetClassToken === 'do-the-math')
     );
-    const columnTitleSizeRem = Number(dynamicBlock.columnTitleSizeRem);
-    const photoMaxWidthPx = Number(dynamicBlock.photoMaxWidthPx);
-    const photoCornerRadiusPx = Number(dynamicBlock.photoCornerRadiusPx);
+    const columnTitleSizeRem = Number(dynamicRuntime.columnTitleSizeRem);
+    const photoMaxWidthPx = Number(dynamicRuntime.photoMaxWidthPx);
+    const photoCornerRadiusPx = Number(dynamicRuntime.photoCornerRadiusPx);
     const sectionStyle = {};
     if (Number.isFinite(columnTitleSizeRem) && columnTitleSizeRem > 0) {
       sectionStyle['--dynamic-columns-column-title-size'] = `${columnTitleSizeRem}rem`;
@@ -1999,68 +2016,42 @@ export function ColumnsBlock({
     if (Number.isFinite(photoCornerRadiusPx) && photoCornerRadiusPx >= 0) {
       sectionStyle['--dynamic-columns-photo-radius'] = `${Math.round(photoCornerRadiusPx)}px`;
     }
-    sectionStyle['--dynamic-columns-photo-aspect'] = normalizePhotoAspect(dynamicBlock.photoAspect);
+    sectionStyle['--dynamic-columns-photo-aspect'] = normalizePhotoAspect(dynamicRuntime.photoAspect);
     const hasIntroCopy = Boolean(title || leadLine || bodyHtml || followupLine);
     const isLegacyHighlight = columnsStyle === 'legacy-highlight';
-    const columnsItems = visibleColumnSlots
-      .map((slot) => {
-        const enabledValue = dynamicBlock[`col${slot}Enabled`];
-        const isEnabled = enabledValue === undefined ? slot <= 2 : toBooleanSetting(enabledValue);
-        if (!isEnabled) {
-          return null;
-        }
-
-        const type = isLegacyHighlight ? 'text' : normalizeDynamicColumnsType(dynamicBlock[`col${slot}Type`]);
-        const columnTitle = String(dynamicBlock[`col${slot}Title`] || '').trim();
-        const columnTitleClassName = normalizeToneClass(dynamicBlock[`col${slot}TitleClassName`] || '');
-        const columnTitleHighlights = parseHighlightsJson(dynamicBlock[`col${slot}TitleHighlightsJson`], columnTitle);
-        const columnBody = String(dynamicBlock[`col${slot}Body`] || '').trim();
-        const columnBodyHtml = String(dynamicBlock[`col${slot}BodyHtml`] || '').trim();
-        const columnImage = String(dynamicBlock[`col${slot}ImageUrl`] || '').trim();
-        const columnImageAlt = String(dynamicBlock[`col${slot}ImageAlt`] || '').trim();
-        const columnIconKey = String(dynamicBlock[`col${slot}IconKey`] || '').trim();
-        const columnIconTone = sanitizeClassName(dynamicBlock[`col${slot}IconTone`] || '');
-        const columnLink = coerceLinkValueFromFields(dynamicBlock, {
-          linkJsonKeys: [`col${slot}ButtonLinkJson`],
-          hrefKeys: [`col${slot}ButtonUrl`],
-          toKeys: [`col${slot}ButtonPageRef`],
-          openInNewWindowKeys: [`col${slot}ButtonOpenInNewWindow`],
-        });
-        const columnAction = buildColumnsAction(
-          readCanonicalBlockString(dynamicBlock, `col${slot}ButtonLabel`),
-          linkValueToEditableHref(columnLink),
-          dynamicBlock[`col${slot}ButtonStyle`],
-          dynamicBlock[`col${slot}ButtonTone`],
-          undefined,
-          resolveTo,
-          useFamilyPresetCtaStyle,
-        );
-
-        if (isLegacyHighlight && !columnTitle) {
-          return null;
-        }
-
-        if (!isLegacyHighlight && !columnTitle && !columnBody && !columnBodyHtml && !columnImage && !columnAction) {
-          return null;
-        }
-
+    const columnsItems = (Array.isArray(dynamicRuntime.items) ? dynamicRuntime.items : [])
+      .map((item) => {
+        const actionTarget = item.action?.to || item.action?.href || '';
+        const columnAction = item.action
+          ? buildColumnsAction(
+            item.action.label,
+            actionTarget,
+            item.action.style,
+            item.action.tone,
+            item.action.to,
+            resolveTo,
+            useFamilyPresetCtaStyle,
+          )
+          : null;
         return {
-          slot,
-          type,
-          widthShare: getDynamicColumnWidthShare(dynamicBlock, slot),
-          title: columnTitle,
-          titleClassName: columnTitleClassName,
-          titleHighlights: columnTitleHighlights,
-          body: columnBody,
-          bodyHtml: columnBodyHtml,
-          image: columnImage,
-          imageAlt: columnImageAlt,
-          iconKey: columnIconKey,
-          iconTone: columnIconTone,
+          slot: item.slot,
+          type: isLegacyHighlight ? 'text' : normalizeDynamicColumnsType(item.type),
+          widthShare: Number(item.widthShare) || 1,
+          title: String(item.title || '').trim(),
+          titleClassName: normalizeToneClass(item.titleClassName || ''),
+          titleHighlights: Array.isArray(item.titleHighlights) ? item.titleHighlights : [],
+          body: String(item.body || '').trim(),
+          bodyHtml: String(item.bodyHtml || '').trim(),
+          image: String(item.imageUrl || '').trim(),
+          imageAlt: String(item.imageAlt || '').trim(),
+          iconKey: String(item.iconKey || '').trim(),
+          iconTone: sanitizeClassName(item.iconTone || ''),
           action: columnAction,
         };
       })
-      .filter(Boolean);
+      .filter((item) => isLegacyHighlight ? Boolean(item.title) : Boolean(
+        item.title || item.body || item.bodyHtml || item.image || item.action,
+      ));
     const gridTemplateColumns = columnsItems.length
       ? columnsItems.map((column) => `minmax(0, ${column.widthShare}fr)`).join(' ')
       : '';

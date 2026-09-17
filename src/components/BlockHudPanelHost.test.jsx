@@ -82,6 +82,25 @@ describe('BlockHudPanelHost', () => {
     );
   });
 
+  it('shows and commits number-label size for numbered Card Grid presets', () => {
+    const onSettingChange = vi.fn();
+    render(createElement(CardGridSettingsProbe, {
+      presetId: 'step-cards',
+      initialSettings: {
+        cardCount: '1',
+        card1Title: '1. First step',
+        card1Body: 'Start here.',
+      },
+      onSettingChange,
+    }));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Layout & typography' }));
+    const numberSize = screen.getByRole('slider', { name: 'Card number label size' });
+    fireEvent.change(numberSize, { target: { value: '4.25' } });
+
+    expect(onSettingChange).toHaveBeenCalledWith('numberSizeRem', 4.25);
+  });
+
   it('routes CTA form HUD blocks through the reference CTA editor', () => {
     render(createElement(BlockHudPanelHost, {
       block: {
@@ -160,7 +179,7 @@ describe('BlockHudPanelHost', () => {
     const headerPage = document.querySelector('.admin-card-grid-hud-page--header');
     expect(headerPage?.querySelector('.admin-card-grid-header-editor-copy')).toBeTruthy();
     expect(headerPage?.querySelector('.admin-card-grid-header-editor-controls')).toBeTruthy();
-    expect(headerPage?.querySelectorAll('.admin-card-grid-header-editor-controls input[type="range"]')).toHaveLength(7);
+    expect(headerPage?.querySelectorAll('.admin-card-grid-header-editor-controls input[type="range"]')).toHaveLength(8);
     expect([...headerPage?.querySelectorAll('.admin-card-grid-header-editor-controls input[type="range"]') || []][0]?.getAttribute('aria-label')).toBe('Header size (rem)');
     expect(document.querySelector('.admin-card-grid-hud-page--appearance .admin-card-grid-hud-group--spacing')).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Layout & typography' }));

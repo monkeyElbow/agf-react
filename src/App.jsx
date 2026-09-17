@@ -277,10 +277,6 @@ function PageRoute({ page }) {
     ));
   }
 
-  if (routeKey === '/yourplan') {
-    return <Navigate to="/" replace />;
-  }
-
   return withPageSuspense(<NativeContentPage page={page} />);
 }
 

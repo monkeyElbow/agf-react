@@ -27,6 +27,12 @@ const COLUMNS_COUNT_OPTIONS = [
   { value: 'four', label: '4 columns' },
 ];
 
+const COLUMNS_JUSTIFY_OPTIONS = [
+  { value: 'left', label: 'Left' },
+  { value: 'center', label: 'Center' },
+  { value: 'right', label: 'Right' },
+];
+
 const COLUMNS_TYPE_OPTIONS = [
   { value: 'text', label: 'Text column' },
   { value: 'photo', label: 'Photo column' },
@@ -116,6 +122,12 @@ const sections = [
         label: 'Columns count',
         type: 'select',
         options: COLUMNS_COUNT_OPTIONS,
+      }),
+      defineEditorField({
+        id: 'justify',
+        label: 'Columns alignment',
+        type: 'select',
+        options: COLUMNS_JUSTIFY_OPTIONS,
       }),
       defineEditorField({ id: 'sectionClassName', label: 'Section class name', type: 'text' }),
     ],

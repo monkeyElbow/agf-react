@@ -9,7 +9,9 @@ import {
   normalizeGridBgTone,
   normalizeDynamicGridHeaderSizeRem,
   normalizeDynamicGridHeaderWidthPercent,
+  normalizeDynamicGridHeaderLetterSpacingEm,
   normalizeDynamicGridNumberPositionPercent,
+  normalizeDynamicGridNumberSizeRem,
   normalizeDynamicGridCardTitleLineHeight,
   normalizeDynamicGridCardTitleBodySpaceRem,
   normalizeDynamicGridCardGapRem,
@@ -90,11 +92,25 @@ describe('dynamic grid contrast helpers', () => {
     expect(normalizeDynamicGridHeaderWidthPercent(undefined)).toBe(100);
   });
 
+  it('normalizes Card Grid header letter spacing within the shared tracking range', () => {
+    expect(normalizeDynamicGridHeaderLetterSpacingEm(-0.0374)).toBe(-0.037);
+    expect(normalizeDynamicGridHeaderLetterSpacingEm(0.2)).toBe(0.04);
+    expect(normalizeDynamicGridHeaderLetterSpacingEm(-0.2)).toBe(-0.12);
+    expect(normalizeDynamicGridHeaderLetterSpacingEm(undefined)).toBe(-0.026);
+  });
+
   it('normalizes the numbered-card number-position slider around centered zero', () => {
     expect(normalizeDynamicGridNumberPositionPercent(-72)).toBe(-50);
     expect(normalizeDynamicGridNumberPositionPercent(27.6)).toBe(28);
     expect(normalizeDynamicGridNumberPositionPercent(68)).toBe(50);
     expect(normalizeDynamicGridNumberPositionPercent(undefined)).toBe(0);
+  });
+
+  it('normalizes the numbered-card number-label size slider', () => {
+    expect(normalizeDynamicGridNumberSizeRem(4.126)).toBe(4.13);
+    expect(normalizeDynamicGridNumberSizeRem(0.5)).toBe(1.5);
+    expect(normalizeDynamicGridNumberSizeRem(8)).toBe(6);
+    expect(normalizeDynamicGridNumberSizeRem(undefined)).toBe(3.2);
   });
 
   it('normalizes the optional Card Grid card-title line-height slider', () => {

@@ -729,8 +729,10 @@ describe('NativeContentPage functional routes', () => {
     expect(screen.getByRole('heading', { name: 'Move your funds.' })).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Start the process' })).toBeTruthy();
     expect(document.querySelector('[data-block-id="rollover_options"] > .ag-panel-rail > .native-info-section-copy > h2')).toBeTruthy();
-    expect(document.querySelector('[data-block-id="rollover_process"] > .ag-panel-rail > .native-info-rich-html > h2')).toBeTruthy();
-    expect(document.querySelectorAll('[data-block-id="rollover_process"] > .ag-panel-rail > .native-info-rich-html > p')).toHaveLength(3);
+    expect(document.querySelector('[data-block-id="rollover_process"] > .ag-panel-rail > .native-info-section-copy > h2')).toBeTruthy();
+    expect(document.querySelectorAll('[data-block-id="rollover_process"] .service-native-grid > .service-native-card')).toHaveLength(3);
+    expect(document.querySelectorAll('[data-block-id="rollover_process"] .service-native-card-step-number')).toHaveLength(3);
+    expect(document.querySelector('[data-block-id="rollover_process"] .rollovers-copy-address')).toBeTruthy();
     expect(screen.getByRole('link', { name: 'Rollover/Transfer Form' })).toBeTruthy();
     expect(screen.getAllByText('Our rollover specialists are happy to help focus your retirement.')).toHaveLength(1);
   });
@@ -2003,13 +2005,14 @@ describe('NativeContentPage functional routes', () => {
     expect(strategyHeadingSection?.getAttribute('style') || '').toContain('--dynamic-billboard-padding-top: 4.8rem');
     expect(strategyHeadingSection?.getAttribute('style') || '').toContain('--dynamic-billboard-padding-bottom: 7.6rem');
     const strategyActionRow = strategyHeadingSection?.querySelector('.service-native-action-row');
-    expect(strategyActionRow?.className).toContain('is-dynamic-billboard-header-gap');
-    expect(strategyActionRow?.getAttribute('style') || '').toContain('--dynamic-billboard-header-gap: 2.3rem');
+    expect(strategyActionRow?.className).not.toContain('is-dynamic-billboard-header-gap');
+    expect(strategyActionRow?.getAttribute('style') || '').not.toContain('--dynamic-billboard-header-gap');
     expect(strategyActionRow?.className).toContain('is-dynamic-billboard-action-gap');
     expect(strategyActionRow?.getAttribute('style') || '').toContain('--dynamic-billboard-action-gap: 2.7rem');
     expect(strategyActionRow?.getAttribute('style') || '').toContain('margin-top: 2.7rem');
     expect(loanApplySection?.className).toContain('is-bg-sandstone');
-    expect(loanDetailsSection?.getAttribute('style') || '').toContain('--dyn-content-padding-bottom: 4.8rem');
+    expect(loanDetailsSection?.getAttribute('style') || '').toContain('padding-bottom: 4.8rem');
+    expect(loanDetailsSection?.className).toContain('is-card-grid-preset-loan-details');
     expect(strategyEnrollSection).toBeNull();
     expect(within(strategyGridSection).queryByRole('link', { name: 'Enroll now' })).toBeNull();
     expect(within(strategyGridSection).getByRole('heading', { name: 'MBA Income Fund' })).toBeTruthy();
@@ -2151,11 +2154,13 @@ describe('NativeContentPage functional routes', () => {
       'intro',
       'confirm_eligibility',
       'enrollment_steps',
-      'return_forms',
       'request_form',
     ].forEach((blockId) => {
       expect(container.querySelector(`[data-block-id="${blockId}"]`)).toBeTruthy();
     });
+    const mailFaxCard = container.querySelector('[data-block-id="enrollment_steps"] .service-native-card:nth-child(4)');
+    expect(mailFaxCard).toBeTruthy();
+    expect(within(mailFaxCard).getByRole('button', { name: /copy mailing address/i })).toBeTruthy();
     expect(container.querySelector('.retirement-child-native-qualify')).toBeNull();
     expect(container.querySelector('.retirement-child-native-strategies')).toBeNull();
   });

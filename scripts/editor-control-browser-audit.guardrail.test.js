@@ -23,6 +23,12 @@ describe('editor browser audit guardrails', () => {
     expect(source).toContain("cardShadow: [{ selector: '.service-native-card', property: 'box-shadow' }]");
     expect(source).toContain("cardShadowOpacity: [{ selector: '.service-native-card', property: 'box-shadow' }]");
     expect(source).toContain("titleTone: [{ selector: '.service-native-card h3', property: 'color' }]");
+    expect(source).toContain("{ selector: '.service-native-card h3 > .service-native-card-title-content, .services-breakdown-panel h3 > a', property: 'text-align' }");
+    expect(source).toContain("{ selector: '.service-native-card h3, .services-breakdown-panel h3', property: 'justify-content' }");
+    expect(source).toContain('const getCardTitleAlignmentProbe = (root) =>');
+    expect(source).toContain('const getCardTitleJustifyTarget = (controlState) =>');
+    expect(source).toContain('visible title geometry did not move into place');
+    expect(source).toContain("for (const requestedTarget of ['left', 'center', 'right'])");
     expect(source).toContain("bodyTone: [{ selector: '.service-native-card :is(p, li)', property: 'color' }]");
     expect(source).toContain("backgroundEffectsJson: [{ selector: '.block-background-effects', property: 'display' }]");
     expect(source).toContain("'aria:Light 1 motion style#1': [{ selector: '.block-background-light', property: 'animation-name' }]");

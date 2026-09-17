@@ -498,6 +498,42 @@ function contentAdminDevPlugin() {
             return;
           }
 
+          if (url.pathname === '/migrate-retirement-403b-loan-details-card-grid') {
+            const result = contentStore.migrateRetirement403bLoanDetailsSnapshot({
+              actor: body.actor,
+              reason: body.reason,
+            });
+            sendJson(res, result.ok ? 200 : 409, result);
+            return;
+          }
+
+          if (url.pathname === '/migrate-retirement-rollover-process-card-grid') {
+            const result = contentStore.migrateRetirementRolloverProcessSnapshot({
+              actor: body.actor,
+              reason: body.reason,
+            });
+            sendJson(res, result.ok ? 200 : 409, result);
+            return;
+          }
+
+          if (url.pathname === '/migrate-retirement-individual-enrollment-step-card-presentation') {
+            const result = contentStore.migrateRetirementIndividualEnrollmentStepCardPresentationSnapshot({
+              actor: body.actor,
+              reason: body.reason,
+            });
+            sendJson(res, result.ok ? 200 : 409, result);
+            return;
+          }
+
+          if (url.pathname === '/migrate-retirement-individual-enrollment-mail-fax-step') {
+            const result = contentStore.migrateRetirementIndividualEnrollmentMailFaxStepSnapshot({
+              actor: body.actor,
+              reason: body.reason,
+            });
+            sendJson(res, result.ok ? 200 : 409, result);
+            return;
+          }
+
           if (url.pathname === '/migrate-online-contributions-step-cards') {
             const result = contentStore.migrateOnlineContributionsStepsSnapshot({
               actor: body.actor,

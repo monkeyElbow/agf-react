@@ -170,6 +170,8 @@ describe('native card-grid style ownership guardrail', () => {
     expect(numberedSource).toContain('.is-numbered-step-cards.is-bg-blue,\n.is-numbered-step-cards.is-bg-grey');
     expect(numberedSource).toContain('--dynamic-grid-alt-title-one: var(--ag-color-atlantean);');
     expect(numberedSource).toContain('.is-numbered-step-cards .native-info-section-copy .native-info-rich-html');
+    expect(numberedSource).toContain('text-align: var(--dynamic-grid-card-body-justify, left) !important;');
+    expect(numberedSource).toContain('text-align: var(--dynamic-grid-card-title-justify, left) !important;');
     expect(numberedSource).toContain('color: var(--dynamic-grid-body-color);');
     expect(serviceSource).toContain('.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-body-alternating');
     expect(serviceSource).toContain('--dynamic-grid-body-color: var(--dynamic-grid-alt-body-one);');

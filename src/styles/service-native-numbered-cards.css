@@ -64,16 +64,17 @@
 
 .is-numbered-step-cards .service-native-card > div:first-child > .service-native-card-step-content {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
+  flex-wrap: nowrap;
   grid-column: 2;
   grid-row: 1 / span 2;
   align-self: center;
-  align-items: center;
+  align-items: stretch;
   gap: var(--numbered-step-card-row-gap);
   min-width: 0;
 }
 
-.is-numbered-step-cards .service-native-card h3 {
+.is-numbered-step-cards .service-native-card-step-number {
   grid-column: 1;
   grid-row: 1 / span 2;
   align-self: center;
@@ -82,45 +83,127 @@
   display: block;
   margin: 0;
   padding-bottom: 0;
-  color: var(--numbered-step-card-accent, var(--ag-color-atlantean)) !important;
+  color: var(--numbered-step-card-accent, var(--ag-color-atlantean));
   font-family: var(--ag-font-helv);
   font-size: var(--numbered-step-card-number-size) !important;
   font-weight: 800;
-  line-height: var(--dynamic-grid-card-title-line-height, 1) !important;
+  line-height: 1;
   letter-spacing: -0.04em;
   position: relative;
   left: var(--numbered-step-card-number-offset, 0%);
 }
 
-.is-numbered-step-cards .service-native-card h3::after {
+.is-numbered-step-cards .service-native-card-step-title {
+  grid-column: auto;
+  grid-row: auto;
+  min-width: 0;
+  margin: 0 0 var(--dynamic-grid-card-title-body-space, 0.35rem);
+  padding: 0;
+  color: var(--dynamic-grid-card-title-color, var(--ag-color-super-grey)) !important;
+  font-family: var(--ag-font-helv);
+  font-size: var(--dynamic-grid-card-title-size, 1.1rem) !important;
+  font-weight: 700;
+  line-height: var(--dynamic-grid-card-title-line-height, 1.05) !important;
+  letter-spacing: 0;
+  text-align: var(--dynamic-grid-card-title-justify, left) !important;
+  overflow-wrap: anywhere;
+}
+
+.is-numbered-step-cards .service-native-card-step-title::after {
   display: none;
 }
 
+/* The legacy step-card skin styles every h3 as the large number. Number and
+   authored title are now separate elements, so the title must consume the
+   normal Card Grid typography controls instead. */
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-preset-step-cards.is-numbered-step-cards
+  .service-native-card .service-native-card-step-title {
+  grid-column: auto !important;
+  grid-row: auto !important;
+  align-self: stretch;
+  justify-self: stretch;
+  width: 100% !important;
+  font-size: var(--dynamic-grid-card-title-size, 1.1rem) !important;
+  line-height: var(--dynamic-grid-card-title-line-height, 1.05) !important;
+}
+
+/* The legacy step-card skin centers/shrink-wraps every h3 because its h3 used
+ * to be the large step number. The number and authored title are now separate
+ * elements; the title must own the full body column so Card title justify can
+ * move its text inside that column. */
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-numbered-step-cards
+  .service-native-card .service-native-card-step-title {
+  align-self: stretch !important;
+  justify-self: stretch !important;
+  width: 100% !important;
+}
+
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-preset-step-cards.is-numbered-step-cards.is-title-super-grey
+  .service-native-card .service-native-card-step-title,
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-preset-step-cards.is-numbered-step-cards.is-title-atlantean
+  .service-native-card .service-native-card-step-title,
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-preset-step-cards.is-numbered-step-cards.is-title-mango
+  .service-native-card .service-native-card-step-title,
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-preset-step-cards.is-numbered-step-cards.is-title-melon
+  .service-native-card .service-native-card-step-title,
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-preset-step-cards.is-numbered-step-cards.is-title-white
+  .service-native-card .service-native-card-step-title {
+  color: var(--dynamic-grid-card-title-color) !important;
+}
+
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-preset-step-cards.is-numbered-step-cards.is-title-alternating
+  .service-native-card:nth-child(3n + 1) .service-native-card-step-title {
+  color: var(--dynamic-grid-alt-title-one) !important;
+}
+
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-preset-step-cards.is-numbered-step-cards.is-title-alternating
+  .service-native-card:nth-child(3n + 2) .service-native-card-step-title {
+  color: var(--dynamic-grid-alt-title-two) !important;
+}
+
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-preset-step-cards.is-numbered-step-cards.is-title-alternating
+  .service-native-card:nth-child(3n) .service-native-card-step-title {
+  color: var(--dynamic-grid-alt-title-three) !important;
+}
+
 .is-numbered-step-cards .service-native-card p {
-  grid-column: 2;
+  grid-column: auto;
   min-width: 0;
   margin: 0;
   align-self: center;
   color: var(--dynamic-grid-body-color);
-  text-align: left;
-  font-size: var(--step-card-body-font-size, clamp(1.18rem, 1.95vw, 1.42rem));
-  line-height: var(--step-card-body-line-height, 1.42);
+  text-align: var(--dynamic-grid-card-body-justify, left) !important;
+  font-size: var(--dynamic-grid-card-body-size, var(--step-card-body-font-size, clamp(1.18rem, 1.95vw, 1.42rem)));
+  line-height: var(--dynamic-grid-card-body-line-height, var(--step-card-body-line-height, 1.42));
 }
 
 .is-numbered-step-cards .service-native-card-step-content > p {
-  flex: 1 1 12rem;
+  flex: 0 0 auto;
   min-width: 0;
+  /* The body is a full-width text field inside the content column. The old
+     centered cross-axis alignment shrink-wrapped short copy, making Step 2
+     look centered even when text-align was left. */
+  align-self: stretch !important;
+  width: 100%;
 }
 
 .is-numbered-step-cards .service-native-card :is(.service-native-card-rich-body, .service-native-card-bullet-list, .service-native-card-link-list, .service-native-card-accordions) {
-  grid-column: 2;
+  grid-column: auto;
   align-self: center;
   min-width: 0;
 }
 
 .is-numbered-step-cards .service-native-card-step-content > :is(.service-native-card-rich-body, .service-native-card-bullet-list, .service-native-card-link-list, .service-native-card-accordions) {
-  flex: 1 1 12rem;
+  flex: 0 0 auto;
   min-width: 0;
+}
+
+/* Rich HTML must occupy the same content column as the step title and
+ * actions. Without this, a short address shrink-wraps and is centered even
+ * when its text-align is left. */
+.is-numbered-step-cards .service-native-card-step-content > .service-native-card-rich-body {
+  align-self: stretch;
+  width: 100%;
 }
 
 .is-numbered-step-cards .service-native-card:not(:has(.service-native-action-row, .service-native-card-link-list, .service-native-card-bullet-list, .service-native-card-accordions)) p {
@@ -136,7 +219,7 @@
 }
 
 .is-numbered-step-cards .service-native-action-row {
-  grid-column: 2;
+  grid-column: auto;
   margin-top: 0.1rem;
   padding-top: 0;
   justify-content: flex-start;
@@ -312,7 +395,12 @@
     grid-row: auto;
   }
 
-  .is-numbered-step-cards .service-native-card h3 {
+  .is-numbered-step-cards .service-native-card-step-number {
     justify-self: flex-start;
+  }
+
+  .is-numbered-step-cards .service-native-card-step-title {
+    grid-column: 1;
+    grid-row: auto;
   }
 }

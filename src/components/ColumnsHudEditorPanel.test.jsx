@@ -220,7 +220,7 @@ describe('ColumnsHudEditorPanel', () => {
     );
 
     expect(screen.getByLabelText('Photo Label').value).toBe('Retirement planning');
-    expect(screen.getByLabelText('Photo Caption').value).toBe('Guidance for long-term savings.');
+    expect(screen.getByLabelText('Photo Caption').textContent).toContain('Guidance for long-term savings.');
   });
 
   it('applies full-title color and clears column title spans', () => {
@@ -479,10 +479,11 @@ describe('ColumnsHudEditorPanel', () => {
     const titleInput = screen.getByLabelText('Title');
     const bodyInput = screen.getByLabelText('Body');
 
-    expect(bodyInput.getAttribute('rows')).toBe('6');
+    expect(bodyInput.getAttribute('contenteditable')).toBe('true');
 
     fireEvent.change(titleInput, { target: { value: 'Draft title value' } });
-    fireEvent.change(bodyInput, { target: { value: 'Draft body value' } });
+    bodyInput.innerHTML = '<p>Draft body value</p>';
+    fireEvent.input(bodyInput);
     fireEvent.click(screen.getByText('Image'));
     fireEvent.change(screen.getByLabelText('Photo URL'), { target: { value: '/images/draft.jpg' } });
     fireEvent.change(screen.getByLabelText('Alt text'), { target: { value: 'Draft alt text' } });
@@ -492,7 +493,7 @@ describe('ColumnsHudEditorPanel', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Force rerender' }));
 
     expect(screen.getByLabelText('Title').value).toBe('Draft title value');
-    expect(screen.getByLabelText('Body').value).toBe('Draft body value');
+    expect(screen.getByLabelText('Body').textContent).toContain('Draft body value');
     fireEvent.click(screen.getByText('Image'));
     expect(screen.getByLabelText('Photo URL').value).toBe('/images/draft.jpg');
     expect(screen.getByLabelText('Alt text').value).toBe('Draft alt text');
@@ -511,7 +512,8 @@ describe('ColumnsHudEditorPanel', () => {
     fireEvent.blur(screen.getByLabelText('URL / path'));
 
     expect(onSettingChange).toHaveBeenCalledWith('col1Title', 'Draft title value');
-    expect(onSettingChange).toHaveBeenCalledWith('col1Body', 'Draft body value');
+    expect(onSettingChange).toHaveBeenCalledWith('col1BodyHtml', '<p>Draft body value</p>');
+    expect(onSettingChange).toHaveBeenCalledWith('col1Body', '');
     expect(onSettingChange).toHaveBeenCalledWith('col1ImageUrl', '/images/draft.jpg');
     expect(onSettingChange).toHaveBeenCalledWith('col1ImageAlt', 'Draft alt text');
     expect(onSettingChange).toHaveBeenCalledWith('col1ButtonLabel', 'Draft button');

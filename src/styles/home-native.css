@@ -3689,7 +3689,7 @@ p.home-services-feature-panel-body {
   width: min(var(--services-breakdown-header-width, 100%), 100%);
   font-size: var(--services-breakdown-header-size, clamp(1.95rem, 3.15vw, 2.55rem));
   line-height: 0.98;
-  letter-spacing: clamp(-0.82px, -0.08vw, -0.16px);
+  letter-spacing: var(--services-breakdown-header-letter-spacing, clamp(-0.82px, -0.08vw, -0.16px));
   text-wrap: balance;
 }
 
@@ -3836,6 +3836,91 @@ p.home-services-feature-panel-body {
 .services-breakdown-links a:focus-visible {
   outline: 2px solid rgba(var(--ag-color-atlantean-dark-rgb), 0.18);
   outline-offset: 3px;
+}
+
+/* The services directory is a Card Grid block with a page-specific shell.
+   Keep that shell, but consume the same canonical Card Grid settings. */
+.services-breakdown-section .services-breakdown-list {
+  gap: var(--services-breakdown-card-gap, clamp(0.8rem, 1.45vw, 1.05rem));
+}
+
+.services-breakdown-section.is-columns-two .services-breakdown-list {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.services-breakdown-section.is-columns-three .services-breakdown-list {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.services-breakdown-section.is-columns-four .services-breakdown-list {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.services-breakdown-section .services-breakdown-panel {
+  border-width: var(--services-breakdown-card-outline-width, 1px);
+  border-color: var(--services-breakdown-card-outline-color, rgba(65, 64, 66, 0.09));
+  box-shadow: var(--services-breakdown-card-shadow);
+}
+
+.services-breakdown-section.is-card-outline-atlantean {
+  --services-breakdown-card-outline-color: var(--ag-color-atlantean);
+}
+
+.services-breakdown-section.is-card-outline-mango {
+  --services-breakdown-card-outline-color: var(--ag-color-mango);
+}
+
+.services-breakdown-section.is-card-outline-melon {
+  --services-breakdown-card-outline-color: var(--ag-color-melon);
+}
+
+.services-breakdown-section.is-card-outline-sandstone {
+  --services-breakdown-card-outline-color: var(--ag-color-sandstone);
+}
+
+.services-breakdown-section.is-card-outline-super-grey {
+  --services-breakdown-card-outline-color: var(--ag-color-super-grey);
+}
+
+.services-breakdown-section.is-card-outline-white {
+  --services-breakdown-card-outline-color: var(--ag-color-white);
+}
+
+.services-breakdown-section.is-card-outline .services-breakdown-panel {
+  border-style: solid;
+}
+
+.services-breakdown-section.is-card-outline-off .services-breakdown-panel,
+.services-breakdown-section.is-card-grid-style-none .services-breakdown-panel {
+  border: 0;
+}
+
+.services-breakdown-section.is-card-grid-style-none .services-breakdown-panel {
+  background: transparent;
+  box-shadow: none;
+}
+
+.services-breakdown-section.is-card-shadow .services-breakdown-panel {
+  box-shadow: 0 12px 26px rgba(5, 30, 54, var(--services-breakdown-card-shadow-opacity, 0.14));
+}
+
+.services-breakdown-section.is-card-shadow-off .services-breakdown-panel,
+.services-breakdown-section.is-card-shadow-off .services-breakdown-panel:hover {
+  box-shadow: none;
+}
+
+.services-breakdown-section .services-breakdown-panel h3 {
+  text-align: var(--services-breakdown-card-title-justify, left);
+}
+
+.services-breakdown-section .services-breakdown-panel h3 > a {
+  display: block;
+  width: 100%;
+  text-align: inherit;
+}
+
+.services-breakdown-section .services-breakdown-description {
+  text-align: var(--services-breakdown-card-body-justify, left);
 }
 
 .services-native-grid {
@@ -4173,6 +4258,10 @@ p.home-services-feature-panel-body {
 }
 
 @media (max-width: 980px) {
+  .services-breakdown-section:is(.is-columns-two, .is-columns-three, .is-columns-four) .services-breakdown-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .services-breakdown-description {
     max-width: 38ch;
   }

@@ -305,6 +305,7 @@ function buildBrowserAudit() {
             borderRadius: style.borderRadius,
             boxShadow: style.boxShadow,
             display: style.display,
+            textAlign: style.textAlign,
             gap: style.gap,
             gridTemplateColumns: style.gridTemplateColumns,
           },
@@ -319,12 +320,30 @@ function buildBrowserAudit() {
       cardShadow: [{ selector: '.service-native-card', property: 'box-shadow' }],
       cardShadowOpacity: [{ selector: '.service-native-card', property: 'box-shadow' }],
       titleTone: [{ selector: '.service-native-card h3', property: 'color' }],
+      cardTitleJustify: [
+        { selector: '.service-native-card h3, .services-breakdown-panel h3', property: 'text-align' },
+        { selector: '.service-native-card h3, .services-breakdown-panel h3', property: 'justify-content' },
+        { selector: '.service-native-card h3 > .service-native-card-title-content, .services-breakdown-panel h3 > a', property: 'text-align' },
+        { selector: '.service-native-card h3, .service-native-card-step-title', property: 'width' },
+        { selector: '.service-native-card h3, .service-native-card-step-title', property: 'justify-self' },
+      ],
       bodyTone: [{ selector: '.service-native-card :is(p, li)', property: 'color' }],
       // Flush-topper cards apply padding inside the shell so the cap stays edge-to-edge.
       cardPaddingRem: [{ selector: '.service-native-card, .insurance-native-coverage .service-native-card :is(h3, p, .service-native-action-row)', property: 'padding' }],
       cardGapRem: [{ selector: '.service-native-grid', property: 'gap' }],
       cardTitleBodySpaceRem: [{ selector: '.service-native-card h3', property: 'margin-bottom' }],
       backgroundEffectsJson: [{ selector: '.block-background-effects', property: 'display' }],
+      // Billboard header gap is the title-to-subtitle spacing. Keep both
+      // shared subtitle class names here because direct and service-owned
+      // BillboardBlock callers use different semantic class names.
+      'aria:Title to subtitle gap#1': [{
+        selector: '.native-info-section-subtitle.is-dynamic-billboard-header-gap, .home-native-billboard-subtitle.is-dynamic-billboard-header-gap',
+        property: 'margin-top',
+      }],
+      'aria:Subtitle size#1': [{
+        selector: '.native-info-section-subtitle, .home-native-billboard-subtitle',
+        property: 'font-size',
+      }],
       'aria:Light 1 motion style#1': [{ selector: '.block-background-light', property: 'animation-name' }],
     });
     const getIraCardSpacing = (root) => {
@@ -339,6 +358,61 @@ function buildBrowserAudit() {
           titleBodyGap: title && body ? body.getBoundingClientRect().top - title.getBoundingClientRect().bottom : null,
         };
       });
+    };
+    const getCardTitleAlignmentProbe = (root) => {
+      const card = root?.querySelector('.service-native-card');
+      const title = card?.querySelector('h3');
+      const titleContent = title?.querySelector('.service-native-card-title-content') || title;
+      const body = card?.querySelector('.service-native-card-flow > :is(p, .service-native-card-rich-body, .native-info-rich-html)');
+      if (!card || !title || !titleContent || !body) return null;
+
+      const range = document.createRange();
+      range.selectNodeContents(titleContent);
+      const textRects = [...range.getClientRects()]
+        .map((rect) => ({ left: rect.left, right: rect.right, width: rect.width, top: rect.top }))
+        .filter((rect) => rect.width > 0);
+      const contentRect = body.getBoundingClientRect();
+      const line = textRects[0] || null;
+      return {
+        card: {
+          left: card.getBoundingClientRect().left,
+          right: card.getBoundingClientRect().right,
+        },
+        title: {
+          left: title.getBoundingClientRect().left,
+          right: title.getBoundingClientRect().right,
+          width: title.getBoundingClientRect().width,
+          textAlign: getComputedStyle(title).textAlign,
+        },
+        titleContent: {
+          left: titleContent.getBoundingClientRect().left,
+          right: titleContent.getBoundingClientRect().right,
+          width: titleContent.getBoundingClientRect().width,
+          display: getComputedStyle(titleContent).display,
+          textAlign: getComputedStyle(titleContent).textAlign,
+        },
+        contentColumn: {
+          left: contentRect.left,
+          right: contentRect.right,
+          width: contentRect.width,
+        },
+        firstTitleLine: line,
+        lineDeltas: line
+          ? {
+              left: Math.abs(line.left - contentRect.left),
+              center: Math.abs(((line.left + line.right) / 2) - ((contentRect.left + contentRect.right) / 2)),
+              right: Math.abs(line.right - contentRect.right),
+            }
+          : null,
+      };
+    };
+    const getCardTitleJustifyTarget = (controlState) => {
+      const match = String(controlState || '').match(/selected:\s*(left|center|right)/i);
+      return match ? match[1].toLowerCase() : '';
+    };
+    const cardTitleAlignmentMatches = (probe, target) => {
+      const delta = probe?.lineDeltas?.[target];
+      return Number.isFinite(delta) && delta <= 8;
     };
     const getRenderedControlProof = (root, fieldId) => {
       const proofs = renderedControlProofs[fieldId];
@@ -682,6 +756,42 @@ function buildBrowserAudit() {
             continue;
           }
           const afterControlState = readControlState(afterControl);
+          if (fieldId === 'cardTitleJustify') {
+            const target = getCardTitleJustifyTarget(afterControlState);
+            const alignmentProbe = getCardTitleAlignmentProbe(section);
+            if (!target || !alignmentProbe) {
+              report.failures.push(`${blockId}/${fieldId}: could not identify the selected title alignment or visible title geometry (${JSON.stringify({ afterControlState, alignmentProbe })})`);
+            } else if (!cardTitleAlignmentMatches(alignmentProbe, target)) {
+              report.failures.push(`${blockId}/${fieldId}: selected ${target} but the visible title did not align to the content column (${JSON.stringify(alignmentProbe)})`);
+            }
+
+            // One mutation only proves one direction. Exercise every title
+            // alignment option so a control cannot pass while only its
+            // initially selected value is wired to the renderer.
+            for (const requestedTarget of ['left', 'center', 'right']) {
+              const activePanel = document.querySelector('.admin-front-hud-tool.is-panel-active') || panel;
+              const activeField = activePanel.querySelector(`[data-editor-field-id="${CSS.escape(fieldId)}"]`);
+              const targetButton = [...(activeField?.querySelectorAll('button[role="radio"]') || [])]
+                .find((button) => String(button.getAttribute('aria-label') || '').trim().toLowerCase() === requestedTarget);
+              if (!targetButton) {
+                report.failures.push(`${blockId}/${fieldId}: missing ${requestedTarget} alignment option during geometry audit`);
+                continue;
+              }
+              if (getCardTitleJustifyTarget(readControlState(targetButton)) !== requestedTarget) {
+                targetButton.click();
+                await sleep(waitMs);
+              }
+              const refreshedPanel = document.querySelector('.admin-front-hud-tool.is-panel-active') || panel;
+              const refreshedField = refreshedPanel.querySelector(`[data-editor-field-id="${CSS.escape(fieldId)}"]`);
+              const refreshedControl = refreshedField ? pickControl(refreshedField) : null;
+              const refreshedState = readControlState(refreshedControl);
+              const refreshedProbe = getCardTitleAlignmentProbe(section);
+              const refreshedTarget = getCardTitleJustifyTarget(refreshedState) || requestedTarget;
+              if (!refreshedProbe || !cardTitleAlignmentMatches(refreshedProbe, requestedTarget)) {
+                report.failures.push(`${blockId}/${fieldId}: requested ${requestedTarget} but the visible title geometry did not move into place (${JSON.stringify({ refreshedState, refreshedTarget, refreshedProbe })})`);
+              }
+            }
+          }
           if (fieldId === 'cardPaddingRem' && beforeIraSpacing.length) {
             const expectedPadding = Number(afterControl.value) * parseFloat(getComputedStyle(document.documentElement).fontSize);
             const afterIraSpacing = getIraCardSpacing(section);

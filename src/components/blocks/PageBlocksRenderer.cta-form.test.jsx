@@ -49,6 +49,24 @@ describe('PageBlocksRenderer CTA form', () => {
     expect(button.className).toContain('is-tone-super-grey');
   });
 
+  it('applies explicit top and bottom padding to the CTA section', () => {
+    const { container } = renderCtaBlock({
+      id: 'cta_form',
+      type: 'cta_form',
+      kind: 'cta_form',
+      mode: 'dynamic',
+      title: 'Imagine the possibilities.',
+      paddingTopRem: 3.25,
+      paddingBottomRem: 5.5,
+      fieldsJson: ctaFieldsJson([
+        { id: 'name', label: 'Name', type: 'text', required: true },
+      ]),
+    });
+
+    expect(container.querySelector('section.native-dynamic-cta')?.style.paddingTop).toBe('3.25rem');
+    expect(container.querySelector('section.native-dynamic-cta')?.style.paddingBottom).toBe('5.5rem');
+  });
+
   it('keeps filled blue CTA buttons on the default blue tone', () => {
     renderCtaBlock({
       id: 'cta_form',

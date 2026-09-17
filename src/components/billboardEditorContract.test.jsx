@@ -18,6 +18,7 @@ const BILLBOARD_CORE_SETTING_KEYS = [
   'subtitleClassName',
   'subtitleHighlightsJson',
   'subtitleSizeRem',
+  'subtitleFontWeight',
   'titleFontFamily',
   'titleFontWeight',
   'titleSizeRem',
@@ -35,6 +36,7 @@ const BILLBOARD_CORE_SETTING_KEYS = [
   'bodyMaxWidthPx',
   'lineSpacing',
   'headerGapRem',
+  'bodyGapRem',
   'actionGapRem',
   'contentMaxWidthPx',
   'paddingTopRem',
@@ -96,6 +98,8 @@ describe('Billboard editor contract', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Copy' }));
     fireEvent.change(screen.getByRole('slider', { name: 'Lead copy size' }), { target: { value: '1.85' } });
     expect(onSettingChange).toHaveBeenCalledWith('leadCopySizeRem', 1.85);
+    fireEvent.change(screen.getByRole('slider', { name: 'Space above body' }), { target: { value: '1.75' } });
+    expect(onSettingChange).toHaveBeenCalledWith('bodyGapRem', 1.75);
 
     fireEvent.click(screen.getByRole('button', { name: 'Layout' }));
     fireEvent.change(screen.getByRole('slider', { name: 'Billboard top padding' }), { target: { value: '5' } });
@@ -104,6 +108,29 @@ describe('Billboard editor contract', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Buttons' }));
     fireEvent.change(screen.getByRole('slider', { name: 'Billboard button gap' }), { target: { value: '2.35' } });
     expect(onSettingChange).toHaveBeenCalledWith('actionGapRem', 2.35);
+  });
+
+  it('keeps the IRA daily billboard on the canonical heading controls', () => {
+    const onSettingChange = vi.fn();
+    render(<BillboardBlockEditor
+      block={billboardBlock({
+        sectionClassName: 'retirement-everyday retirement-daily-billboard',
+        titleFontFamily: 'helv',
+        titleFontWeight: 700,
+        justify: 'center',
+      })}
+      onSettingChange={onSettingChange}
+    />);
+
+    expect(screen.getByText('Title font')).toBeTruthy();
+    expect(screen.getByText('Title weight')).toBeTruthy();
+    expect(screen.getByRole('group', { name: 'Title alignment' })).toBeTruthy();
+
+    fireEvent.click(within(screen.getByRole('group', { name: 'Title weight' })).getByRole('button', { name: '500' }));
+    fireEvent.click(within(screen.getByRole('group', { name: 'Title alignment' })).getByRole('button', { name: 'Left' }));
+
+    expect(onSettingChange).toHaveBeenCalledWith('titleFontWeight', 500);
+    expect(onSettingChange).toHaveBeenCalledWith('justify', 'left');
   });
 
   it('loads legacy plain copy into the shared body editor without migrating on open', () => {
@@ -189,7 +216,9 @@ describe('Billboard editor contract', () => {
     />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Heading' }));
-    expect(screen.getByRole('button', { name: '800' })).toBeTruthy();
+    const titlePanel = document.querySelector('.admin-billboard-hud-heading-title-panel');
+    expect(titlePanel).toBeTruthy();
+    expect(within(titlePanel).getByRole('button', { name: '800' })).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Helvetica Neue' }));
 
     expect(onSettingChange).toHaveBeenCalledWith('titleFontFamily', 'helv');
@@ -199,13 +228,14 @@ describe('Billboard editor contract', () => {
   });
 
   it('reflects the selected title span color in the title palette', () => {
+    const onSettingChange = vi.fn();
     const block = billboardBlock({
       title: 'Vision fuel',
       titleClassName: 'is-white',
       titleHighlightsJson: '[{"start":7,"end":11,"className":"is-mango","text":"fuel"}]',
     });
 
-    render(<BillboardBlockEditor block={block} onSettingChange={vi.fn()} />);
+    render(<BillboardBlockEditor block={block} onSettingChange={onSettingChange} />);
 
     const titleInput = screen.getByLabelText('Title');
     titleInput.focus();
@@ -215,6 +245,17 @@ describe('Billboard editor contract', () => {
     const titlePalette = screen.getByRole('radiogroup', { name: 'Billboard title color' });
     expect(within(titlePalette).getByRole('radio', { name: 'Mango' }).getAttribute('aria-checked')).toBe('true');
     expect(within(titlePalette).getByRole('radio', { name: 'White' }).getAttribute('aria-checked')).toBe('false');
+  });
+
+  it('accepts an explicit title soft return', () => {
+    const onSettingChange = vi.fn();
+    render(<BillboardBlockEditor block={billboardBlock({ title: 'One line' })} onSettingChange={onSettingChange} />);
+
+    const titleInput = screen.getByLabelText('Title');
+    fireEvent.change(titleInput, { target: { value: 'First line\nSecond line' } });
+    fireEvent.blur(titleInput);
+
+    expect(onSettingChange).toHaveBeenCalledWith('title', 'First line\nSecond line');
   });
 
   it('applies a color to the selected Billboard subtitle span', () => {
@@ -355,5 +396,31 @@ describe('Billboard editor contract', () => {
     expect(normalized.settings.titleFontWeight).toBe(700);
     expect(editableFieldIds).not.toContain('titleFontFamily');
     expect(editableFieldIds).not.toContain('titleFontWeight');
+  });
+
+  it('keeps Ministry Impact Fund billboard title controls editable', () => {
+    const normalized = normalizeBlockPresentation({
+      ...billboardBlock({ sectionClassName: 'legacy-child-native-billboard' }),
+      settings: {
+        ...billboardBlock({ sectionClassName: 'legacy-child-native-billboard' }).settings,
+        titleFontFamily: 'heading',
+        titleFontWeight: 600,
+        titleSizeRem: 3.4,
+      },
+      presetId: 'default',
+    });
+    const editableFieldIds = normalized.editableFields.map((field) => field.id);
+
+    expect(normalized.settings).toMatchObject({
+      titleFontFamily: 'heading',
+      titleFontWeight: 600,
+      titleSizeRem: 3.4,
+    });
+    expect(editableFieldIds).toEqual(expect.arrayContaining([
+      'titleFontFamily',
+      'titleFontWeight',
+      'titleSizeRem',
+      'justify',
+    ]));
   });
 });

@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { ResourcesProvider, useResources } from '../context/ResourcesContext';
 import { getResourceCategoryTone } from '../lib/resourceCategoryTone';
+import { useManagedContentSource } from '../hooks/useManagedContentSource';
+import DynamicCardGridSection from '../components/blocks/DynamicCardGridSection';
 
 function normalizeSearchText(value) {
   return String(value || '')
@@ -14,8 +16,21 @@ function normalizeSearchText(value) {
 
 function ResourcesPageContent() {
   const { publishedArticles: publishedArticleRecords } = useResources();
+  const { blocksByPath } = useManagedContentSource({ pathname: '/resources' });
   const [searchParams, setSearchParams] = useSearchParams();
   const [query, setQuery] = useState('');
+  const featuredResourcesBlock = useMemo(
+    () => (Array.isArray(blocksByPath?.['/resources'])
+      ? blocksByPath['/resources'].find((block) => (
+        block?.id === 'featured_resources'
+        && block?.kind === 'card_grid'
+        && block?.mode === 'dynamic'
+        && block?.hidden !== true
+        && block?.hidden !== 'true'
+      ))
+      : null),
+    [blocksByPath],
+  );
 
   const publishedArticles = useMemo(
     () => publishedArticleRecords.filter((item) => item.type === 'article'),
@@ -61,6 +76,13 @@ function ResourcesPageContent() {
           <h1>Resource Library</h1>
         </div>
       </section>
+
+      {featuredResourcesBlock ? (
+        <DynamicCardGridSection
+          block={featuredResourcesBlock}
+          extraSectionClassName="resources-native-featured"
+        />
+      ) : null}
 
       <section className="resources-native-filters">
         <div className="ag-panel-rail">

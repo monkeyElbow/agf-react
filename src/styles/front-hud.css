@@ -13,19 +13,60 @@
   transition: filter 2000ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* Public rendering also loads this stylesheet. An uncropped background light
-   is the one intentional exception to the normal per-block stacking context:
-   it must be able to bridge into the next block while authored rails remain
-   above it. Keep ownership and HUD chrome above the bridge. */
-.service-native-page:has(.block-background-effects.is-uncropped) :is(.service-native-hero, .service-native-intro, .service-native-section) {
+/* An uncropped light is a page-level background wash. Release every managed
+   block on that page from its private stacking context so a light can show
+   through neighboring block backgrounds. The content children below are the
+   foreground layer; the authored rail itself is deliberately not elevated. */
+.service-native-page:has(.block-background-effects.is-uncropped) :is(.service-native-hero, .service-native-intro, .service-native-section),
+.service-native-page:has(.block-background-effects.is-uncropped) [data-block-id] {
   isolation: auto;
   z-index: auto;
 }
 
-.service-native-page:has(.block-background-effects.is-uncropped) :is(.service-native-hero, .service-native-intro, .service-native-section) > :is(.ag-panel-rail, .ag-panel-rail-wide),
-.service-native-page:has(.block-background-effects.is-uncropped) [data-block-id] > :is(.ag-panel-rail, .ag-panel-rail-wide) {
+/* Elevate authored content inside the rail, not the whole rail/block. This
+   keeps neighboring cards and page copy above the overscan while preserving
+   the light wash in the space around them. */
+.service-native-page:has(.block-background-effects.is-uncropped)
+  :is(.service-native-hero, .service-native-intro, .service-native-section, [data-block-id])
+  > :is(.ag-panel-rail, .ag-panel-rail-wide)
+  > :not(.block-background-effects),
+.service-native-page:has(.block-background-effects.is-uncropped)
+  [data-block-id]
+  > :is(.ag-panel-rail, .ag-panel-rail-wide)
+  > :not(.block-background-effects) {
   position: relative;
-  z-index: 3;
+  z-index: 1;
+}
+
+.service-native-page:has(.block-background-effects.is-uncropped)
+  :is(.service-native-hero, .service-native-intro, .service-native-section, [data-block-id])
+  > :is(.ag-panel-rail, .ag-panel-rail-wide) {
+  z-index: auto;
+}
+
+/* Uncropped lights may cross into a neighboring Card Grid, but they must
+   stop at authored page-content sections. These sections form an opaque
+   foreground boundary so an absolutely positioned light cannot paint over
+   later disclosure, address, or instructional copy. */
+.service-native-page:has(.block-background-effects.is-uncropped)
+  :is(.native-dynamic-page-content, .test-dynamic-page-content) {
+  position: relative;
+  z-index: 1;
+  background-color: #fff;
+}
+
+/* This address block intentionally has no white surface; preserve the page
+   canvas/light treatment while keeping its copy above the light layer. */
+.service-native-page:has(.block-background-effects.is-uncropped)
+  .native-dynamic-page-content.retirement-individual-enrollment-return {
+  background-color: transparent;
+}
+
+/* The 501(c)(3) disclosure is also intentionally transparent. Keep the
+   disclosure copy above the page-level light without adding a white panel. */
+.service-native-page:has(.block-background-effects.is-uncropped)
+  .native-dynamic-page-content.retirement-individual-enrollment-qualify-disclosure {
+  background-color: transparent;
 }
 
 .service-native-page :is(.service-native-hero, .service-native-intro, .service-native-section)::after {
@@ -3854,6 +3895,48 @@
   border-radius: 12px;
 }
 
+.admin-page-content-address-card {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.admin-page-content-field-label {
+  display: grid;
+  gap: 0.22rem;
+  min-width: 0;
+  color: var(--ag-admin-hud-text, #414042);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.admin-page-content-field-label input,
+.admin-page-content-field-label textarea,
+.admin-page-content-field-label select {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid rgba(var(--ag-admin-hud-accent-rgb), 0.28);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.74);
+  color: inherit;
+  font: inherit;
+  font-weight: 500;
+  padding: 0.42rem 0.5rem;
+}
+
+.admin-page-content-field-label textarea {
+  resize: vertical;
+}
+
+.admin-page-content-alignment-row {
+  max-width: 22rem;
+  margin-top: 0.65rem;
+}
+
+.admin-front-hud-page-content-background-panel .admin-background-editor-page,
+.admin-front-hud-page-content-address-panel .admin-page-content-address-card {
+  width: 100%;
+}
+
 .admin-front-hud-page-content-settings .admin-page-content-preset-row {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
@@ -5193,6 +5276,80 @@
 .admin-billboard-hud-copy-editor {
   --admin-billboard-copy-editor-background: linear-gradient(145deg, rgba(255, 255, 255, 0.98) 0%, rgba(245, 245, 245, 0.96) 100%);
   --admin-billboard-copy-editor-color: var(--ag-color-super-grey);
+}
+
+/* Billboard body copy has one deliberately compact toolbar. The shared HTML
+   editor keeps an overflow scrollport for larger article editors, but that
+   treatment makes this small HUD surface grow a stray scrollbar. Keep every
+   body-copy action in the same row and use the mini HUD swatches. */
+.admin-billboard-hud-copy-editor .admin-html-editor-controls.is-inline {
+  gap: 0.2rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.24rem 0.34rem;
+  scrollbar-width: none;
+}
+
+.admin-billboard-hud-copy-editor .admin-html-editor-controls.is-inline::-webkit-scrollbar {
+  display: none;
+}
+
+.admin-billboard-hud-copy-editor .admin-html-editor-mode-tabs {
+  gap: 0.08rem;
+  padding: 0.12rem;
+}
+
+.admin-billboard-hud-copy-editor .admin-html-editor-mode-tabs button {
+  padding: 0.18rem 0.3rem;
+  font-size: 0.6rem;
+}
+
+.admin-billboard-hud-copy-editor .admin-html-editor-toolbar {
+  flex: 0 0 auto !important;
+  align-items: center;
+  width: max-content;
+  min-width: max-content;
+  gap: 0 !important;
+  padding: 0 !important;
+  overflow: visible;
+}
+
+.admin-billboard-hud-copy-editor .admin-html-editor-toolbar button {
+  flex: 0 0 auto;
+  width: 28px;
+  min-width: 28px;
+  min-height: 24px;
+  height: 26px;
+  padding: 0.16rem 0.2rem;
+  font-size: 0.68rem;
+}
+
+.admin-billboard-hud-copy-editor .admin-html-editor-color-group {
+  gap: 0;
+  flex-wrap: nowrap;
+  flex: 0 0 auto;
+  width: max-content !important;
+  min-width: max-content;
+  max-width: none !important;
+  margin-right: 0;
+}
+
+.admin-billboard-hud-copy-editor .admin-html-editor-color-group .admin-html-editor-color-swatch {
+  width: 18px !important;
+  min-width: 18px !important;
+  height: 18px !important;
+  min-height: 18px !important;
+}
+
+.admin-billboard-hud-copy-editor .admin-html-editor-toolbar
+  :is(.admin-html-editor-action-link, .admin-html-editor-action-unlink, .admin-html-editor-action-clear) {
+  width: auto;
+  min-width: 0;
+  overflow: visible;
+  padding-inline: 0.32rem;
+  font-size: 0.62rem;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .admin-billboard-hud-copy-editor.is-bg-sand {
@@ -6881,6 +7038,15 @@
   min-width: 0;
 }
 
+.admin-billboard-hud-heading-row .admin-billboard-heading-text {
+  min-height: var(--ag-hud-editor-control-height);
+  height: var(--ag-hud-editor-control-height);
+  padding-block: 0.2rem;
+  border-radius: var(--ag-field-radius);
+  resize: vertical;
+  line-height: 1.2;
+}
+
 .admin-billboard-hud-heading-color-meta {
   display: flex;
   align-items: center;
@@ -7102,6 +7268,13 @@
   padding: var(--ag-hud-editor-panel-padding);
 }
 
+.admin-billboard-hud-reference-panel.is-heading-panel .admin-billboard-hud-heading-type-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--ag-hud-editor-row-gap);
+  min-width: 0;
+}
+
 .admin-billboard-hud-reference-panel.is-heading-panel .admin-billboard-hud-heading-row {
   grid-template-columns: minmax(0, 1fr) minmax(7rem, 0.72fr);
 }
@@ -7123,6 +7296,10 @@
     grid-template-columns: minmax(0, 1fr);
   }
 
+  .admin-billboard-hud-reference-panel.is-heading-panel .admin-billboard-hud-heading-type-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .admin-billboard-hud-reference-panel.is-heading-panel .admin-billboard-hud-heading-row {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -7132,6 +7309,23 @@
 .admin-billboard-editor-slider,
 .admin-billboard-editor-group {
   min-width: 0;
+}
+
+.admin-billboard-editor-slider.is-disabled,
+.admin-billboard-editor-group.is-disabled,
+.admin-billboard-editor-width-control.is-disabled {
+  opacity: 0.46;
+}
+
+.admin-billboard-editor-slider.is-disabled,
+.admin-billboard-editor-group.is-disabled,
+.admin-billboard-editor-width-control.is-disabled {
+  cursor: not-allowed;
+}
+
+.admin-billboard-editor-group.is-disabled .admin-front-hud-segment-btn,
+.admin-billboard-editor-width-control.is-disabled .admin-billboard-editor-auto {
+  cursor: not-allowed;
 }
 
 .admin-billboard-editor-field small {
@@ -7193,8 +7387,23 @@
   gap: var(--ag-hud-editor-row-gap);
 }
 
-.admin-billboard-editor-bottom-padding {
-  grid-column: 2;
+.admin-billboard-editor-layout-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--ag-hud-editor-space-3);
+  min-width: 0;
+}
+
+.admin-billboard-editor-layout-controls {
+  display: grid;
+  align-content: start;
+  gap: var(--ag-hud-editor-row-gap);
+  min-width: 0;
+  padding: var(--ag-hud-editor-panel-padding);
+  border: 1px solid var(--ag-hud-editor-border);
+  border-radius: var(--ag-hud-editor-radius);
+  background: rgba(255, 255, 255, 0.24);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.42);
 }
 
 .admin-billboard-editor-width-control {
@@ -7528,13 +7737,10 @@
 
 @media (max-width: 760px) {
   .admin-billboard-editor-copy-grid,
-  .admin-billboard-editor-width-grid {
+  .admin-billboard-editor-width-grid,
+  .admin-billboard-editor-layout-grid {
     grid-template-columns: 1fr;
     gap: var(--ag-hud-editor-row-gap);
-  }
-
-  .admin-billboard-editor-bottom-padding {
-    grid-column: auto;
   }
 
   .admin-front-hud-page-workflow.is-editor-command-bar {
@@ -7646,6 +7852,18 @@
   .admin-front-hud-page-content-layout-panel,
 .admin-hud-editor-shared-surface .admin-front-hud-page-content-editor.is-section-layout
   .admin-front-hud-page-content-content-panel,
+.admin-hud-editor-shared-surface .admin-front-hud-page-content-editor.is-section-content
+  > .admin-hud-editor-panel-stack
+  > :is(.admin-front-hud-page-content-address-panel, .admin-front-hud-page-content-background-panel),
+.admin-hud-editor-shared-surface .admin-front-hud-page-content-editor.is-section-address
+  > .admin-hud-editor-panel-stack
+  > :is(.admin-front-hud-page-content-content-panel, .admin-front-hud-page-content-layout-panel, .admin-front-hud-page-content-background-panel),
+.admin-hud-editor-shared-surface .admin-front-hud-page-content-editor.is-section-layout
+  > .admin-hud-editor-panel-stack
+  > :is(.admin-front-hud-page-content-address-panel, .admin-front-hud-page-content-background-panel),
+.admin-hud-editor-shared-surface .admin-front-hud-page-content-editor.is-section-background
+  > .admin-hud-editor-panel-stack
+  > :is(.admin-front-hud-page-content-content-panel, .admin-front-hud-page-content-address-panel, .admin-front-hud-page-content-layout-panel),
 .admin-hud-editor-shared-surface .admin-front-hud-testimonials-editor.is-section-selection
   .admin-front-hud-testimonials-col.is-preview,
 .admin-hud-editor-shared-surface .admin-front-hud-testimonials-editor.is-section-preview
@@ -10928,12 +11146,18 @@
     overflow-y: hidden;
   }
 
+.admin-hud-editor-shared-surface .admin-billboard-hud-copy-editor .admin-html-editor-controls.is-inline {
+    max-width: 100%;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+  }
+
   .admin-hud-editor-shared-surface .admin-html-editor-toolbar {
     max-width: max-content;
   }
 
-  /* The Billboard copy toolbar is intentionally horizontally scrollable;
-     clip its scrollport at the copy surface so it cannot cover column two. */
+  /* Keep the Billboard copy toolbar inside its own surface so it cannot cover
+     column two. Its scoped compact rules keep the full action set in one row. */
   .admin-hud-editor-shared-surface .admin-billboard-editor-copy-fields {
     overflow: hidden;
   }

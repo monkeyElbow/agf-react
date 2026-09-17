@@ -44,6 +44,10 @@ import { defaultLoansCtaSettings } from '../data/ctaFormSeeds';
 import { buildDefaultLoansIntroRuntime } from '../data/loansIntroSeed';
 import { buildHeroLineStyle, normalizeHeroLineGapEm } from '../lib/heroLineStyle';
 import {
+  normalizeBillboardTitleFontFamily,
+  normalizeBillboardTitleFontWeight,
+} from '../lib/dynamicSectionTypography';
+import {
   heroTitleSizeRemToRuntimeCss,
   normalizeHeroTitleLetterSpacingEm,
 } from '../lib/heroTitleSize';
@@ -239,6 +243,17 @@ function buildLoanInquiryConfigFromBlock(block) {
     title,
     titleClassName,
     titleHighlightsJson: derivedSecondLineHighlight,
+    titleFontFamily: normalizeBillboardTitleFontFamily(settings.titleFontFamily || 'helv'),
+    titleFontWeight: normalizeBillboardTitleFontWeight(
+      settings.titleFontWeight,
+      normalizeBillboardTitleFontFamily(settings.titleFontFamily || 'helv'),
+    ),
+    justify: ['left', 'center', 'right'].includes(String(settings.justify || '').trim().toLowerCase())
+      ? String(settings.justify).trim().toLowerCase()
+      : 'left',
+    bodyJustify: ['left', 'center', 'right'].includes(String(settings.bodyJustify || '').trim().toLowerCase())
+      ? String(settings.bodyJustify).trim().toLowerCase()
+      : 'left',
     subtitle: subtitle && !subtitle.includes('<') ? subtitle : '',
     bodyHtml: bodyHtml || defaultLoanInquiryBodyHtml,
     bgTone: ['blue', 'sand', 'white', 'grey'].includes(String(settings.bgTone || '').trim().toLowerCase())
@@ -272,6 +287,10 @@ function buildDefaultLoanInquiryConfig() {
         className: 'is-white',
       },
     ]),
+    titleFontFamily: 'helv',
+    titleFontWeight: 700,
+    justify: 'left',
+    bodyJustify: 'left',
     subtitle: '',
     bodyHtml: defaultLoanInquiryBodyHtml,
     hideStepTitles: true,
@@ -709,6 +728,27 @@ export default function LoansPage({ sectionsOnly = false }) {
       && block?.hidden !== 'true'
     )) || null
   ), [managedBlocks]);
+  const loanOptionsBillboardRenderBlock = useMemo(() => {
+    if (!loanOptionsBillboardBlock) {
+      return null;
+    }
+    const settings = loanOptionsBillboardBlock.settings && typeof loanOptionsBillboardBlock.settings === 'object'
+      ? loanOptionsBillboardBlock.settings
+      : {};
+    return {
+      ...loanOptionsBillboardBlock,
+      settings: {
+        ...settings,
+        // The legacy custom renderer always used dark copy on this white
+        // section. Keep that appearance for old records that predate the
+        // shared Billboard text-tone setting without writing a migration.
+        ...(String(settings.textTone || '').trim() ? {} : { textTone: 'dark' }),
+        // The former Loans-specific renderer used the Helv headline face.
+        // Preserve it for legacy records that do not carry typography fields.
+        ...(String(settings.titleFontFamily || '').trim() ? {} : { titleFontFamily: 'helv' }),
+      },
+    };
+  }, [loanOptionsBillboardBlock]);
   const testimonialsBlock = useMemo(() => (
     managedBlocks.find((block) => (
       block?.id === 'testimonials'
@@ -741,15 +781,11 @@ export default function LoansPage({ sectionsOnly = false }) {
         ? { paddingBottom: `${loanOptionsGrid.paddingBottomRem}rem` }
         : {}),
       '--dynamic-grid-card-padding': `${loanOptionsGrid.cardPaddingRem}rem`,
+      '--dynamic-grid-card-gap': `${loanOptionsGrid.cardGapRem}rem`,
       '--dynamic-grid-card-title-size': `${loanOptionsGrid.cardTitleSizeRem}rem`,
       ...(hasSetting('cardTitleJustify')
         ? {
             '--dynamic-grid-card-title-justify': loanOptionsGrid.cardTitleJustify,
-            '--dynamic-grid-card-title-justify-content': loanOptionsGrid.cardTitleJustify === 'left'
-              ? 'flex-start'
-              : loanOptionsGrid.cardTitleJustify === 'right'
-                ? 'flex-end'
-                : 'center',
           }
         : {}),
       ...(hasSetting('cardTitleBodySpaceRem')
@@ -777,6 +813,7 @@ export default function LoansPage({ sectionsOnly = false }) {
       ...(hasSetting('headerSizeRem') && Number.isFinite(Number(loanOptionsGrid.headerSizeRem))
         ? { '--dynamic-grid-header-size': `${loanOptionsGrid.headerSizeRem}rem` }
         : {}),
+      '--dynamic-grid-header-letter-spacing': `${loanOptionsGrid.headerLetterSpacingEm}em`,
       ...(hasSetting('headerWidthPercent') && Number.isFinite(Number(loanOptionsGrid.headerWidthPercent))
         ? { '--dynamic-grid-header-width': `${loanOptionsGrid.headerWidthPercent}%` }
         : {}),
@@ -823,10 +860,6 @@ export default function LoansPage({ sectionsOnly = false }) {
   const renderedValueCardsBlock = useMemo(
     () => buildLoanValueCardsRenderableBlock(valueCardsBlock),
     [valueCardsBlock],
-  );
-  const loanOptionsBillboard = useMemo(
-    () => buildCanonicalBlockRuntime(loanOptionsBillboardBlock),
-    [loanOptionsBillboardBlock],
   );
   const dynamicVisionFuel = useMemo(
     () => buildLoanVisionFuelConfigFromBlock(visionFuelBlock),
@@ -1160,7 +1193,7 @@ export default function LoansPage({ sectionsOnly = false }) {
         onClick={hudAnchor.onClick}
         style={hudAnchor.style}
         structureControls={(
-          <FrontHudStructureControls pathname="/services/loans" blockId={blockId} canReorder={blockId !== 'cta_band'} placement="anchor" />
+          <FrontHudStructureControls pathname="/services/loans" blockId={blockId} placement="anchor" />
         )}
       />
     );
@@ -1234,14 +1267,8 @@ export default function LoansPage({ sectionsOnly = false }) {
     || loanOptionsGrid?.subtitle
     || loanOptionsGrid?.bodyHtml
     || loanOptionsGrid?.body
-    || loanOptionsCards.length
-    || loanOptionsBillboard,
+    || loanOptionsCards.length,
   );
-  const loanOptionsCtaAction = loanOptionsBillboard?.actions?.[0] || null;
-  const loanOptionsCtaHref = String(loanOptionsCtaAction?.to || loanOptionsCtaAction?.href || '').trim();
-  const loanOptionsCtaLabel = String(loanOptionsCtaAction?.label || '').trim();
-  const loanOptionsCtaClassName = loanOptionsCtaAction?.className
-    || actionButtonClassName(loanOptionsCtaAction?.style || 'blue', loanOptionsCtaAction?.tone || 'atlantean');
 
   return (
     <div
@@ -1484,25 +1511,32 @@ export default function LoansPage({ sectionsOnly = false }) {
                 >
                   <h3
                     className={item.titleClassName || undefined}
-                    style={Number.isFinite(Number(loanOptionsGrid?.cardTitleLineHeight))
-                      ? { lineHeight: String(loanOptionsGrid.cardTitleLineHeight) }
-                      : undefined}
+                    style={{
+                      ...(loanOptionsGrid?.cardTitleJustify
+                        ? { textAlign: loanOptionsGrid.cardTitleJustify }
+                        : {}),
+                      ...(Number.isFinite(Number(loanOptionsGrid?.cardTitleLineHeight))
+                        ? { lineHeight: String(loanOptionsGrid.cardTitleLineHeight) }
+                        : {}),
+                    }}
                   >
-                    {item.titleLink?.to ? (
-                      <Link to={item.titleLink.to} target={item.titleLink.openInNewWindow ? '_blank' : undefined} rel={item.titleLink.openInNewWindow ? 'noreferrer noopener' : undefined}>
-                        {item.titleHighlights?.length
-                          ? renderHighlightedText(item.title, item.titleHighlights)
-                          : item.title}
-                      </Link>
-                    ) : item.titleLink?.href ? (
-                      <a href={item.titleLink.href} target={item.titleLink.openInNewWindow ? '_blank' : undefined} rel={item.titleLink.openInNewWindow ? 'noreferrer noopener' : undefined}>
-                        {item.titleHighlights?.length
-                          ? renderHighlightedText(item.title, item.titleHighlights)
-                          : item.title}
-                      </a>
-                    ) : item.titleHighlights?.length
-                      ? renderHighlightedText(item.title, item.titleHighlights)
-                      : item.title}
+                    <span className="service-native-card-title-content">
+                      {item.titleLink?.to ? (
+                        <Link to={item.titleLink.to} target={item.titleLink.openInNewWindow ? '_blank' : undefined} rel={item.titleLink.openInNewWindow ? 'noreferrer noopener' : undefined}>
+                          {item.titleHighlights?.length
+                            ? renderHighlightedText(item.title, item.titleHighlights)
+                            : item.title}
+                        </Link>
+                      ) : item.titleLink?.href ? (
+                        <a href={item.titleLink.href} target={item.titleLink.openInNewWindow ? '_blank' : undefined} rel={item.titleLink.openInNewWindow ? 'noreferrer noopener' : undefined}>
+                          {item.titleHighlights?.length
+                            ? renderHighlightedText(item.title, item.titleHighlights)
+                            : item.title}
+                        </a>
+                      ) : item.titleHighlights?.length
+                        ? renderHighlightedText(item.title, item.titleHighlights)
+                        : item.title}
+                    </span>
                   </h3>
                   {loanOptionsGrid.showTitleDivider ? <hr /> : null}
                   <div className="service-native-card-flow">
@@ -1620,57 +1654,18 @@ export default function LoansPage({ sectionsOnly = false }) {
               ))}
             </div>
           ) : null}
-          {loanOptionsBillboard ? (
-            <div
-              className={`loans-native-option-question-wrap fade-up${getHudBlockStateClassName('cta_band')}${getOwnershipVisualForBlockId('cta_band').className || ''}`}
-              data-block-id="cta_band"
-            >
-              <BlockSurfaceLayers ownership={getOwnershipVisualForBlockId('cta_band')} hudAnchor={renderHudAnchor('cta_band')} />
-              <div className="native-info-section-copy is-justify-center">
-                {loanOptionsBillboard.title ? <h2>{loanOptionsBillboard.title}</h2> : null}
-                {loanOptionsBillboard.bodyHtml ? (
-                  <SafeRichText
-                    as="div"
-                    className={`native-info-rich-html${loanOptionsBillboard.bodyColorClassName ? ` ${loanOptionsBillboard.bodyColorClassName}` : ''}${loanOptionsBillboard.bodyHtmlStyle ? ' is-dynamic-billboard-lead-copy-sized' : ''}`}
-                    html={loanOptionsBillboard.bodyHtml}
-                    style={loanOptionsBillboard.bodyHtmlStyle || undefined}
-                  />
-                ) : loanOptionsBillboard.body ? (
-                  <p
-                    className={[loanOptionsBillboard.bodyColorClassName || '', loanOptionsBillboard.bodyHtmlStyle ? 'is-dynamic-billboard-lead-copy-sized' : ''].filter(Boolean).join(' ') || undefined}
-                    style={loanOptionsBillboard.bodyHtmlStyle || undefined}
-                  >
-                    {loanOptionsBillboard.body}
-                  </p>
-                ) : null}
-                {loanOptionsCtaLabel && loanOptionsCtaHref ? (
-                  <div className="service-native-action-row is-centered">
-                    {loanOptionsCtaHref.startsWith('/') ? (
-                      <Link
-                        to={loanOptionsCtaHref}
-                        className={loanOptionsCtaClassName}
-                        target={loanOptionsCtaAction?.openInNewWindow ? '_blank' : undefined}
-                        rel={loanOptionsCtaAction?.openInNewWindow ? 'noreferrer noopener' : undefined}
-                      >
-                        {loanOptionsCtaLabel}
-                      </Link>
-                    ) : (
-                      <a
-                        href={loanOptionsCtaHref}
-                        className={loanOptionsCtaClassName}
-                        target={loanOptionsCtaAction?.openInNewWindow ? '_blank' : undefined}
-                        rel={loanOptionsCtaAction?.openInNewWindow ? 'noreferrer noopener' : undefined}
-                      >
-                        {loanOptionsCtaLabel}
-                      </a>
-                    )}
-                  </div>
-                ) : null}
-              </div>
-            </div>
-          ) : null}
         </div>
       </section>
+      ) : null}
+      {loanOptionsBillboardRenderBlock ? (
+        <BillboardBlock
+          block={loanOptionsBillboardRenderBlock}
+          resolveTo={resolveRoutePath}
+          ownership={getOwnershipVisualForBlockId('cta_band')}
+          hudAnchor={renderHudAnchor('cta_band')}
+          sectionStyle={managedBlockOrderStyle('cta_band')}
+          extraSectionClassName={`loans-native-option-question-wrap${getHudBlockStateClassName('cta_band')}`}
+        />
       ) : null}
       {renderAdditionalBillboardsAfter('loan_options')}
 

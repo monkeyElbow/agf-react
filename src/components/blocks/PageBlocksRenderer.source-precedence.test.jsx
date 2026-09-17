@@ -100,6 +100,48 @@ describe('PageBlocksRenderer source precedence', () => {
     expect(container.querySelector('.native-info-rich-html')?.className).toContain('is-atlantean');
   });
 
+  it('keeps title-to-subtitle and subtitle-to-body spacing independent', () => {
+    const { container } = renderBlocks([{
+      id: 'billboard-spacing',
+      kind: 'billboard',
+      mode: 'dynamic',
+      settings: {
+        title: 'A title',
+        subtitle: 'A subtitle',
+        bodyHtml: '<p>Body copy.</p>',
+        headerGapRem: 2,
+        bodyGapRem: 1.5,
+      },
+    }]);
+
+    const subtitle = container.querySelector('.home-native-billboard-subtitle');
+    const body = container.querySelector('.native-info-rich-html');
+    expect(subtitle?.className).toContain('is-dynamic-billboard-header-gap');
+    expect(body?.className).toContain('is-dynamic-billboard-body-gap');
+    expect(body?.className).not.toContain('is-dynamic-billboard-header-gap');
+  });
+
+  it('does not preserve body spacing or body controls after the canonical body is cleared', () => {
+    const { container } = renderBlocks([{
+      id: 'billboard',
+      kind: 'billboard',
+      mode: 'dynamic',
+      settings: {
+        title: 'No supporting copy',
+        bodyHtml: '<div><br></div>',
+        body: 'Recovery-only legacy copy.',
+        bodySource: 'html',
+        headerGapRem: 2.4,
+        buttonLabel: 'Continue',
+      },
+    }]);
+
+    const actionRow = container.querySelector('.service-native-action-row');
+    expect(container.querySelector('.native-info-rich-html')).toBeNull();
+    expect(actionRow?.className).toContain('is-dynamic-billboard-header-gap');
+    expect(actionRow?.getAttribute('style') || '').not.toContain('--dynamic-billboard-header-gap');
+  });
+
   it('renders saved Billboard subtitle highlight ranges', () => {
     const { container } = renderBlocks([{
       id: 'billboard',

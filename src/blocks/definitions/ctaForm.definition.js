@@ -74,6 +74,8 @@ const sections = [
     title: 'Placement',
     surfaces: ['hud', 'admin'],
     fields: [
+      defineEditorField({ id: 'paddingTopRem', label: 'Padding top (rem)', type: 'range', min: 0, max: 8, step: 0.05, defaultValue: 2.5 }),
+      defineEditorField({ id: 'paddingBottomRem', label: 'Padding bottom (rem)', type: 'range', min: 0, max: 8, step: 0.05, defaultValue: 4 }),
       defineEditorField({ id: 'anchorId', label: 'Anchor ID', type: 'text' }),
       defineEditorField({ id: 'sectionClassName', label: 'Section class name', type: 'text' }),
     ],
@@ -101,6 +103,8 @@ export const ctaFormBlockDefinition = createFormBlockDefinitionScaffold({
     successMessage: 'Thanks. We will reach out soon.',
     anchorId: '',
     sectionClassName: '',
+    paddingTopRem: 2.5,
+    paddingBottomRem: 4,
   },
   renderer: {
     buildRuntime: buildDynamicCtaFormFromBlock,

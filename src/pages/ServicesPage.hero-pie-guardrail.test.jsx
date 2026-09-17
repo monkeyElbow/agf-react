@@ -45,15 +45,14 @@ describe('services hero pie renderer guardrail', () => {
     expect(cssSource).not.toMatch(/\.services-pie-slice-control\.is-active\s+\.services-pie-wedge\s*\{[^}]*filter:/s);
   });
 
-  it('renders the services overview billboard block through the existing intro shell', () => {
+  it('renders the services overview Billboard through the canonical Billboard renderer', () => {
     const source = readSource('./ServicesPage.jsx');
 
     expect(source).toContain('buildCanonicalBlockRuntime(billboardIntroBlock);');
     expect(source).toContain("block?.id === 'intro'");
     expect(source).toContain("block?.kind === 'billboard'");
-    expect(source).toContain('mapServicesBillboardToIntroRuntime');
-    expect(source).toContain('className={`services-native-intro');
-    expect(source).toContain('className={`service-native-intro-copy');
+    expect(source).toContain('block={billboardIntroBlock}');
+    expect(source).toContain('extraSectionClassName={`services-native-intro dynamic-intro');
   });
 
   it('keeps the services overview bleed container mobile-safe without dropping the desktop full-bleed treatment', () => {
@@ -75,8 +74,9 @@ describe('services hero pie renderer guardrail', () => {
     const hudCssSource = readSource('../styles/front-hud.css');
 
     expect(source).toContain("className={`services-pie-hero${getHudBlockStateClassName('hero_pie')}");
-    expect(source).toContain("className={`${servicesBreakdownRuntime.sectionClassName || 'services-native-grid-wrap services-breakdown-section'}${getHudBlockStateClassName('services_cards')}");
-    expect(source).toContain("className={`${servicesMattersRuntime.sectionClassName || 'services-native-matters'}${getHudBlockStateClassName('matters_band')}");
+    expect(source).toContain("className={`${servicesBreakdownRuntime.sectionClassName || 'services-native-grid-wrap services-breakdown-section'} native-dynamic-grid");
+    expect(source).toContain("getHudBlockStateClassName('services_cards')");
+    expect(source).toContain('block={servicesMattersBlock}');
     expect(source).toContain("className={`services-native-testimonials${getHudBlockStateClassName('testimonials')}");
     expect(hudCssSource).toContain('.service-native-page :is(.services-pie-hero, .services-native-grid-wrap, .services-native-matters, .services-native-testimonials)');
     expect(hudCssSource).toContain('.service-native-page.has-active-front-hud-panel\n  :is(.services-pie-hero, .services-native-grid-wrap, .services-native-matters, .services-native-testimonials):not(.is-hud-focus-target)::after');

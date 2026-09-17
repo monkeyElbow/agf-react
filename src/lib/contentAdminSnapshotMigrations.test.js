@@ -11,6 +11,12 @@ import {
   MIF_REQUEST_HEADLINE_COLOR_PATH,
   QCD_REQUEST_HEADLINE_COLOR_MIGRATION_VERSION,
   QCD_REQUEST_HEADLINE_COLOR_PATH,
+  RETIREMENT_403B_LOAN_DETAILS_CARD_GRID_MIGRATION_VERSION,
+  RETIREMENT_403B_LOAN_DETAILS_PATH,
+  RETIREMENT_ROLLOVER_PROCESS_CARD_GRID_MIGRATION_VERSION,
+  RETIREMENT_ROLLOVER_PROCESS_PATH,
+  RETIREMENT_INDIVIDUAL_ENROLLMENT_PATH,
+  RETIREMENT_INDIVIDUAL_ENROLLMENT_MAIL_FAX_STEP_MIGRATION_VERSION,
   INSURANCE_PC_RESOURCES_PATH,
   INSURANCE_PATH,
   GENEROSITY_FUND_PATH,
@@ -25,6 +31,13 @@ import {
   SUPPORT_LIBRARY_BLOCK_MIGRATION_VERSION,
   migrateQcdCenteredCardGridBlock,
   migrateQcdCenteredCardGridState,
+  migrateRetirement403bLoanDetailsBlock,
+  migrateRetirement403bLoanDetailsState,
+  migrateRetirementRolloverProcessBlock,
+  migrateRetirementRolloverProcessState,
+  migrateRetirementIndividualEnrollmentStepCardPresentationBlock,
+  migrateRetirementIndividualEnrollmentStepCardPresentationState,
+  migrateRetirementIndividualEnrollmentMailFaxStepState,
   migrateCgaSecureActCardState,
   migrateInsuranceCoverageCtaState,
   migrateInsuranceFeatureColumnsState,
@@ -489,6 +502,238 @@ describe('content-admin snapshot migrations', () => {
     expect(migrated.changed).toBe(true);
     expect(migrated.state.blocksByPath['/services/planned-giving/qualified-charitable-distribution'][0].settings.card1ListJson)
       .toBe(JSON.stringify(['One line']));
+  });
+
+  it('converts the 403(b) loan details block to one rich card without losing the source HTML', () => {
+    const block = {
+      id: 'loan_details',
+      kind: 'content',
+      mode: 'dynamic',
+      settings: {
+        html: '<div class="retirement-403b-loan-copy"><h2>403(b) Plan Loans</h2><p>Keep this guidance.</p></div>',
+        bgTone: 'grey',
+        textTone: 'white',
+        paddingTopRem: 5,
+        paddingBottomRem: 5,
+        sectionClassName: 'retirement-403b-native-loans',
+      },
+    };
+
+    const migrated = migrateRetirement403bLoanDetailsBlock(RETIREMENT_403B_LOAN_DETAILS_PATH, block);
+
+    expect(migrated).toMatchObject({
+      kind: 'card_grid',
+      templateId: 'card_grid',
+      presetId: 'loan-details',
+      settings: {
+        title: '403(b) Plan Loans',
+        columns: 'one',
+        cardCount: '1',
+        cardStyle: 'card2',
+        legacyLoanDetailsHtml: block.settings.html,
+      },
+    });
+    expect(migrated.settings.card1Body).toContain('<div class="retirement-403b-loan-copy">');
+    expect(migrated.settings.card1Body).toContain('<p>Keep this guidance.</p>');
+    expect(migrated.settings.bgTone).toBe('grey');
+    expect(migrated.settings.textTone).toBe('white');
+    expect(migrated.settings.sectionClassName).toBe('retirement-403b-native-loans');
+    expect(migrated.settings.html).toBe('');
+    expect(RETIREMENT_403B_LOAN_DETAILS_CARD_GRID_MIGRATION_VERSION).toBe(1);
+  });
+
+  it('does not strip a custom heading when a legacy loan block already has an authored title', () => {
+    const block = {
+      id: 'loan_details',
+      kind: 'content',
+      mode: 'dynamic',
+      settings: {
+        title: 'Custom loan heading',
+        html: '<div><h2>403(b) Plan Loans</h2><p>Custom recovery copy.</p></div>',
+      },
+    };
+
+    const migrated = migrateRetirement403bLoanDetailsBlock(RETIREMENT_403B_LOAN_DETAILS_PATH, block);
+
+    expect(migrated.settings.title).toBe('Custom loan heading');
+    expect(migrated.settings.card1Body).toContain('<h2>403(b) Plan Loans</h2>');
+    expect(migrated.settings.card1Body).toContain('Custom recovery copy.');
+  });
+
+  it('migrates only the target 403(b) block and is idempotent', () => {
+    const state = {
+      blocksByPath: {
+        [RETIREMENT_403B_LOAN_DETAILS_PATH]: [
+          {
+            id: 'loan_details',
+            kind: 'content',
+            mode: 'dynamic',
+            settings: { html: '<h2>403(b) Plan Loans</h2><p>Loan copy.</p>' },
+          },
+          { id: 'housing_feature', kind: 'columns', mode: 'dynamic', settings: {} },
+        ],
+      },
+    };
+
+    const migrated = migrateRetirement403bLoanDetailsState(state);
+    expect(migrated.changed).toBe(true);
+    expect(migrated.state.blocksByPath[RETIREMENT_403B_LOAN_DETAILS_PATH][0].kind).toBe('card_grid');
+    expect(migrated.state.blocksByPath[RETIREMENT_403B_LOAN_DETAILS_PATH][1]).toEqual(state.blocksByPath[RETIREMENT_403B_LOAN_DETAILS_PATH][1]);
+    expect(migrateRetirement403bLoanDetailsState(migrated.state).changed).toBe(false);
+  });
+
+  it('converts rollover process HTML into shared numbered step cards and preserves the form address', () => {
+    const block = {
+      id: 'rollover_process',
+      kind: 'content',
+      mode: 'dynamic',
+      settings: {
+        html: '<h2>Start the process</h2><p>First step.</p><p>Second step.</p><p>Third step.</p>',
+        bodyLineHeight: 1.7,
+        bodyBorderWidth: 2.5,
+        sectionClassName: 'retirement-rollovers-native-process',
+        buttonLabel: 'Rollover/Transfer Form',
+        buttonDocumentId: 'document-retirement-rollover-transfer-form',
+        addressClassName: 'rollovers-copy-address',
+        addressTitle: 'AGFinancial',
+        addressLines: 'PO Box 2515\nSpringfield MO 65801',
+      },
+    };
+
+    const migrated = migrateRetirementRolloverProcessBlock(RETIREMENT_ROLLOVER_PROCESS_PATH, block);
+
+    expect(migrated).toMatchObject({
+      kind: 'card_grid',
+      templateId: 'card_grid',
+      presetId: 'step-cards',
+      settings: {
+        title: 'Start the process',
+        columns: 'one',
+        cardCount: '3',
+        card1Title: '1',
+        card1Body: 'First step.',
+        card2Body: 'Second step.',
+        card3Body: 'Third step.',
+        buttonDocumentId: 'document-retirement-rollover-transfer-form',
+        addressTitle: 'AGFinancial',
+        legacyRolloverProcessHtml: block.settings.html,
+      },
+    });
+    expect(migrated.settings.cardBodyLineHeight).toBe(1.7);
+    expect(migrated.settings.cardOutlineWidth).toBe(2);
+    expect(migrated.settings.html).toBe('');
+    expect(RETIREMENT_ROLLOVER_PROCESS_CARD_GRID_MIGRATION_VERSION).toBe(1);
+  });
+
+  it('migrates only rollover process and is idempotent', () => {
+    const state = {
+      blocksByPath: {
+        [RETIREMENT_ROLLOVER_PROCESS_PATH]: [
+          {
+            id: 'rollover_process',
+            kind: 'content',
+            mode: 'dynamic',
+            settings: { html: '<h2>Start the process</h2><p>Step one.</p>' },
+          },
+          { id: 'rollover_options', kind: 'card_grid', mode: 'dynamic', settings: {} },
+        ],
+      },
+    };
+
+    const migrated = migrateRetirementRolloverProcessState(state);
+    expect(migrated.changed).toBe(true);
+    expect(migrated.state.blocksByPath[RETIREMENT_ROLLOVER_PROCESS_PATH][0].kind).toBe('card_grid');
+    expect(migrated.state.blocksByPath[RETIREMENT_ROLLOVER_PROCESS_PATH][1])
+      .toEqual(state.blocksByPath[RETIREMENT_ROLLOVER_PROCESS_PATH][1]);
+    expect(migrateRetirementRolloverProcessState(migrated.state).changed).toBe(false);
+  });
+
+  it('separates individual enrollment step titles from their compact number markers', () => {
+    const block = {
+      id: 'enrollment_steps',
+      kind: 'card_grid',
+      mode: 'dynamic',
+      settings: {
+        titleTone: 'super-grey',
+        cardTitleSizeRem: 1.1,
+        card1Title: '1. Complete the enrollment form',
+        card2Title: '2. Return your enrollment form',
+        card3Title: '3. Complete payroll deduction',
+      },
+    };
+
+    const migrated = migrateRetirementIndividualEnrollmentStepCardPresentationBlock(
+      RETIREMENT_INDIVIDUAL_ENROLLMENT_PATH,
+      block,
+    );
+
+    expect(migrated.settings).toMatchObject({
+      titleTone: 'alternating',
+      cardTitleSizeRem: 1.55,
+      card1Title: 'Complete the enrollment form',
+      card2Title: 'Return your enrollment form',
+      card3Title: 'Complete payroll deduction',
+    });
+    expect(JSON.parse(migrated.settings.legacyEnrollmentStepPresentationSettingsJson)).toMatchObject({
+      titleTone: 'super-grey',
+      card1Title: '1. Complete the enrollment form',
+    });
+
+    const state = migrateRetirementIndividualEnrollmentStepCardPresentationState({
+      blocksByPath: { [RETIREMENT_INDIVIDUAL_ENROLLMENT_PATH]: [block] },
+    });
+    expect(state.changed).toBe(true);
+    expect(migrateRetirementIndividualEnrollmentStepCardPresentationState(state.state).changed).toBe(false);
+  });
+
+  it('moves the individual enrollment Mail/Fax block into recoverable step 04 card data', () => {
+    const state = {
+      blocksByPath: {
+        [RETIREMENT_INDIVIDUAL_ENROLLMENT_PATH]: [
+          {
+            id: 'enrollment_steps',
+            kind: 'card_grid',
+            mode: 'dynamic',
+            settings: {
+              cardCount: 3,
+              card1Title: 'Complete the enrollment form',
+              card2Title: 'Return your enrollment form',
+              card3Title: 'Complete payroll deduction',
+            },
+          },
+          {
+            id: 'return_forms',
+            kind: 'content',
+            mode: 'dynamic',
+            settings: {
+              addressTitle: 'Mail or fax completed forms to:',
+              addressLines: 'AGFinancial\nPO Box 2515\nSpringfield, MO 65801',
+              fineprint: '**FAX:** 417.520.0406',
+            },
+          },
+        ],
+      },
+    };
+
+    expect(RETIREMENT_INDIVIDUAL_ENROLLMENT_MAIL_FAX_STEP_MIGRATION_VERSION).toBe(1);
+    const migrated = migrateRetirementIndividualEnrollmentMailFaxStepState(state);
+    const blocks = migrated.state.blocksByPath[RETIREMENT_INDIVIDUAL_ENROLLMENT_PATH];
+    const steps = blocks.find((block) => block.id === 'enrollment_steps');
+
+    expect(migrated.changed).toBe(true);
+    expect(blocks.some((block) => block.id === 'return_forms')).toBe(false);
+    expect(steps.settings).toMatchObject({
+      cardCount: 4,
+      cardTitleJustify: 'left',
+      cardBodyJustify: 'left',
+      card4Title: 'Mail or fax completed forms to:',
+      card4CopyLabel: 'Copy mailing address',
+      card4CopyText: 'AGFinancial\nPO Box 2515\nSpringfield, MO 65801',
+    });
+    expect(steps.settings.card4Body).toContain('<br>');
+    expect(steps.settings.card4Body).toContain('<strong>FAX:</strong>');
+    expect(JSON.parse(steps.settings.legacyEnrollmentMailFaxStepSourceJson).returnFormsBlock.id).toBe('return_forms');
+    expect(migrateRetirementIndividualEnrollmentMailFaxStepState(migrated.state).changed).toBe(false);
   });
 
   it('converts legacy arrow-prefixed P&C resource copy into real card lists', () => {

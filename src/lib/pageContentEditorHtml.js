@@ -29,22 +29,21 @@ export function getPageContentEditorHtml(settings = {}) {
     return settings.bodyHtml;
   }
 
-  const bodyHtml = pageContentLinesToHtml(settings.body);
-  if (bodyHtml) {
-    return bodyHtml;
-  }
+  return pageContentLinesToHtml(settings.body);
+}
 
-  const fineprintHtml = pageContentLinesToHtml(settings.fineprint);
-  if (fineprintHtml) {
-    return fineprintHtml;
-  }
+// Page Content has auxiliary presentation fields that must remain independent
+// from the editable body: fineprint/notes and the copyable address block. The
+// HUD used to flatten those fields into the HTML editor, which made the same
+// text appear in two places and made the auxiliary controls look disconnected.
+export function getPageContentBodyEditorHtml(settings = {}) {
+  return getPageContentEditorHtml(settings);
+}
 
-  const addressTitle = String(settings.addressTitle || '').trim();
-  const addressLines = pageContentLinesToHtml(settings.addressLines);
-  return [
-    addressTitle ? `<p>${escapePageContentHtml(addressTitle)}</p>` : '',
-    addressLines,
-  ].filter(Boolean).join('');
+export function hasLegacyPageContentBodySource(settings = {}) {
+  return !hasMeaningfulPageContentHtml(settings.html)
+    && !hasMeaningfulPageContentHtml(settings.bodyHtml)
+    && Boolean(String(settings.body || '').trim());
 }
 
 export function getPageContentEditorField(settings = {}) {
@@ -60,10 +59,5 @@ export function getPageContentEditorField(settings = {}) {
 export function hasLegacyPageContentSource(settings = {}) {
   return !hasMeaningfulPageContentHtml(settings.html)
     && !hasMeaningfulPageContentHtml(settings.bodyHtml)
-    && (
-      String(settings.body || '').trim()
-      || String(settings.fineprint || '').trim()
-      || String(settings.addressTitle || '').trim()
-      || String(settings.addressLines || '').trim()
-    );
+    && Boolean(String(settings.body || '').trim());
 }

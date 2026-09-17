@@ -349,10 +349,18 @@ export default function DynamicRequestFormSection({ config }) {
           ) : null}
         </form>
       </div>
-      <div className="native-info-section-copy dynamic-request-copy dynamic-request-copy-shell fade-up">
+      <div
+        className="native-info-section-copy dynamic-request-copy dynamic-request-copy-shell fade-up"
+        style={{ textAlign: config?.bodyJustify || 'left' }}
+      >
         {config?.title ? (
           <h2
             className={String(config.titleClassName || '').trim() || undefined}
+            style={{
+              fontFamily: config?.titleFontFamily === 'helv' ? 'var(--ag-font-helv)' : 'var(--ag-font-heading)',
+              fontWeight: config?.titleFontWeight,
+              textAlign: config?.justify || 'left',
+            }}
             dangerouslySetInnerHTML={{
               __html: renderTextWithHighlights(
                 config.title,

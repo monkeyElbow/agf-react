@@ -195,28 +195,32 @@ describe('native page content renderer guardrail', () => {
     expect(cssSource).toContain('letter-spacing: -0.035em;');
   });
 
-  it('keeps 403(b) loans surface and text tones on the shared page-content contract', () => {
+  it('keeps 403(b) loans on the shared one-card grid contract', () => {
     const rendererSource = readSource('./NativeContentPage.jsx');
     const runtimeSource = readSource('../lib/dynamicPageBlocks.js');
-    const definitionSource = readSource('../blocks/definitions/pageContent.definition.js');
+    const definitionSource = readSource('../blocks/definitions/cardGrid.definition.js');
+    const presetSource = readSource('../lib/cardGridPresets.js');
     const adminEditorSource = readSource('./block-editors/migratedBlockEditors.jsx');
-    const hudEditorSource = readSource('./PageContentHudEditorPanel.jsx');
     const cssSource = readSource('../styles/service-native.css');
 
-    expect(runtimeSource).toContain('const bgTone = normalizeSurfaceBgTone(settings.bgTone, \'white\');');
-    expect(runtimeSource).toContain('const textTone = normalizeSharedPanelTextTone(settings.textTone, \'dark\');');
-    expect(rendererSource).toContain('is-bg-${bgTone} is-text-${textTone}');
-    expect(definitionSource).toContain("id: 'bgTone'");
-    expect(definitionSource).toContain("id: 'textTone'");
-    expect(adminEditorSource).toContain("fields.filter((field) => field.id === 'textTone')");
-    expect(adminEditorSource).toContain('<BackgroundEditorPage');
-    expect(hudEditorSource).toContain('PageContentSurfaceToneControls');
+    expect(runtimeSource).toContain("kind !== 'card_grid'");
+    expect(rendererSource).toContain("buildPresetFamilyRuntimeClassName('card_grid', presetId)");
+    expect(definitionSource).toContain("presets: getCardGridPresetDefinitions()");
+    expect(presetSource).toContain("id: 'loan-details'");
+    expect(presetSource).toContain("maxCards: 1");
+    expect(adminEditorSource).toContain('presetMaxCards');
     expect(cssSource).toContain('.retirement-403b-native-loans.is-bg-grey');
     expect(cssSource).toContain('.retirement-403b-native-loans.is-bg-sand');
-    expect(cssSource).toContain('.retirement-403b-native-loans.is-text-white');
+    expect(cssSource).toContain('.service-native-grid.is-one {');
+    expect(cssSource).toContain('grid-template-columns: minmax(0, 1fr);');
+    expect(cssSource).toContain('.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).retirement-403b-native-loans .native-info-section-copy > h2');
+    expect(cssSource).toContain('.retirement-403b-native-loans .service-native-card {');
+    expect(cssSource).toContain('background: transparent !important;');
+    expect(cssSource).toContain('.retirement-403b-loan-detail-card {');
+    expect(cssSource).toContain('border: 2px solid var(--ret403b-loan-detail-accent, var(--ag-color-mango));');
+    expect(cssSource).toContain('font-size: clamp(2.15rem, 3.4vw, 2.8rem) !important;');
+    expect(cssSource).toContain('color: #ffffff !important;');
     expect(cssSource).toContain('color: var(--ag-color-mango) !important;');
-    expect(cssSource).not.toContain('--dyn-content-padding-top: clamp(10rem, 15vw, 13rem);');
-    expect(cssSource).not.toContain('padding-top: clamp(5rem, 8.5vw, 6.75rem);');
     expect(cssSource).not.toContain('.native-info-page--retirement-403b .retirement-403b-native-loans');
   });
 
@@ -270,12 +274,16 @@ describe('native page content renderer guardrail', () => {
     expect(cssSource).toContain('padding: var(--dynamic-grid-card-padding, clamp(1.9rem, 2.8vw, 2.7rem));');
     expect(cssSource).toContain('.native-info-page--life-quote .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).life-quote-native-types .service-native-card h3 {');
     expect(cssSource).toContain('min-height: 0 !important;');
-    expect(cssSource).toContain('font-size: clamp(1.72rem, 2.7vw, 2.28rem);');
-    expect(cssSource).toContain('text-align: left;');
+    expect(cssSource).toContain('font-size: var(--dynamic-grid-card-title-size, clamp(1.72rem, 2.7vw, 2.28rem));');
+    expect(cssSource).toContain('line-height: var(--dynamic-grid-card-title-line-height, 1.02) !important;');
+    expect(cssSource).toContain('text-align: var(--dynamic-grid-card-title-justify, left);');
+    expect(cssSource).toContain('margin: 0 0 var(--dynamic-grid-card-title-body-space, 0.95rem);');
     expect(cssSource).toContain('.native-info-page--life-quote .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).life-quote-native-types .service-native-card h3::after {');
     expect(cssSource).toContain('display: none !important;');
     expect(cssSource).toContain('.native-info-page--life-quote .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).life-quote-native-types .service-native-card p {');
-    expect(cssSource).toContain('font-size: var(--service-native-intro-body-size);');
+    expect(cssSource).toContain('font-size: var(--dynamic-grid-card-body-size, var(--service-native-intro-body-size));');
+    expect(cssSource).toContain('line-height: var(--dynamic-grid-card-body-line-height, 1.48);');
+    expect(cssSource).toContain('text-align: var(--dynamic-grid-card-body-justify, left) !important;');
     expect(cssSource).toContain('.native-info-page--life-quote .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).life-quote-native-types .service-native-card:nth-child(2) h3 {');
     expect(cssSource).toContain('color: var(--ag-color-mango);');
   });

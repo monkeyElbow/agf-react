@@ -100,6 +100,7 @@ describe('dynamicSectionTypography', () => {
     })).toEqual({
       color: 'var(--ag-color-mango)',
       fontSize: 'clamp(calc(1.42rem * 0.68), 5vw, 1.42rem)',
+      fontWeight: 400,
       letterSpacing: '-0.015em',
     });
   });
@@ -111,7 +112,19 @@ describe('dynamicSectionTypography', () => {
       subtitleLetterSpacingEm: -0.08,
     })).toEqual({
       fontSize: 'clamp(calc(1.42rem * 0.68), 5vw, 1.42rem)',
+      fontWeight: 400,
       letterSpacing: '-0.08em',
+    });
+  });
+
+  it('applies an explicit subtitle weight to supporting copy', () => {
+    expect(buildBillboardSubtitleStyle({
+      subtitleDisplay: 'supporting',
+      subtitleSizeRem: 1.42,
+      titleFontFamily: 'heading',
+      subtitleFontWeight: 700,
+    })).toMatchObject({
+      fontWeight: 700,
     });
   });
 });

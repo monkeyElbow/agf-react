@@ -2232,7 +2232,7 @@
   font-family: var(--ag-font-helv);
   font-size: var(--dynamic-grid-header-size, clamp(1.9rem, 4.2vw, 2.9rem));
   line-height: 1.04;
-  letter-spacing: var(--ag-letter-spacing-helv-intro);
+  letter-spacing: var(--dynamic-grid-header-letter-spacing, var(--ag-letter-spacing-helv-intro));
   color: var(--dynamic-grid-heading-color);
 }
 
