@@ -612,17 +612,57 @@ describe('content-admin snapshot migrations', () => {
         cardCount: '3',
         card1Title: '1',
         card1Body: 'First step.',
-        card2Body: 'Second step.',
+        card1ButtonLabel: 'Rollover/Transfer Form',
+        card1ButtonDocumentId: 'document-retirement-rollover-transfer-form',
+        card2Body: expect.stringContaining('Second step.'),
+        card2CopyLabel: 'Copy mailing address',
+        card2CopyText: 'AGFinancial\nPO Box 2515\nSpringfield MO 65801',
         card3Body: 'Third step.',
-        buttonDocumentId: 'document-retirement-rollover-transfer-form',
-        addressTitle: 'AGFinancial',
+        buttonDocumentId: '',
+        addressTitle: '',
+        addressLines: '',
+        retirementRolloverProcessCardGridMigrationVersion: 2,
         legacyRolloverProcessHtml: block.settings.html,
       },
     });
     expect(migrated.settings.cardBodyLineHeight).toBe(1.7);
     expect(migrated.settings.cardOutlineWidth).toBe(2);
     expect(migrated.settings.html).toBe('');
-    expect(RETIREMENT_ROLLOVER_PROCESS_CARD_GRID_MIGRATION_VERSION).toBe(1);
+    expect(migrated.settings.card2Body).toContain('<strong>AGFinancial</strong>');
+    expect(RETIREMENT_ROLLOVER_PROCESS_CARD_GRID_MIGRATION_VERSION).toBe(2);
+  });
+
+  it('upgrades already-migrated rollover cards so the action and address belong to their steps', () => {
+    const block = {
+      id: 'rollover_process',
+      kind: 'card_grid',
+      mode: 'dynamic',
+      presetId: 'step-cards',
+      settings: {
+        cardCount: '3',
+        card1Title: '1',
+        card1Body: 'Download the form.',
+        card2Title: '2',
+        card2Body: 'Return the completed form to the address below.',
+        buttonLabel: 'Rollover/Transfer Form',
+        buttonDocumentId: 'document-retirement-rollover-transfer-form',
+        addressTitle: 'AGFinancial',
+        addressLines: 'PO Box 2515\nSpringfield MO 65801',
+      },
+    };
+
+    const migrated = migrateRetirementRolloverProcessBlock(RETIREMENT_ROLLOVER_PROCESS_PATH, block);
+
+    expect(migrated.settings).toMatchObject({
+      card1ButtonLabel: 'Rollover/Transfer Form',
+      card1ButtonDocumentId: 'document-retirement-rollover-transfer-form',
+      card2CopyLabel: 'Copy mailing address',
+      card2CopyText: 'AGFinancial\nPO Box 2515\nSpringfield MO 65801',
+      buttonLabel: '',
+      addressLines: '',
+      retirementRolloverProcessCardGridMigrationVersion: 2,
+    });
+    expect(migrated.settings.card2Body).toContain('<strong>AGFinancial</strong>');
   });
 
   it('migrates only rollover process and is idempotent', () => {

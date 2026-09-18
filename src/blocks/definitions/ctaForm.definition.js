@@ -74,6 +74,7 @@ const sections = [
     title: 'Placement',
     surfaces: ['hud', 'admin'],
     fields: [
+      defineEditorField({ id: 'headerGapRem', label: 'Space below header (rem)', type: 'range', min: 0, max: 6, step: 0.05, defaultValue: 1.5 }),
       defineEditorField({ id: 'paddingTopRem', label: 'Padding top (rem)', type: 'range', min: 0, max: 8, step: 0.05, defaultValue: 2.5 }),
       defineEditorField({ id: 'paddingBottomRem', label: 'Padding bottom (rem)', type: 'range', min: 0, max: 8, step: 0.05, defaultValue: 4 }),
       defineEditorField({ id: 'anchorId', label: 'Anchor ID', type: 'text' }),
@@ -103,6 +104,7 @@ export const ctaFormBlockDefinition = createFormBlockDefinitionScaffold({
     successMessage: 'Thanks. We will reach out soon.',
     anchorId: '',
     sectionClassName: '',
+    headerGapRem: 1.5,
     paddingTopRem: 2.5,
     paddingBottomRem: 4,
   },

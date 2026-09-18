@@ -52,21 +52,21 @@ describe('calculators native page content', () => {
     expect(cssSource).toContain('text-align: left;');
     expect(calculatorStyles).toContain('.native-info-page--calculators .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).calculators-native-collection,');
     expect(calculatorStyles).toContain('.native-info-page--calculators .calculators-native-page-head + .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).calculators-native-collection {\n  padding-top: 0;\n}');
-    expect(calculatorStyles).toContain('.calculators-native-collection .service-native-grid {\n  margin-top: 0;');
-    expect(calculatorStyles).toContain('.native-info-page--calculators .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).calculators-native-collection .service-native-grid {\n  margin-top: 0;\n}');
+    expect(calculatorStyles).toContain('.calculators-native-collection .service-native-grid {\n  margin-top: var(--dynamic-grid-header-cards-space, 0);');
+    expect(calculatorStyles).toContain('.native-info-page--calculators .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).calculators-native-collection .service-native-grid {\n  margin-top: var(--dynamic-grid-header-cards-space, 0);\n}');
     expect(calculatorStyles).toContain('.native-info-page--calculators .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).calculators-native-collection .service-native-card {');
-    expect(calculatorStyles).toContain('padding: clamp(1.75rem, 2.6vw, 2.25rem);');
+    expect(calculatorStyles).toContain('padding: var(--dynamic-grid-card-padding, clamp(1.75rem, 2.6vw, 2.25rem));');
     expect(calculatorStyles).toContain('transform 240ms cubic-bezier(0.22, 1, 0.36, 1),');
     expect(calculatorStyles).toContain('.native-info-page--calculators .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).calculators-native-collection .service-native-card:is(:hover, :focus-within) {');
     expect(calculatorStyles).toContain('transform: translateY(-2px) scale(1.004);');
     expect(calculatorStyles).toContain('.native-info-page--calculators .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).calculators-native-collection .service-native-card h3 {');
     expect(calculatorStyles).toContain('min-height: 0;');
-    expect(calculatorStyles).toContain('font-size: clamp(1.95rem, 3.05vw, 2.52rem);');
-    expect(calculatorStyles).toContain('letter-spacing: -0.03em;');
-    expect(calculatorStyles).toContain('.native-info-page--calculators .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).calculators-native-collection .service-native-card:nth-child(3n) h3 {\n  color: var(--ag-color-super-grey);\n}');
+    expect(calculatorStyles).toContain('text-align: var(--dynamic-grid-card-title-justify, center);');
+    expect(calculatorStyles).toContain('margin: 0 0 var(--dynamic-grid-card-title-body-space, 1rem);');
+    expect(calculatorStyles).not.toContain('.native-info-page--calculators .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).calculators-native-collection .service-native-card:nth-child(3n) h3');
     expect(calculatorStyles).toContain('.native-info-page--calculators .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).calculators-native-collection .service-native-card > div > p:not(.service-native-card-subtitle):not(.service-native-card-phone) {');
-    expect(calculatorStyles).toContain('font-size: clamp(1.02rem, 1.55vw, 1.18rem);');
-    expect(calculatorStyles).toContain('font-weight: 400;');
+    expect(calculatorStyles).toContain('font-size: var(--dynamic-grid-card-body-size, clamp(1.02rem, 1.55vw, 1.18rem));');
+    expect(calculatorStyles).toContain('text-align: var(--dynamic-grid-card-body-justify, left);');
   });
 
   it('keeps standalone calculator routes shell-only with block-owned intro, widget, and contact form sections', () => {

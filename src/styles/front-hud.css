@@ -4642,6 +4642,12 @@
   gap: 0.4rem;
 }
 
+.admin-cta-hud-spacing-controls {
+  display: grid;
+  gap: 0.7rem;
+  max-width: 720px;
+}
+
 .admin-cta-hud-submit-row .admin-color-palette,
 .admin-cta-hud-submit-row .admin-front-hud-swatch-row {
   justify-self: start;
@@ -9312,13 +9318,15 @@
 }
 
 .admin-hud-editor-shared-surface .admin-cta-hud-editor--reference.is-section-heading
-  .admin-cta-hud-editor-panels > :is(.admin-cta-hud-card--background, .admin-cta-hud-card--message, .admin-cta-hud-card--fields),
+  .admin-cta-hud-editor-panels > :is(.admin-cta-hud-card--background, .admin-cta-hud-card--message, .admin-cta-hud-card--fields, .admin-cta-hud-card--spacing),
 .admin-hud-editor-shared-surface .admin-cta-hud-editor--reference.is-section-background
-  .admin-cta-hud-editor-panels > :is(.admin-cta-hud-card--heading, .admin-cta-hud-card--message, .admin-cta-hud-card--fields),
+  .admin-cta-hud-editor-panels > :is(.admin-cta-hud-card--heading, .admin-cta-hud-card--message, .admin-cta-hud-card--fields, .admin-cta-hud-card--spacing),
 .admin-hud-editor-shared-surface .admin-cta-hud-editor--reference.is-section-message
-  .admin-cta-hud-editor-panels > :is(.admin-cta-hud-card--heading, .admin-cta-hud-card--background, .admin-cta-hud-card--fields),
+  .admin-cta-hud-editor-panels > :is(.admin-cta-hud-card--heading, .admin-cta-hud-card--background, .admin-cta-hud-card--fields, .admin-cta-hud-card--spacing),
 .admin-hud-editor-shared-surface .admin-cta-hud-editor--reference.is-section-fields
-  .admin-cta-hud-editor-panels > :is(.admin-cta-hud-card--heading, .admin-cta-hud-card--background, .admin-cta-hud-card--message) {
+  .admin-cta-hud-editor-panels > :is(.admin-cta-hud-card--heading, .admin-cta-hud-card--background, .admin-cta-hud-card--message, .admin-cta-hud-card--spacing),
+.admin-hud-editor-shared-surface .admin-cta-hud-editor--reference.is-section-spacing
+  .admin-cta-hud-editor-panels > :is(.admin-cta-hud-card--heading, .admin-cta-hud-card--background, .admin-cta-hud-card--message, .admin-cta-hud-card--fields) {
   display: none;
 }
 

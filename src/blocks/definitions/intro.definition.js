@@ -5,6 +5,7 @@ import { buildDynamicIntroFromBlock } from '../../lib/dynamicPageBlocks';
 import { getTokenSwatch, SEMANTIC_TEXT_COLOR_OPTIONS_WITH_DEFAULT } from '../../lib/colorSystem';
 import { validateLinkFieldGroups } from '../../lib/linkValue';
 import {
+  DEFAULT_INTRO_HEADING_SIZE_REM,
   DEFAULT_INTRO_EXTRA_LINE_HEIGHT,
   DEFAULT_INTRO_EXTRA_LINE_SIZE_REM,
   DEFAULT_INTRO_EXTRA_LINE_SPACE_BEFORE_REM,
@@ -99,6 +100,16 @@ const sections = [
           { value: 'center', label: 'Center' },
           { value: 'right', label: 'Right' },
         ],
+      }),
+      defineEditorField({
+        id: 'headingSizeRem',
+        label: 'Intro heading size (rem)',
+        type: 'range',
+        min: 2.4,
+        max: 8,
+        step: 0.05,
+        defaultValue: DEFAULT_INTRO_HEADING_SIZE_REM,
+        unit: 'rem',
       }),
       defineEditorField({ id: 'lineSpacing', label: 'Intro heading line spacing', type: 'number' }),
       defineEditorField({ id: 'extraLine', label: 'Accent line (optional)', type: 'text' }),

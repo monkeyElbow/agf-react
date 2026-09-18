@@ -42,13 +42,14 @@ describe('CtaHudEditorPanel', () => {
     });
 
     const cards = Array.from(container.querySelectorAll('.admin-cta-hud-editor-panels > section'));
-    expect(cards).toHaveLength(4);
+    expect(cards).toHaveLength(5);
     expect(within(cards[2]).getByText('Message + Submit')).toBeTruthy();
     expect(within(cards[2]).getByText('Lead Copy')).toBeTruthy();
     expect(within(cards[2]).getByLabelText('Submit Label')).toBeTruthy();
     expect(within(cards[2]).getByRole('group', { name: 'CTA submit style' })).toBeTruthy();
     expect(within(cards[2]).getByText('Button Preview')).toBeTruthy();
-    expect(within(cards[3]).getByText('Form Fields')).toBeTruthy();
+    expect(within(cards[3]).getByText('Spacing')).toBeTruthy();
+    expect(within(cards[4]).getByText('Form Fields')).toBeTruthy();
   });
 
   it('exposes the CTA groups through the reference editor rail', () => {
@@ -59,6 +60,30 @@ describe('CtaHudEditorPanel', () => {
     expect(screen.getByRole('button', { name: 'Background' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Message + Submit' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Form Fields' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Spacing' })).toBeTruthy();
+  });
+
+  it('forwards CTA spacing controls from the Spacing editor page', () => {
+    const onHeaderGapRemChange = vi.fn();
+    const onPaddingTopRemChange = vi.fn();
+    const onPaddingBottomRemChange = vi.fn();
+    renderPanel({
+      headerGapRem: 1.5,
+      paddingTopRem: 2.5,
+      paddingBottomRem: 4,
+      onHeaderGapRemChange,
+      onPaddingTopRemChange,
+      onPaddingBottomRemChange,
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Spacing' }));
+    fireEvent.change(screen.getByRole('slider', { name: 'Space below header' }), { target: { value: '2.2' } });
+    fireEvent.change(screen.getByRole('slider', { name: 'Padding top' }), { target: { value: '3.1' } });
+    fireEvent.change(screen.getByRole('slider', { name: 'Padding bottom' }), { target: { value: '5.4' } });
+
+    expect(onHeaderGapRemChange).toHaveBeenCalledWith(2.2);
+    expect(onPaddingTopRemChange).toHaveBeenCalledWith(3.1);
+    expect(onPaddingBottomRemChange).toHaveBeenCalledWith(5.4);
   });
 
   it('shows title span chips and omits the old heading helper copy', () => {

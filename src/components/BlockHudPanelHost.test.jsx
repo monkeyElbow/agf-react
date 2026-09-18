@@ -124,6 +124,44 @@ describe('BlockHudPanelHost', () => {
     expect(screen.getByRole('button', { name: 'Form Fields' })).toBeTruthy();
   });
 
+  it('gives Page Content one background owner instead of appending a host duplicate', () => {
+    render(createElement(BlockHudPanelHost, {
+      block: {
+        id: 'page-content-background-owner-probe',
+        kind: 'content',
+        mode: 'dynamic',
+        settings: {
+          sectionClassName: 'custom-page-content',
+          html: '<p>Page content</p>',
+        },
+      },
+      onSettingChange: vi.fn(),
+    }));
+
+    expect(screen.getAllByRole('button', { name: 'Background' })).toHaveLength(1);
+    expect(screen.getAllByRole('region', { name: 'Background' })).toHaveLength(1);
+    expect(document.querySelector('.admin-hud-shared-background-page')).toBeNull();
+  });
+
+  it('does not expose background controls for widget-owned Page Content in the HUD', () => {
+    render(createElement(BlockHudPanelHost, {
+      block: {
+        id: 'widget-page-content-background-owner-probe',
+        kind: 'content',
+        mode: 'dynamic',
+        settings: {
+          widget: 'careers-jobs',
+          sectionClassName: 'careers-native-jobs-list',
+          html: '',
+        },
+      },
+      onSettingChange: vi.fn(),
+    }));
+
+    expect(screen.queryByRole('button', { name: 'Background' })).toBeNull();
+    expect(screen.queryByText('Background lights')).toBeNull();
+  });
+
   it('routes card grid HUD blocks through the shared model rail and block options page', () => {
     const onSettingChange = vi.fn();
     render(createElement(BlockHudPanelHost, {

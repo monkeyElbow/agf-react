@@ -25,6 +25,12 @@ function validateSiteFeatureAction(block) {
 const defaultSiteFeatureEntry = getDefaultSiteFeatureCatalogEntry();
 const featureIdOptions = getSiteFeatureOptions();
 
+const SITE_FEATURE_CARD_JUSTIFY_OPTIONS = [
+  { value: 'left', label: 'Left' },
+  { value: 'center', label: 'Center' },
+  { value: 'right', label: 'Right' },
+];
+
 const sections = [
   {
     id: 'feature',
@@ -87,6 +93,13 @@ const sections = [
         max: 1.5,
         step: 0.05,
         defaultValue: 0.95,
+      }),
+      defineEditorField({
+        id: 'cardTitleJustify',
+        label: 'Card title justify',
+        type: 'select',
+        options: SITE_FEATURE_CARD_JUSTIFY_OPTIONS,
+        defaultValue: 'left',
       }),
       defineEditorField({
         id: 'cardBodySizeRem',
@@ -157,6 +170,7 @@ export const siteFeatureBlockDefinition = createBlockDefinition({
     sectionClassName: '',
     cardTitleSizeRem: 5.4,
     cardTitleLineHeight: 0.95,
+    cardTitleJustify: 'left',
     cardBodySizeRem: 1.14,
     cardBodyLineHeight: 1.72,
     titleTone: 'super-grey',

@@ -75,6 +75,8 @@ export default function IntroHudEditorPanel({
   headingInputRef,
   onHeadingSelectionCapture,
   headingSelection,
+  headingSizeRem,
+  onHeadingSizeChange,
   headingHighlightsJson = '',
   headingColor,
   onHeadingColorChange,
@@ -214,6 +216,14 @@ export default function IntroHudEditorPanel({
                     ))}
                   </div>
                 </div>
+                <IntroAccentSlider
+                  label="Heading size (rem)"
+                  value={headingSizeRem}
+                  min={2.4}
+                  max={8}
+                  step={0.05}
+                  onChange={onHeadingSizeChange}
+                />
                 <label className="admin-front-hud-range">
                   <span>Line Height {Number(lineSpacing || 0).toFixed(2)}</span>
                   <input

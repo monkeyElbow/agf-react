@@ -41,6 +41,7 @@ import {
 } from '../lib/dynamicPageBlocks';
 import { normalizeBackgroundEffects } from '../lib/backgroundEffects';
 import { defaultLoansCtaSettings } from '../data/ctaFormSeeds';
+import { defaultTestimonialsLibrary } from '../data/testimonialsLibrarySeed';
 import { buildDefaultLoansIntroRuntime } from '../data/loansIntroSeed';
 import { buildHeroLineStyle, normalizeHeroLineGapEm } from '../lib/heroLineStyle';
 import {
@@ -868,7 +869,12 @@ export default function LoansPage({ sectionsOnly = false }) {
   const testimonialsData = useMemo(
     () => resolveTestimonialsBlockData({
       block: testimonialsBlock,
+      // The seeded library is the recovery source for this legacy custom
+      // route. A temporarily empty or mismatched provider must not turn a
+      // configured block into a blank public section. The resolver preserves
+      // an explicitly empty manual selection.
       library: testimonialsLibrary,
+      fallbackItems: defaultTestimonialsLibrary,
       defaultTag: 'loans',
     }),
     [testimonialsBlock, testimonialsLibrary],
@@ -1411,7 +1417,7 @@ export default function LoansPage({ sectionsOnly = false }) {
             className={`service-native-intro-copy is-justify-${resolvedIntro.justify || 'center'}`}
             style={{ '--intro-heading-line-height': resolvedIntro.lineSpacing || 1.05 }}
           >
-            <h2 className={resolvedIntro.headingClassName || undefined}>
+            <h2 className={resolvedIntro.headingClassName || undefined} style={resolvedIntro.headingStyle}>
               <span
                 dangerouslySetInnerHTML={{
                   __html: renderTextWithHighlights(resolvedIntro.heading, resolvedIntro.headingHighlights),
@@ -1502,12 +1508,21 @@ export default function LoansPage({ sectionsOnly = false }) {
             <p className="loans-native-options-lead">{loanOptionsGrid.body}</p>
           ) : null}
           {loanOptionsCards.length ? (
-            <div className="service-native-grid loans-native-options-grid">
+            <div
+              className="service-native-grid loans-native-options-grid"
+              style={{
+                '--dynamic-grid-header-cards-space': `${loanOptionsGrid.headerCardsSpaceRem}rem`,
+                marginTop: `${loanOptionsGrid.headerCardsSpaceRem}rem`,
+              }}
+            >
               {loanOptionsCards.map((item) => (
                 <article
                   key={`loan-option-${item.slot}-${item.title}`}
                   className={['service-native-card loans-native-option-card fade-up', item.cardClass || 'card2'].filter(Boolean).join(' ')}
-                  style={{ '--dynamic-grid-card-padding': `${loanOptionsGrid.cardPaddingRem}rem` }}
+                  style={{
+                    '--dynamic-grid-card-padding': `${loanOptionsGrid.cardPaddingRem}rem`,
+                    padding: `${loanOptionsGrid.cardPaddingRem}rem`,
+                  }}
                 >
                   <h3
                     className={item.titleClassName || undefined}

@@ -11,8 +11,9 @@ function renderPanel(props = {}) {
     textTone: 'dark',
     bgTone: 'sand',
     justify: 'center',
-    lineSpacing: 1.04,
-    ...props,
+      lineSpacing: 1.04,
+      headingSizeRem: 4.2,
+      ...props,
   }));
 }
 
@@ -141,6 +142,28 @@ describe('IntroHudEditorPanel', () => {
     expect(onSpaceBeforeChange).toHaveBeenCalledWith(1.8);
     expect(onLineHeightChange).toHaveBeenCalledWith(1.1);
     expect(screen.getByLabelText('Accent line size (rem) value')).toBeTruthy();
+  });
+
+  it('exposes the intro heading size control and forwards changes', () => {
+    const onHeadingSizeChange = vi.fn();
+    renderPanel({ headingSizeRem: 4.2, onHeadingSizeChange });
+
+    fireEvent.change(screen.getByRole('slider', { name: 'Heading size (rem)' }), {
+      target: { value: '5.1' },
+    });
+
+    expect(onHeadingSizeChange).toHaveBeenCalledWith(5.1);
+  });
+
+  it('exposes the intro heading line-height control and forwards changes', () => {
+    const onLineSpacingChange = vi.fn();
+    renderPanel({ lineSpacing: 1.04, onLineSpacingChange });
+
+    fireEvent.change(screen.getByRole('slider', { name: 'Line Height 1.04' }), {
+      target: { value: '1.28' },
+    });
+
+    expect(onLineSpacingChange).toHaveBeenCalledWith(1.28);
   });
 
   it('keeps the pilot compact by removing redundant section headers and notes', () => {

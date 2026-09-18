@@ -1,4 +1,5 @@
 export const DEFAULT_INTRO_LINE_SPACING = 1.04;
+export const DEFAULT_INTRO_HEADING_SIZE_REM = 2.99;
 export const DEFAULT_INTRO_EXTRA_LINE_SIZE_REM = 1.7;
 export const DEFAULT_INTRO_EXTRA_LINE_SPACE_BEFORE_REM = 1;
 export const DEFAULT_INTRO_EXTRA_LINE_HEIGHT = 1.35;
@@ -28,6 +29,28 @@ export function normalizeIntroLineSpacing(value, fallback = DEFAULT_INTRO_LINE_S
     return fallback;
   }
   return Math.max(0.85, Math.min(1.4, Number(numeric.toFixed(2))));
+}
+
+export function normalizeIntroHeadingSizeRem(value, fallback = DEFAULT_INTRO_HEADING_SIZE_REM) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return fallback;
+  }
+  return Math.max(2.4, Math.min(8, Number(numeric.toFixed(2))));
+}
+
+export function getIntroHeadingSizeDefault(sectionClassName = '') {
+  const classes = String(sectionClassName || '').split(/\s+/);
+  if (classes.includes('about-native-top-intro')) {
+    return 6.7;
+  }
+  if (classes.includes('careers-native-top-intro')) {
+    return 4.15;
+  }
+  if (classes.includes('services-native-intro')) {
+    return 5.8;
+  }
+  return DEFAULT_INTRO_HEADING_SIZE_REM;
 }
 
 export function normalizeIntroExtraLineSizeRem(value, fallback = DEFAULT_INTRO_EXTRA_LINE_SIZE_REM) {

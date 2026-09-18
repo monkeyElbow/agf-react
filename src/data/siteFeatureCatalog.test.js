@@ -143,6 +143,7 @@ describe('site feature catalog', () => {
       'cardsJson',
       'cardTitleSizeRem',
       'cardTitleLineHeight',
+      'cardTitleJustify',
       'cardBodySizeRem',
       'cardBodyLineHeight',
       'titleTone',

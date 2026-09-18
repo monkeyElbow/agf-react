@@ -56,6 +56,7 @@ describe('PageBlocksRenderer CTA form', () => {
       kind: 'cta_form',
       mode: 'dynamic',
       title: 'Imagine the possibilities.',
+      headerGapRem: 2.25,
       paddingTopRem: 3.25,
       paddingBottomRem: 5.5,
       fieldsJson: ctaFieldsJson([
@@ -65,6 +66,7 @@ describe('PageBlocksRenderer CTA form', () => {
 
     expect(container.querySelector('section.native-dynamic-cta')?.style.paddingTop).toBe('3.25rem');
     expect(container.querySelector('section.native-dynamic-cta')?.style.paddingBottom).toBe('5.5rem');
+    expect(container.querySelector('section.native-dynamic-cta')?.style.getPropertyValue('--dynamic-cta-header-gap')).toBe('2.25rem');
   });
 
   it('keeps filled blue CTA buttons on the default blue tone', () => {

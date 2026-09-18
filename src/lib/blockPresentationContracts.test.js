@@ -1,11 +1,41 @@
 import { describe, expect, it } from 'vitest';
 import {
+  hasPageContentEditableBackground,
   normalizeBlockPresentation,
   normalizeBillboardPresentationSettings,
   normalizeRequestFormPresetSettings,
 } from './blockPresentationContracts';
 
 describe('block presentation contracts', () => {
+  it('hides shared background controls for fixed-surface Page Content variants', () => {
+    expect(hasPageContentEditableBackground({ sectionClassName: 'careers-native-jobs-list' })).toBe(false);
+    expect(hasPageContentEditableBackground({ sectionClassName: 'careers-native-fineprint' })).toBe(false);
+    expect(hasPageContentEditableBackground({ sectionClassName: 'insurance-pc-native-fineprint' })).toBe(false);
+    expect(hasPageContentEditableBackground({ sectionClassName: 'retirement-individual-enrollment-qualify-disclosure' })).toBe(false);
+    expect(hasPageContentEditableBackground({ sectionClassName: 'accessibility-native-conformance' })).toBe(false);
+    expect(hasPageContentEditableBackground({ sectionClassName: 'retirement-group-enrollment-return' })).toBe(false);
+    expect(hasPageContentEditableBackground({ sectionClassName: 'retirement-403b-terms-definitions-core' })).toBe(false);
+    expect(hasPageContentEditableBackground({ sectionClassName: 'tax-guide-content' })).toBe(false);
+    expect(hasPageContentEditableBackground({ widget: 'careers-jobs' })).toBe(false);
+    expect(hasPageContentEditableBackground({ sectionClassName: 'custom-page-content' })).toBe(true);
+    expect(hasPageContentEditableBackground({})).toBe(true);
+  });
+
+  it('removes fixed-surface Page Content background fields from the shared editor model', () => {
+    const normalized = normalizeBlockPresentation({
+      kind: 'content',
+      settings: { sectionClassName: 'careers-native-fineprint' },
+      editableFields: [
+        { id: 'html' },
+        { id: 'bgTone' },
+        { id: 'backgroundEffectsJson' },
+        { id: 'paddingTopRem' },
+      ],
+    });
+
+    expect(normalized.editableFields.map((field) => field.id)).toEqual(['html', 'paddingTopRem']);
+  });
+
   it('repairs legacy-impact request forms through one shared contract', () => {
     expect(normalizeRequestFormPresetSettings({
       presetId: 'legacy-impact',

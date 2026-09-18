@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   getPageContentEditorHtml,
+  hasLegacyPageContentBodySource,
+  hasLegacyPageContentFineprintSource,
   hasLegacyPageContentSource,
 } from './pageContentEditorHtml';
 
@@ -29,6 +31,20 @@ describe('page content editor HTML source resolution', () => {
       addressTitle: 'Mail completed forms to:',
       addressLines: 'AGFinancial\nPO Box 2515',
     })).toBe(false);
+  });
+
+  it('recovers the Careers fineprint block into the body editor without changing generic fineprint blocks', () => {
+    const settings = {
+      sectionClassName: 'careers-native-fineprint',
+      html: '<p></p>',
+      fineprint: 'AGFinancial is an equal opportunity employer.',
+    };
+
+    expect(getPageContentEditorHtml(settings)).toBe('<p>AGFinancial is an equal opportunity employer.</p>');
+    expect(hasLegacyPageContentFineprintSource(settings)).toBe(true);
+    expect(hasLegacyPageContentBodySource(settings)).toBe(true);
+    expect(hasLegacyPageContentSource(settings)).toBe(true);
+    expect(getPageContentEditorHtml({ ...settings, sectionClassName: 'legacy-giving-fineprint' })).toBe('');
   });
 
   it('keeps canonical HTML ahead of legacy page content sources', () => {

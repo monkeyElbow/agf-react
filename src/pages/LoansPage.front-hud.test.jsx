@@ -199,6 +199,7 @@ describe('LoansPage front HUD', () => {
               ...(block.settings || {}),
               cardOutline: true,
               cardShadow: true,
+              headerCardsSpaceRem: 3.25,
             },
           }
           : block
@@ -212,6 +213,8 @@ describe('LoansPage front HUD', () => {
 
     const optionsSection = document.querySelector('.loans-native-options');
     const firstCardTitle = optionsSection?.querySelector('.loans-native-option-card h3');
+    const optionsGrid = optionsSection?.querySelector('.loans-native-options-grid');
+    const firstCard = optionsSection?.querySelector('.loans-native-option-card');
     expect(optionsSection).toBeTruthy();
     expect(firstCardTitle).toBeTruthy();
 
@@ -230,11 +233,23 @@ describe('LoansPage front HUD', () => {
     }
 
     // The CSS variable is emitted on the public section and the normalized
-    // value reaches the actual title node consumed by the browser.
+    // values reach the actual nodes consumed by the browser.
     expect(firstCardTitle?.style.lineHeight).toBe('1.1');
+    expect(firstCard?.style.padding).toBe('2rem');
+    expect(optionsGrid?.style.marginTop).toBe('3.25rem');
+    fireEvent.change(screen.getByRole('slider', { name: 'Space below subhead' }), { target: { value: '1.25' } });
+    await waitFor(() => expect(optionsGrid?.style.marginTop).toBe('1.25rem'));
     expect(optionsSection?.className).toContain('is-card-outline');
     expect(optionsSection?.className).toContain('is-card-shadow');
   }, 15000);
+
+  it('renders configured loan testimonials even when the provider library is temporarily empty', () => {
+    const { container } = renderLoansPage();
+    const testimonials = container.querySelector('[data-block-id="testimonials"]');
+
+    expect(testimonials?.querySelectorAll('.loans-native-testimonial-quote')).toHaveLength(3);
+    expect(testimonials?.textContent).toContain('With AGFinancial’s partnership');
+  });
 
   it('routes the Hero headline tracking control into the live Loans hero renderer', async () => {
     const { container } = renderLoansPage();

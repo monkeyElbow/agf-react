@@ -21,12 +21,32 @@ function pageContentLinesToHtml(value) {
     .join('');
 }
 
+function isCareersFineprintBlock(settings = {}) {
+  return String(settings.sectionClassName || '')
+    .split(/\s+/)
+    .map((token) => token.trim())
+    .filter(Boolean)
+    .includes('careers-native-fineprint');
+}
+
+export function hasLegacyPageContentFineprintSource(settings = {}) {
+  return isCareersFineprintBlock(settings)
+    && Boolean(String(settings.fineprint || '').trim());
+}
+
 export function getPageContentEditorHtml(settings = {}) {
   if (hasMeaningfulPageContentHtml(settings.html)) {
     return settings.html;
   }
   if (hasMeaningfulPageContentHtml(settings.bodyHtml)) {
     return settings.bodyHtml;
+  }
+
+  // Careers' fixed fineprint block predates the shared HTML body field. Keep
+  // its semantic source recoverable and visible in the one body editor until
+  // an explicit edit migrates it to html.
+  if (hasLegacyPageContentFineprintSource(settings)) {
+    return pageContentLinesToHtml(settings.fineprint);
   }
 
   return pageContentLinesToHtml(settings.body);
@@ -43,7 +63,7 @@ export function getPageContentBodyEditorHtml(settings = {}) {
 export function hasLegacyPageContentBodySource(settings = {}) {
   return !hasMeaningfulPageContentHtml(settings.html)
     && !hasMeaningfulPageContentHtml(settings.bodyHtml)
-    && Boolean(String(settings.body || '').trim());
+    && (Boolean(String(settings.body || '').trim()) || hasLegacyPageContentFineprintSource(settings));
 }
 
 export function getPageContentEditorField(settings = {}) {
@@ -59,5 +79,5 @@ export function getPageContentEditorField(settings = {}) {
 export function hasLegacyPageContentSource(settings = {}) {
   return !hasMeaningfulPageContentHtml(settings.html)
     && !hasMeaningfulPageContentHtml(settings.bodyHtml)
-    && Boolean(String(settings.body || '').trim());
+    && (Boolean(String(settings.body || '').trim()) || hasLegacyPageContentFineprintSource(settings));
 }

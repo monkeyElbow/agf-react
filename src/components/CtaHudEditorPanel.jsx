@@ -32,6 +32,7 @@ const CTA_EDITOR_SECTIONS = Object.freeze([
   { id: 'background', label: 'Background', icon: '◉' },
   { id: 'message', label: 'Message + Submit', icon: '↗' },
   { id: 'fields', label: 'Form Fields', icon: '☷' },
+  { id: 'spacing', label: 'Spacing', icon: '↕' },
 ]);
 
 export { normalizeCtaHudSubmitStyle, normalizeCtaHudSubmitTone } from '../lib/ctaHudSettings';
@@ -58,6 +59,44 @@ function resolveCtaHeadingAutoColor(bgTone) {
 function normalizeCtaHudBgTone(value) {
   const token = String(value || '').trim().toLowerCase();
   return ['white', 'sand', 'blue', 'grey'].includes(token) ? token : 'white';
+}
+
+function normalizeCtaSpacingValue(value, fallback, min, max) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return fallback;
+  }
+  return Math.max(min, Math.min(max, Number(numeric.toFixed(2))));
+}
+
+function CtaHudSpacingControl({ label, value, min, max, onChange }) {
+  const activeValue = normalizeCtaSpacingValue(value, min, min, max);
+
+  return (
+    <label className="admin-front-hud-range">
+      <span>{label}</span>
+      <div className="admin-front-hud-range-controls">
+        <input
+          type="range"
+          min={min}
+          max={max}
+          step="0.05"
+          value={activeValue}
+          aria-label={label}
+          onChange={(event) => onChange?.(Number(event.target.value))}
+        />
+        <input
+          type="number"
+          min={min}
+          max={max}
+          step="0.05"
+          value={activeValue}
+          aria-label={`${label} value`}
+          onChange={(event) => onChange?.(event.target.value === '' ? '' : Number(event.target.value))}
+        />
+      </div>
+    </label>
+  );
 }
 
 export default function CtaHudEditorPanel({
@@ -87,6 +126,12 @@ export default function CtaHudEditorPanel({
   onBgToneChange,
   backgroundEffectsJson = '',
   onBackgroundEffectsChange,
+  headerGapRem = 1.5,
+  paddingTopRem = 2.5,
+  paddingBottomRem = 4,
+  onHeaderGapRemChange,
+  onPaddingTopRemChange,
+  onPaddingBottomRemChange,
   onApplySelectionColor,
   onTitleColorChange,
   onRemoveTitleSpan,
@@ -453,6 +498,35 @@ export default function CtaHudEditorPanel({
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      <section className="admin-front-hud-card admin-cta-hud-card--spacing">
+        <div className="admin-front-hud-card-head">
+          <h4>Spacing</h4>
+        </div>
+        <div className="admin-cta-hud-spacing-controls">
+          <CtaHudSpacingControl
+            label="Space below header"
+            value={headerGapRem}
+            min={0}
+            max={6}
+            onChange={onHeaderGapRemChange}
+          />
+          <CtaHudSpacingControl
+            label="Padding top"
+            value={paddingTopRem}
+            min={0}
+            max={8}
+            onChange={onPaddingTopRemChange}
+          />
+          <CtaHudSpacingControl
+            label="Padding bottom"
+            value={paddingBottomRem}
+            min={0}
+            max={8}
+            onChange={onPaddingBottomRemChange}
+          />
         </div>
       </section>
 

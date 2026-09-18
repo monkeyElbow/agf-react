@@ -31,7 +31,7 @@ export const RETIREMENT_403B_LOAN_DETAILS_CARD_GRID_MIGRATION_VERSION = 1;
 export const RETIREMENT_403B_LOAN_DETAILS_PATH = '/services/retirement/403b';
 
 export const RETIREMENT_ROLLOVER_PROCESS_CARD_GRID_MIGRATION_ID = 'retirement-rollover-process-card-grid';
-export const RETIREMENT_ROLLOVER_PROCESS_CARD_GRID_MIGRATION_VERSION = 1;
+export const RETIREMENT_ROLLOVER_PROCESS_CARD_GRID_MIGRATION_VERSION = 2;
 export const RETIREMENT_ROLLOVER_PROCESS_PATH = '/services/retirement/rollovers';
 
 export const RETIREMENT_INDIVIDUAL_ENROLLMENT_STEP_CARD_PRESENTATION_MIGRATION_ID = 'retirement-individual-enrollment-step-card-presentation';
@@ -1089,27 +1089,143 @@ function extractRolloverProcessCopy(settings) {
   };
 }
 
+function escapeRolloverCardHtml(value) {
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function buildRolloverAddressCardBody(body, addressTitle, addressLines) {
+  const currentBody = String(body || '').trim();
+  const safeBody = currentBody
+    ? (/<[a-z][^>]*>/i.test(currentBody) ? currentBody : `<p>${escapeRolloverCardHtml(currentBody)}</p>`)
+    : '';
+  const safeTitle = escapeRolloverCardHtml(addressTitle);
+  const safeLines = addressLines.map((line) => escapeRolloverCardHtml(line)).join('<br>');
+  if (!safeTitle && !safeLines) {
+    return safeBody;
+  }
+  const addressMarkup = `<p><strong>${safeTitle}</strong>${safeTitle && safeLines ? '<br>' : ''}${safeLines}</p>`;
+  return `${safeBody}${addressMarkup}`;
+}
+
+function rolloverCardActionPatch(settings) {
+  return {
+    card1ButtonLabel: String(settings.buttonLabel || '').trim(),
+    card1ButtonUrl: String(settings.buttonUrl || '').trim(),
+    card1ButtonPageRef: String(settings.buttonPageRef || '').trim(),
+    card1ButtonOpenInNewWindow: Boolean(settings.buttonOpenInNewWindow),
+    card1ButtonDocumentId: String(settings.buttonDocumentId || '').trim(),
+    ...(Object.prototype.hasOwnProperty.call(settings, 'buttonStyle') ? { card1ButtonStyle: settings.buttonStyle } : {}),
+    ...(Object.prototype.hasOwnProperty.call(settings, 'buttonTone') ? { card1ButtonTone: settings.buttonTone } : {}),
+    card1ButtonClassName: String(settings.buttonClassName || '').trim(),
+  };
+}
+
+function rolloverCardAddressPatch(settings, currentBody = '') {
+  const addressLines = String(settings.addressLines || '')
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const addressTitle = addressLines.length
+    ? (String(settings.addressTitle || '').trim() || 'AGFinancial')
+    : '';
+  return {
+    card2Body: buildRolloverAddressCardBody(currentBody, addressTitle, addressLines),
+    card2CopyLabel: addressLines.length ? 'Copy mailing address' : '',
+    card2CopyText: addressLines.length ? [addressTitle, ...addressLines].join('\n') : '',
+  };
+}
+
 /**
  * Moves the rollover process from bespoke page-content HTML to the shared
- * numbered step-card preset. Address and form settings remain on the block,
- * while the original source is retained for recovery.
+ * numbered step-card preset. The form action belongs to step 1 and the
+ * mailing address belongs to step 2, while the original source is retained
+ * for recovery.
  */
 export function migrateRetirementRolloverProcessBlock(pathname, block) {
   const source = cloneJson(block);
-  if (
-    String(pathname || '').trim() !== RETIREMENT_ROLLOVER_PROCESS_PATH
+  if (String(pathname || '').trim() !== RETIREMENT_ROLLOVER_PROCESS_PATH
     || String(source?.id || '').trim() !== 'rollover_process'
-    || String(source?.kind || '').trim() !== 'content'
-    || String(source?.mode || '').trim() !== 'dynamic'
-  ) {
+    || String(source?.mode || '').trim() !== 'dynamic') {
     return source;
   }
 
   const originalSettings = source.settings && typeof source.settings === 'object'
     ? { ...source.settings }
     : {};
+
+  if (String(source?.kind || '').trim() === 'card_grid') {
+    const migrationVersion = Number(originalSettings.retirementRolloverProcessCardGridMigrationVersion || 0);
+    if (migrationVersion >= 2) {
+      return source;
+    }
+
+    const hasSectionAction = [
+      originalSettings.buttonLabel,
+      originalSettings.buttonUrl,
+      originalSettings.buttonPageRef,
+      originalSettings.buttonDocumentId,
+    ].some((value) => String(value || '').trim());
+    const hasSectionAddress = [
+      originalSettings.addressTitle,
+      originalSettings.addressLines,
+    ].some((value) => String(value || '').trim());
+    const nextSettings = {
+      ...originalSettings,
+      ...(hasSectionAction ? rolloverCardActionPatch(originalSettings) : {}),
+      ...(hasSectionAddress ? rolloverCardAddressPatch(originalSettings, originalSettings.card2Body) : {}),
+      buttonLabel: '',
+      buttonUrl: '',
+      buttonPageRef: '',
+      buttonOpenInNewWindow: false,
+      buttonDocumentId: '',
+      buttonStyle: '',
+      buttonTone: '',
+      buttonClassName: '',
+      addressClassName: '',
+      addressTitle: '',
+      addressLines: '',
+      retirementRolloverProcessCardGridMigrationVersion: 2,
+      ...(hasSectionAction || hasSectionAddress
+        ? {
+            legacyRolloverProcessActionAddressJson: JSON.stringify({
+              buttonLabel: originalSettings.buttonLabel,
+              buttonUrl: originalSettings.buttonUrl,
+              buttonPageRef: originalSettings.buttonPageRef,
+              buttonOpenInNewWindow: originalSettings.buttonOpenInNewWindow,
+              buttonDocumentId: originalSettings.buttonDocumentId,
+              buttonStyle: originalSettings.buttonStyle,
+              buttonTone: originalSettings.buttonTone,
+              buttonClassName: originalSettings.buttonClassName,
+              addressClassName: originalSettings.addressClassName,
+              addressTitle: originalSettings.addressTitle,
+              addressLines: originalSettings.addressLines,
+            }),
+          }
+        : {}),
+    };
+    return JSON.stringify(nextSettings) === JSON.stringify(originalSettings)
+      ? source
+      : { ...source, settings: nextSettings };
+  }
+
+  if (String(source?.kind || '').trim() !== 'content') {
+    return source;
+  }
+
   const extracted = extractRolloverProcessCopy(originalSettings);
   const bodies = extracted.bodies.slice(0, 3);
+  const addressLines = String(originalSettings.addressLines || '')
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const addressTitle = addressLines.length
+    ? (String(originalSettings.addressTitle || '').trim() || 'AGFinancial')
+    : '';
   const nextSettings = {
     ...originalSettings,
     title: extracted.title,
@@ -1133,17 +1249,40 @@ export function migrateRetirementRolloverProcessBlock(pathname, block) {
     cardBodyLineHeight: Number.isFinite(Number(originalSettings.bodyLineHeight))
       ? Number(originalSettings.bodyLineHeight)
       : 1.62,
+    ...rolloverCardActionPatch(originalSettings),
     card1Title: '1',
     card1Body: bodies[0] || '',
     card2Title: '2',
-    card2Body: bodies[1] || '',
+    ...rolloverCardAddressPatch({ ...originalSettings, addressTitle, addressLines: addressLines.join('\n') }, bodies[1] || ''),
     card3Title: '3',
     card3Body: bodies[2] || '',
+    buttonLabel: '',
+    buttonUrl: '',
+    buttonPageRef: '',
+    buttonOpenInNewWindow: false,
+    buttonDocumentId: '',
+    addressClassName: '',
+    addressTitle: '',
+    addressLines: '',
+    retirementRolloverProcessCardGridMigrationVersion: 2,
     legacyRolloverProcessHtml: extracted.html,
     legacyRolloverProcessSourcesJson: JSON.stringify({
       html: String(originalSettings.html || ''),
       bodyHtml: String(originalSettings.bodyHtml || ''),
       body: String(originalSettings.body || ''),
+    }),
+    legacyRolloverProcessActionAddressJson: JSON.stringify({
+      buttonLabel: originalSettings.buttonLabel,
+      buttonUrl: originalSettings.buttonUrl,
+      buttonPageRef: originalSettings.buttonPageRef,
+      buttonOpenInNewWindow: originalSettings.buttonOpenInNewWindow,
+      buttonDocumentId: originalSettings.buttonDocumentId,
+      buttonStyle: originalSettings.buttonStyle,
+      buttonTone: originalSettings.buttonTone,
+      buttonClassName: originalSettings.buttonClassName,
+      addressClassName: originalSettings.addressClassName,
+      addressTitle: originalSettings.addressTitle,
+      addressLines: originalSettings.addressLines,
     }),
   };
 

@@ -920,17 +920,18 @@
   line-height: var(--intro-heading-line-height, 1.04);
   letter-spacing: var(--ag-letter-spacing-helv-intro);
   font-weight: 700;
+  font-size: var(--dynamic-intro-heading-size, var(--service-native-intro-heading-size));
 }
 
 .services-native-page .services-native-intro.service-native-intro.dynamic-intro .service-native-intro-copy > h2 {
-  font-size: clamp(3.38rem, 7.65vw, 5.8rem);
+  font-size: var(--dynamic-intro-heading-size, clamp(3.38rem, 7.65vw, 5.8rem));
   letter-spacing: -0.04em;
   line-height: 0.98;
 }
 
 @media (max-width: 767px) {
   .services-native-page .services-native-intro.service-native-intro.dynamic-intro .service-native-intro-copy > h2 {
-    font-size: clamp(3.19rem, 13.26vw, 4.4rem);
+    font-size: var(--dynamic-intro-heading-size, clamp(3.19rem, 13.26vw, 4.4rem));
     line-height: 0.98;
   }
 }
@@ -1729,15 +1730,15 @@
 
 .service-native-section.native-dynamic-cta,
 .service-native-section.test-dynamic-cta {
-  padding-top: clamp(2.5rem, 5vw, 4rem);
-  padding-bottom: clamp(2.5rem, 5vw, 4rem);
+  padding-top: var(--dynamic-cta-padding-top, clamp(2.5rem, 5vw, 4rem));
+  padding-bottom: var(--dynamic-cta-padding-bottom, clamp(2.5rem, 5vw, 4rem));
 }
 
 .service-native-section.native-dynamic-cta.is-external-inline-reveal,
 .service-native-section.test-dynamic-cta.is-external-inline-reveal {
   scroll-margin-top: clamp(5rem, 11vw, 7rem);
-  padding-top: clamp(1.15rem, 2.7vw, 1.85rem);
-  padding-bottom: clamp(1.75rem, 3.5vw, 2.65rem);
+  padding-top: var(--dynamic-cta-padding-top, clamp(1.15rem, 2.7vw, 1.85rem));
+  padding-bottom: var(--dynamic-cta-padding-bottom, clamp(1.75rem, 3.5vw, 2.65rem));
 }
 
 .service-native-section.native-dynamic-cta > .ag-panel-rail,
@@ -1764,6 +1765,15 @@
   font-size: clamp(1.85rem, 4vw, 2.9rem);
   line-height: 1.05;
   letter-spacing: var(--ag-letter-spacing-helv-intro);
+}
+
+.service-native-section:is(.native-dynamic-cta, .test-dynamic-cta).has-cta-header:not(.has-cta-body-copy) > .ag-panel-rail > .dynamic-cta-form {
+  margin-top: var(--dynamic-cta-header-gap, 1.5rem);
+}
+
+.service-native-section:is(.native-dynamic-cta, .test-dynamic-cta).has-cta-body-copy .native-info-section-copy > h2 + .native-info-rich-html,
+.service-native-section:is(.native-dynamic-cta, .test-dynamic-cta).has-cta-body-copy .native-info-section-copy > h2 + .native-info-section-subtitle {
+  margin-top: var(--dynamic-cta-header-gap, 1.5rem);
 }
 
 .service-native-section.native-dynamic-cta.is-bg-blue,
@@ -3233,7 +3243,7 @@
 .service-native-section.native-dynamic-page-content.native-functional-page-head--utility,
 .service-native-section.test-dynamic-page-content.native-functional-page-head--utility {
   padding: var(--utility-header-padding-top) 0 var(--utility-header-padding-bottom);
-  background: #ffffff;
+  background: var(--dynamic-page-content-background, #ffffff);
   border-bottom: 0;
 }
 
@@ -5227,8 +5237,8 @@ p.impact-proof-story-proof-body {
   .service-native-section.native-dynamic-cta.is-external-inline-reveal,
   .service-native-section.test-dynamic-cta.is-external-inline-reveal {
     scroll-margin-top: clamp(4.5rem, 17vw, 6rem);
-    padding-top: 0.95rem;
-    padding-bottom: 1.8rem;
+    padding-top: var(--dynamic-cta-padding-top, 0.95rem);
+    padding-bottom: var(--dynamic-cta-padding-bottom, 1.8rem);
   }
 
   .service-native-section.native-dynamic-cta.is-external-inline-reveal .native-info-inline-form.dynamic-cta-form,

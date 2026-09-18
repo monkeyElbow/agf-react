@@ -5616,15 +5616,15 @@
 
 .service-native-section.native-dynamic-cta,
 .service-native-section.test-dynamic-cta {
-  padding-top: clamp(2.5rem, 5vw, 4rem);
-  padding-bottom: clamp(2.5rem, 5vw, 4rem);
+  padding-top: var(--dynamic-cta-padding-top, clamp(2.5rem, 5vw, 4rem));
+  padding-bottom: var(--dynamic-cta-padding-bottom, clamp(2.5rem, 5vw, 4rem));
 }
 
 .service-native-section.native-dynamic-cta.is-external-inline-reveal,
 .service-native-section.test-dynamic-cta.is-external-inline-reveal {
   scroll-margin-top: clamp(5rem, 11vw, 7rem);
-  padding-top: clamp(1.15rem, 2.7vw, 1.85rem);
-  padding-bottom: clamp(1.75rem, 3.5vw, 2.65rem);
+  padding-top: var(--dynamic-cta-padding-top, clamp(1.15rem, 2.7vw, 1.85rem));
+  padding-bottom: var(--dynamic-cta-padding-bottom, clamp(1.75rem, 3.5vw, 2.65rem));
 }
 
 .service-native-section.native-dynamic-cta > .ag-panel-rail,
@@ -5651,6 +5651,15 @@
   font-size: clamp(1.85rem, 4vw, 2.9rem);
   line-height: 1.05;
   letter-spacing: var(--ag-letter-spacing-helv-intro);
+}
+
+.service-native-section:is(.native-dynamic-cta, .test-dynamic-cta).has-cta-header:not(.has-cta-body-copy) > .ag-panel-rail > .dynamic-cta-form {
+  margin-top: var(--dynamic-cta-header-gap, 1.5rem);
+}
+
+.service-native-section:is(.native-dynamic-cta, .test-dynamic-cta).has-cta-body-copy .native-info-section-copy > h2 + .native-info-rich-html,
+.service-native-section:is(.native-dynamic-cta, .test-dynamic-cta).has-cta-body-copy .native-info-section-copy > h2 + .native-info-section-subtitle {
+  margin-top: var(--dynamic-cta-header-gap, 1.5rem);
 }
 
 .service-native-section.native-dynamic-cta.is-bg-blue,
@@ -6312,6 +6321,16 @@
   color: var(--dynamic-grid-body-color);
   font-size: var(--dynamic-grid-card-body-size, 1rem);
   line-height: var(--dynamic-grid-card-body-line-height, 1.58);
+  text-align: var(--dynamic-grid-card-body-justify, left);
+}
+
+/* Body justification is a Card Grid setting, not a route-specific visual
+   hint. Rich-text wrappers and custom card flows must inherit the same
+   setting as plain paragraphs. */
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid) .service-native-card-flow,
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid) .service-native-card-flow .native-info-rich-html,
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid) .service-native-card-flow .native-info-rich-html :is(p, li) {
+  text-align: var(--dynamic-grid-card-body-justify, left) !important;
 }
 
 /* Planned-giving bullet size is a block setting. Keep it above generic
@@ -7872,8 +7891,24 @@
 .service-native-section.test-dynamic-page-content.native-functional-page-head--utility,
 .native-info-page--forms .native-functional-page-head--forms {
   padding: var(--utility-header-padding-top) 0 var(--utility-header-padding-bottom);
-  background: #ffffff;
+  background: var(--dynamic-page-content-background, #ffffff);
   border-bottom: 0;
+}
+
+.service-native-section:is(.native-dynamic-page-content, .test-dynamic-page-content).is-bg-white.native-functional-page-head--utility {
+  --dynamic-page-content-background: #ffffff;
+}
+
+.service-native-section:is(.native-dynamic-page-content, .test-dynamic-page-content).is-bg-blue.native-functional-page-head--utility {
+  --dynamic-page-content-background: var(--ag-surface-blue-gradient);
+}
+
+.service-native-section:is(.native-dynamic-page-content, .test-dynamic-page-content).is-bg-sand.native-functional-page-head--utility {
+  --dynamic-page-content-background: linear-gradient(147deg, rgb(242, 238, 235) 62%, rgb(218, 215, 208) 100%);
+}
+
+.service-native-section:is(.native-dynamic-page-content, .test-dynamic-page-content).is-bg-grey.native-functional-page-head--utility {
+  --dynamic-page-content-background: linear-gradient(145deg, var(--ag-color-super-grey) 0%, #636265 100%);
 }
 
 .native-functional-page-head--utility {
@@ -13501,9 +13536,9 @@ p.impact-proof-story-proof-body {
   margin: 0 0 clamp(2rem, 3.8vw, 2.8rem);
   max-width: 12ch;
   font-family: var(--ag-font-body);
-  font-size: clamp(3.7rem, 8.6vw, 6.7rem);
+  font-size: var(--dynamic-intro-heading-size, clamp(3.7rem, 8.6vw, 6.7rem));
   font-weight: 800;
-  line-height: 0.94;
+  line-height: var(--intro-heading-line-height, 1.04);
   letter-spacing: clamp(-3.2px, -0.28vw, -1.2px);
   text-wrap: balance;
 }
@@ -13517,12 +13552,12 @@ p.impact-proof-story-proof-body {
 }
 
 .native-info-page--about .service-native-intro.about-native-top-intro .native-info-intro-emphasis {
-  margin: 1rem auto 0;
+  margin-top: var(--service-native-intro-emphasis-space-before, 1rem);
   max-width: 42rem;
   font-family: var(--ag-font-body);
   font-size: var(--service-native-intro-emphasis-size);
   font-weight: 700;
-  line-height: 1.34;
+  line-height: var(--service-native-intro-emphasis-line-height, 1.34);
 }
 
 .about-native-building-shot,
@@ -22985,8 +23020,8 @@ p.impact-proof-story-proof-body {
   .service-native-section.native-dynamic-cta.is-external-inline-reveal,
   .service-native-section.test-dynamic-cta.is-external-inline-reveal {
     scroll-margin-top: clamp(4.5rem, 17vw, 6rem);
-    padding-top: 0.95rem;
-    padding-bottom: 1.8rem;
+    padding-top: var(--dynamic-cta-padding-top, 0.95rem);
+    padding-bottom: var(--dynamic-cta-padding-bottom, 1.8rem);
   }
 
   .service-native-section.native-dynamic-cta.is-external-inline-reveal .native-info-inline-form.dynamic-cta-form,

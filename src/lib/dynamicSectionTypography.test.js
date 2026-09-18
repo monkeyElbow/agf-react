@@ -3,6 +3,7 @@ import {
   buildBillboardLeadCopyStyle,
   buildBillboardSubtitleStyle,
   buildBillboardTitleStyle,
+  getIntroHeadingSizeDefault,
   normalizeBillboardLeadCopySizeRem,
   normalizeBillboardLeadCopyLineHeight,
   normalizeBillboardTitleFontWeight,
@@ -12,10 +13,20 @@ import {
   normalizeIntroExtraLineHeight,
   normalizeIntroExtraLineSizeRem,
   normalizeIntroExtraLineSpaceBeforeRem,
+  normalizeIntroHeadingSizeRem,
   normalizeIntroLineSpacing,
 } from './dynamicSectionTypography';
 
 describe('dynamicSectionTypography', () => {
+  it('normalizes intro heading size and preserves custom intro defaults', () => {
+    expect(normalizeIntroHeadingSizeRem(undefined)).toBe(2.99);
+    expect(normalizeIntroHeadingSizeRem(8.4)).toBe(8);
+    expect(normalizeIntroHeadingSizeRem(1)).toBe(2.4);
+    expect(getIntroHeadingSizeDefault('about-native-top-intro')).toBe(6.7);
+    expect(getIntroHeadingSizeDefault('careers-native-top-intro')).toBe(4.15);
+    expect(getIntroHeadingSizeDefault('other-intro')).toBe(2.99);
+  });
+
   it('keeps intro line spacing on the shared rounded clamp path', () => {
     expect(normalizeIntroLineSpacing(undefined)).toBe(1.04);
     expect(normalizeIntroLineSpacing(1.237)).toBe(1.24);

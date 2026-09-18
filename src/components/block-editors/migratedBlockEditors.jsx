@@ -86,7 +86,9 @@ import {
   normalizeBillboardTitleLetterSpacingEm,
   normalizeBillboardTitleSizeRem,
   getBillboardTitleWeightOptions,
+  getIntroHeadingSizeDefault,
   getIntroExtraLineDefaults,
+  normalizeIntroHeadingSizeRem,
   normalizeIntroLineSpacing,
 } from '../../lib/dynamicSectionTypography';
 import {
@@ -159,8 +161,12 @@ import {
   getPageContentBodyEditorHtml,
   getPageContentEditorField,
   hasLegacyPageContentBodySource,
+  hasLegacyPageContentFineprintSource,
 } from '../../lib/pageContentEditorHtml';
-import { getBlockPresentationLockedFieldIds } from '../../lib/blockPresentationContracts';
+import {
+  getBlockPresentationLockedFieldIds,
+  hasPageContentEditableBackground,
+} from '../../lib/blockPresentationContracts';
 import {
   createProtectedEditorDraft,
   isOlderEditorDraftRevision,
@@ -1246,17 +1252,19 @@ function CardGridButtonEditor({
   settings,
   onSettingChange,
   routeOptions,
+  documentOptions = [],
 }) {
   const suffix = buttonNumber === 2 ? 'Button2' : 'Button';
   const prefix = `card${buttonNumber}${suffix}`;
   const labelField = fieldById.get(`${prefix}Label`);
+  const documentField = fieldById.get(`${prefix}DocumentId`);
   const destinationField = getPromotedRouteLinkField(
     fieldById,
     `${prefix}Url`,
     `${prefix}PageRef`,
   );
 
-  if (!labelField && !destinationField) {
+  if (!labelField && !destinationField && !documentField) {
     return null;
   }
 
@@ -1270,6 +1278,12 @@ function CardGridButtonEditor({
         }
       : null,
   ].filter(Boolean);
+  const selectedDocumentId = String(settings[documentField?.id] || '');
+  const normalizedDocumentOptions = Array.isArray(documentOptions) ? documentOptions : [];
+  const documentSelectOptions = selectedDocumentId
+    && !normalizedDocumentOptions.some((option) => option.value === selectedDocumentId)
+    ? [{ value: selectedDocumentId, label: selectedDocumentId }, ...normalizedDocumentOptions]
+    : normalizedDocumentOptions;
 
   return (
     <section className="admin-card-grid-action-card">
@@ -1285,6 +1299,20 @@ function CardGridButtonEditor({
         routeOptions={routeOptions}
         draftFieldIds={GRID_LOCAL_DRAFT_FIELD_IDS}
       />
+      {documentField ? (
+        <label className="admin-card-grid-document-field">
+          <span>PDF / document</span>
+          <select
+            value={selectedDocumentId}
+            onChange={(event) => onSettingChange(documentField.id, event.target.value)}
+          >
+            <option value="">Select document</option>
+            {documentSelectOptions.map((option) => (
+              <option key={option.value} value={option.value}>{option.label}</option>
+            ))}
+          </select>
+        </label>
+      ) : null}
     </section>
   );
 }
@@ -1428,6 +1456,7 @@ function CardGridCardEditor({
               settings={settings}
               onSettingChange={onSettingChange}
               routeOptions={routeOptions}
+              documentOptions={documentOptions}
             />
             <CardGridButtonEditor
               buttonNumber={2}
@@ -1435,6 +1464,7 @@ function CardGridCardEditor({
               settings={settings}
               onSettingChange={onSettingChange}
               routeOptions={routeOptions}
+              documentOptions={documentOptions}
             />
           </div>
         </CardGridEditorDisclosure>
@@ -2975,6 +3005,9 @@ export function CtaFormBlockEditor({ block, onSettingChange, routeOptions = [], 
   const subtitleField = fieldById.get('subtitle') || null;
   const ctaBgTone = normalizePanelBgTone(settings.bgTone);
   const configFields = pickFieldDescriptors(fieldById, getSharedFormConfigFieldIds());
+  const placementFields = ['headerGapRem', 'paddingTopRem', 'paddingBottomRem']
+    .map((id) => fieldById.get(id))
+    .filter(Boolean);
   const {
     draftValues: ctaFormDraftValues,
     updateDraftField: updateCtaFormDraftField,
@@ -3129,6 +3162,19 @@ export function CtaFormBlockEditor({ block, onSettingChange, routeOptions = [], 
         draftFieldIds={['subtitle']}
         sourceRevision={sourceRevision}
       />
+
+      {placementFields.length ? (
+        <section className="admin-panel-appearance admin-panel-appearance--cta-spacing">
+          <h4>Spacing</h4>
+          <DraftBackedFieldControlGrid
+            fields={placementFields}
+            settings={settings}
+            onSettingChange={onSettingChange}
+            className="admin-content-field-list--inline"
+            routeOptions={routeOptions}
+          />
+        </section>
+      ) : null}
 
       <section className="admin-panel-appearance admin-panel-appearance--intro-text">
         <div className="admin-content-field-list admin-content-field-list--inline">
@@ -3832,6 +3878,12 @@ export function CtaFormHudBlockEditor({ block, onSettingChange, sourceRevision =
       onBgToneChange={(nextValue) => onChange('bgTone', nextValue)}
       backgroundEffectsJson={settings.backgroundEffectsJson}
       onBackgroundEffectsChange={(nextValue) => onChange('backgroundEffectsJson', nextValue)}
+      headerGapRem={settings.headerGapRem ?? 1.5}
+      paddingTopRem={settings.paddingTopRem ?? 2.5}
+      paddingBottomRem={settings.paddingBottomRem ?? 4}
+      onHeaderGapRemChange={(nextValue) => onChange('headerGapRem', nextValue)}
+      onPaddingTopRemChange={(nextValue) => onChange('paddingTopRem', nextValue)}
+      onPaddingBottomRemChange={(nextValue) => onChange('paddingBottomRem', nextValue)}
       onApplySelectionColor={(colorValue, selectedTitle = titleSelection) => {
         const result = applyTextColorSelection({
           text: String(settings.title || ''),
@@ -5063,6 +5115,10 @@ export function IntroBlockEditor({ block, onSettingChange, routeOptions = [], so
     ];
   const introJustify = normalizeJustifySelection(settings.justify, introJustifyOptions);
   const introLineSpacing = normalizeIntroLineSpacing(settings.lineSpacing);
+  const introHeadingSizeRem = normalizeIntroHeadingSizeRem(
+    settings.headingSizeRem,
+    getIntroHeadingSizeDefault(settings.sectionClassName),
+  );
   const introExtraLineDefaults = getIntroExtraLineDefaults(settings.sectionClassName);
   const introBgTone = normalizePanelBgTone(settings.bgTone);
   const introTextTone = normalizePanelTextTone(settings.textTone, 'dark');
@@ -5093,6 +5149,7 @@ export function IntroBlockEditor({ block, onSettingChange, routeOptions = [], so
     && field.id !== 'textTone'
     && field.id !== 'justify'
     && field.id !== 'lineSpacing'
+    && field.id !== 'headingSizeRem'
     && field.id !== 'extraLineClassName'
   )).map((field) => {
     if (Object.prototype.hasOwnProperty.call(introExtraLineDefaults, field.id)) {
@@ -5159,6 +5216,31 @@ export function IntroBlockEditor({ block, onSettingChange, routeOptions = [], so
                   options={introJustifyOptions}
                   onChange={(nextValue) => onSettingChange('justify', nextValue)}
                 />
+                <label className="admin-intro-line-spacing-control">
+                  <div className="admin-line-spacing-control-head">
+                    <span>{introHeadingSizeRem.toFixed(2)} rem</span>
+                  </div>
+                  <div className="admin-hero-inline-height-row">
+                    <input
+                      type="range"
+                      min="2.4"
+                      max="8"
+                      step="0.05"
+                      value={introHeadingSizeRem}
+                      onChange={(event) => onSettingChange('headingSizeRem', Number(event.target.value))}
+                      aria-label="Intro heading size (rem)"
+                    />
+                    <AdminNumberInput
+                      className="admin-hero-inline-height-number"
+                      min="2.4"
+                      max="8"
+                      step="0.05"
+                      value={introHeadingSizeRem}
+                      onChange={(nextValue) => onSettingChange('headingSizeRem', nextValue)}
+                      aria-label="Intro heading size (rem) number"
+                    />
+                  </div>
+                </label>
                 <label className="admin-intro-line-spacing-control">
                   <div className="admin-line-spacing-control-head">
                     <span>{introLineSpacing.toFixed(2)}</span>
@@ -5304,6 +5386,10 @@ export function IntroBlockEditor({ block, onSettingChange, routeOptions = [], so
 function IntroHudBlockEditor({ block, onSettingChange, routeOptions = [], blockOptions = null }) {
   const settings = block.settings || {};
   const introExtraLineDefaults = getIntroExtraLineDefaults(settings.sectionClassName);
+  const introHeadingSizeRem = normalizeIntroHeadingSizeRem(
+    settings.headingSizeRem,
+    getIntroHeadingSizeDefault(settings.sectionClassName),
+  );
   const allFields = resolveEditorFields(block.kind, 'hud', block.editableFields);
   const actionSettings = {
     ...settings,
@@ -5397,6 +5483,8 @@ function IntroHudBlockEditor({ block, onSettingChange, routeOptions = [], blockO
         selectionMeta,
       )}
       headingSelection={introHeadingSelection}
+      headingSizeRem={introHeadingSizeRem}
+      onHeadingSizeChange={(nextValue) => onSettingChange('headingSizeRem', nextValue)}
       headingHighlightsJson={String(settings.headingHighlightsJson || '')}
       headingColor={extractHeroLineColorToken(settings.headingClassName)}
       onHeadingColorChange={(nextValue) => {
@@ -6599,6 +6687,7 @@ export function SiteFeatureBlockEditor({ block, onSettingChange, routeOptions = 
   const historyGalleryFields = [
     fieldById.get('cardTitleSizeRem'),
     fieldById.get('cardTitleLineHeight'),
+    fieldById.get('cardTitleJustify'),
     fieldById.get('cardBodySizeRem'),
     fieldById.get('cardBodyLineHeight'),
     fieldById.get('titleTone'),
@@ -7862,13 +7951,18 @@ export function PageContentBlockEditor({ block, onSettingChange }) {
   const fields = resolveEditorFields(block.kind, 'admin', block.editableFields);
   const appearanceFields = fields.filter((field) => field.id === 'textTone');
   const backgroundToneField = fields.find((field) => field.id === 'bgTone') || null;
+  const showBackgroundEditor = hasPageContentEditableBackground(settings);
   const editorField = getPageContentEditorField(settings);
   const usesLegacyBodySource = hasLegacyPageContentBodySource(settings);
+  const usesLegacyFineprintBodySource = hasLegacyPageContentFineprintSource(settings);
 
   const handleHtmlChange = (nextValue) => {
     onSettingChange(editorField, nextValue);
     if (usesLegacyBodySource) {
       onSettingChange('body', '');
+    }
+    if (usesLegacyFineprintBodySource) {
+      onSettingChange('fineprint', '');
     }
   };
 
@@ -7907,15 +8001,17 @@ export function PageContentBlockEditor({ block, onSettingChange }) {
         />
       </div>
 
-      <BackgroundEditorPage
-        backgroundTone={settings.bgTone}
-        backgroundToneOptions={Array.isArray(backgroundToneField?.options) ? backgroundToneField.options : []}
-        backgroundToneLabel={backgroundToneField?.label || 'Page content background'}
-        onBackgroundToneChange={(nextValue) => onSettingChange('bgTone', nextValue)}
-        backgroundEffectsJson={settings.backgroundEffectsJson}
-        onBackgroundEffectsChange={(nextValue) => onSettingChange('backgroundEffectsJson', nextValue)}
-        paletteVariant="admin"
-      />
+      {showBackgroundEditor ? (
+        <BackgroundEditorPage
+          backgroundTone={settings.bgTone}
+          backgroundToneOptions={Array.isArray(backgroundToneField?.options) ? backgroundToneField.options : []}
+          backgroundToneLabel={backgroundToneField?.label || 'Page content background'}
+          onBackgroundToneChange={(nextValue) => onSettingChange('bgTone', nextValue)}
+          backgroundEffectsJson={settings.backgroundEffectsJson}
+          onBackgroundEffectsChange={(nextValue) => onSettingChange('backgroundEffectsJson', nextValue)}
+          paletteVariant="admin"
+        />
+      ) : null}
 
       <PageContentLayoutControls
         settings={settings}

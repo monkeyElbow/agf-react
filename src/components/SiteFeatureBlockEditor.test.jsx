@@ -203,6 +203,7 @@ describe('SiteFeatureBlockEditor', () => {
     expect(screen.getByText('History Gallery presentation')).toBeTruthy();
     expect(screen.getByLabelText('Card title size (rem)')).toBeTruthy();
     expect(screen.getByLabelText('Card title line height')).toBeTruthy();
+    expect(screen.getByRole('radiogroup', { name: 'Card title justify' })).toBeTruthy();
     expect(screen.getByLabelText('Card body size (rem)')).toBeTruthy();
     expect(screen.getByLabelText('Card body line height')).toBeTruthy();
     expect(screen.getByRole('radiogroup', { name: 'Card title color' })).toBeTruthy();

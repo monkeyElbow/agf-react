@@ -369,6 +369,91 @@ describe('NativeContentPage functional routes', () => {
     expect(screen.getByText('Let’s explore what we can do together.')).toBeTruthy();
   });
 
+  it('carries calculator panel settings through to the rendered DOM contract', () => {
+    mockBlocksByPath = {
+      '/calculators': (contentBlockBlueprintsByPath['/calculators'] || []).map((block) => {
+        const settings = { ...(block?.settings || {}) };
+        if (block?.id === 'utility_header') {
+          settings.bgTone = 'grey';
+        }
+        if (block?.id === 'calculator_cards') {
+          Object.assign(settings, {
+            bgTone: 'sand',
+            cardCount: 2,
+            cardStyle: 'card3',
+            cardOutline: true,
+            cardShadow: true,
+            cardPaddingRem: 2.4,
+            cardGapRem: 2.75,
+            cardTitleSizeRem: 1.7,
+            cardTitleJustify: 'left',
+            cardTitleBodySpaceRem: 2.1,
+            cardBodySizeRem: 1.15,
+            cardBodyLineHeight: 1.8,
+            cardBodyJustify: 'right',
+            titleTone: 'mango',
+          });
+        }
+        if (block?.id === 'billboard') {
+          Object.assign(settings, {
+            justify: 'left',
+            bodyJustify: 'right',
+            leadCopySizeRem: 1.55,
+            leadCopyLineHeight: 1.7,
+          });
+        }
+        if (block?.id === 'cta_form') {
+          Object.assign(settings, { paddingTopRem: 1.25, paddingBottomRem: 6.5 });
+        }
+        return {
+          ...block,
+          settings,
+          editableFields: Array.isArray(block?.editableFields) ? [...block.editableFields] : [],
+        };
+      }),
+    };
+
+    render(
+      <MemoryRouter>
+        <NativeContentPage
+          page={{
+            path: '/calculators',
+            title: 'Calculators',
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+    const utilityHeader = document.querySelector('[data-block-id="utility_header"]');
+    const cardsSection = document.querySelector('[data-block-id="calculator_cards"]');
+    const billboard = document.querySelector('[data-block-id="billboard"]');
+    const cta = document.querySelector('[data-block-id="cta_form"]');
+    const firstCard = cardsSection?.querySelector('.service-native-card');
+    const firstCardTitle = firstCard?.querySelector('h3');
+    const billboardCopy = billboard?.querySelector('.native-info-section-copy');
+
+    expect(utilityHeader?.className).toContain('is-bg-grey');
+    expect(cardsSection?.className).toContain('is-card-grid-style-card3');
+    expect(cardsSection?.className).toContain('is-card-outline');
+    expect(cardsSection?.className).toContain('is-card-shadow');
+    expect(cardsSection?.style.getPropertyValue('--dynamic-grid-card-padding')).toBe('2.4rem');
+    expect(cardsSection?.style.getPropertyValue('--dynamic-grid-card-gap')).toBe('2.75rem');
+    expect(cardsSection?.style.getPropertyValue('--dynamic-grid-card-title-size')).toBe('1.7rem');
+    expect(cardsSection?.style.getPropertyValue('--dynamic-grid-card-title-justify')).toBe('left');
+    expect(cardsSection?.style.getPropertyValue('--dynamic-grid-card-title-body-space')).toBe('2.1rem');
+    expect(cardsSection?.style.getPropertyValue('--dynamic-grid-card-body-size')).toBe('1.15rem');
+    expect(cardsSection?.style.getPropertyValue('--dynamic-grid-card-body-line-height')).toBe('1.8');
+    expect(cardsSection?.style.getPropertyValue('--dynamic-grid-card-body-justify')).toBe('right');
+    expect(firstCardTitle?.style.textAlign).toBe('left');
+    expect(billboardCopy?.className).toContain('is-justify-left');
+    const billboardBody = billboard?.querySelector('.billboard-body-copy');
+    expect(billboardBody?.className).toContain('is-body-justify-right');
+    expect(billboard?.querySelector('.native-info-section-copy')?.getAttribute('style') || '')
+      .toContain('--dynamic-billboard-lead-copy-size:');
+    expect(cta?.style.getPropertyValue('--dynamic-cta-padding-top')).toBe('1.25rem');
+    expect(cta?.style.getPropertyValue('--dynamic-cta-padding-bottom')).toBe('6.5rem');
+  });
+
   it('renders standalone calculator widgets without blank page-content shell copy', () => {
     mockBlocksByPath = {
       '/calculators/net-worth': (contentBlockBlueprintsByPath['/calculators/net-worth'] || []).map((block) => ({
@@ -996,6 +1081,9 @@ describe('NativeContentPage functional routes', () => {
         ...block,
         settings: {
           ...(block?.settings || {}),
+          ...(block?.id === 'intro'
+            ? { lineSpacing: 1.28 }
+            : {}),
           ...(block?.id === 'history'
             ? {
               buttonLabel: 'Explore our impact',
@@ -1022,8 +1110,11 @@ describe('NativeContentPage functional routes', () => {
     );
 
     expect(document.querySelector('.service-native-hero')).toBeNull();
-    expect(document.querySelector('.service-native-intro.about-native-top-intro')).toBeTruthy();
-    expect(document.querySelector('.service-native-intro.about-native-top-intro')?.className).not.toContain('careers-native-top-intro');
+    const aboutIntro = document.querySelector('.service-native-intro.about-native-top-intro');
+    expect(aboutIntro).toBeTruthy();
+    expect(aboutIntro?.className).not.toContain('careers-native-top-intro');
+    expect(aboutIntro?.querySelector('.service-native-intro-copy')?.getAttribute('style'))
+      .toContain('--intro-heading-line-height: 1.28');
     expect(screen.getByRole('heading', { name: 'Where faith & finance grow together.' }).className).toContain('is-atlantean');
     expect(screen.getByText('Our culture is delivering the best financial products and experiences that align with biblical values.')).toBeTruthy();
     expect(screen.getByText('Our mission is your financial health and ministry growth.')).toBeTruthy();
@@ -1079,8 +1170,10 @@ describe('NativeContentPage functional routes', () => {
     expect(historySection?.className).toContain('is-title-super-grey');
     expect(historySection?.className).toContain('is-body-super-grey');
     expect(historySection?.style.getPropertyValue('--dynamic-grid-card-title-size')).toBe('5.4rem');
+    expect(historySection?.style.getPropertyValue('--dynamic-grid-card-title-justify')).toBe('');
     expect(historySection?.style.getPropertyValue('--dynamic-grid-card-body-size')).toBe('1.14rem');
     expect(historySection?.style.getPropertyValue('--dynamic-grid-card-body-line-height')).toBe('1.72');
+    expect(historySection?.querySelector('.investments-native-growth-card h3')?.style.textAlign).toBe('');
 
     expect(document.querySelector('.about-native-cta-form')).toBeTruthy();
   });
@@ -1331,6 +1424,7 @@ describe('NativeContentPage functional routes', () => {
     expect(screen.getByText('Springfield, MO')).toBeTruthy();
     expect(screen.getByText('Posted March 20, 2026')).toBeTruthy();
     expect(screen.getByRole('link', { name: 'Apply Online' })).toBeTruthy();
+    expect(screen.getByText(/AGFinancial \(AGF\) is an equal opportunity\/affirmative action employer\./)).toBeTruthy();
   });
 
   it('exposes every Careers section in the front HUD in authored order', () => {

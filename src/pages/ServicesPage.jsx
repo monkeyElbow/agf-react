@@ -873,7 +873,7 @@ export default function ServicesPage() {
             className={`service-native-intro-copy is-justify-${resolvedIntro.justify || 'center'}`}
             style={{ '--intro-heading-line-height': resolvedIntro.lineSpacing || 1.04 }}
           >
-            <h2 className={resolvedIntro.headingClassName || undefined}>
+            <h2 className={resolvedIntro.headingClassName || undefined} style={resolvedIntro.headingStyle}>
               <span
                 dangerouslySetInnerHTML={{
                   __html: renderTextWithHighlights(resolvedIntro.heading, resolvedIntro.headingHighlights),

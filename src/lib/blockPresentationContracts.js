@@ -48,6 +48,78 @@ const REQUEST_FORM_STEP_META_FIELD_IDS = Object.freeze(
   ]),
 );
 
+// These Page Content variants are section-owned presentations, not generic
+// content surfaces. Their route renderer/CSS owns the surface background, so
+// exposing the shared bg/lights controls creates no-op controls (and, for
+// lights, can make an unrelated neighboring section look affected).
+const PAGE_CONTENT_BACKGROUND_LOCKED_CLASS_NAMES = Object.freeze([
+  'careers-native-jobs-list',
+  'careers-native-fineprint',
+  'contact-us-address',
+  'insurance-pc-native-fineprint',
+  'legacy-child-native-cga-qcd-fineprint',
+  'legacy-child-native-cga-state-notices',
+  'legacy-giving-fineprint',
+  'retirement-individual-enrollment-qualify-disclosure',
+]);
+
+const PAGE_CONTENT_BACKGROUND_LOCKED_CLASS_SET = new Set(PAGE_CONTENT_BACKGROUND_LOCKED_CLASS_NAMES);
+
+// Route-owned Page Content variants use these prefixes for their fixed
+// renderer surfaces. Keep the classification here instead of scattering
+// special cases through the admin editors. A deliberately generic class such
+// as `custom-page-content` remains editable.
+const PAGE_CONTENT_BACKGROUND_LOCKED_CLASS_PREFIXES = Object.freeze([
+  'accessibility-',
+  'calculator-',
+  'contact-us-',
+  'group-life-',
+  'insurance-',
+  'investments-',
+  'mission-assure-',
+  'ministers-group-life-',
+  'online-contrib-',
+  'resources-',
+  'retirement-',
+  'subscribe-',
+  'tax-guide-',
+  'yourplan-',
+]);
+
+function isRouteOwnedPageContentClass(className) {
+  return (
+    className.includes('-native-')
+    || className.startsWith('native-')
+    || className.startsWith('legacy-')
+    || PAGE_CONTENT_BACKGROUND_LOCKED_CLASS_PREFIXES.some((prefix) => className.startsWith(prefix))
+  );
+}
+
+function isPageContentBackgroundLocked(settings = {}) {
+  const classTokens = sanitizeClassTokens(settings?.sectionClassName);
+  return Boolean(String(settings?.widget || '').trim()) || classTokens.some((className) => (
+    PAGE_CONTENT_BACKGROUND_LOCKED_CLASS_SET.has(className)
+    || className === 'native-functional-page-head'
+    || className.endsWith('-native-page-head')
+    || className.endsWith('-native-fineprint')
+    || className.endsWith('-native-disclosure')
+    || isRouteOwnedPageContentClass(className)
+  ));
+}
+
+export function getPageContentPresentationContract(settings = {}) {
+  return isPageContentBackgroundLocked(settings)
+    ? {
+        id: 'fixed-surface',
+        lockedFieldIds: Object.freeze(['bgTone', 'backgroundEffectsJson']),
+      }
+    : null;
+}
+
+export function hasPageContentEditableBackground(settings = {}) {
+  return !getPageContentPresentationContract(settings);
+}
+
 const REQUEST_FORM_PRESET_PRESENTATION_CONTRACTS = Object.freeze({
   'legacy-impact': Object.freeze({
     settings: Object.freeze({
@@ -161,6 +233,11 @@ export function getBlockPresentationLockedFieldIds(block) {
 
   if (kind === 'billboard') {
     const contract = getBillboardPresentationContract(settings, source.presetId);
+    return normalizeLockedFieldIds(contract?.lockedFieldIds);
+  }
+
+  if (kind === 'content') {
+    const contract = getPageContentPresentationContract(settings);
     return normalizeLockedFieldIds(contract?.lockedFieldIds);
   }
 

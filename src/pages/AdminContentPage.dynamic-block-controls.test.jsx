@@ -1130,6 +1130,12 @@ describe('dynamic block control wiring', () => {
     });
 
     expect(onSettingChange).toHaveBeenCalledWith('lineSpacing', 1.22);
+
+    fireEvent.change(screen.getByLabelText('Intro heading size (rem)'), {
+      target: { value: '5.1' },
+    });
+
+    expect(onSettingChange).toHaveBeenCalledWith('headingSizeRem', 5.1);
   });
 
   it('keeps intro drafts stable through stale shared rerenders', () => {
@@ -2981,5 +2987,27 @@ describe('dynamic block control wiring', () => {
     });
 
     expect(onSettingChange).toHaveBeenCalledWith('bodyFontSizeRem', 1.35);
+  });
+
+  it('does not expose shared background controls for fixed-surface page content', () => {
+    render(
+      <PageContentBlockEditor
+        block={(() => {
+          const source = getDynamicBlock('content');
+          return {
+            ...source,
+            settings: {
+              ...source.settings,
+              sectionClassName: 'careers-native-fineprint',
+              fineprint: 'Equal opportunity copy.',
+            },
+          };
+        })()}
+        onSettingChange={vi.fn()}
+      />,
+    );
+
+    expect(screen.queryByRole('radiogroup', { name: 'Background color' })).toBeNull();
+    expect(screen.queryByText('Background lights')).toBeNull();
   });
 });

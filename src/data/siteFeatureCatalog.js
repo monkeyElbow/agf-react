@@ -388,6 +388,7 @@ const SITE_FEATURE_CATALOG_DEFINITIONS = [
       'cardsJson',
       'cardTitleSizeRem',
       'cardTitleLineHeight',
+      'cardTitleJustify',
       'cardBodySizeRem',
       'cardBodyLineHeight',
       'titleTone',

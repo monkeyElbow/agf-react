@@ -1837,6 +1837,7 @@ export default function RetirementPage() {
             >
               <h2
                 className={`${resolvedIntro.headingClassName || ''}${showFrontHud && introBlock ? ' admin-front-hud-click-edit-target' : ''}`.trim() || undefined}
+                style={resolvedIntro.headingStyle}
                 onClick={showFrontHud && introBlock ? handleIntroHeadingEditIntent : undefined}
                 onKeyDown={showFrontHud && introBlock ? (event) => handleBodyEditKeyDown(event, handleIntroHeadingEditIntent) : undefined}
                 role={showFrontHud && introBlock ? 'button' : undefined}

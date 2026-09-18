@@ -330,6 +330,23 @@ describe('buildDynamicCtaFormFromBlock', () => {
     });
   });
 
+  it('carries explicit CTA header spacing into the canonical runtime', () => {
+    const runtime = buildDynamicCtaFormFromBlock({
+      id: 'cta_form',
+      kind: 'cta_form',
+      mode: 'dynamic',
+      settings: {
+        title: 'Contact our team',
+        headerGapRem: 2.25,
+        fieldsJson: ctaFieldsJson([
+          { id: 'email', label: 'Email', type: 'email', required: true },
+        ]),
+      },
+    });
+
+    expect(runtime?.headerGapRem).toBe(2.25);
+  });
+
   it('keeps legacy published CTA snapshots visible until the explicit field migration runs', () => {
     const runtime = buildDynamicCtaFormFromBlock({
       id: 'cta_form',
@@ -751,6 +768,7 @@ describe('buildDynamicIntroFromBlock', () => {
         bodyHtml: '<p>Shared intro body.</p>',
         bodyColorClassName: 'white',
         extraLine: 'A little more confidence.',
+        headingSizeRem: 5.25,
         extraLineTone: 'white',
         extraLineSizeRem: 2.25,
         extraLineSpaceBeforeRem: 1.75,
@@ -778,6 +796,9 @@ describe('buildDynamicIntroFromBlock', () => {
       heading: 'Plan with clarity.',
       headingClassName: 'is-atlantean',
       headingHighlights: [{ text: 'clarity', className: 'is-mango' }],
+      headingStyle: {
+        fontSize: 'clamp(calc(5.25rem * 0.58), 8vw, 5.25rem)',
+      },
       bodyHtml: '<p>Shared intro body.</p>',
       bodyColorClassName: 'is-white',
       extraLine: 'A little more confidence.',
@@ -1743,6 +1764,7 @@ describe('buildDynamicSiteFeatureFromBlock', () => {
         featureId: 'about_history_feature',
         cardTitleSizeRem: 4.2,
         cardTitleLineHeight: 1.1,
+        cardTitleJustify: 'right',
         cardBodySizeRem: 1.3,
         cardBodyLineHeight: 1.9,
         titleTone: 'mango',
@@ -1754,6 +1776,7 @@ describe('buildDynamicSiteFeatureFromBlock', () => {
       catalogLabel: 'History Gallery',
       cardTitleSizeRem: 4.2,
       cardTitleLineHeight: 1.1,
+      cardTitleJustify: 'right',
       cardBodySizeRem: 1.3,
       cardBodyLineHeight: 1.9,
       titleTone: 'mango',
@@ -3832,5 +3855,23 @@ describe('buildDynamicPageContentFromBlock', () => {
     });
 
     expect(runtime).toBeNull();
+  });
+
+  it('keeps semantic fineprint content when the legacy HTML field is only an empty paragraph', () => {
+    const runtime = buildDynamicPageContentFromBlock({
+      id: 'fineprint',
+      kind: 'content',
+      mode: 'dynamic',
+      settings: {
+        html: '<p></p>',
+        sectionClassName: 'careers-native-fineprint',
+        fineprint: 'AGFinancial is an equal opportunity employer.',
+      },
+    });
+
+    expect(runtime).toMatchObject({
+      html: '',
+      fineprint: ['AGFinancial is an equal opportunity employer.'],
+    });
   });
 });

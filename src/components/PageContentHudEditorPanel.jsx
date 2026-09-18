@@ -7,11 +7,13 @@ import {
   getPageContentBodyEditorHtml,
   getPageContentEditorField,
   hasLegacyPageContentBodySource,
+  hasLegacyPageContentFineprintSource,
 } from '../lib/pageContentEditorHtml';
 import {
   PANEL_TEXT_TONE_OPTIONS,
   SURFACE_BG_TONE_OPTIONS,
 } from '../lib/colorSystem';
+import { hasPageContentEditableBackground } from '../lib/blockPresentationContracts';
 
 const PAGE_CONTENT_JUSTIFY_OPTIONS = [
   { value: 'left', label: 'Left' },
@@ -405,8 +407,10 @@ export default function PageContentHudEditorPanel({
   const isRolloverProcess = String(settings.sectionClassName || '')
     .split(/\s+/)
     .includes('retirement-rollovers-native-process');
+  const showBackgroundEditor = hasPageContentEditableBackground(settings);
   const editorField = getPageContentEditorField(settings);
   const usesLegacyBodySource = hasLegacyPageContentBodySource(settings);
+  const usesLegacyFineprintBodySource = hasLegacyPageContentFineprintSource(settings);
   const htmlDraftFields = useMemo(() => ([
     {
       id: editorField,
@@ -416,9 +420,12 @@ export default function PageContentHudEditorPanel({
         if (usesLegacyBodySource) {
           onSettingChange?.('body', '');
         }
+        if (usesLegacyFineprintBodySource) {
+          onSettingChange?.('fineprint', '');
+        }
       },
     },
-  ]), [editorField, onSettingChange, settings, usesLegacyBodySource]);
+  ]), [editorField, onSettingChange, settings, usesLegacyBodySource, usesLegacyFineprintBodySource]);
   const {
     draftValues,
     updateDraftValue,
@@ -428,7 +435,7 @@ export default function PageContentHudEditorPanel({
     { id: 'content', label: 'Content', icon: 'Aa' },
     { id: 'address', label: 'Address', icon: '⌖' },
     { id: 'layout', label: 'Layout', icon: '▦' },
-    { id: 'background', label: 'Background', icon: '◌' },
+    ...(showBackgroundEditor ? [{ id: 'background', label: 'Background', icon: '◌' }] : []),
   ], blockOptions);
 
   if (!block || typeof onSettingChange !== 'function') {
@@ -510,17 +517,19 @@ export default function PageContentHudEditorPanel({
       <section className="admin-hud-editor-panel admin-front-hud-page-content-address-panel">
         <PageContentAddressControls settings={settings} onSettingChange={onSettingChange} />
       </section>
-      <section className="admin-hud-editor-panel admin-front-hud-page-content-background-panel">
-        <BackgroundEditorPage
-          backgroundTone={settings.bgTone}
-          backgroundToneOptions={SURFACE_BG_TONE_OPTIONS}
-          backgroundToneLabel="Page content background"
-          onBackgroundToneChange={(nextValue) => onSettingChange('bgTone', nextValue)}
-          backgroundEffectsJson={settings.backgroundEffectsJson}
-          onBackgroundEffectsChange={(nextValue) => onSettingChange('backgroundEffectsJson', nextValue)}
-          paletteVariant="hud"
-        />
-      </section>
+      {showBackgroundEditor ? (
+        <section className="admin-hud-editor-panel admin-front-hud-page-content-background-panel">
+          <BackgroundEditorPage
+            backgroundTone={settings.bgTone}
+            backgroundToneOptions={SURFACE_BG_TONE_OPTIONS}
+            backgroundToneLabel="Page content background"
+            onBackgroundToneChange={(nextValue) => onSettingChange('bgTone', nextValue)}
+            backgroundEffectsJson={settings.backgroundEffectsJson}
+            onBackgroundEffectsChange={(nextValue) => onSettingChange('backgroundEffectsJson', nextValue)}
+            paletteVariant="hud"
+          />
+        </section>
+      ) : null}
       <HudEditorBlockOptionsPage>{blockOptions}</HudEditorBlockOptionsPage>
     </HudEditorModelLayout>
   );

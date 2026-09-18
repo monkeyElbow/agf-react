@@ -1482,6 +1482,9 @@ function CtaFormBlock({ block, ownership, hudAnchor, sectionHudClassName = '' })
   const presentationClassName = buildDynamicCtaPresentationClassName(runtime);
   const textTone = ['blue', 'grey'].includes(bgTone) ? 'white' : 'dark';
   const sectionStyle = {
+    ...(Number.isFinite(Number(runtime?.headerGapRem))
+      ? { '--dynamic-cta-header-gap': `${runtime.headerGapRem}rem` }
+      : {}),
     ...(Number.isFinite(Number(runtime?.paddingTopRem)) ? { paddingTop: `${runtime.paddingTopRem}rem` } : {}),
     ...(Number.isFinite(Number(runtime?.paddingBottomRem)) ? { paddingBottom: `${runtime.paddingBottomRem}rem` } : {}),
   };
@@ -1520,7 +1523,7 @@ function CtaFormBlock({ block, ownership, hudAnchor, sectionHudClassName = '' })
 
   return (
     <section
-      className={`service-native-section native-dynamic-cta is-bg-${bgTone} is-text-${textTone}${sectionClassName ? ` ${sectionClassName}` : ''}${presentationClassName ? ` ${presentationClassName}` : ''}${runtime.backgroundEffects?.enabled ? ' has-block-background-effects' : ''}${sectionHudClassName}${ownership?.className || ''}`}
+      className={`service-native-section native-dynamic-cta${resolvedTitle ? ' has-cta-header' : ''}${bodyHtml && renderBodyInSectionCopy ? ' has-cta-body-copy' : ''} is-bg-${bgTone} is-text-${textTone}${sectionClassName ? ` ${sectionClassName}` : ''}${presentationClassName ? ` ${presentationClassName}` : ''}${runtime.backgroundEffects?.enabled ? ' has-block-background-effects' : ''}${sectionHudClassName}${ownership?.className || ''}`}
       data-block-id={block?.id || undefined}
       data-cta-display-mode={runtime?.displayMode || 'default'}
       data-cta-trigger-mode={runtime?.triggerMode || 'default'}

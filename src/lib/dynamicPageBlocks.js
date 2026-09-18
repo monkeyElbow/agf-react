@@ -66,6 +66,7 @@ import {
   buildBillboardLeadCopyStyle,
   buildBillboardSubtitleStyle,
   buildBillboardTitleStyle,
+  normalizeIntroHeadingSizeRem,
   normalizeIntroExtraLineHeight,
   normalizeIntroExtraLineSizeRem,
   normalizeIntroExtraLineSpaceBeforeRem,
@@ -1059,19 +1060,34 @@ function toIntroEmphasisStyle(settings = {}) {
   }
   if (settings.extraLineSizeRem !== null && settings.extraLineSizeRem !== ''
     && Number.isFinite(Number(settings.extraLineSizeRem))) {
+    const normalizedSize = normalizeIntroExtraLineSizeRem(settings.extraLineSizeRem);
     style['--service-native-intro-emphasis-size'] = `${normalizeIntroExtraLineSizeRem(settings.extraLineSizeRem)}rem`;
+    style.fontSize = `${normalizedSize}rem`;
   }
   if (settings.extraLineSpaceBeforeRem !== null && settings.extraLineSpaceBeforeRem !== ''
     && Number.isFinite(Number(settings.extraLineSpaceBeforeRem))) {
-    style['--service-native-intro-emphasis-space-before'] = `${normalizeIntroExtraLineSpaceBeforeRem(settings.extraLineSpaceBeforeRem)}rem`;
+    const normalizedSpaceBefore = normalizeIntroExtraLineSpaceBeforeRem(settings.extraLineSpaceBeforeRem);
+    style['--service-native-intro-emphasis-space-before'] = `${normalizedSpaceBefore}rem`;
+    style.marginTop = `${normalizedSpaceBefore}rem`;
   }
   if (settings.extraLineLineHeight !== null && settings.extraLineLineHeight !== ''
     && Number.isFinite(Number(settings.extraLineLineHeight))) {
-    style['--service-native-intro-emphasis-line-height'] = String(
-      normalizeIntroExtraLineHeight(settings.extraLineLineHeight),
-    );
+    const normalizedLineHeight = normalizeIntroExtraLineHeight(settings.extraLineLineHeight);
+    style['--service-native-intro-emphasis-line-height'] = String(normalizedLineHeight);
+    style.lineHeight = String(normalizedLineHeight);
   }
   return Object.keys(style).length ? style : undefined;
+}
+
+function toIntroHeadingStyle(settings = {}) {
+  if (settings.headingSizeRem === null || settings.headingSizeRem === ''
+    || !Number.isFinite(Number(settings.headingSizeRem))) {
+    return undefined;
+  }
+  const normalizedSize = normalizeIntroHeadingSizeRem(settings.headingSizeRem);
+  return {
+    fontSize: `clamp(calc(${normalizedSize}rem * 0.58), 8vw, ${normalizedSize}rem)`,
+  };
 }
 
 export function buildDynamicIntroFromBlock(block) {
@@ -1080,6 +1096,7 @@ export function buildDynamicIntroFromBlock(block) {
   }
   const settings = block.settings || {};
   const heading = String(settings.heading || '').trim();
+  const headingStyle = toIntroHeadingStyle(settings);
   const headingClassName = normalizeHighlightClassName(settings.headingClassName || '');
   const headingHighlights = parseTextHighlights(settings.headingHighlightsJson);
   const bodyHtml = String(settings.bodyHtml || '').trim();
@@ -1132,6 +1149,7 @@ export function buildDynamicIntroFromBlock(block) {
     heading,
     headingClassName,
     headingHighlights,
+    headingStyle,
     bodyHtml,
     body,
     ...(bodyColorClassName ? { bodyColorClassName } : {}),
@@ -1654,6 +1672,9 @@ export function buildDynamicSiteFeatureFromBlock(block) {
           : {}),
         ...(Object.prototype.hasOwnProperty.call(settings, 'cardTitleLineHeight')
           ? { cardTitleLineHeight: normalizeSiteFeatureGalleryNumber(settings.cardTitleLineHeight, 0.95, 0.8, 1.5) }
+          : {}),
+        ...(Object.prototype.hasOwnProperty.call(settings, 'cardTitleJustify')
+          ? { cardTitleJustify: normalizeDynamicGridCardJustify(settings.cardTitleJustify, 'left') }
           : {}),
         ...(Object.prototype.hasOwnProperty.call(settings, 'cardBodySizeRem')
           ? { cardBodySizeRem: normalizeSiteFeatureGalleryNumber(settings.cardBodySizeRem, 1.14, 0.9, 2) }
@@ -2308,8 +2329,13 @@ export function buildDynamicCtaFormFromBlock(block, { fallbackSettings = null, f
   const triggerMode = normalizeDynamicCtaTriggerMode(
     resolveCtaFormSetting(settings, fallbackSettings, 'triggerMode'),
   );
+  const rawHeaderGapRem = resolveCtaFormSetting(settings, fallbackSettings, 'headerGapRem');
   const rawPaddingTopRem = resolveCtaFormSetting(settings, fallbackSettings, 'paddingTopRem');
   const rawPaddingBottomRem = resolveCtaFormSetting(settings, fallbackSettings, 'paddingBottomRem');
+  const hasHeaderGapOverride = rawHeaderGapRem !== null
+    && rawHeaderGapRem !== undefined
+    && String(rawHeaderGapRem).trim() !== ''
+    && Number.isFinite(Number(rawHeaderGapRem));
   const hasPaddingTopOverride = rawPaddingTopRem !== null
     && rawPaddingTopRem !== undefined
     && String(rawPaddingTopRem).trim() !== ''
@@ -2330,6 +2356,7 @@ export function buildDynamicCtaFormFromBlock(block, { fallbackSettings = null, f
     titleHighlights,
     anchorId: String(settings.anchorId || '').trim(),
     sectionClassName: sanitizeClassName(settings.sectionClassName || ''),
+    ...(hasHeaderGapOverride ? { headerGapRem: normalizePageContentSpaceRem(rawHeaderGapRem, 1.5, 0, 6) } : {}),
     ...(hasPaddingTopOverride ? { paddingTopRem: normalizePageContentSpaceRem(rawPaddingTopRem, 2.5, 0, 8) } : {}),
     ...(hasPaddingBottomOverride ? { paddingBottomRem: normalizePageContentSpaceRem(rawPaddingBottomRem, 4, 0, 8) } : {}),
     displayMode,

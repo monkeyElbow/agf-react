@@ -69,6 +69,24 @@ describe('PageContentHudEditorPanel', () => {
     expect(onSettingChange).not.toHaveBeenCalledWith('fineprint', '');
   });
 
+  it('restores the Careers fineprint block in the body editor and migrates on explicit edit', () => {
+    const onSettingChange = vi.fn();
+    renderPanel({
+      sectionClassName: 'careers-native-fineprint',
+      html: '<p></p>',
+      fineprint: 'AGFinancial is an equal opportunity employer.',
+    }, onSettingChange);
+
+    expect(screen.getByRole('textbox', { name: 'HTML content' }).textContent).toContain('AGFinancial is an equal opportunity employer.');
+    const editor = screen.getByRole('textbox', { name: 'HTML content' });
+    editor.innerHTML = '<p>Updated EEO copy.</p>';
+    fireEvent.input(editor);
+    fireEvent.blur(editor);
+
+    expect(onSettingChange).toHaveBeenCalledWith('html', '<p>Updated EEO copy.</p>');
+    expect(onSettingChange).toHaveBeenCalledWith('fineprint', '');
+  });
+
   it('shows the numeric Page Content controls as sliders', () => {
     const onSettingChange = vi.fn();
 
@@ -139,5 +157,12 @@ describe('PageContentHudEditorPanel', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Background' }));
     expect(screen.getByRole('radiogroup', { name: 'Background color' })).toBeTruthy();
     expect(screen.getByText('Background lights')).toBeTruthy();
+  });
+
+  it('does not expose background controls for fixed-surface Careers content', () => {
+    renderPanel({ sectionClassName: 'careers-native-fineprint', fineprint: 'Equal opportunity copy.' });
+
+    expect(screen.queryByRole('button', { name: 'Background' })).toBeNull();
+    expect(screen.queryByText('Background lights')).toBeNull();
   });
 });

@@ -29,6 +29,20 @@ describe('native page content renderer guardrail', () => {
     expect(aboutIntroStyles).not.toMatch(/\b(?:background|color)\s*:/);
   });
 
+  it('keeps About Intro heading line height owned by the shared editor variable', () => {
+    const cssSource = readSource('../styles/service-native.css');
+    const aboutIntroHeadingStyles = readCssBetween(
+      cssSource,
+      '.native-info-page--about .service-native-intro.about-native-top-intro h2 {',
+      '.native-info-page--about .service-native-intro.about-native-top-intro p {',
+    );
+
+    expect(aboutIntroHeadingStyles).toContain(
+      'line-height: var(--intro-heading-line-height, 1.04);',
+    );
+    expect(aboutIntroHeadingStyles.match(/line-height:/g)).toHaveLength(1);
+  });
+
   it('keeps the shared dynamic page content builder in the native page path', () => {
     const source = readSource('./NativeContentPage.jsx');
     const compositionSource = readSource('../lib/managedPageComposition.js');

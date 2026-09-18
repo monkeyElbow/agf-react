@@ -992,6 +992,7 @@ function buildNativeIntroConfig(block, { includeTestClassName = false } = {}) {
     heading: runtime.heading || null,
     headingClassName: runtime.headingClassName || '',
     headingHighlights: Array.isArray(runtime.headingHighlights) ? runtime.headingHighlights : [],
+    headingStyle: runtime.headingStyle || undefined,
     bodyHtml: normalizeHtmlContent(runtime.bodyHtml),
     bodyColorClassName: runtime.bodyColorClassName || '',
     body: runtime.body ? [runtime.body] : [],
@@ -1085,12 +1086,16 @@ function buildNativeBillboardSection(block, { includeTestClassName = false } = {
     backgroundEffects: runtime.backgroundEffects,
     title: runtime.title,
     titleClassName: runtime.titleClassName || undefined,
-    titleStyle: runtime.titleStyle,
+    titleStyle: runtime.titleStyle
+      ? { ...runtime.titleStyle, textAlign: runtime.justify || undefined }
+      : { textAlign: runtime.justify || undefined },
     titleHighlights: Array.isArray(runtime.titleHighlights) ? runtime.titleHighlights : [],
     subtitle: runtime.subtitle || undefined,
     subtitleClassName: runtime.subtitleClassName || undefined,
     subtitleHighlights: Array.isArray(runtime.subtitleHighlights) ? runtime.subtitleHighlights : [],
-    subtitleStyle: runtime.subtitleStyle || undefined,
+    subtitleStyle: runtime.subtitleStyle
+      ? { ...runtime.subtitleStyle, textAlign: runtime.justify || undefined }
+      : { textAlign: runtime.justify || undefined },
     html: normalizeHtmlContent(runtime.bodyHtml),
     htmlClassName: [
       runtime.bodyColorClassName,
@@ -1099,7 +1104,9 @@ function buildNativeBillboardSection(block, { includeTestClassName = false } = {
       !runtime.subtitle && runtime.headerGapRem !== null ? 'is-dynamic-billboard-header-gap' : '',
       runtime.bodyGapRem !== null ? 'is-dynamic-billboard-body-gap' : '',
     ].filter(Boolean).join(' '),
-    htmlStyle: runtime.bodyHtmlStyle || undefined,
+    htmlStyle: runtime.bodyHtmlStyle || runtime.bodyJustify
+      ? { ...(runtime.bodyHtmlStyle || {}), textAlign: runtime.bodyJustify || undefined }
+      : undefined,
     body: runtime.body ? [runtime.body] : [],
     bodyJustify: normalizeHeroJustify(runtime.bodyJustify || 'center'),
     headerGapRem: runtime.headerGapRem,
@@ -1728,16 +1735,28 @@ function buildDynamicCtaSection(block, pathname) {
   const sectionClassBase = pathname === '/test' ? 'test-dynamic-cta' : 'native-dynamic-cta';
   const submitButtonConfig = toActionButtonClassConfig(runtime.submitStyle, runtime.submitTone);
   const presentationClassName = buildDynamicCtaPresentationClassName(runtime);
+  const sectionStyle = {
+    ...(Number.isFinite(Number(runtime.headerGapRem))
+      ? { '--dynamic-cta-header-gap': `${runtime.headerGapRem}rem` }
+      : {}),
+    ...(Number.isFinite(Number(runtime.paddingTopRem))
+      ? { '--dynamic-cta-padding-top': `${runtime.paddingTopRem}rem` }
+      : {}),
+    ...(Number.isFinite(Number(runtime.paddingBottomRem))
+      ? { '--dynamic-cta-padding-bottom': `${runtime.paddingBottomRem}rem` }
+      : {}),
+  };
 
   return {
     id: `${pathname}-dynamic-cta-${String(block.id || 'cta_form').trim() || 'cta_form'}`,
     blockId: String(block?.id || '').trim() || undefined,
     copyWrap: true,
     anchorId: runtime.anchorId || undefined,
-    className: `${sectionClassBase}${runtime.sectionClassName ? ` ${runtime.sectionClassName}` : ''} is-bg-${runtime.bgTone}${presentationClassName ? ` ${presentationClassName}` : ''}`,
+    className: `${sectionClassBase}${runtime.sectionClassName ? ` ${runtime.sectionClassName}` : ''}${runtime.title ? ' has-cta-header' : ''}${runtime.bodyHtml ? ' has-cta-body-copy' : ''} is-bg-${runtime.bgTone}${presentationClassName ? ` ${presentationClassName}` : ''}`,
     title: runtime.title,
     titleClassName: runtime.titleClassName || undefined,
     titleHighlights: runtime.titleHighlights?.length ? runtime.titleHighlights : [],
+    sectionStyle: Object.keys(sectionStyle).length ? sectionStyle : undefined,
     html: runtime.bodyHtml,
     form: {
       variant: 'dynamic-cta',
@@ -1903,6 +1922,9 @@ function buildDynamicSiteFeatureSection(block, pathname) {
       ...(Number.isFinite(Number(runtime.cardTitleLineHeight))
         ? { '--dynamic-grid-card-title-line-height': String(runtime.cardTitleLineHeight) }
         : {}),
+      ...(runtime.cardTitleJustify
+        ? { '--dynamic-grid-card-title-justify': runtime.cardTitleJustify }
+        : {}),
       ...(Number.isFinite(Number(runtime.cardBodySizeRem))
         ? { '--dynamic-grid-card-body-size': `${runtime.cardBodySizeRem}rem` }
         : {}),
@@ -1923,6 +1945,7 @@ function buildDynamicSiteFeatureSection(block, pathname) {
       // separately controlled by its background-lights data.
       cardsPresetSurface: false,
       cards: Array.isArray(runtime.cards) ? runtime.cards : [],
+      ...(runtime.cardTitleJustify ? { cardTitleJustify: runtime.cardTitleJustify } : {}),
       justify: 'center',
       actions: runtime.action ? [toNativeActionItem(runtime.action)].filter(Boolean) : [],
     };
@@ -6388,6 +6411,7 @@ export default function NativeContentPage({ page }) {
                 {introHeading ? (
                   <h2
                     className={`${introConfig?.headingClassName || ''}${showIntroHud && allowOnPageClickEdit ? ' admin-front-hud-click-edit-target' : ''}`.trim() || undefined}
+                    style={introConfig?.headingStyle}
                     onClick={showIntroHud && allowOnPageClickEdit ? handleIntroHeadingEditIntent : undefined}
                     onKeyDown={showIntroHud && allowOnPageClickEdit ? (event) => handleBodyEditKeyDown(event, handleIntroHeadingEditIntent) : undefined}
                     role={showIntroHud && allowOnPageClickEdit ? 'button' : undefined}
@@ -6862,6 +6886,7 @@ export default function NativeContentPage({ page }) {
                     {sectionIntro.heading ? (
                       <h2
                         className={`${sectionIntro.headingClassName || ''}${showSectionHud && allowOnPageClickEdit ? ' admin-front-hud-click-edit-target' : ''}`.trim() || undefined}
+                        style={sectionIntro.headingStyle}
                         onClick={showSectionHud && allowOnPageClickEdit ? (event) => handleSectionBodyEditIntent(dynamicSectionHudPanelId, event) : undefined}
                         onKeyDown={showSectionHud && allowOnPageClickEdit ? (event) => handleBodyEditKeyDown(event, (keyEvent) => handleSectionBodyEditIntent(dynamicSectionHudPanelId, keyEvent)) : undefined}
                         role={showSectionHud && allowOnPageClickEdit ? 'button' : undefined}

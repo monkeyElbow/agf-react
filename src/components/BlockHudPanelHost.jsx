@@ -71,6 +71,9 @@ const HUD_EDITORS_WITH_SECTION_RAIL = new Set([
 const HUD_BLOCKS_WITH_INLINE_BACKGROUND = new Set([
   'hero',
   'intro',
+  // Page Content owns this surface in PageContentHudEditorPanel. Keeping it
+  // here prevents the host from appending a second generic Background page.
+  'content',
   'billboard',
   'request_form',
   'card_grid',

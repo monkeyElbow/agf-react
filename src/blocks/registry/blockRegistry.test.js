@@ -293,6 +293,7 @@ describe('canonical block registry', () => {
       'beatsJson',
       'cardTitleSizeRem',
       'cardTitleLineHeight',
+      'cardTitleJustify',
       'cardBodySizeRem',
       'cardBodyLineHeight',
       'titleTone',
