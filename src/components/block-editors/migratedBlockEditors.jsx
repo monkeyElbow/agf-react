@@ -1601,7 +1601,10 @@ export function CardChartBlockEditor({
     .map((fieldId) => fieldById.get(fieldId))
     .filter(Boolean);
   const fineprintSizeField = fieldById.get('fineprintSizeRem');
-  const spacingFields = ['headerGapRem', 'spaceBeforeRem', 'spaceAfterRem', 'paddingTopRem', 'paddingBottomRem', 'cellPaddingRem', 'cellTextSizeRem', 'cellTextWeight']
+  const spacingFields = ['headerGapRem', 'spaceBeforeRem', 'spaceAfterRem', 'paddingTopRem', 'paddingBottomRem', 'cellPaddingRem', 'cardGapRem', 'cellTextSizeRem', 'cellTextWeight']
+    .map((fieldId) => fieldById.get(fieldId))
+    .filter(Boolean);
+  const cardStyleFields = ['cardShadow', 'cardShadowOpacity']
     .map((fieldId) => fieldById.get(fieldId))
     .filter(Boolean);
   const layoutFields = ['fullBleed', 'contentMaxWidthPx', 'anchorId']
@@ -1675,6 +1678,16 @@ export function CardChartBlockEditor({
       <p className="admin-card-chart-control-help">
         Sets the number of comparison columns. Increasing this adds another editable card and chart column.
       </p>
+      {cardStyleFields.length ? (
+        <FieldControlGrid
+          fields={cardStyleFields}
+          settings={settings}
+          onSettingChange={onSettingChange}
+          routeOptions={routeOptions}
+          sourceRevision={sourceRevision}
+          className="admin-content-field-list--inline admin-card-chart-style-fields"
+        />
+      ) : null}
       {cardControls}
     </div>
   );
@@ -3936,43 +3949,6 @@ export function RequestFormBlockEditor({
   const headingAndLeadContent = (
     <div className="admin-request-form-content-grid">
       <div className="admin-request-form-heading-column">
-        <div className="admin-request-form-typography-controls" aria-label="Request form heading and body typography">
-          <BillboardSegment
-            label="Heading font"
-            options={[
-              { value: 'heading', label: 'Avenir' },
-              { value: 'helv', label: 'Helvetica' },
-            ]}
-            value={requestTitleFontFamily}
-            onChange={(nextValue) => {
-              const nextFontFamily = normalizeBillboardTitleFontFamily(nextValue);
-              onSettingChange('titleFontFamily', nextFontFamily);
-              const currentRawWeight = Number(settings.titleFontWeight);
-              const nextWeight = normalizeBillboardTitleFontWeight(currentRawWeight, nextFontFamily);
-              if (!Number.isFinite(currentRawWeight) || nextWeight !== currentRawWeight) {
-                onSettingChange('titleFontWeight', nextWeight);
-              }
-            }}
-          />
-          <BillboardSegment
-            label="Heading weight"
-            options={requestTitleWeightOptions.map((weight) => ({ value: Number(weight), label: String(weight) }))}
-            value={requestTitleFontWeight}
-            onChange={(nextValue) => onSettingChange('titleFontWeight', Number(nextValue))}
-          />
-          <BillboardSegment
-            label="Heading alignment"
-            options={requestJustifyOptions}
-            value={requestJustify}
-            onChange={(nextValue) => onSettingChange('justify', nextValue)}
-          />
-          <BillboardSegment
-            label="Body alignment"
-            options={requestBodyJustifyOptions}
-            value={requestBodyJustify}
-            onChange={(nextValue) => onSettingChange('bodyJustify', nextValue)}
-          />
-        </div>
         <ColorTextSelectionEditor
           label="Form heading"
           text={settings.title ?? ''}
@@ -4010,6 +3986,49 @@ export function RequestFormBlockEditor({
             placeholder="Optional lead copy above the form"
             ariaLabel="Lead Copy"
             paletteVariant={hudMode ? 'hud' : 'admin'}
+          />
+        </div>
+      </div>
+      <div className="admin-request-form-typography-panel">
+        <div
+          className="admin-request-form-typography-controls"
+          role="group"
+          aria-label="Request form heading and body typography"
+        >
+          <BillboardSegment
+            label="Heading font"
+            options={[
+              { value: 'heading', label: 'Avenir' },
+              { value: 'helv', label: 'Helvetica' },
+            ]}
+            value={requestTitleFontFamily}
+            onChange={(nextValue) => {
+              const nextFontFamily = normalizeBillboardTitleFontFamily(nextValue);
+              onSettingChange('titleFontFamily', nextFontFamily);
+              const currentRawWeight = Number(settings.titleFontWeight);
+              const nextWeight = normalizeBillboardTitleFontWeight(currentRawWeight, nextFontFamily);
+              if (!Number.isFinite(currentRawWeight) || nextWeight !== currentRawWeight) {
+                onSettingChange('titleFontWeight', nextWeight);
+              }
+            }}
+          />
+          <BillboardSegment
+            label="Heading weight"
+            options={requestTitleWeightOptions.map((weight) => ({ value: Number(weight), label: String(weight) }))}
+            value={requestTitleFontWeight}
+            onChange={(nextValue) => onSettingChange('titleFontWeight', Number(nextValue))}
+          />
+          <BillboardSegment
+            label="Heading alignment"
+            options={requestJustifyOptions}
+            value={requestJustify}
+            onChange={(nextValue) => onSettingChange('justify', nextValue)}
+          />
+          <BillboardSegment
+            label="Body alignment"
+            options={requestBodyJustifyOptions}
+            value={requestBodyJustify}
+            onChange={(nextValue) => onSettingChange('bodyJustify', nextValue)}
           />
         </div>
       </div>

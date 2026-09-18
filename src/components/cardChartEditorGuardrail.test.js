@@ -115,4 +115,26 @@ describe('Card Chart editor contracts', () => {
       '.admin-hud-editor-shared-surface .admin-card-chart-spacing-controls .admin-content-field-list {\n    grid-template-columns: minmax(0, 1fr);',
     );
   });
+
+  it('keeps Card Chart gutter and shadow controls in the shared editor contract', () => {
+    const definition = readSource('../blocks/definitions/cardChart.definition.js');
+    const editor = readSource('./block-editors/migratedBlockEditors.jsx');
+    const renderer = readSource('./NativeContentPage.jsx');
+    const runtime = readSource('../lib/dynamicPageBlocks.js');
+    const styles = readSource('../styles/service-native.css');
+
+    expect(definition).toContain("id: 'cardGapRem'");
+    expect(definition).toContain("id: 'cardShadow'");
+    expect(definition).toContain("id: 'cardShadowOpacity'");
+    expect(editor).toContain("['headerGapRem', 'spaceBeforeRem', 'spaceAfterRem', 'paddingTopRem', 'paddingBottomRem', 'cellPaddingRem', 'cardGapRem'");
+    expect(editor).toContain("['cardShadow', 'cardShadowOpacity']");
+    expect(runtime).toContain('normalizeDynamicGridCardGapRem(settings.cardGapRem)');
+    expect(runtime).toContain('cardShadowOpacity: hasCardShadowOpacitySetting');
+    expect(renderer).toContain("'--card-chart-gap': `${runtime.cardGapRem}rem`");
+    expect(renderer).toContain("'--card-chart-shadow-opacity': String(runtime.cardShadowOpacity)");
+    expect(renderer).toContain("' is-card-shadow-off'");
+    expect(styles).toContain('border-spacing: var(--card-chart-gap');
+    expect(styles).toContain('var(--card-chart-shadow-opacity');
+    expect(styles).toContain('.is-card-shadow-off .info-table-sheet__desktop-shell');
+  });
 });

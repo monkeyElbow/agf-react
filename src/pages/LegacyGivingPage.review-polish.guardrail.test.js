@@ -204,9 +204,10 @@ describe('planned giving review polish guardrail', () => {
     expect(cssSource).toContain('padding: 0;');
     expect(cssSource).toContain('.service-native-section.native-dynamic-grid.legacy-child-native-trust-choices--trusts .charitable-trusts-native-choice-card p,');
     expect(cssSource).toContain('.legacy-child-native-trust-choices--trusts.native-dynamic-grid .charitable-trusts-native-choice-card > .investments-native-cert-card__cap {');
-    expect(cssSource).toContain('padding-bottom: clamp(0.31rem, 0.66vw, 0.39rem);');
+    expect(cssSource).toContain('var(--dynamic-grid-card-padding, clamp(1.8rem, 3.3vw, 2.2rem))');
+    expect(cssSource).toContain('clamp(0.31rem, 0.66vw, 0.39rem);');
     expect(cssSource).toContain('.legacy-child-native-trust-choices--trusts.native-dynamic-grid .charitable-trusts-native-choice-card > .investments-native-cert-card__body {');
-    expect(cssSource).toContain('padding-top: clamp(0.675rem, 1.4vw, 0.875rem);');
+    expect(cssSource).toContain('var(--dynamic-grid-card-padding, clamp(1.35rem, 2.8vw, 1.75rem))');
     expect(cssSource).toContain('--investments-cert-body-padding-bottom: clamp(1.8rem, 3.3vw, 2.2rem);');
     expect(cssSource).toContain('.service-native-section.native-dynamic-grid.legacy-child-native-trust-choices--trusts .charitable-trusts-native-choice-card h3,');
     expect(cssSource).toContain('.legacy-child-native-trust-choices--trusts.native-dynamic-grid .service-native-card h3 {');

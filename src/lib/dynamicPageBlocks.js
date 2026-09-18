@@ -2720,6 +2720,7 @@ export function buildDynamicGridFromBlock(block) {
   const subtitleHighlights = hasMergedIntro ? [] : legacySubtitleHighlights;
   const bodyHtml = hasMergedIntro ? mergedIntroHtml : legacyBodyHtml;
   const bgTone = normalizeGridBgTone(settings.bgTone || 'white');
+  const backgroundEffects = normalizeBackgroundEffects(settings.backgroundEffectsJson);
   const contentWidth = normalizeDynamicGridWidth(settings.contentWidth);
   // The investment-options preset owns its stacked-row layout; ignore stale
   // persisted column counts because the preset editor does not expose them.
@@ -2991,6 +2992,14 @@ export function buildDynamicGridFromBlock(block) {
         panelTone: String(settings[`card${slot}PanelTone`] || '').trim(),
         action: cardActions[0] || null,
         actions: cardActions,
+        primaryActionStyle: String(settings[`card${slot}ButtonStyle`] || '').trim(),
+        primaryActionTone: String(settings[`card${slot}ButtonTone`] || '').trim(),
+        primaryActionToneAuthored: Object.prototype.hasOwnProperty.call(settings, `card${slot}ButtonTone`)
+          && String(settings[`card${slot}ButtonTone`] || '').trim() !== '',
+        secondaryActionStyle: String(settings[`card${slot}Button2Style`] || '').trim(),
+        secondaryActionTone: String(settings[`card${slot}Button2Tone`] || '').trim(),
+        secondaryActionToneAuthored: Object.prototype.hasOwnProperty.call(settings, `card${slot}Button2Tone`)
+          && String(settings[`card${slot}Button2Tone`] || '').trim() !== '',
         links: cardLinks,
         accordions: cardAccordions,
       };
@@ -3015,6 +3024,7 @@ export function buildDynamicGridFromBlock(block) {
     hasMergedIntro,
     anchorId: String(settings.anchorId || '').trim(),
     bgTone,
+    backgroundEffects,
     contentWidth,
     columns,
     cardCount,
@@ -3318,6 +3328,18 @@ export function buildDynamicCardChartFromBlock(block) {
     return null;
   }
 
+  const hasCardShadowSetting = typeof settings.cardShadow === 'boolean'
+    || ['true', 'false'].includes(String(settings.cardShadow || '').trim().toLowerCase());
+  const cardShadow = hasCardShadowSetting ? toBoolean(settings.cardShadow) : true;
+  const hasCardShadowOpacitySetting = settings.cardShadowOpacity !== null
+    && settings.cardShadowOpacity !== undefined
+    && settings.cardShadowOpacity !== ''
+    && Number.isFinite(Number(settings.cardShadowOpacity));
+  const hasCardGapSetting = settings.cardGapRem !== null
+    && settings.cardGapRem !== undefined
+    && settings.cardGapRem !== ''
+    && Number.isFinite(Number(settings.cardGapRem));
+
   return {
     title,
     bgTone,
@@ -3344,6 +3366,13 @@ export function buildDynamicCardChartFromBlock(block) {
     paddingTopRem: normalizePageContentSpaceRem(settings.paddingTopRem, 2.4, 0, 8),
     paddingBottomRem: normalizePageContentSpaceRem(settings.paddingBottomRem, 2.4, 0, 8),
     cellPaddingRem: normalizePageContentSpaceRem(settings.cellPaddingRem, 0.9, 0.55, 1.8),
+    cardGapRem: hasCardGapSetting
+      ? normalizeDynamicGridCardGapRem(settings.cardGapRem)
+      : null,
+    cardShadow,
+    cardShadowOpacity: hasCardShadowOpacitySetting
+      ? normalizeDynamicGridCardShadowOpacity(settings.cardShadowOpacity)
+      : null,
     cellTextSizeRem: normalizePageContentSpaceRem(settings.cellTextSizeRem, 1.05, 0.8, 1.5),
     cellTextWeight: (() => {
       const value = Number(settings.cellTextWeight);

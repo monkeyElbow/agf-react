@@ -2309,6 +2309,45 @@ describe('buildDynamicRatesFromBlock', () => {
 });
 
 describe('buildDynamicGridFromBlock', () => {
+  it('carries the saved background-light crop mode into the canonical grid runtime', () => {
+    const clippedRuntime = buildDynamicGridFromBlock({
+      id: 'careers-benefits',
+      kind: 'card_grid',
+      mode: 'dynamic',
+      settings: {
+        backgroundEffectsJson: JSON.stringify({
+          enabled: true,
+          clip: true,
+          lights: [{ id: 'benefits-light', positionModel: 'edge-v1', tone: 'blue', x: 108, y: 24, size: 90 }],
+        }),
+        card1Title: 'A reason',
+      },
+    });
+    const uncroppedRuntime = buildDynamicGridFromBlock({
+      id: 'careers-benefits-uncropped',
+      kind: 'card_grid',
+      mode: 'dynamic',
+      settings: {
+        backgroundEffectsJson: JSON.stringify({
+          enabled: true,
+          clip: false,
+          lights: [{ id: 'benefits-light', positionModel: 'edge-v1', tone: 'blue', x: 108, y: 24, size: 90 }],
+        }),
+        card1Title: 'A reason',
+      },
+    });
+
+    expect(clippedRuntime?.backgroundEffects).toMatchObject({
+      enabled: true,
+      clip: true,
+      lights: [expect.objectContaining({ id: 'benefits-light', x: 108, y: 24, size: 90 })],
+    });
+    expect(uncroppedRuntime?.backgroundEffects).toMatchObject({
+      enabled: true,
+      clip: false,
+    });
+  });
+
   it('restores Insurance coverage hover motion while allowing the editor to turn it off', () => {
     const legacyRuntime = buildDynamicGridFromBlock({
       id: 'insurance-coverage',

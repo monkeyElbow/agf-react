@@ -2814,6 +2814,10 @@ describe('dynamic block control wiring', () => {
       expect(screen.getByRole('group', { name: 'Heading weight' })).toBeTruthy();
       expect(screen.getByRole('group', { name: 'Heading alignment' })).toBeTruthy();
       expect(screen.getByRole('group', { name: 'Body alignment' })).toBeTruthy();
+      const typographyControls = screen.getByRole('group', { name: 'Request form heading and body typography' });
+      expect(typographyControls.parentElement?.className).toContain('admin-request-form-typography-panel');
+      expect(typographyControls.parentElement?.parentElement?.lastElementChild).toBe(typographyControls.parentElement);
+      expect(typographyControls.parentElement?.parentElement?.firstElementChild?.querySelector('.admin-color-text-editor')).toBeTruthy();
       fireEvent.click(within(screen.getByRole('group', { name: 'Heading font' })).getByRole('button', { name: 'Avenir' }));
       expect(onSettingChange).toHaveBeenCalledWith('titleFontFamily', 'heading');
       fireEvent.click(within(screen.getByRole('group', { name: 'Body alignment' })).getByRole('button', { name: 'Right' }));

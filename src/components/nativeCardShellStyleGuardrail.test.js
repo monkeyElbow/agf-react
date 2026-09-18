@@ -60,6 +60,29 @@ describe('native card shell style guardrail', () => {
     });
   });
 
+  it('keeps charitable-trust choice cards connected to shared Card Grid controls', () => {
+    const source = readSource('../styles/service-native.css');
+
+    expect(source).toContain('.legacy-child-native-trust-choices--trusts .charitable-trusts-native-choice-grid.is-one');
+    expect(source).toContain('gap: var(--dynamic-grid-card-gap, clamp(1rem, 3vw, 1.8rem));');
+    expect(source).toContain('padding: var(--dynamic-grid-card-padding, clamp(1.8rem, 3.3vw, 2.2rem))');
+    expect(source).toContain('font-size: var(--dynamic-grid-card-title-size, clamp(1.9rem, 3.35vw, 2.45rem));');
+    expect(source).toContain('line-height: var(--dynamic-grid-card-title-line-height, 1.02);');
+    expect(source).toContain('text-align: var(--dynamic-grid-card-title-justify, center);');
+    expect(source).toContain('margin: 0 0 var(--dynamic-grid-card-title-body-space, 0.2rem);');
+    expect(source).toContain('font-size: var(--dynamic-grid-card-body-size, 1.08rem);');
+    expect(source).toContain('line-height: var(--dynamic-grid-card-body-line-height, 1.65);');
+    expect(source).toContain('text-align: var(--dynamic-grid-card-body-justify, left);');
+    expect(source).toContain('.legacy-child-native-trust-choices--trusts.native-dynamic-grid.is-card-outline');
+    expect(source).toContain('.legacy-child-native-trust-choices--trusts.native-dynamic-grid.is-card-shadow');
+    expect(source).toContain('.legacy-child-native-trust-choices--trusts.native-dynamic-grid.is-card-hover-scale');
+    expect(source).toContain('.charitable-trusts-native-choice-card h3.is-atlantean');
+    expect(source).toContain('.legacy-child-native-trust-choices--trusts.native-dynamic-grid.is-card-outline.is-card-outline-alternating');
+    expect(source).toContain('.legacy-child-native-trust-choices--trusts.native-dynamic-grid.is-title-alternating');
+    expect(source).not.toContain('.legacy-child-native-trust-choices--trusts.native-dynamic-grid .charitable-trusts-native-choice-grid {\n  margin-top: 0;\n  grid-template-columns: repeat(2, minmax(0, 1fr));');
+    expect(source).not.toContain('background: #ffffff;\n}\n\n.legacy-child-native-trust-choices--trusts .service-native-grid');
+  });
+
   it('does not expose card-title color when a card-grid presentation intentionally hides card titles', () => {
     const editorSource = readSource('./block-editors/migratedBlockEditors.jsx');
 

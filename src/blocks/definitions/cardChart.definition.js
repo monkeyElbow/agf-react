@@ -71,6 +71,7 @@ const sections = [
       defineEditorField({ id: 'paddingTopRem', label: 'Padding top (rem)', type: 'range', min: 0, max: 8, step: 0.25, defaultValue: 2.4, suffix: 'rem' }),
       defineEditorField({ id: 'paddingBottomRem', label: 'Padding bottom (rem)', type: 'range', min: 0, max: 8, step: 0.25, defaultValue: 2.4, suffix: 'rem' }),
       defineEditorField({ id: 'cellPaddingRem', label: 'Cell padding (rem)', type: 'range', min: 0.55, max: 1.8, step: 0.05, defaultValue: 0.9, suffix: 'rem' }),
+      defineEditorField({ id: 'cardGapRem', label: 'Card gutter (rem)', type: 'range', min: 0, max: 4, step: 0.05, defaultValue: 1.6, suffix: 'rem' }),
       defineEditorField({ id: 'cellTextSizeRem', label: 'Cell text size (rem)', type: 'range', min: 0.8, max: 1.5, step: 0.05, defaultValue: 1.05, suffix: 'rem' }),
       defineEditorField({
         id: 'cellTextWeight',
@@ -93,6 +94,8 @@ const sections = [
     title: 'Cards',
     surfaces: ['hud', 'admin'],
     fields: [
+      defineEditorField({ id: 'cardShadow', label: 'Card shadow', type: 'boolean', defaultValue: true }),
+      defineEditorField({ id: 'cardShadowOpacity', label: 'Card shadow opacity', type: 'range', min: 0, max: 100, step: 1, defaultValue: 18, suffix: '%' }),
       ...cardFields,
     ],
   },
@@ -135,7 +138,7 @@ export const cardChartBlockDefinition = createBlockDefinition({
   editorType: 'card_chart',
   allowedVariants: ['default'],
   supportedModes: ['dynamic'],
-  defaults: { title: 'Card Chart', justify: 'center', bgTone: 'white', titleClassName: '', titleHighlightsJson: '', cardCount: '2', fineprint: '', fineprintDisclosureId: '', fineprintJustify: 'center', fineprintSizeRem: 0.88, valueAlignment: '', fullBleed: true, spaceBeforeRem: 0, spaceAfterRem: 0, headerGapRem: 2.4, paddingTopRem: 2.4, paddingBottomRem: 2.4, cellPaddingRem: 0.9, cellTextSizeRem: 1.05, cellTextWeight: '650', contentMaxWidthPx: 1180, sectionClassName: '', anchorId: '' },
+  defaults: { title: 'Card Chart', justify: 'center', bgTone: 'white', titleClassName: '', titleHighlightsJson: '', cardCount: '2', fineprint: '', fineprintDisclosureId: '', fineprintJustify: 'center', fineprintSizeRem: 0.88, valueAlignment: '', fullBleed: true, spaceBeforeRem: 0, spaceAfterRem: 0, headerGapRem: 2.4, paddingTopRem: 2.4, paddingBottomRem: 2.4, cellPaddingRem: 0.9, cardGapRem: 1.6, cardShadow: true, cardShadowOpacity: 18, cellTextSizeRem: 1.05, cellTextWeight: '650', contentMaxWidthPx: 1180, sectionClassName: '', anchorId: '' },
   schema: { fields: sections.flatMap((section) => section.fields) },
   renderer: { buildRuntime: buildDynamicCardChartFromBlock },
   editor: { sections, hudSectionIds: ['content', 'spacing', 'cards', 'fineprint', 'layout'], adminSectionIds: ['content', 'spacing', 'cards', 'fineprint', 'layout'] },

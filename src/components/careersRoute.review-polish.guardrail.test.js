@@ -41,6 +41,13 @@ describe('careers route review polish guardrail', () => {
     expect(cssSource).toContain('@media (max-width: 980px) {\n  .service-native-page {\n    /* Safari/iPad can still include transformed descendants in the horizontal\n       pan range when this is `clip`. Hide that range at the page shell so the\n       menu and all sections stay locked to the viewport. */\n    overflow-x: hidden;');
   });
 
+  it('lets the Careers benefits section honor the saved crop mode instead of forcing clipping', () => {
+    const cssSource = readSource('../styles/service-native.css');
+
+    expect(cssSource).toContain('.native-info-page--careers .careers-native-benefits {\n  overflow: visible;\n  contain: none;');
+    expect(cssSource).toContain('.native-info-page--careers .careers-native-benefits:has(> .block-background-effects.is-clipped) {\n  overflow: clip;\n  contain: paint;');
+  });
+
   it('keeps the careers benefits-to-ready background progress and observed enter reveals wired in source', () => {
     const cssSource = readSource('../styles/service-native.css');
     const contentSource = readSource('../data/nativePageContent.js');

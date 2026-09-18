@@ -14249,10 +14249,16 @@ p.impact-proof-story-proof-body {
   margin-top: var(--dynamic-grid-header-cards-space, 0);
 }
 
-/* Background lights are intentionally allowed to overscan a block, but not
-   the document viewport. Careers is the narrowest Card Grid instance and
-   previously let that layer create page-level horizontal scrolling. */
+/* Careers is the narrowest Card Grid instance and previously let an
+   uncropped light create page-level horizontal scrolling. Keep the crop
+   containment only when the authored control is On; otherwise the shared
+   background-effects layer can intentionally overscan into the page wash. */
 .native-info-page--careers .careers-native-benefits {
+  overflow: visible;
+  contain: none;
+}
+
+.native-info-page--careers .careers-native-benefits:has(> .block-background-effects.is-clipped) {
   overflow: clip;
   contain: paint;
 }
@@ -17707,11 +17713,26 @@ p.impact-proof-story-proof-body {
   --dynamic-grid-card-body-line-height: 1.65;
   padding-top: clamp(2.6rem, 6vw, 4.8rem);
   padding-bottom: clamp(1.8rem, 3.8vw, 3rem);
-  background: #ffffff;
 }
 
 .legacy-child-native-trust-choices--trusts .service-native-grid {
-  gap: clamp(1rem, 3vw, 1.8rem);
+  gap: var(--dynamic-grid-card-gap, clamp(1rem, 3vw, 1.8rem));
+}
+
+.legacy-child-native-trust-choices--trusts .charitable-trusts-native-choice-grid.is-one {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.legacy-child-native-trust-choices--trusts .charitable-trusts-native-choice-grid.is-two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.legacy-child-native-trust-choices--trusts .charitable-trusts-native-choice-grid.is-three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.legacy-child-native-trust-choices--trusts .charitable-trusts-native-choice-grid.is-four {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .legacy-child-native-trust-choices--trusts .service-native-card {
@@ -17847,7 +17868,6 @@ p.impact-proof-story-proof-body {
 
 .legacy-child-native-trust-choices--trusts.native-dynamic-grid .charitable-trusts-native-choice-grid {
   margin-top: 0;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .legacy-child-native-trust-choices--trusts.native-dynamic-grid .charitable-trusts-native-choice-card {
@@ -17864,7 +17884,9 @@ p.impact-proof-story-proof-body {
   display: block;
   flex: 0 0 auto;
   height: auto;
-  padding-bottom: clamp(0.31rem, 0.66vw, 0.39rem);
+  padding: var(--dynamic-grid-card-padding, clamp(1.8rem, 3.3vw, 2.2rem))
+    var(--dynamic-grid-card-padding, clamp(2.4rem, 5.2vw, 3.1rem))
+    clamp(0.31rem, 0.66vw, 0.39rem);
 }
 
 .legacy-child-native-trust-choices--trusts.native-dynamic-grid .charitable-trusts-native-choice-card > .investments-native-cert-card__body {
@@ -17872,7 +17894,9 @@ p.impact-proof-story-proof-body {
   flex: 1 1 auto;
   flex-direction: column;
   height: auto;
-  padding-top: clamp(0.675rem, 1.4vw, 0.875rem);
+  padding: var(--dynamic-grid-card-padding, clamp(1.35rem, 2.8vw, 1.75rem))
+    var(--dynamic-grid-card-padding, clamp(2.4rem, 5.2vw, 3.1rem))
+    var(--dynamic-grid-card-padding, clamp(1.2rem, 2.5vw, 1.55rem));
 }
 
 .service-native-section.native-dynamic-grid.legacy-child-native-trust-choices--trusts .charitable-trusts-native-choice-card h3,
@@ -17880,19 +17904,21 @@ p.impact-proof-story-proof-body {
   padding: 0;
   background: transparent;
   font-family: var(--ag-font-heading);
-  font-size: clamp(1.9rem, 3.35vw, 2.45rem);
-  margin: 0 0 0.2rem;
+  font-size: var(--dynamic-grid-card-title-size, clamp(1.9rem, 3.35vw, 2.45rem));
+  line-height: var(--dynamic-grid-card-title-line-height, 1.02);
+  text-align: var(--dynamic-grid-card-title-justify, center);
+  margin: 0 0 var(--dynamic-grid-card-title-body-space, 0.2rem);
   min-height: 0;
   display: block;
   align-items: initial;
 }
 
 .legacy-child-native-trust-choices--trusts.native-dynamic-grid .charitable-trusts-native-choice-card.investments-native-cert-card--atlantean h3 {
-  color: var(--ag-color-atlantean-dark);
+  color: var(--dynamic-grid-card-title-color, var(--ag-color-atlantean-dark));
 }
 
 .legacy-child-native-trust-choices--trusts.native-dynamic-grid .charitable-trusts-native-choice-card.investments-native-cert-card--mango h3 {
-  color: var(--ag-color-mango);
+  color: var(--dynamic-grid-card-title-color, var(--ag-color-mango));
 }
 
 .service-native-section.native-dynamic-grid.legacy-child-native-trust-choices--trusts .charitable-trusts-native-choice-card h3 mark,
@@ -17900,11 +17926,147 @@ p.impact-proof-story-proof-body {
   color: inherit;
 }
 
+.legacy-child-native-trust-choices--trusts.native-dynamic-grid .charitable-trusts-native-choice-card h3.is-atlantean {
+  color: var(--ag-color-atlantean) !important;
+}
+
+.legacy-child-native-trust-choices--trusts.native-dynamic-grid .charitable-trusts-native-choice-card h3.is-mango {
+  color: var(--ag-color-mango) !important;
+}
+
+.legacy-child-native-trust-choices--trusts.native-dynamic-grid .charitable-trusts-native-choice-card h3.is-melon {
+  color: var(--ag-color-melon) !important;
+}
+
+.legacy-child-native-trust-choices--trusts.native-dynamic-grid .charitable-trusts-native-choice-card h3.is-sandstone {
+  color: var(--ag-color-sandstone) !important;
+}
+
+.legacy-child-native-trust-choices--trusts.native-dynamic-grid .charitable-trusts-native-choice-card h3.is-super-grey {
+  color: var(--ag-color-super-grey) !important;
+}
+
+.legacy-child-native-trust-choices--trusts.native-dynamic-grid .charitable-trusts-native-choice-card h3.is-white {
+  color: #ffffff !important;
+}
+
 .service-native-section.native-dynamic-grid.legacy-child-native-trust-choices--trusts .charitable-trusts-native-choice-card p,
 .legacy-child-native-trust-choices--trusts.native-dynamic-grid .charitable-trusts-native-choice-card p {
   padding: 0;
-  font-size: 1.08rem;
-  line-height: 1.65;
+  color: var(--dynamic-grid-body-color, var(--ag-color-super-grey));
+  font-size: var(--dynamic-grid-card-body-size, 1.08rem);
+  line-height: var(--dynamic-grid-card-body-line-height, 1.65);
+  text-align: var(--dynamic-grid-card-body-justify, left);
+}
+
+.legacy-child-native-trust-choices--trusts.native-dynamic-grid .charitable-trusts-native-choice-card
+  .native-info-rich-html,
+.legacy-child-native-trust-choices--trusts.native-dynamic-grid .charitable-trusts-native-choice-card
+  .service-native-card-bullet-list {
+  color: var(--dynamic-grid-body-color, var(--ag-color-super-grey));
+  font-size: var(--dynamic-grid-card-body-size, 1.08rem);
+  line-height: var(--dynamic-grid-card-body-line-height, 1.65);
+  text-align: var(--dynamic-grid-card-body-justify, left);
+}
+
+.legacy-child-native-trust-choices--trusts.native-dynamic-grid.is-card-outline
+  .charitable-trusts-native-choice-card {
+  border: var(--dynamic-grid-card-outline-width, 1.5px) solid var(--dynamic-grid-card-outline-color) !important;
+}
+
+.legacy-child-native-trust-choices--trusts.native-dynamic-grid.is-card-outline-off
+  .charitable-trusts-native-choice-card {
+  border: 0 !important;
+}
+
+.legacy-child-native-trust-choices--trusts.native-dynamic-grid.is-card-outline.is-card-outline-alternating
+  .charitable-trusts-native-choice-grid > .charitable-trusts-native-choice-card:nth-child(3n + 1) {
+  border-color: var(--dynamic-grid-card-outline-one) !important;
+}
+
+.legacy-child-native-trust-choices--trusts.native-dynamic-grid.is-card-outline.is-card-outline-alternating
+  .charitable-trusts-native-choice-grid > .charitable-trusts-native-choice-card:nth-child(3n + 2) {
+  border-color: var(--dynamic-grid-card-outline-two) !important;
+}
+
+.legacy-child-native-trust-choices--trusts.native-dynamic-grid.is-card-outline.is-card-outline-alternating
+  .charitable-trusts-native-choice-grid > .charitable-trusts-native-choice-card:nth-child(3n) {
+  border-color: var(--dynamic-grid-card-outline-three) !important;
+}
+
+.legacy-child-native-trust-choices--trusts.native-dynamic-grid.is-title-alternating
+  .charitable-trusts-native-choice-grid > .charitable-trusts-native-choice-card:nth-child(3n + 1) h3 {
+  color: var(--dynamic-grid-alt-title-one) !important;
+}
+
+.legacy-child-native-trust-choices--trusts.native-dynamic-grid.is-title-alternating
+  .charitable-trusts-native-choice-grid > .charitable-trusts-native-choice-card:nth-child(3n + 2) h3 {
+  color: var(--dynamic-grid-alt-title-two) !important;
+}
+
+.legacy-child-native-trust-choices--trusts.native-dynamic-grid.is-title-alternating
+  .charitable-trusts-native-choice-grid > .charitable-trusts-native-choice-card:nth-child(3n) h3 {
+  color: var(--dynamic-grid-alt-title-three) !important;
+}
+
+.legacy-child-native-trust-choices--trusts.native-dynamic-grid.is-card-shadow
+  .charitable-trusts-native-choice-card {
+  box-shadow: 0 12px 26px rgba(5, 30, 54, var(--dynamic-grid-card-shadow-opacity, 0.14)) !important;
+}
+
+.legacy-child-native-trust-choices--trusts.native-dynamic-grid.is-card-shadow-off
+  .charitable-trusts-native-choice-card,
+.legacy-child-native-trust-choices--trusts.native-dynamic-grid.is-card-shadow-off
+  .charitable-trusts-native-choice-card:hover {
+  box-shadow: none !important;
+}
+
+.legacy-child-native-trust-choices--trusts.native-dynamic-grid.is-card-hover-scale
+  .charitable-trusts-native-choice-card:hover {
+  transform: translateY(-3px) scale(1.02);
+}
+
+.legacy-child-native-trust-choices--trusts.native-dynamic-grid.is-card-hover-scale-disabled
+  .charitable-trusts-native-choice-card:hover {
+  transform: none;
+}
+
+.legacy-child-native-trust-choices--trusts.native-dynamic-grid.is-card-grid-style-card1
+  .charitable-trusts-native-choice-card > :is(.investments-native-cert-card__cap, .investments-native-cert-card__body) {
+  background: linear-gradient(142deg, rgba(255, 255, 255, 1) 50%, rgba(255, 255, 255, 0.85) 100%);
+}
+
+.legacy-child-native-trust-choices--trusts.native-dynamic-grid.is-card-grid-style-card2
+  .charitable-trusts-native-choice-card > :is(.investments-native-cert-card__cap, .investments-native-cert-card__body) {
+  background: linear-gradient(142deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0.84) 100%);
+}
+
+.legacy-child-native-trust-choices--trusts.native-dynamic-grid.is-card-grid-style-card3
+  .charitable-trusts-native-choice-card > :is(.investments-native-cert-card__cap, .investments-native-cert-card__body) {
+  background: #ffffff;
+}
+
+.legacy-child-native-trust-choices--trusts.native-dynamic-grid.is-card-grid-style-card4
+  .charitable-trusts-native-choice-card > :is(.investments-native-cert-card__cap, .investments-native-cert-card__body) {
+  background: linear-gradient(142deg, rgba(255, 255, 255, 0.26) 0%, rgba(255, 255, 255, 0.14) 55%, rgba(0, 0, 0, 0.06) 100%);
+}
+
+.legacy-child-native-trust-choices--trusts.native-dynamic-grid.is-card-grid-style-none
+  .charitable-trusts-native-choice-card {
+  background: transparent;
+  box-shadow: none;
+}
+
+.legacy-child-native-trust-choices--trusts.native-dynamic-grid.is-card-grid-style-none
+  .charitable-trusts-native-choice-card > :is(.investments-native-cert-card__cap, .investments-native-cert-card__body) {
+  background: transparent;
+}
+
+.legacy-child-native-trust-choices--trusts.native-dynamic-grid.is-card-grid-style-borderless-shadow
+  .charitable-trusts-native-choice-card {
+  border: 0 !important;
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 16px 34px rgba(5, 30, 54, 0.16);
 }
 
 .legacy-child-native-trust-choices--trusts.native-dynamic-grid .charitable-trusts-native-choice-card .service-native-action-row {
@@ -23432,6 +23594,8 @@ p.impact-proof-story-proof-body {
   --card-chart-cell-padding: 0.9rem 1rem;
   --card-chart-header-padding: clamp(0.78rem, 1.4vw, 1rem) clamp(1rem, 1.9vw, 1.35rem);
   --card-chart-mobile-cell-padding: 0.82rem 0.88rem;
+  --card-chart-gap: 1.6rem;
+  --card-chart-shadow-opacity: 0.18;
   --card-chart-list-gap: 0.58rem;
   background: #fff;
   margin-top: var(--dyn-content-margin-top, 0);
@@ -23542,13 +23706,13 @@ p.impact-proof-story-proof-body {
 .service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart) .info-table-sheet__desktop-shell {
   border: 0;
   background: transparent;
-  filter: drop-shadow(0 18px 34px rgba(65, 64, 66, 0.18));
+  filter: drop-shadow(0 18px 34px rgba(65, 64, 66, var(--card-chart-shadow-opacity, 0.18)));
 }
 
 .service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart) .info-table-sheet__table {
   min-width: 760px;
   border-collapse: separate;
-  border-spacing: clamp(1.05rem, 2.2vw, 1.6rem) 0;
+  border-spacing: var(--card-chart-gap, clamp(1.05rem, 2.2vw, 1.6rem)) 0;
 }
 
 .service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart) .info-table-sheet__table th,
@@ -23694,7 +23858,17 @@ p.impact-proof-story-proof-body {
 
 .service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart) .info-table-sheet__card {
   border-color: rgba(196, 190, 182, 0.38);
-  box-shadow: 0 16px 34px rgba(65, 64, 66, 0.16);
+  box-shadow: 0 16px 34px rgba(65, 64, 66, var(--card-chart-shadow-opacity, 0.16));
+}
+
+.service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart) .info-table-sheet__card + .info-table-sheet__card {
+  margin-top: var(--card-chart-gap, 0.72rem);
+}
+
+.service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart).is-card-shadow-off .info-table-sheet__desktop-shell,
+.service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart).is-card-shadow-off .info-table-sheet__card {
+  filter: none;
+  box-shadow: none;
 }
 
 @media (max-width: 900px) {

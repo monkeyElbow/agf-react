@@ -1236,26 +1236,42 @@ describe('NativeContentPage functional routes', () => {
 
   it('renders the careers route through NativeContentPage with delegated jobs behavior intact', () => {
     mockBlocksByPath = {
-      '/about-us/careers': contentBlockBlueprintsByPath['/about-us/careers'].map((block) => (
-        block.id === 'ready'
-          ? {
-              ...block,
-              settings: {
-                ...block.settings,
-                paddingTopRem: 3.25,
-                paddingBottomRem: 4.5,
-                leadCopyLineHeight: 1.8,
-                backgroundEffectsJson: JSON.stringify({
-                  enabled: true,
-                  clip: true,
-                  lights: [
-                    { id: 'careers-ready-light', tone: 'mango', strength: 72, x: 22, y: 34, size: 64 },
-                  ],
-                }),
-              },
-            }
-          : block
-      )),
+      '/about-us/careers': contentBlockBlueprintsByPath['/about-us/careers'].map((block) => {
+        if (block.id === 'ready') {
+          return {
+            ...block,
+            settings: {
+              ...block.settings,
+              paddingTopRem: 3.25,
+              paddingBottomRem: 4.5,
+              leadCopyLineHeight: 1.8,
+              backgroundEffectsJson: JSON.stringify({
+                enabled: true,
+                clip: true,
+                lights: [
+                  { id: 'careers-ready-light', tone: 'mango', strength: 72, x: 22, y: 34, size: 64 },
+                ],
+              }),
+            },
+          };
+        }
+        if (block.id === 'benefits') {
+          return {
+            ...block,
+            settings: {
+              ...block.settings,
+              backgroundEffectsJson: JSON.stringify({
+                enabled: true,
+                clip: true,
+                lights: [
+                  { id: 'careers-benefits-light', tone: 'blue', strength: 58, x: 108, y: 24, size: 90 },
+                ],
+              }),
+            },
+          };
+        }
+        return block;
+      }),
     };
     mockVisibleJobs = [
       {
@@ -1307,6 +1323,10 @@ describe('NativeContentPage functional routes', () => {
     expect(careersReadyBillboard?.getAttribute('style')).toContain('--dynamic-billboard-padding-bottom: 4.5rem');
     expect(careersReadyBillboard?.querySelector('.block-background-effects .block-background-light')).toBeTruthy();
     expect(careersReadyBillboard?.querySelector('.native-info-rich-html')?.style.getPropertyValue('--dynamic-billboard-lead-copy-line-height')).toBe('1.8');
+    const careersBenefits = document.querySelector('[data-block-id="benefits"]');
+    expect(careersBenefits?.className).toContain('has-block-background-effects');
+    expect(careersBenefits?.querySelector('.block-background-effects.is-clipped')).toBeTruthy();
+    expect(careersBenefits?.querySelector('.block-background-effects.is-uncropped')).toBeNull();
     expect(screen.getByRole('heading', { name: 'Marketing Manager' })).toBeTruthy();
     expect(screen.getByText('Springfield, MO')).toBeTruthy();
     expect(screen.getByText('Posted March 20, 2026')).toBeTruthy();
@@ -2188,6 +2208,37 @@ describe('NativeContentPage functional routes', () => {
               }),
             }
             : {}),
+          ...(block.id === 'trust_type_cards'
+            ? {
+              columns: 'three',
+              bgTone: 'sand',
+              cardStyle: 'card3',
+              cardPaddingRem: 1.8,
+              cardGapRem: 2.4,
+              cardTitleSizeRem: 1.7,
+              cardBodySizeRem: 1.1,
+              cardTitleJustify: 'left',
+              cardBodyJustify: 'right',
+              cardOutline: false,
+              cardShadow: false,
+              titleTone: 'mango',
+              bodyTone: 'melon',
+            }
+            : {}),
+          ...(block.id === 'remainder_trust_type_cards'
+            ? {
+              cardGapRem: 2.25,
+              cardShadow: false,
+              cardShadowOpacity: 4,
+            }
+            : {}),
+          ...(block.id === 'lead_trust_type_cards'
+            ? {
+              cardGapRem: 0.75,
+              cardShadow: true,
+              cardShadowOpacity: 32,
+            }
+            : {}),
         },
       })),
     };
@@ -2215,6 +2266,15 @@ describe('NativeContentPage functional routes', () => {
 
     expect(intro?.className).toContain('is-text-white');
     expect(trustChoices).toBeTruthy();
+    expect(document.querySelector('.charitable-trusts-native-choice-grid.is-three')).toBeTruthy();
+    expect(trustChoices?.className).toContain('is-card-grid-style-card3');
+    expect(trustChoices?.className).toContain('is-card-outline-off');
+    expect(trustChoices?.className).toContain('is-card-shadow-off');
+    expect(trustChoices?.getAttribute('style')).toContain('--dynamic-grid-card-gap: 2.4rem');
+    expect(trustChoices?.getAttribute('style')).toContain('--dynamic-grid-card-title-size: 1.7rem');
+    expect(trustChoices?.getAttribute('style')).toContain('--dynamic-grid-card-body-size: 1.1rem');
+    expect(trustChoices?.getAttribute('style')).toContain('--dynamic-grid-card-title-justify: left');
+    expect(trustChoices?.getAttribute('style')).toContain('--dynamic-grid-card-body-justify: right');
     expect(trustChoices?.querySelectorAll('.service-native-card')).toHaveLength(2);
     const trustChoiceHeadings = trustChoices?.querySelectorAll('.service-native-card h3') || [];
     expect(trustChoiceHeadings).toHaveLength(2);
@@ -2262,6 +2322,9 @@ describe('NativeContentPage functional routes', () => {
     expect(screen.queryByRole('heading', { name: 'How it works' })).toBeNull();
     expect(screen.queryByText('Placeholder: describe the first CRT step here.')).toBeNull();
     expect(charitableRemainderTrustTypes).toBeTruthy();
+    expect(charitableRemainderTrustTypes?.className).toContain('is-card-shadow-off');
+    expect(charitableRemainderTrustTypes?.getAttribute('style')).toContain('--card-chart-gap: 2.25rem');
+    expect(charitableRemainderTrustTypes?.getAttribute('style')).toContain('--card-chart-shadow-opacity: 0.04');
     expect(charitableRemainderTrustTypes?.querySelector('.info-table-sheet[data-info-table-first-column-header="false"]')).toBeTruthy();
     expect(within(charitableRemainderTrustTypes).getAllByText('Charitable Remainder Unitrust (CRUT)').length).toBeGreaterThan(0);
     expect(within(charitableRemainderTrustTypes).getAllByText('Minimum required payout of 5%').length).toBeGreaterThan(0);
@@ -2274,6 +2337,10 @@ describe('NativeContentPage functional routes', () => {
     expect(charitableLeadTrust?.querySelector('.block-background-effects.is-uncropped')).toBeTruthy();
     expect(charitableLeadTrust?.querySelectorAll('.block-background-light')).toHaveLength(2);
     expect(charitableLeadTrustTypes).toBeTruthy();
+    expect(charitableLeadTrustTypes?.className).toContain('is-card-shadow');
+    expect(charitableLeadTrustTypes?.className).not.toContain('is-card-shadow-off');
+    expect(charitableLeadTrustTypes?.getAttribute('style')).toContain('--card-chart-gap: 0.75rem');
+    expect(charitableLeadTrustTypes?.getAttribute('style')).toContain('--card-chart-shadow-opacity: 0.32');
     expect(charitableLeadTrustTypes?.querySelector('.info-table-sheet[data-info-table-first-column-header="false"]')).toBeTruthy();
     expect(within(charitableLeadTrustTypes).getAllByText('Grantor Lead Trust').length).toBeGreaterThan(0);
     expect(within(charitableLeadTrustTypes).getAllByText('Donor is taxed on the trust’s income each year').length).toBeGreaterThan(0);

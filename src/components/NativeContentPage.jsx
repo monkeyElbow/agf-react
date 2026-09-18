@@ -1301,7 +1301,7 @@ function buildDynamicCardChartSection(block, pathname) {
     blockId,
     hideTitle: !runtime.title,
     anchorId: runtime.anchorId || undefined,
-    className: `${pathname === '/test' ? 'test-dynamic-card-chart' : 'native-dynamic-card-chart'}${runtime.sectionClassName ? ` ${runtime.sectionClassName}` : ''} is-bg-${runtime.bgTone}`,
+    className: `${pathname === '/test' ? 'test-dynamic-card-chart' : 'native-dynamic-card-chart'}${runtime.sectionClassName ? ` ${runtime.sectionClassName}` : ''}${runtime.cardShadow === true ? ' is-card-shadow' : ''}${runtime.cardShadow === false ? ' is-card-shadow-off' : ''} is-bg-${runtime.bgTone}`,
     fullBleed: Boolean(runtime.fullBleed),
     title: runtime.title,
     justify,
@@ -1321,6 +1321,12 @@ function buildDynamicCardChartSection(block, pathname) {
       '--card-chart-header-gap': `${runtime.headerGapRem}rem`,
       '--card-chart-cell-padding': `${runtime.cellPaddingRem}rem ${Math.max(runtime.cellPaddingRem, 1)}rem`,
       '--card-chart-mobile-cell-padding': `${runtime.cellPaddingRem}rem ${Math.max(runtime.cellPaddingRem, 1)}rem`,
+      ...(runtime.cardGapRem !== null && runtime.cardGapRem !== undefined
+        ? { '--card-chart-gap': `${runtime.cardGapRem}rem` }
+        : {}),
+      ...(runtime.cardShadowOpacity !== null && runtime.cardShadowOpacity !== undefined
+        ? { '--card-chart-shadow-opacity': String(runtime.cardShadowOpacity) }
+        : {}),
       '--card-chart-list-gap': `${Math.max(runtime.cellPaddingRem * 0.65, 0.58)}rem`,
       '--card-chart-cell-text-size': `${runtime.cellTextSizeRem}rem`,
       '--card-chart-cell-text-weight': String(runtime.cellTextWeight),
@@ -1352,6 +1358,7 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
     bodyHtml,
     anchorId,
     bgTone,
+    backgroundEffects,
     contentWidth,
     columns,
     cardCount,
@@ -1460,6 +1467,12 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
       iconTone: card.iconTone || '',
       cardClass: card.cardClass,
       panelTone: card.panelTone,
+      primaryActionStyle: card.primaryActionStyle || '',
+      primaryActionTone: card.primaryActionTone || '',
+      primaryActionToneAuthored: card.primaryActionToneAuthored === true,
+      secondaryActionStyle: card.secondaryActionStyle || '',
+      secondaryActionTone: card.secondaryActionTone || '',
+      secondaryActionToneAuthored: card.secondaryActionToneAuthored === true,
       actions: (Array.isArray(card.actions) ? card.actions : (card.action ? [card.action] : []))
         .map((action) => toNativeActionItem(action))
         .filter(Boolean),
@@ -1489,6 +1502,7 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
     subtitle: subtitle || undefined,
     subtitleClassName: subtitleClassName || undefined,
     subtitleHighlights: subtitleHighlights.length ? subtitleHighlights : [],
+    backgroundEffects,
     subtitleStyle: Number.isFinite(Number(headerSubheadSpaceRem))
       && !hasMergedIntro
       ? {
@@ -7560,19 +7574,36 @@ export default function NativeContentPage({ page }) {
             ) : null}
 
             {cards.length && visibleCards.length && useCertificateCardLayout ? (
-              <div className={`service-native-grid is-two ${useRetirementCertificateCardLayout ? 'retirement-account-grid' : 'investments-native-cert-grid'}${useCharitableTrustChoiceLayout ? ' charitable-trusts-native-choice-grid' : ''}`}>
+              <div className={`service-native-grid is-${section.columns || 'two'} ${useRetirementCertificateCardLayout ? 'retirement-account-grid' : 'investments-native-cert-grid'}${useCharitableTrustChoiceLayout ? ' charitable-trusts-native-choice-grid' : ''}`}>
                 {visibleCards.map((card, cardIndex) => {
                   const cardTone = cardIndex === 1 ? 'mango' : 'atlantean';
                   const { description, minimum } = card.bodySegments || { description: card.body || '', minimum: '' };
-                  const primaryAction = Array.isArray(card.actions) && card.actions.length ? card.actions[0] : null;
-                  const certificateAction = primaryAction
-                    ? {
-                        ...primaryAction,
-                        style: 'blue',
-                        tone: cardTone,
-                        className: `is-tone-${cardTone}`,
-                      }
-                    : null;
+                  const certificateActions = (Array.isArray(card.actions) ? card.actions : []).map((action, actionIndex) => {
+                    const tone = actionIndex === 0
+                      ? (card.primaryActionToneAuthored ? card.primaryActionTone : cardTone)
+                      : (card.secondaryActionToneAuthored ? card.secondaryActionTone : (action.tone || 'super-grey'));
+                    const configuredAction = toNativeActionItem({
+                      ...action,
+                      className: String(action.className || '')
+                        .split(/\s+/)
+                        .filter((token) => token && token !== 'is-outline' && !token.startsWith('is-tone-'))
+                        .join(' '),
+                      style: actionIndex === 0
+                        ? (card.primaryActionStyle || action.style || 'blue')
+                        : (card.secondaryActionStyle || action.style || 'outline'),
+                      tone,
+                    });
+                    return {
+                      ...configuredAction,
+                      className: [
+                        String(configuredAction.className || '')
+                          .split(/\s+/)
+                          .filter((token) => token && !token.startsWith('is-tone-'))
+                          .join(' '),
+                        `is-tone-${normalizeActionButtonTone(tone, 'atlantean')}`,
+                      ].filter(Boolean).join(' '),
+                    };
+                  });
 
                   return (
                     <article
@@ -7605,6 +7636,7 @@ export default function NativeContentPage({ page }) {
                           </p>
                         ) : null}
                         {card.bodyHtml ? <SafeRichText as="div" className="native-info-rich-html service-native-card-rich-body" html={card.bodyHtml} /> : null}
+                        {card.copyText ? <CopyToClipboardButton text={card.copyText} label={card.copyLabel || 'Copy'} /> : null}
                         {Array.isArray(card.list) && card.list.length ? (
                           <ul className="service-native-card-bullet-list">
                             {card.list.map((item) => (
@@ -7612,9 +7644,48 @@ export default function NativeContentPage({ page }) {
                             ))}
                           </ul>
                         ) : null}
-                        {certificateAction ? (
+                        {Array.isArray(card.links) && card.links.length ? (
+                          <ul className="service-native-card-link-list">
+                            {card.links.map((item) => (
+                              <li key={`${card.title}-${item.label}-${item.to || item.href || item.documentId}`}>
+                                <NativeLink item={item} />
+                              </li>
+                            ))}
+                          </ul>
+                        ) : null}
+                        {Array.isArray(card.accordions) && card.accordions.length ? (
+                          <div className="service-native-card-accordions">
+                            {card.accordions.map((accordion) => (
+                              <NativeCardAccordion
+                                key={`${card.title}-${accordion.title}`}
+                                cardTitle={card.title}
+                                accordion={accordion}
+                              />
+                            ))}
+                          </div>
+                        ) : null}
+                        {card.fineprint ? (
+                          Array.isArray(card.fineprint)
+                            ? card.fineprint.map((line, index) => (
+                              <p
+                                key={`${card.title}-fineprint-${index + 1}`}
+                                className="service-native-card-fineprint"
+                                style={buildNativeCardFineprintStyle(card)}
+                              >
+                                {renderTextWithStrong(line)}
+                              </p>
+                            ))
+                            : (
+                              <p className="service-native-card-fineprint" style={buildNativeCardFineprintStyle(card)}>
+                                {renderTextWithStrong(card.fineprint)}
+                              </p>
+                            )
+                        ) : null}
+                        {certificateActions.length ? (
                           <div className="service-native-action-row">
-                            <Action item={certificateAction} />
+                            {certificateActions.map((action) => (
+                              <Action key={`${action.label}-${action.to || action.href || action.documentId}`} item={action} />
+                            ))}
                           </div>
                         ) : null}
                       </div>

@@ -8962,6 +8962,17 @@
   min-width: 0;
 }
 
+.admin-hud-editor-shared-surface .admin-card-chart-style-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: var(--ag-hud-editor-field-gap);
+  min-width: 0;
+}
+
+.admin-hud-editor-shared-surface .admin-card-chart-style-fields > label {
+  grid-column: span 1;
+}
+
 @media (max-width: 760px) {
   .admin-card-chart-fineprint-fields,
   .admin-hud-editor-shared-surface .admin-card-chart-hud-page--fineprint
@@ -8985,6 +8996,10 @@
   }
 
   .admin-hud-editor-shared-surface .admin-card-chart-spacing-controls .admin-content-field-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-hud-editor-shared-surface .admin-card-chart-style-fields {
     grid-template-columns: minmax(0, 1fr);
   }
 }
@@ -10413,8 +10428,34 @@
 }
 
 .admin-hud-editor-shared-surface .admin-request-form-heading-column,
-.admin-hud-editor-shared-surface .admin-request-form-lead-column {
+.admin-hud-editor-shared-surface .admin-request-form-lead-column,
+.admin-hud-editor-shared-surface .admin-request-form-typography-panel {
   min-width: 0;
+  padding: var(--ag-hud-editor-panel-padding);
+  border: 1px solid var(--ag-hud-editor-border);
+  border-radius: var(--ag-hud-editor-radius);
+  background: rgba(255, 255, 255, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+
+.admin-hud-editor-shared-surface .admin-request-form-typography-panel {
+  grid-column: 1 / -1;
+}
+
+.admin-hud-editor-shared-surface .admin-request-form-heading-column,
+.admin-hud-editor-shared-surface .admin-request-form-lead-column {
+  display: grid;
+  align-content: start;
+  gap: var(--ag-hud-editor-field-gap);
+}
+
+.admin-hud-editor-shared-surface .admin-request-form-lead-field {
+  min-width: 0;
+}
+
+.admin-hud-editor-shared-surface .admin-request-form-typography-controls {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--ag-hud-editor-field-gap);
 }
 
 .admin-hud-editor-shared-surface .admin-request-form-hud-editor .admin-color-text-editor {
@@ -11106,6 +11147,7 @@
   }
 
   .admin-hud-editor-shared-surface .admin-request-form-content-grid,
+  .admin-hud-editor-shared-surface .admin-request-form-typography-controls,
   .admin-hud-editor-shared-surface .admin-request-form-swatch-groups,
   .admin-hud-editor-shared-surface .admin-request-form-options-layout,
   .admin-hud-editor-shared-surface .admin-request-form-spacing-grid {
